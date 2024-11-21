@@ -1,0 +1,61 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    width: 100%;               
+    height: 80px;             
+    padding: 0 30px;          
+    box-sizing: border-box;    
+  }
+  
+  .logo span {
+    font-family: 'Inria Serif', serif;
+    font-size: 80px;           
+    font-weight: bold;
+    color: black;              
+  }
+  
+  .nav-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;             
+  }
+  
+  button.ingresar {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;                 
+  }
+  
+  button.ingresar:hover {
+    background-color: #125699;
+  }
+  
+  button.ingresar i {
+    font-size: 20px;            
+  }
+  
+  button.help-icon {
+    background-color: transparent;
+    border: none;
+    color: black;              
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
+  button.help-icon:hover {
+    color: #125699;            
+  }
+  
+  button.help-icon i {
+    font-size: 30px;           
+  }
+  
