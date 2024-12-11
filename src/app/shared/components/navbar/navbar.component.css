@@ -1,12 +1,13 @@
-.navbar {
+  .navbar {
     display: flex;
     align-items: center;
-    justify-content: center; 
+    justify-content: center;
     background-color: #0980C2;
-    width: 100%;               
-    height: 80px;             
-    padding: 20px 0;       
-    box-sizing: border-box; 
+    width: 100%;
+    height: 80px;  /* Ajusta este valor si tu header tiene diferente altura */
+    padding: 20px 0;
+    box-sizing: border-box;
+    z-index: 50; /* Esto asegura que el navbar no quede debajo del header */
   }
 
   .navbar-links {

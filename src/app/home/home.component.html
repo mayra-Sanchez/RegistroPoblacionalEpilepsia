@@ -1,0 +1,16 @@
+<div class="home">
+    <app-navbar (tabSelected)="onTabSelected($event)"></app-navbar> 
+    
+    <div class="content">
+      <div *ngIf="selectedTab === 'inicio'">
+        <h1>Bienvenido a la página de inicio</h1>
+      </div>
+      <div *ngIf="selectedTab === 'sistema'">
+        <h1>Sistema de Información</h1>
+      </div>
+      <div *ngIf="selectedTab === 'contacto'">
+        <h1>Contacto</h1>
+      </div>
+    </div>
+  </div>
+  

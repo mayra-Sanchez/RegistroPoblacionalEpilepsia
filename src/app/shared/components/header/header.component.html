@@ -1,17 +1,28 @@
 <div class="header">
-    <div class="logo">
-      <span>RPE</span>
-    </div>
-    
-    <div class="nav-buttons">
-      <button class="ingresar">
-        <i class="fa fa-sign-in-alt"></i> 
-        Ingresar
-      </button>
-      <button class="help-icon">
-        <i class="fa fa-question-circle"></i> 
-      </button>
-    </div>
+  <div class="logo">
+    <span>RPE</span>
   </div>
 
-  
+  <div class="nav-buttons">
+    <button class="ingresar" (click)="openModal()">
+      <i class="fa fa-sign-in-alt"></i> 
+      Ingresar
+    </button>
+    <button class="help-icon">
+      <i class="fa fa-question-circle"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" *ngIf="isModalVisible">
+  <div class="modal-content">
+    <span class="close" (click)="closeModal()">&times;</span>
+    <h2>Selecciona una opción</h2>
+    <ul>
+      <li><button (click)="navigateTo('registro')">Opción 1: Registro</button></li>
+      <li><button (click)="navigateTo('administrador')">Opción 2: Administrador</button></li>
+      <li><button (click)="navigateTo('investigador')">Opción 3: Investigador</button></li>
+    </ul>
+  </div>
+</div>

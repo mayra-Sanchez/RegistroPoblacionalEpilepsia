@@ -14,4 +14,4 @@ import { ConsolaAdministradorComponent } from './consola-administrador.component
     ConsolaAdministradorRoutingModule
   ]
 })
-export class ConsolaAdministradorModule { }
+export class AdminModule { }

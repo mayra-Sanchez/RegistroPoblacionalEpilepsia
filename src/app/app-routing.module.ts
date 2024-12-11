@@ -1,10 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AppComponent } from './app.component';
+import { HomeComponent } from './home/home.component';
 
 const routes: Routes = [
-  { path: '', component: AppComponent },
-  { path: '**', redirectTo: '', pathMatch: 'full' },
+  { path: '', redirectTo: 'Home', pathMatch: 'full' },
+  {
+    path: 'Home',
+    component: HomeComponent,
+  },
   {
     path: 'registro',
     loadChildren: () =>
@@ -16,7 +19,7 @@ const routes: Routes = [
     path: 'administrador',
     loadChildren: () =>
       import('./modules/consola-administrador/consola-administrador.module').then(
-        (m) => m.ConsolaAdministradorModule
+        (m) => m.AdminModule
       ),
   },
   {

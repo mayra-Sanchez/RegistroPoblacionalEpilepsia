@@ -7,10 +7,4 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'RPE-Frontend';
-  
-  selectedTab: string = 'inicio'; 
-  
-  onTabSelected(tab: string): void {
-    this.selectedTab = tab;
-  }
 }
