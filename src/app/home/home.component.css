@@ -10,9 +10,9 @@
   h2, h1 {
     text-align: center;
     color: #333;
+    margin-top: 3%;
   }
   
-  /* Para los links de consolas */
   .console-link {
     display: inline-block;
     margin: 10px;
@@ -28,4 +28,85 @@
   .console-link:hover {
     background-color: #357ab8;
   }
+
+  .contentHome {
+    padding: 30px;
+  }
+  
+  .info-container {
+    text-align: center;
+  }
+  
+  .info-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-top: 5%;
+  }
+  
+  .info-content p {
+    flex: 1;
+    text-align: justify;
+    font-size: 17px;
+    line-height: 2;
+  }
+  
+  .info-content img {
+    flex: 1;
+    max-width: 550px;
+    height: auto;
+    border-radius: 10px;
+  }
+
+  .contact-container {
+    text-align: center;
+  }
+  
+  .contact-content {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    margin-top: 5%;
+  }
+  
+  .contact-content p {
+    flex: 2;
+    text-align: justify;
+    font-size: 18px;
+    line-height: 2;
+    margin-top: 4%;
+  }
+  
+  .contact-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+    margin-top: 5%;
+
+    font-size: 19px;
+  }
+  
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 19px;
+
+  }
+  
+  .contact-item i {
+    font-size: 19px;
+    color: #4a90e2;
+  }
+  
+  .contact-info span {
+    font-size: 19px;
+    color: #333;
+  }
+  
+  
   

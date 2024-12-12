@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { ConsolaRegistroRoutingModule } from './consola-registro-routing.module';
 import { ConsolaRegistroComponent } from './consola-registro.component';
-import { NavbarRegistroComponent } from '../../navbar-registro/navbar-registro.component';
+import { NavbarRegistroComponent } from '../../shared/components/navbar-registro/navbar-registro.component';
 
 
 @NgModule({

@@ -1,16 +1,45 @@
 <div class="home">
-    <app-navbar (tabSelected)="onTabSelected($event)"></app-navbar> 
-    
-    <div class="content">
-      <div *ngIf="selectedTab === 'inicio'">
-        <h1>Bienvenido a la página de inicio</h1>
-      </div>
-      <div *ngIf="selectedTab === 'sistema'">
-        <h1>Sistema de Información</h1>
-      </div>
-      <div *ngIf="selectedTab === 'contacto'">
-        <h1>Contacto</h1>
+  <app-navbar (tabSelected)="onTabSelected($event)"></app-navbar>
+
+  <div class="contentHome">
+    <div *ngIf="selectedTab === 'inicio'" class="info-container">
+      <h1>REGISTRO DE PACIENTES CON EPILEPSIA</h1>
+      <div class="info-content">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+        <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
       </div>
     </div>
+    <div *ngIf="selectedTab === 'sistema'">
+      <h1>SISTEMA DE INFORMACIÓN</h1>
+      <div class="info-content">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+        <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
+      </div>
+    </div>
+    <div *ngIf="selectedTab === 'contacto'">
+      <h1>CONTÁCTENOS</h1>
+      <div class="contact-content">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Ubicación #x x</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone"></i>
+            <span>1234567890</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>correo&#64;gmail.com</span>
+          </div>
+        </div>
+      </div>
   </div>
-  
+</div>
