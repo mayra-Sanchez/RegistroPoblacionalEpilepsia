@@ -1,0 +1,17 @@
+<nav class="navbar">
+    <ul class="navbar-links">
+      <li (click)="selectTab('inicioDigitador')" [class.selected]="selectedTab === 'inicioDigitador'">
+        <a routerLink="#InicioDigitador">Inicio</a>
+      </li>
+      <li (click)="selectTab('registroPaciente')" [class.selected]="selectedTab === 'registroPaciente'">
+        <a routerLink="#RegistroPaciente">Registrar nuevo paciente</a>
+      </li>
+      <li (click)="selectTab('listadoPacientes')" [class.selected]="selectedTab === 'listadoPacientes'">
+        <a routerLink="#ListadoPacientes">Ver listado de pacientes</a>
+      </li>
+      <li (click)="selectTab('consultaDatosDigitador')" [class.selected]="selectedTab === 'consultaDatosDigitador'">
+        <a routerLink="#ConsultaDatosDigitador">Consulta de datos</a>
+      </li>
+    </ul>
+  </nav>
+  

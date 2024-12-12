@@ -6,5 +6,9 @@ import { Component } from '@angular/core';
   styleUrls: ['./consola-administrador.component.css']
 })
 export class ConsolaAdministradorComponent {
-
+  selectedTab: string = 'inicio'; 
+  
+  onTabSelected(tab: string): void {
+    this.selectedTab = tab;
+  }
 }

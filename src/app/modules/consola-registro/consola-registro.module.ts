@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 
 import { ConsolaRegistroRoutingModule } from './consola-registro-routing.module';
 import { ConsolaRegistroComponent } from './consola-registro.component';
+import { NavbarRegistroComponent } from '../../navbar-registro/navbar-registro.component';
 
 
 @NgModule({
   declarations: [
-    ConsolaRegistroComponent
+    ConsolaRegistroComponent,
+    NavbarRegistroComponent
   ],
   imports: [
     CommonModule,

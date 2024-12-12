@@ -1,1 +1,19 @@
-<p>consola-administrador works!</p>
+<div class="admin">
+    <app-navbar-admin (tabSelected)="onTabSelected($event)"></app-navbar-admin> 
+    
+    <div class="contentAdmin">
+      <div *ngIf="selectedTab === 'inicioAdmin'">
+        <h1>Bienvenido a la página de inicio</h1>
+      </div>
+      <div *ngIf="selectedTab === 'gestionUsuarios'">
+        <h1>Usuarios</h1>
+      </div>
+      <div *ngIf="selectedTab === 'gestionVariables'">
+        <h1>Variables</h1>
+      </div>
+      <div *ngIf="selectedTab === 'gestionCapas'">
+        <h1>Capas</h1>
+      </div>
+    </div>
+  </div>
+  

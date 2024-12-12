@@ -1,1 +1,16 @@
-<p>consola-investigador works!</p>
+<div class="investigador">
+    <app-navbar-investigador (tabSelected)="onTabSelected($event)"></app-navbar-investigador > 
+    
+    <div class="contentInvestigador">
+      <div *ngIf="selectedTab === 'inicioInvestigador'">
+        <h1>Bienvenido a la página de inicio</h1>
+      </div>
+      <div *ngIf="selectedTab === 'consultaDatos'">
+        <h1>Consultar datos</h1>
+      </div>
+      <div *ngIf="selectedTab === 'consultasGuardadas'">
+        <h1>Consultas guardadas</h1>
+      </div>
+    </div>
+  </div>
+  

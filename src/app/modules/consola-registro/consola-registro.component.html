@@ -1,1 +1,19 @@
-<p>consola-registro works!</p>
+<div class="digitador">
+    <app-navbar-registro (tabSelected)="onTabSelected($event)"></app-navbar-registro> 
+    
+    <div class="contentDigitador">
+      <div *ngIf="selectedTab === 'inicioDigitador'">
+        <h1>Bienvenido a la página de inicio</h1>
+      </div>
+      <div *ngIf="selectedTab === 'registroPaciente'">
+        <h1>Registro paciente</h1>
+      </div>
+      <div *ngIf="selectedTab === 'listadoPacientes'">
+        <h1>Listado pacientes</h1>
+      </div>
+      <div *ngIf="selectedTab === 'consultaDatosDigitador'">
+        <h1>Consultas de datos digitador</h1>
+      </div>
+    </div>
+  </div>
+  
