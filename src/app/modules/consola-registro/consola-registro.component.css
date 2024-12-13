@@ -1,31 +1,60 @@
 .digitador {
-    display: flex;
-    flex-direction: column;  
-    height: 100%;            
-    justify-content: flex-start; 
-    width: 100%;             
-    padding: 0;
-  }
-  
-  h2, h1 {
-    text-align: center;
-    color: #333;
-  }
-  
-  /* Para los links de consolas */
-  .console-link {
-    display: inline-block;
-    margin: 10px;
-    padding: 10px 20px;
-    text-decoration: none;
-    background-color: #4a90e2;
-    color: white;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.3s;
-  }
-  
-  .console-link:hover {
-    background-color: #357ab8;
-  }
-  
+  display: flex;
+  flex-direction: column;  
+  height: 100%;            
+  justify-content: flex-start; 
+  width: 100%;             
+  padding: 0;
+}
+
+.contentDigitador {
+  padding: 30px;
+}
+
+h2, h1 {
+  text-align: center;
+  color: #333;
+}
+
+/* Estilos para enlaces de consola */
+.console-link {
+  display: inline-block;
+  margin: 10px;
+  padding: 10px 20px;
+  text-decoration: none;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.console-link:hover {
+  background-color: #357ab8;
+}
+
+.info-container {
+  text-align: center;
+}
+
+.inicio-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin-top: 5%;
+}
+
+.inicio-content p {
+  flex: 1;
+  text-align: justify;
+  font-size: 18px;
+  line-height: 3;
+}
+
+.inicio-content img {
+  flex: 1;
+  max-width: 550px;
+  height: auto;
+  border-radius: 10px;
+}

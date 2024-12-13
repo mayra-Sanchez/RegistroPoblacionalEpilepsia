@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./consola-registro.component.css']
 })
 export class ConsolaRegistroComponent {
-  selectedTab: string = 'inicio'; 
+  selectedTab: string = 'inicioDigitador'; 
   
   onTabSelected(tab: string): void {
     this.selectedTab = tab;

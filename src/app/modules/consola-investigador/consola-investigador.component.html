@@ -2,8 +2,14 @@
     <app-navbar-investigador (tabSelected)="onTabSelected($event)"></app-navbar-investigador > 
     
     <div class="contentInvestigador">
-      <div *ngIf="selectedTab === 'inicioInvestigador'">
-        <h1>Bienvenido a la página de inicio</h1>
+      <div *ngIf="selectedTab === 'inicioInvestigador'" class="info-container">
+        <h1>Bienvenido investigador</h1>
+      <div class="inicio-content">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+        <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
+      </div>
       </div>
       <div *ngIf="selectedTab === 'consultaDatos'">
         <h1>Consultar datos</h1>

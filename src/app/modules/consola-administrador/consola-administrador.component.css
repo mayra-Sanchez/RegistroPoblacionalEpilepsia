@@ -7,12 +7,16 @@
   padding: 0;
 }
 
+.contentAdmin {
+  padding: 30px;
+}
+
 h2, h1 {
   text-align: center;
   color: #333;
 }
 
-/* Para los links de consolas */
+/* Estilos para enlaces de consola */
 .console-link {
   display: inline-block;
   margin: 10px;
@@ -27,4 +31,30 @@ h2, h1 {
 
 .console-link:hover {
   background-color: #357ab8;
+}
+
+.info-container {
+  text-align: center;
+}
+
+.inicio-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin-top: 5%;
+}
+
+.inicio-content p {
+  flex: 1;
+  text-align: justify;
+  font-size: 18px;
+  line-height: 3;
+}
+
+.inicio-content img {
+  flex: 1;
+  max-width: 550px;
+  height: auto;
+  border-radius: 10px;
 }
