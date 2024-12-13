@@ -83,4 +83,23 @@ export class ConsolaAdministradorComponent {
   handleDelete(row: any) {
     console.log('Eliminar', row);
   }
+
+  crearNuevaVariable() {
+    // Lógica para abrir un modal o navegar a un formulario
+    console.log('Crear nueva variable');
+    // Puedes usar Angular Material Dialog, Router, o alguna otra librería para el formulario
+  }
+  
+  crearNuevoUsuario() {
+    // Lógica para abrir un modal o navegar a un formulario
+    console.log('Crear nueva variable');
+    // Puedes usar Angular Material Dialog, Router, o alguna otra librería para el formulario
+  }
+
+  crearNuevaCapa() {
+    // Lógica para abrir un modal o navegar a un formulario
+    console.log('Crear nueva variable');
+    // Puedes usar Angular Material Dialog, Router, o alguna otra librería para el formulario
+  }
 }
+

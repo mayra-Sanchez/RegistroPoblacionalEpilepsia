@@ -22,7 +22,11 @@
 
     <!-- Gestión de Usuarios -->
     <div *ngIf="selectedTab === 'gestionUsuarios'">
-      <h1>Usuarios</h1>
+      <div class="action-bar">
+        <button class="btn btn-primary create-button" (click)="crearNuevoUsuario()">
+          Crear nuevo usuario
+        </button>
+      </div>
       <app-table [data]="usuariosData" [columns]="usuariosColumns" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
         (onDelete)="handleDelete($event)">
       </app-table>
@@ -31,7 +35,11 @@
 
     <!-- Gestión de Variables -->
     <div *ngIf="selectedTab === 'gestionVariables'">
-      <h1>Variables</h1>
+      <div class="action-bar">
+        <button class="btn btn-primary create-button" (click)="crearNuevaVariable()">
+          Crear nueva variable
+        </button>
+      </div>
       <app-table [data]="variablesData" [columns]="variablesColumns" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
         (onDelete)="handleDelete($event)">
       </app-table>
@@ -39,7 +47,11 @@
 
     <!-- Gestión de Capas -->
     <div *ngIf="selectedTab === 'gestionCapas'">
-      <h1>Capas</h1>
+      <div class="action-bar">
+        <button class="btn btn-primary create-button" (click)="crearNuevaCapa()">
+          Crear nueva capa
+        </button>
+      </div>
       <app-table [data]="capasData" [columns]="capasColumns" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
         (onDelete)="handleDelete($event)">
       </app-table>
