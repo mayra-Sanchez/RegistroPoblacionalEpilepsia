@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ConsolaAdministradorRoutingModule } from './consola-administrador-routing.module';
 import { ConsolaAdministradorComponent } from './consola-administrador.component';
 import { NavbarAdminComponent } from '../../shared/components/navbar-admin/navbar-admin.component';
-import { TableComponent } from '../../table/table.component';
+import { TableComponent } from '../../shared/components/table/table.component';
 import { FormsModule } from '@angular/forms'; // Asegúrate de que FormsModule esté importado
 import { MatTableModule } from '@angular/material/table'; // Asegúrate de que MatTableModule esté importado
 import { MatPaginatorModule } from '@angular/material/paginator'; // Importa MatPaginatorModule

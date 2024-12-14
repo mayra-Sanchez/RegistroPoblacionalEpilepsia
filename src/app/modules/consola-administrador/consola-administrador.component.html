@@ -27,7 +27,7 @@
           Crear nuevo usuario
         </button>
       </div>
-      <app-table [data]="usuariosData" [columns]="usuariosColumns" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
+      <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
         (onDelete)="handleDelete($event)">
       </app-table>
 
@@ -40,7 +40,7 @@
           Crear nueva variable
         </button>
       </div>
-      <app-table [data]="variablesData" [columns]="variablesColumns" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
+      <app-table [data]="variablesData" [columns]="variablesColumns" [itemsPerPageOptions]="[5, 10, 20]" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
         (onDelete)="handleDelete($event)">
       </app-table>
     </div>
@@ -52,7 +52,7 @@
           Crear nueva capa
         </button>
       </div>
-      <app-table [data]="capasData" [columns]="capasColumns" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
+      <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
         (onDelete)="handleDelete($event)">
       </app-table>
     </div>
