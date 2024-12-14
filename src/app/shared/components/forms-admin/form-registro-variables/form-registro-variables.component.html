@@ -1,0 +1,27 @@
+<div class="user-form-container">
+    <h2>Crear variable</h2>
+    <form (ngSubmit)="crearVariable()">
+      <div class="form-row">
+        <input type="text" placeholder="Nombre" [(ngModel)]="nuevaVariable.nombre" name="nombre" required />
+      </div>
+      <div class="form-row">
+        <textarea placeholder="Descripción" [(ngModel)]="nuevaVariable.descripcion" name="descripcion" required></textarea>
+      </div>
+      <div class="form-row">
+        <select [(ngModel)]="nuevaVariable.tipo" name="tipo" required>
+          <option value="" disabled selected>Tipo</option>
+          <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
+        </select>
+  
+        <select [(ngModel)]="nuevaVariable.capaInvestigacion" name="capaInvestigacion" required>
+          <option value="" disabled selected>Capa de investigación</option>
+          <option *ngFor="let capa of capasInvestigacion" [value]="capa">{{ capa }}</option>
+        </select>
+      </div>
+  
+      <div class="form-button">
+        <button type="button" class="btn btn-primary">Crear</button>
+      </div>
+    </form>
+  </div>
+  

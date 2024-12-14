@@ -1,0 +1,21 @@
+<div class="user-form-container">
+    <h2>Registro de capa</h2>
+    <form (ngSubmit)="registrarCapa()">
+        <div class="form-row">
+            <input type="text" placeholder="Nombre de la capa" [(ngModel)]="nuevaCapa.nombre" name="nombre" required />
+
+        </div>
+        <div class="form-row">
+            <textarea placeholder="Descripción" [(ngModel)]="nuevaCapa.descripcion" name="descripcion"
+                required></textarea>
+        </div>
+        <div class="form-row">
+            <input type="text" placeholder="Jefe de capa" [(ngModel)]="nuevaCapa.jefeCapa" name="jefeCapa" required />
+            <input type="text" placeholder="Identificación del jefe" [(ngModel)]="nuevaCapa.identificacionJefe"
+                name="identificacionJefe" required />
+        </div>
+        <div class="form-button">
+            <button type="button" class="btn btn-primary">Registrar</button>
+        </div>
+    </form>
+</div>

@@ -11,6 +11,16 @@
   padding: 30px;
 }
 
+.contentAdmin2 {
+  display: flex;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+  min-height: auto; /* Ajusta altura completa restando el tamaño del navbar */
+  padding: 20px;
+  box-sizing: border-box;
+  margin-top: 3%;
+}
+
 h2, h1 {
   text-align: center;
   color: #333;
@@ -66,8 +76,8 @@ h2, h1 {
 }
 
 .create-button {
-  background-color: #007bff; /* Color del botón */
-  color: white;             /* Texto blanco */
+  background-color: #007bff; 
+  color: white;            
   border: none;
   border-radius: 5px;
   padding: 10px 20px;
@@ -77,5 +87,5 @@ h2, h1 {
 }
 
 .create-button:hover {
-  background-color: #0056b3; /* Color al pasar el cursor */
+  background-color: #0056b3; 
 }

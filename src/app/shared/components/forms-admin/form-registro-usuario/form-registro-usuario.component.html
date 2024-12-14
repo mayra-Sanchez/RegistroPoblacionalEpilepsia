@@ -1,0 +1,31 @@
+<div class="user-form-container">
+  <h2>Registro de usuario</h2>
+  <form>
+    <div class="form-row">
+      <input type="text" placeholder="Nombre" />
+      <input type="text" placeholder="Apellido" />
+      <input type="text" placeholder="Tipo de documento" />
+    </div>
+    <div class="form-row">
+      <input type="text" placeholder="Número de documento" />
+      <select>
+        <option value="" disabled selected>Rol</option>
+        <option value="admin">Administrador</option>
+        <option value="investigador">Investigador</option>
+        <option value="digitador">Personal de salud</option>
+      </select>
+        <input type="date" id="birthdate" placeholder="Fecha de nacimiento" />
+    </div>
+    
+    <div class="form-row">
+      <select>
+        <option value="" disabled selected>Capa de investigación</option>
+        <option value="1">Capa 1</option>
+        <option value="2">Capa 2</option>
+      </select>
+      <input type="email" placeholder="Correo electrónico" />
+      <input type="password" placeholder="Contraseña" />
+    </div>
+    <button type="button" class="btn btn-primary" (click)="onRegister()">Registrar</button>
+  </form>
+</div>

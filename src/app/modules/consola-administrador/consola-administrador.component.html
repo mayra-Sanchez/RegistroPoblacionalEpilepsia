@@ -22,39 +22,53 @@
 
     <!-- Gestión de Usuarios -->
     <div *ngIf="selectedTab === 'gestionUsuarios'">
-      <div class="action-bar">
-        <button class="btn btn-primary create-button" (click)="crearNuevoUsuario()">
-          Crear nuevo usuario
-        </button>
+      <!-- Verifica si se está creando un nuevo usuario -->
+      <div *ngIf="!isCreatingUser">
+        <div class="action-bar">
+          <button class="btn btn-primary create-button" (click)="crearNuevoUsuario()">
+            Crear nuevo usuario
+          </button>
+        </div>
+        <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
+          (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
+        </app-table>
       </div>
-      <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
-        (onDelete)="handleDelete($event)">
-      </app-table>
-
+      <div *ngIf="isCreatingUser" class="contentAdmin2">
+        <app-form-registro-usuario (closeForm)="isCreatingUser = false"></app-form-registro-usuario>
+      </div>
     </div>
-
     <!-- Gestión de Variables -->
     <div *ngIf="selectedTab === 'gestionVariables'">
-      <div class="action-bar">
-        <button class="btn btn-primary create-button" (click)="crearNuevaVariable()">
-          Crear nueva variable
-        </button>
+      <div *ngIf="!isCreatingVar">
+        <div class="action-bar">
+          <button class="btn btn-primary create-button" (click)="crearNuevaVariable()">
+            Crear nueva variable
+          </button>
+        </div>
+        <app-table [data]="variablesData" [columns]="variablesColumns" [itemsPerPageOptions]="[5, 10, 20]"
+          (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
+        </app-table>
       </div>
-      <app-table [data]="variablesData" [columns]="variablesColumns" [itemsPerPageOptions]="[5, 10, 20]" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
-        (onDelete)="handleDelete($event)">
-      </app-table>
+      <div *ngIf="isCreatingVar" class="contentAdmin2">
+        <app-form-registro-variables (closeForm)="isCreatingVar = false"></app-form-registro-variables>
+      </div>
     </div>
 
     <!-- Gestión de Capas -->
     <div *ngIf="selectedTab === 'gestionCapas'">
-      <div class="action-bar">
-        <button class="btn btn-primary create-button" (click)="crearNuevaCapa()">
-          Crear nueva capa
-        </button>
+      <div *ngIf="!isCreatingCapa">
+        <div class="action-bar">
+          <button class="btn btn-primary create-button" (click)="crearNuevaCapa()">
+            Crear nueva capa
+          </button>
+        </div>
+        <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]"
+          (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
+        </app-table>
       </div>
-      <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]" (onView)="handleView($event)" (onEdit)="handleEdit($event)"
-        (onDelete)="handleDelete($event)">
-      </app-table>
+      <div *ngIf="isCreatingCapa" class="contentAdmin2">
+        <app-form-registro-capas (closeForm)="isCreatingCapa = false"></app-form-registro-capas>
+      </div>
     </div>
   </div>
 </div>

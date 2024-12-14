@@ -6,11 +6,18 @@ import { Component } from '@angular/core';
   styleUrls: ['./consola-administrador.component.css']
 })
 export class ConsolaAdministradorComponent {
-  selectedTab: string = 'inicioAdmin'; 
-  
-  onTabSelected(tab: string): void {
-    this.selectedTab = tab;
-  }
+  // admin.component.ts
+selectedTab: string = 'inicioAdmin'; // Estado inicial
+isCreatingUser: boolean = false; // Nuevo estado para mostrar el formulario
+isCreatingVar: boolean = false;
+isCreatingCapa = false;
+
+onTabSelected(tab: string) {
+  this.selectedTab = tab;
+  this.isCreatingUser = false;
+  this.isCreatingVar = false;
+  this.isCreatingCapa = false;
+}
 
   usuariosData = [
     { nombre: 'Lorem', apellido: 'Parra', documento: '12345', capa: 'Investigación de depresión', rol: 'Médico' },
@@ -87,19 +94,19 @@ export class ConsolaAdministradorComponent {
   crearNuevaVariable() {
     // Lógica para abrir un modal o navegar a un formulario
     console.log('Crear nueva variable');
-    // Puedes usar Angular Material Dialog, Router, o alguna otra librería para el formulario
+    this.isCreatingVar = true;
   }
   
   crearNuevoUsuario() {
     // Lógica para abrir un modal o navegar a un formulario
     console.log('Crear nueva variable');
-    // Puedes usar Angular Material Dialog, Router, o alguna otra librería para el formulario
+    this.isCreatingUser = true;
   }
 
   crearNuevaCapa() {
     // Lógica para abrir un modal o navegar a un formulario
     console.log('Crear nueva variable');
-    // Puedes usar Angular Material Dialog, Router, o alguna otra librería para el formulario
+    this.isCreatingCapa = true;
   }
 }
 
