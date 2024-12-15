@@ -3,19 +3,42 @@
 
   <div class="contentDigitador">
     <div *ngIf="selectedTab === 'inicioDigitador'" class="info-container">
-      <h1>Bienvenido digitador</h1>
       <div class="inicio-content">
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proide bhvcdew3567890'¡3211  azxcvbnm,.-nt, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-        <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
+        <!-- Descripción de la investigación -->
+        <div class="box">
+          <h3>Descripción de la investigación</h3>
+          <p>
+            Este proyecto tiene como objetivo analizar los efectos del uso prolongado de tecnologías digitales en la salud mental de individuos entre 18 y 35 años. A través de encuestas, entrevistas y estudios de casos, se busca identificar patrones de comportamiento, niveles de estrés y posibles trastornos asociados con el uso constante de dispositivos electrónicos.
+          </p>
+          <div class="info-investigador">
+            <p>Jefe de la investigación: {{ jefeInvestigacion }}</p>
+            <p>Contacto: {{ contactoInvestigacion }}</p>
+          </div>
+        </div>
+
+        <!-- Tarjetas de información -->
+        <div class="info-cards">
+          <div class="box capa">
+            <h4>Usted pertenece a la capa</h4>
+            <h2>{{ capaUsuario }}</h2>
+          </div>
+          <div class="box total-pacientes">
+            <h4>Total de pacientes en la investigación</h4>
+            <h2>{{ totalPacientes }}</h2>
+          </div>
+        </div>
       </div>
     </div>
     <div *ngIf="selectedTab === 'registroPaciente'">
-      <h1>Registro paciente</h1>
+      <h1>REGISTRO BÁSICO</h1>
+      <h1>Ingrese las variables necesarias para el registro del paciente</h1>
+      <div class="contentRegistro2">
+        <app-form-registro-paciente></app-form-registro-paciente>
+      </div>
     </div>
     <div *ngIf="selectedTab === 'listadoPacientes'">
-      <h1>Listado pacientes</h1>
+      <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
+      (onView)="handleView($event)" (onEdit)="handleEdit($event)"></app-table-ver-usuarios>
     </div>
     <div *ngIf="selectedTab === 'consultaDatosDigitador'">
       <h1>Consultas de datos digitador</h1>

@@ -1,0 +1,28 @@
+<div class="user-form-container">
+    <form>
+        <div class="form-row">
+            <input type="text" placeholder="Tipo de documento" />
+            <input type="text" placeholder="Número de documento" />
+            <select>
+                <option value="" disabled selected>Sexo</option>
+                <option value="femenino">Femenino</option>
+                <option value="masculino">Masculino</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <input type="dateBirtday" id="birthdate" placeholder="Fecha de nacimiento" />
+            <input type="email" placeholder="Correo electrónico" />
+            <input type="numeroTelefono" placeholder="Número telefonico" />
+        </div>
+
+        <div class="form-row">
+            <input type="dateRegister" id="deadRegister" placeholder="Fecha de registro" />
+            <input type="dateDead" id="deadDate" placeholder="Fecha de muerte" />
+        </div>
+        <div class="form-row-button">
+            <button type="button" class="btn btn-primary" (click)="onConsentimiento()">Consentimiento informado</button>
+            <button type="button" class="btn btn-primary" (click)="onDatosClinicos()">Ingresar datos clinicos</button>
+        </div>
+
+    </form>
+</div>

@@ -38,23 +38,97 @@ h2, h1 {
 }
 
 .inicio-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  margin-top: 8%;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+  min-height: auto; 
+}
+
+.box {
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(0, 0, 0, 0.2);
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 30px;
-  margin-top: 5%;
+  flex-direction: column; 
+  gap: 15px; 
+  position: relative;
 }
 
-.inicio-content p {
-  flex: 1;
-  text-align: justify;
-  font-size: 18px;
-  line-height: 3;
+.box h3 {
+  margin: 0 auto; 
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  position: relative;
+  top: 0;
 }
 
-.inicio-content img {
-  flex: 1;
-  max-width: 550px;
-  height: auto;
-  border-radius: 10px;
+.box p {
+  margin: 0; 
+  text-align: left;
+  line-height: 1.5; 
+  font-size: 1em;
+}
+
+.box h2 {
+  margin: 0; 
+  text-align: center; 
+  line-height: 1.5; 
+  font-size: 1em;
+}
+
+/* Información del investigador */
+.box .info-investigador {
+  margin-top: auto; /* Empuja hacia la parte inferior de la caja */
+  font-size: 0.9em;
+  color: #333;
+}
+
+/* Título centrado */
+.description h3 {
+  position: absolute; /* Posiciona el título */
+  top: 0; /* Se coloca arriba */
+  left: 50%; /* Punto medio horizontal */
+  transform: translateX(-50%); /* Centra el texto */
+  margin-top: 10px; /* Espacio arriba */
+  font-size: 1.1em; /* Ajusta tamaño */
+  font-weight: bold; /* Negrita opcional */
+}
+
+.description {
+  height: 200px; 
+}
+
+.info-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.capa,
+.total-pacientes {
+  text-align: center;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #000;
+  width: 60%;
+  margin: 10px auto;
+}
+
+.contentRegistro2 {
+  display: flex;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+  min-height: auto; /* Ajusta altura completa restando el tamaño del navbar */
+  padding: 20px;
+  box-sizing: border-box;
+  margin-top: 3%;
 }
