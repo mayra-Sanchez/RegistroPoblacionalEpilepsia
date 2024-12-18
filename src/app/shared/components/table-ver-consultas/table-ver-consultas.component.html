@@ -1,0 +1,65 @@
+<div class="table-controls">
+    <!-- Elementos por página -->
+    <div class="items-per-page">
+        <label>Elementos por página:</label>
+        <select [(ngModel)]="itemsPerPage" (change)="updatePagination()">
+            <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+        </select>
+    </div>
+
+    <!-- Orden alfabético -->
+    <div class="sort-options">
+        <label>Ordenar por:</label>
+        <select [(ngModel)]="sortField" (change)="sortData()">
+            <option *ngFor="let column of columns" [value]="column.field">
+                {{ column.header }}
+            </option>
+        </select>
+    </div>
+
+    <div class="search-bar">
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="filterData()"
+          placeholder="Buscar"
+        />
+        <i class="fa fa-search"></i>
+      </div>
+      
+</div>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th *ngFor="let col of columns">{{ col.header }}</th>
+                <th> </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let row of paginatedData">
+                <td *ngFor="let col of columns">{{ row[col.field] }}</td>
+                <td>
+                    <div class="actions">
+                        <button class="action-btn view" (click)="view(row)">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit" (click)="edit(row)">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" (click)="delete(row)">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<div class="pagination-controls">
+    <button (click)="prevPage()" [disabled]="currentPage === 1">Anterior</button>
+    <span>{{ currentPage }} de {{ totalPages }} Páginas</span>
+    <button (click)="nextPage()" [disabled]="currentPage === totalPages">Siguiente</button>
+</div>

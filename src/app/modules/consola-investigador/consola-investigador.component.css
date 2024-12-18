@@ -11,6 +11,15 @@
   padding: 30px;
 }
 
+.contentInvestigador2 {
+  display: flex;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+  min-height: auto; /* Ajusta altura completa restando el tamaño del navbar */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
 h2, h1 {
   text-align: center;
   color: #333;

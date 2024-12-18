@@ -1,22 +1,23 @@
 <div class="investigador">
-    <app-navbar-investigador (tabSelected)="onTabSelected($event)"></app-navbar-investigador > 
-    
-    <div class="contentInvestigador">
-      <div *ngIf="selectedTab === 'inicioInvestigador'" class="info-container">
-        <h1>Bienvenido investigador</h1>
+  <app-navbar-investigador (tabSelected)="onTabSelected($event)"></app-navbar-investigador>
+
+  <div class="contentInvestigador">
+    <div *ngIf="selectedTab === 'inicioInvestigador'" class="info-container">
+      <h1>Bienvenido investigador</h1>
       <div class="inicio-content">
         <p>
           Aqui van las graficas
         </p>
         <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
       </div>
-      </div>
-      <div *ngIf="selectedTab === 'consultaDatos'">
-        <h1>Consultar datos</h1>
-      </div>
-      <div *ngIf="selectedTab === 'consultasGuardadas'">
-        <h1>Consultas guardadas</h1>
-      </div>
+    </div>
+    <div *ngIf="selectedTab === 'consultaDatos'">
+      <h1>Consultar datos</h1>
+    </div>
+    <div *ngIf="selectedTab === 'consultasGuardadas'" class="contentInvestigador2">
+      <app-table-ver-consultas [data]="consultasData" [columns]="consultasColumns" [itemsPerPageOptions]="[5, 10, 20]"
+        (onView)="handleView($event)" (onEdit)="handleEdit($event)"
+        (onDelete)="handleDelete($event)"></app-table-ver-consultas>
     </div>
   </div>
-  
+</div>

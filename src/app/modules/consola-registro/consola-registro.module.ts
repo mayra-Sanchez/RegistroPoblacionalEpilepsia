@@ -5,7 +5,7 @@ import { ConsolaRegistroRoutingModule } from './consola-registro-routing.module'
 import { ConsolaRegistroComponent } from './consola-registro.component';
 import { NavbarRegistroComponent } from '../../shared/components/navbars/navbar-registro/navbar-registro.component';
 import { FormRegistroPacienteComponent } from '../../form-registro-paciente/form-registro-paciente.component';
-import { TableVerUsuariosComponent } from '../../table-ver-usuarios/table-ver-usuarios.component';
+import { TableVerUsuariosComponent } from '../../shared/components/table-ver-usuarios/table-ver-usuarios.component';
 import { FormsModule } from '@angular/forms'; // Asegúrate de que FormsModule esté importado
 import { MatTableModule } from '@angular/material/table'; // Asegúrate de que MatTableModule esté importado
 import { MatPaginatorModule } from '@angular/material/paginator'; // Importa MatPaginatorModule
