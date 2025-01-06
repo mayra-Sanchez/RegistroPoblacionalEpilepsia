@@ -10,21 +10,39 @@ import { FormsModule } from '@angular/forms'; // Asegúrate de que FormsModule e
 import { MatTableModule } from '@angular/material/table'; // Asegúrate de que MatTableModule esté importado
 import { MatPaginatorModule } from '@angular/material/paginator'; // Importa MatPaginatorModule
 import { MatSortModule } from '@angular/material/sort';
+import { VisualizationDigitadorComponent } from '../../visualization-digitador/visualization-digitador.component';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { NgxEchartsModule } from 'ngx-echarts';
 
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
     NavbarRegistroComponent,
     FormRegistroPacienteComponent,
-    TableVerUsuariosComponent
+    TableVerUsuariosComponent,
+    VisualizationDigitadorComponent
   ],
   imports: [
     CommonModule,
     ConsolaRegistroRoutingModule, 
-    FormsModule, // Asegúrate de que FormsModule esté aquí
-    MatTableModule, // Asegúrate de que MatTableModule esté aquí
-    MatPaginatorModule, // Asegúrate de que MatPaginatorModule esté aquí
-    MatSortModule, // Asegúrate de que MatSortModule esté aquí
+    FormsModule, 
+    MatTableModule, 
+    MatPaginatorModule, 
+    MatSortModule, 
+    MatSliderModule,
+    MatRadioModule,
+    MatCheckboxModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatButtonModule,
+    NgxEchartsModule.forRoot({
+      echarts: () => import('echarts'),
+    }),
   ]
 })
 export class ConsolaRegistroModule { }

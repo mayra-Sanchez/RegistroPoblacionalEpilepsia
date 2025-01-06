@@ -1,0 +1,40 @@
+<div class="container">
+    <!-- Filtros -->
+    <div class="filters">
+        <h3>Filtrar por:</h3>
+        <label>
+            <input type="radio" name="gender" [(ngModel)]="filters.gender" value="Femenino" /> Femenino
+        </label>
+        <label>
+            <input type="radio" name="gender" [(ngModel)]="filters.gender" value="Masculino" /> Masculino
+        </label>
+
+        <h4>Edad:</h4>
+        <mat-slider [(ngModel)]="filters.minAge" [max]="100" [min]="0" thumbLabel tickInterval="10"></mat-slider>
+
+        <h4>Estado de crisis:</h4>
+        <label *ngFor="let state of crisisStates">
+            <input type="checkbox" [value]="state" (change)="toggleCrisisState(state, $event)" /> {{ state }}
+        </label>
+    </div>
+
+    <!-- Contenedor de la gráfica -->
+    <div class="chart-container">
+        <div echarts [options]="chartOptions" class="chart"></div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="actions">
+        <mat-form-field appearance="fill" class="type-selector">
+            <mat-label>Tipo de visualización</mat-label>
+            <mat-select [(value)]="selectedChartType" (selectionChange)="updateChartType()">
+                <mat-option value="bar">Barras</mat-option>
+                <mat-option value="line">Líneas</mat-option>
+                <mat-option value="pie">Pastel</mat-option>
+                <mat-option value="scatter">Dispersión</mat-option>
+            </mat-select>
+        </mat-form-field>
+        <button mat-raised-button (click)="saveQuery()">Guardar consulta</button>
+        <button mat-raised-button (click)="exportData()">Exportar datos</button>
+    </div>
+</div>
