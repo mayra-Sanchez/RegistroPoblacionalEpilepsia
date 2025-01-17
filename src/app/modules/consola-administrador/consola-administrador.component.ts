@@ -19,15 +19,11 @@ export class ConsolaAdministradorComponent implements OnInit {
   constructor(private consolaService: ConsolaAdministradorService, private router: Router) { }
 
   // Método para seleccionar pestaña y navegar
-  onTabSelected(tab: string): void {
-    const validTabs = ['inicioAdmin', 'gestionUsuarios', 'gestionVariables', 'gestionCapas'];
-    if (validTabs.includes(tab)) {
-      this.selectedTab = tab;
-      this.router.navigate([`/administrador/${tab}`]);
-    } else {
-      console.error('Pestaña no válida:', tab);
-      this.router.navigate(['/administrador/inicioAdmin']);
-    }
+  onTabSelected(tab: string) {
+    this.selectedTab = tab;
+    this.isCreatingUser = false;
+    this.isCreatingVar = false;
+    this.isCreatingCapa = false;
   }
 
   usuariosData = [
@@ -59,7 +55,7 @@ export class ConsolaAdministradorComponent implements OnInit {
   ];
 
   capasColumns = [
-    { field: 'nombre', header: 'Nombre' },
+    { field: 'nombreCapa', header: 'Nombre' },
     { field: 'descripcion', header: 'Descripción' },
     { field: 'jefe', header: 'Jefe de capa' },
   ];

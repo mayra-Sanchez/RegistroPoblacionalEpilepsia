@@ -32,7 +32,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatPaginatorModule, // Asegúrate de que MatPaginatorModule esté aquí
     MatSortModule, // Asegúrate de que MatSortModule esté aquí
     HttpClientModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
   ]
 })
 export class AdminModule { }

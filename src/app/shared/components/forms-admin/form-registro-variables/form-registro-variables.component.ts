@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ModalConfirmacionComponent } from '../../modal-confirmacion/modal-confirmacion.component';
 
 interface CapaInvestigacion {
   id: string;
@@ -23,7 +26,10 @@ export class FormRegistroVariablesComponent implements OnInit {
   capasInvestigacion: CapaInvestigacion[] = [];  // Usar la interfaz aquí
   selectedLayerId: string = '';  // Definir la variable selectedLayerId
 
-  constructor(private variableService: ConsolaAdministradorService) {}
+  constructor(private variableService: ConsolaAdministradorService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) { }
 
   ngOnInit(): void {
     // Obtener todas las capas de investigación cuando se carga el componente
@@ -48,7 +54,7 @@ export class FormRegistroVariablesComponent implements OnInit {
       console.error('El evento no proviene de un <select> válido.');
     }
   }
-    
+
 
   crearVariable() {
     const variableData = {
@@ -61,13 +67,29 @@ export class FormRegistroVariablesComponent implements OnInit {
 
     console.log('Datos enviados para crear variable:', variableData);
 
-    this.variableService.crearVariable(variableData).subscribe({
-      next: (response) => {
-        console.log('Variable registrada en el backend:', response);
-        this.limpiarFormulario();
-      },
-      error: (error) => {
-        console.error('Error al crear la variable:', error);
+    // Mostrar un diálogo de confirmación antes de enviar los datos
+    const dialogRef = this.dialog.open(ModalConfirmacionComponent, {
+      width: '300px',
+      panelClass: 'custom-modal',
+      data: { // Pasar los datos directamente
+        titulo: 'Confirmar variable',
+        mensaje: '¿Estás seguro de registrar esta variable?'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmado) => {
+      if (confirmado) {
+        this.variableService.crearVariable(variableData).subscribe({
+          next: (response) => {
+            console.log('Variable registrada en el backend:', response);
+            this.snackBar.open('Variable registrada con éxito', 'Cerrar', { duration: 3000 });
+            this.limpiarFormulario();
+          },
+          error: (error) => {
+            console.error('Error al crear la variable:', error);
+            this.snackBar.open('Error al registrar la variable', 'Cerrar', { duration: 3000 });
+          }
+        });
       }
     });
   }
@@ -80,6 +102,6 @@ export class FormRegistroVariablesComponent implements OnInit {
       descripcion: '',
       tipo: ''
     };
-    this.selectedLayerId = '';  // Resetea también el ID de la capa seleccionada
+    this.selectedLayerId = '';
   }
 }

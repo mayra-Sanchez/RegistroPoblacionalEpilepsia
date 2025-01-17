@@ -1,1 +1,100 @@
-/* You can add global styles to this file, and also import other style files */
+/* Estilos globales */
+html, body {
+    height: 100%;
+  }
+  
+  body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+  }
+  
+  /* Estilos para mensajes de snack-bar */
+  .snack-success {
+    background-color: #4caf50; 
+    color: white; 
+  }
+  
+  .snack-error {
+    background-color: #f44336; 
+    color: white;
+  }
+  
+  /* Clase personalizada para el modal */
+  .custom-modal .mat-dialog-container {
+    background-color: white;
+    border-radius: 8px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+    padding: 20px; 
+  }
+  
+  /* Estilos globales para los contenedores de diálogo de Angular Material */
+  .mat-dialog-container {
+    background-color: white;
+    border-radius: 8px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 20px; 
+  }
+  
+  /* Acciones del modal */
+  /* Contenedor de las acciones (botones) */
+.modal-actions {
+    display: flex;
+    justify-content: center; 
+    gap: 15px; 
+    margin-top: 15px; 
+    margin-bottom: 15px; 
+  }
+  
+  /* Botón de cancelar */
+  button.btn-cancel {
+    background-color: #f44336;
+    color: white; 
+    border-radius: 8px; 
+    padding: 10px 20px; 
+    font-size: 14px; 
+    cursor: pointer; 
+    border: none; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; 
+  }
+  
+  button.btn-cancel:hover {
+    background-color: #d32f2f; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+  }
+  
+  /* Botón de confirmar */
+  button.btn-confirm {
+    background-color: #2196f3; 
+    color: white;
+    border-radius: 8px; 
+    padding: 10px 20px; 
+    font-size: 14px;
+    cursor: pointer;
+    border: none; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; 
+  }
+  
+  button.btn-confirm:hover {
+    background-color: #1976d2; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+  }
+  
+  /* Título del modal */
+  .modal-title {
+    text-align: center; 
+    font-size: 18px; 
+    font-weight: bold; 
+    margin-bottom: 10px; 
+    color: #333; 
+  }
+  
+  /* Contenido del modal */
+  .modal-content {
+    text-align: center;
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #555; 
+  }
+  

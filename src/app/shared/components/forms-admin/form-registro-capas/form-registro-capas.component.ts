@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ModalConfirmacionComponent } from '../../modal-confirmacion/modal-confirmacion.component';
 
 @Component({
   selector: 'app-form-registro-capas',
@@ -13,7 +16,9 @@ export class FormRegistroCapasComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private consolaAdministradorService: ConsolaAdministradorService
+    private consolaAdministradorService: ConsolaAdministradorService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -31,42 +36,51 @@ export class FormRegistroCapasComponent implements OnInit {
   }
 
   registrarCapa(): void {
-    // Validar el formulario antes de enviar
     if (this.form.valid) {
-      // Preparar los datos para enviar al backend
       const capaData = {
-        id: this.form.value.id || null, // Asegurar que sea null si no hay ID
-        nombreCapa: this.form.value.nombre?.trim(), // Eliminar espacios en blanco
-        descripcion: this.form.value.descripcion?.trim(), // Eliminar espacios en blanco
+        id: this.form.value.id || null,
+        nombreCapa: this.form.value.nombre?.trim(),
+        descripcion: this.form.value.descripcion?.trim(),
         jefeCapa: {
-          id: this.form.value.jefeCapa?.id || 1, // Asignar 1 si no hay ID
-          nombre: this.form.value.jefeCapa?.nombre?.trim(), // Validar y limpiar nombre
-          numero_identificacion: this.form.value.jefeCapa?.numero_identificacion?.trim() || 'N/A', // Predeterminado si no hay valor
+          id: this.form.value.jefeCapa?.id || 1,
+          nombre: this.form.value.jefeCapa?.nombre?.trim(),
+          numero_identificacion: this.form.value.jefeCapa?.numero_identificacion?.trim() || 'N/A',
         },
       };
 
-      // Verificar los datos antes de enviarlos
-      console.log('Datos preparados para enviar:', capaData);
-
-      // Llamar al servicio para registrar la capa
-      this.consolaAdministradorService.registrarCapa(capaData).subscribe(
-        (response) => {
-          console.log('Respuesta del servidor:', response);
-          this.mensaje = 'Capa registrada con éxito. 🎉';
-          this.form.reset(); // Limpiar el formulario después de un registro exitoso
+      // Abrir el modal de confirmación
+      const dialogRef = this.dialog.open(ModalConfirmacionComponent, {
+        width: '400px', 
+        panelClass: 'custom-modal', 
+        data: {
+          titulo: 'Confirmar Registro',
+          mensaje: '¿Estás seguro de registrar esta capa?',
         },
-        (error) => {
-          console.error('Error al registrar la capa:', error);
-          if (error.error?.message) {
-            this.mensaje = `Error: ${error.error.message}`;
-          } else {
-            this.mensaje = 'Ocurrió un error al registrar la capa. Intenta nuevamente.';
-          }
+      });
+      
+
+      dialogRef.afterClosed().subscribe((confirmado) => {
+        if (confirmado) {
+          this.consolaAdministradorService.registrarCapa(capaData).subscribe(
+            (response) => {
+              this.mostrarNotificacion('Capa registrada con éxito. 🎉', 'success');
+              this.form.reset();
+            },
+            (error) => {
+              this.mostrarNotificacion('Ocurrió un error al registrar la capa.', 'error');
+            }
+          );
         }
-      );
+      });
     } else {
-      console.log('Formulario inválido:', this.form.value);
-      this.form.markAllAsTouched(); // Marcar todos los campos como tocados para mostrar errores
+      this.form.markAllAsTouched();
     }
+  }
+
+  mostrarNotificacion(mensaje: string, tipo: 'success' | 'error'): void {
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: 3000,
+      panelClass: tipo === 'success' ? 'snack-success' : 'snack-error',
+    });
   }
 }

@@ -8,20 +8,27 @@ import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { HomeComponent } from './home/home.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
+import { ModalConfirmacionComponent } from './shared/components/modal-confirmacion/modal-confirmacion.component';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+
 @NgModule({
   declarations: [
     AppComponent,
     HeaderComponent,
     FooterComponent,
     NavbarComponent,
-    HomeComponent
+    HomeComponent,
+    ModalConfirmacionComponent
     
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    HttpClientModule 
+    HttpClientModule,
+    MatDialogModule,
+    MatSnackBarModule
   ],
   providers: [],
   bootstrap: [AppComponent]

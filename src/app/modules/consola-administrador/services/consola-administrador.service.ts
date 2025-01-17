@@ -76,7 +76,7 @@ export class ConsolaAdministradorService {
 
     // Estructura de datos enviada al backend
     const variableData = {
-      id: variable.id || null,  // Si no hay id, enviamos una cadena vacía
+      id: variable.id || null,  
       idCapaInvestigacion: variable.idCapaInvestigacion,
       nombreVariable: variable.nombreVariable,
       descripcion: variable.descripcion,
