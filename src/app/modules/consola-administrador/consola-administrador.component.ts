@@ -1,23 +1,34 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { ConsolaAdministradorService } from './services/consola-administrador.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-consola-administrador',
   templateUrl: './consola-administrador.component.html',
   styleUrls: ['./consola-administrador.component.css']
 })
-export class ConsolaAdministradorComponent {
+export class ConsolaAdministradorComponent implements OnInit {
   // admin.component.ts
-selectedTab: string = 'inicioAdmin'; // Estado inicial
-isCreatingUser: boolean = false; // Nuevo estado para mostrar el formulario
-isCreatingVar: boolean = false;
-isCreatingCapa = false;
+  selectedTab: string = 'inicioAdmin'; // Estado inicial
+  isCreatingUser: boolean = false; // Nuevo estado para mostrar el formulario
+  isCreatingVar: boolean = false;
+  isCreatingCapa = false;
+  capasData: any[] = [];
+  variablesData: any[] = [];
 
-onTabSelected(tab: string) {
-  this.selectedTab = tab;
-  this.isCreatingUser = false;
-  this.isCreatingVar = false;
-  this.isCreatingCapa = false;
-}
+  constructor(private consolaService: ConsolaAdministradorService, private router: Router) { }
+
+  // Método para seleccionar pestaña y navegar
+  onTabSelected(tab: string): void {
+    const validTabs = ['inicioAdmin', 'gestionUsuarios', 'gestionVariables', 'gestionCapas'];
+    if (validTabs.includes(tab)) {
+      this.selectedTab = tab;
+      this.router.navigate([`/administrador/${tab}`]);
+    } else {
+      console.error('Pestaña no válida:', tab);
+      this.router.navigate(['/administrador/inicioAdmin']);
+    }
+  }
 
   usuariosData = [
     { nombre: 'Lorem', apellido: 'Parra', documento: '12345', capa: 'Investigación de depresión', rol: 'Médico' },
@@ -30,32 +41,6 @@ onTabSelected(tab: string) {
     { nombre: 'María', apellido: 'Fernández', documento: '45678', capa: 'Investigación de estrés', rol: 'Psicóloga' },
     { nombre: 'Luis', apellido: 'Ramírez', documento: '56789', capa: 'Investigación de trauma', rol: 'Psiquiatra' },
     { nombre: 'Sofia', apellido: 'Pérez', documento: '67801', capa: 'Investigación de depresión', rol: 'Médico' },
-  ];
-
-  variablesData = [
-    { nombre: 'Altura', descripcion: 'Numérico', capa: 'Depresión y epilepsia', tipo: 'númerico' },
-    { nombre: 'Peso', descripcion: 'Numérico', capa: 'Estrés y ansiedad', tipo: 'númerico' },
-    { nombre: 'Edad', descripcion: 'Numérico', capa: 'Estrés y trauma', tipo: 'númerico' },
-    { nombre: 'Frecuencia cardiaca', descripcion: 'Numérico', capa: 'Ansiedad y depresión', tipo: 'númerico' },
-    { nombre: 'Saturación de oxígeno', descripcion: 'Porcentaje', capa: 'Adicción y trauma', tipo: 'porcentaje' },
-    { nombre: 'Temperatura corporal', descripcion: 'Grados Celsius', capa: 'Depresión y epilepsia', tipo: 'númerico' },
-    { nombre: 'Presión arterial', descripcion: 'Numérico', capa: 'Estrés y ansiedad', tipo: 'númerico' },
-    { nombre: 'Nivel de ansiedad', descripcion: 'Escala de 1 a 10', capa: 'Ansiedad y estrés', tipo: 'escala' },
-    { nombre: 'Nivel de depresión', descripcion: 'Escala de 1 a 10', capa: 'Depresión y trauma', tipo: 'escala' },
-    { nombre: 'Nivel de cortisol', descripcion: 'Nanogramos por decilitro', capa: 'Estrés y adicción', tipo: 'numérico' },
-  ];
-
-  capasData = [
-    { nombre: 'Depresión y epilepsia', descripcion: 'Estudio sobre la relación entre depresión y epilepsia', jefe: 'Antonio' },
-    { nombre: 'Estrés y ansiedad', descripcion: 'Investigación sobre los efectos del estrés y la ansiedad en la salud mental', jefe: 'Carlos' },
-    { nombre: 'Trauma y adicción', descripcion: 'Investigación sobre el impacto del trauma y la adicción en los pacientes', jefe: 'Elena' },
-    { nombre: 'Ansiedad y depresión', descripcion: 'Estudio sobre la comorbilidad de la ansiedad y la depresión', jefe: 'María' },
-    { nombre: 'Estrés y trauma', descripcion: 'Investigación sobre la relación entre el estrés y el trauma psicológico', jefe: 'Luis' },
-    { nombre: 'Estrés y adicción', descripcion: 'Estudio de cómo el estrés contribuye a la adicción', jefe: 'Juan' },
-    { nombre: 'Depresión y trauma', descripcion: 'Investigación sobre la relación entre depresión y trauma psicológico', jefe: 'Sofía' },
-    { nombre: 'Adicción y ansiedad', descripcion: 'Estudio sobre la comorbilidad de la ansiedad y la adicción', jefe: 'Pedro' },
-    { nombre: 'Estrés y salud cardiovascular', descripcion: 'Investigación sobre el impacto del estrés en la salud cardiovascular', jefe: 'Antonio' },
-    { nombre: 'Ansiedad y salud mental', descripcion: 'Investigación sobre los efectos de la ansiedad en la salud mental a largo plazo', jefe: 'Carlos' },
   ];
 
   usuariosColumns = [
@@ -79,6 +64,52 @@ onTabSelected(tab: string) {
     { field: 'jefe', header: 'Jefe de capa' },
   ];
 
+
+  ngOnInit(): void {
+    this.consolaService.getAllLayers().subscribe({
+      next: (data: any[]) => {
+        console.log('Capas obtenidas del backend:', data);
+        this.capasData = data.map(capa => ({
+          id: capa.id,               // Asegúrate de guardar el id
+          nombreCapa: capa.nombreCapa,
+          descripcion: capa.descripcion,
+          jefe: capa.jefeCapa.nombre
+        }));
+      },
+      error: (error) => {
+        console.error('Error al cargar capas:', error);
+        this.mostrarMensajeError('No se pudo cargar la información de las capas');
+      }
+    });
+  
+    // Cargar las variables
+    this.consolaService.getAllVariables().subscribe({
+      next: (data: any[]) => {
+        console.log('Variables obtenidas del backend:', data);
+        this.variablesData = data.map(variable => ({
+          nombre: variable.nombreVariable,
+          descripcion: variable.descripcion,
+          capa: this.getCapaNombreById(variable.idCapaInvestigacion), // Obtener nombre de la capa con el ID
+          tipo: variable.tipo
+        }));
+      },
+      error: (error) => {
+        console.error('Error al cargar variables:', error);
+        this.mostrarMensajeError('No se pudo cargar la información de las variables');
+      }
+    });
+  }
+  
+  // Método para obtener el nombre de la capa usando su idCapaInvestigacion
+  getCapaNombreById(idCapaInvestigacion: string): string {
+    const capa = this.capasData.find(capa => capa.id === idCapaInvestigacion); // Comparar con idCapaInvestigacion
+    return capa ? capa.nombreCapa : 'Capa desconocida';
+  }  
+
+  mostrarMensajeError(mensaje: string): void {
+    alert(mensaje); // Cambiar por un mecanismo más amigable si es necesario
+  }
+
   handleView(row: any) {
     console.log('Ver', row);
   }
@@ -96,16 +127,16 @@ onTabSelected(tab: string) {
     console.log('Crear nueva variable');
     this.isCreatingVar = true;
   }
-  
+
   crearNuevoUsuario() {
     // Lógica para abrir un modal o navegar a un formulario
-    console.log('Crear nueva variable');
+    console.log('Crear nueva user');
     this.isCreatingUser = true;
   }
 
   crearNuevaCapa() {
     // Lógica para abrir un modal o navegar a un formulario
-    console.log('Crear nueva variable');
+    console.log('Crear nueva capa');
     this.isCreatingCapa = true;
   }
 }

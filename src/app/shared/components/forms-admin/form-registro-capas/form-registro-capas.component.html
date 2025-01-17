@@ -1,21 +1,53 @@
 <div class="user-form-container">
-    <h2>Registro de capa</h2>
-    <form (ngSubmit)="registrarCapa()">
+    <h2>Registro de Capa de Investigación</h2>
+  
+    <form [formGroup]="form" (ngSubmit)="registrarCapa()">
+  
+      <input type="hidden" formControlName="id" />
+  
+      <!-- Campo: Nombre de la Capa -->
+      <div class="form-row">
+        <input type="text" id="nombre" formControlName="nombre" placeholder="Nombre de la capa" />
+        <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="error-message">
+          <small>El nombre de la capa es obligatorio.</small>
+        </div>
+      </div>
+  
+      <!-- Campo: Descripción -->
+      <div class="form-row">
+        <textarea id="descripcion" formControlName="descripcion" placeholder="Descripción"></textarea>
+        <div *ngIf="form.get('descripcion')?.invalid && form.get('descripcion')?.touched" class="error-message">
+          <small>La descripción es obligatoria.</small>
+        </div>
+      </div>
+  
+      <!-- Grupo: Jefe de Capa -->
+      <div formGroupName="jefeCapa">
         <div class="form-row">
-            <input type="text" placeholder="Nombre de la capa" [(ngModel)]="nuevaCapa.nombre" name="nombre" required />
-
+          <input type="text" id="jefeCapaNombre" formControlName="nombre" placeholder="Nombre del jefe de capa" />
+          <div *ngIf="form.get('jefeCapa.nombre')?.invalid && form.get('jefeCapa.nombre')?.touched" class="error-message">
+            <small>El nombre del jefe de capa es obligatorio.</small>
+          </div>
         </div>
+  
         <div class="form-row">
-            <textarea placeholder="Descripción" [(ngModel)]="nuevaCapa.descripcion" name="descripcion"
-                required></textarea>
+          <input type="hidden" formControlName="id" />
+          <input type="text" id="numeroIdentificacion" formControlName="numero_identificacion"
+            placeholder="Número de identificación del jefe" />
+          <div *ngIf="form.get('jefeCapa.numero_identificacion')?.invalid && form.get('jefeCapa.numero_identificacion')?.touched"
+            class="error-message">
+            <small>El número de identificación es obligatorio.</small>
+          </div>
         </div>
-        <div class="form-row">
-            <input type="text" placeholder="Jefe de capa" [(ngModel)]="nuevaCapa.jefeCapa" name="jefeCapa" required />
-            <input type="text" placeholder="Identificación del jefe" [(ngModel)]="nuevaCapa.identificacionJefe"
-                name="identificacionJefe" required />
-        </div>
-        <div class="form-button">
-            <button type="button" class="btn btn-primary">Registrar</button>
-        </div>
+      </div>
+  
+      <div class="form-button">
+        <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Registrar Capa</button>
+      </div>
+  
     </form>
-</div>
+  
+    <div *ngIf="mensaje" class="mensaje">
+      <p>{{ mensaje }}</p>
+    </div>
+  </div>

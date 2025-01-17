@@ -12,6 +12,8 @@ import { MatSortModule } from '@angular/material/sort';
 import { FormRegistroUsuarioComponent } from '../../shared/components/forms-admin/form-registro-usuario/form-registro-usuario.component';
 import { FormRegistroVariablesComponent } from '../../shared/components/forms-admin/form-registro-variables/form-registro-variables.component';
 import { FormRegistroCapasComponent } from '../../shared/components/forms-admin/form-registro-capas/form-registro-capas.component'; // Importa MatSortModule
+import { HttpClientModule } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -29,6 +31,8 @@ import { FormRegistroCapasComponent } from '../../shared/components/forms-admin/
     MatTableModule, // Asegúrate de que MatTableModule esté aquí
     MatPaginatorModule, // Asegúrate de que MatPaginatorModule esté aquí
     MatSortModule, // Asegúrate de que MatSortModule esté aquí
+    HttpClientModule,
+    ReactiveFormsModule
   ]
 })
 export class AdminModule { }
