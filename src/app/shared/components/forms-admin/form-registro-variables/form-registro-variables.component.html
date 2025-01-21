@@ -1,26 +1,40 @@
 <div class="user-form-container">
   <h2>Crear variable</h2>
-  <form (ngSubmit)="crearVariable()">
+  <form [formGroup]="form" (ngSubmit)="crearVariable()">
     <div class="form-row">
-      <input type="text" placeholder="Nombre" [(ngModel)]="nuevaVariable.nombreVariable" name="nombreVariable"
-        required />
+      <input type="text" placeholder="Nombre" formControlName="nombreVariable" required />
+      <div *ngIf="campoEsValido('nombreVariable')">
+        <small class="error-message" *ngIf="form.get('nombreVariable')?.hasError('required')">El nombre es obligatorio.</small>
+        <small class="error-message" *ngIf="form.get('nombreVariable')?.hasError('minlength')">El nombre debe tener al menos 3 caracteres.</small>
+      </div>
     </div>
+
     <div class="form-row">
-      <textarea placeholder="Descripción" [(ngModel)]="nuevaVariable.descripcion" name="descripcion"
-        required></textarea>
+      <textarea placeholder="Descripción" formControlName="descripcion" required></textarea>
+      <div *ngIf="campoEsValido('descripcion')">
+        <small class="error-message" *ngIf="form.get('descripcion')?.hasError('required')">La descripción es obligatoria.</small>
+        <small class="error-message" *ngIf="form.get('descripcion')?.hasError('minlength')">La descripción debe tener al menos 5 caracteres.</small>
+      </div>
     </div>
+
     <div class="form-row">
-      <select [(ngModel)]="nuevaVariable.tipo" name="tipo" required>
+      <select formControlName="tipo" required>
         <option value="" disabled selected>Tipo</option>
         <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
       </select>
+      <div *ngIf="campoEsValido('tipo')">
+        <small class="error-message" *ngIf="form.get('tipo')?.hasError('required')">El tipo es obligatorio.</small>
+      </div>
+    </div>
 
-      <!-- Selección de capa de investigación -->
+    <div class="form-row">
       <div *ngIf="capasInvestigacion.length === 0">No hay capas disponibles.</div>
-      <select *ngIf="capasInvestigacion.length > 0" [(ngModel)]="nuevaVariable.idCapaInvestigacion"
-        name="capaInvestigacion" required (change)="onLayerSelect($event)">
+      <select *ngIf="capasInvestigacion.length > 0" formControlName="idCapaInvestigacion" required (change)="onLayerSelect($event)">
         <option *ngFor="let capa of capasInvestigacion" [value]="capa.id">{{ capa.nombreCapa }}</option>
       </select>
+      <div *ngIf="campoEsValido('idCapaInvestigacion')">
+        <small class="error-message" *ngIf="form.get('idCapaInvestigacion')?.hasError('required')">La capa de investigación es obligatoria.</small>
+      </div>
     </div>
 
     <div class="form-button">

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -8,31 +9,32 @@ interface CapaInvestigacion {
   id: string;
   nombreCapa: string;
 }
+
 @Component({
   selector: 'app-form-registro-variables',
   templateUrl: './form-registro-variables.component.html',
   styleUrls: ['./form-registro-variables.component.css']
 })
 export class FormRegistroVariablesComponent implements OnInit {
-  nuevaVariable = {
-    id: '',
-    idCapaInvestigacion: '',
-    nombreVariable: '',
-    descripcion: '',
-    tipo: ''
-  };
-
+  form: FormGroup;
+  capasInvestigacion: CapaInvestigacion[] = [];
   tipos = ['Entero', 'Real', 'Cadena', 'Fecha', 'Lógico'];
-  capasInvestigacion: CapaInvestigacion[] = [];  // Usar la interfaz aquí
-  selectedLayerId: string = '';  // Definir la variable selectedLayerId
 
-  constructor(private variableService: ConsolaAdministradorService,
+  constructor(
+    private fb: FormBuilder,
+    private variableService: ConsolaAdministradorService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
-  ) { }
+  ) {
+    this.form = this.fb.group({
+      nombreVariable: ['', [Validators.required, Validators.minLength(3)]],
+      descripcion: ['', [Validators.required, Validators.minLength(5)]],
+      tipo: ['', Validators.required],
+      idCapaInvestigacion: ['', Validators.required]
+    });
+  }
 
   ngOnInit(): void {
-    // Obtener todas las capas de investigación cuando se carga el componente
     this.variableService.getAllLayers().subscribe({
       next: (data) => {
         this.capasInvestigacion = data;
@@ -43,35 +45,28 @@ export class FormRegistroVariablesComponent implements OnInit {
     });
   }
 
-  // Manejar la selección de la capa de investigación
   onLayerSelect(event: Event): void {
-    const selectElement = event.target as HTMLSelectElement | null; // Asegúrate de que `event.target` no sea null
-    if (selectElement) { // Comprueba si selectElement no es null
-      this.selectedLayerId = selectElement.value; // Ahora TypeScript reconoce que `value` es válido
-      this.nuevaVariable.idCapaInvestigacion = this.selectedLayerId;
-      console.log('Capa seleccionada, ID:', this.selectedLayerId);
-    } else {
-      console.error('El evento no proviene de un <select> válido.');
+    const selectElement = event.target as HTMLSelectElement;
+    if (selectElement) {
+      this.form.patchValue({
+        idCapaInvestigacion: selectElement.value
+      });
     }
   }
 
-
   crearVariable() {
-    const variableData = {
-      id: this.nuevaVariable.id || '',
-      idCapaInvestigacion: this.nuevaVariable.idCapaInvestigacion,
-      nombreVariable: this.nuevaVariable.nombreVariable,
-      descripcion: this.nuevaVariable.descripcion,
-      tipo: this.nuevaVariable.tipo
-    };
+    if (this.form.invalid) {
+      this.snackBar.open('Formulario inválido. Complete todos los campos correctamente.', 'Cerrar', { duration: 3000 });
+      return;
+    }
 
+    const variableData = this.form.value;
     console.log('Datos enviados para crear variable:', variableData);
 
-    // Mostrar un diálogo de confirmación antes de enviar los datos
     const dialogRef = this.dialog.open(ModalConfirmacionComponent, {
       width: '300px',
       panelClass: 'custom-modal',
-      data: { // Pasar los datos directamente
+      data: {
         titulo: 'Confirmar variable',
         mensaje: '¿Estás seguro de registrar esta variable?'
       }
@@ -95,13 +90,12 @@ export class FormRegistroVariablesComponent implements OnInit {
   }
 
   limpiarFormulario() {
-    this.nuevaVariable = {
-      id: '',
-      idCapaInvestigacion: '',
-      nombreVariable: '',
-      descripcion: '',
-      tipo: ''
-    };
-    this.selectedLayerId = '';
+    this.form.reset();
   }
-}
+
+  // Método para verificar si el campo es inválido y ha sido tocado
+  campoEsValido(campo: string): boolean {
+    const control = this.form.get(campo);
+    return control ? control.invalid && control.touched : false;
+  }
+}  
