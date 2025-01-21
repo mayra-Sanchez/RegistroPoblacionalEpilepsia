@@ -20,7 +20,12 @@ export class HeaderComponent {
   }
 
   navigateTo(route: string): void {
-    this.isModalVisible = false; // Cierra el modal
-    this.router.navigate([`/${route}`]); // Navega a la ruta seleccionada
+    this.isModalVisible = false; 
+    if (route === '') {
+      this.router.navigate(['/']);
+    } else {
+      this.router.navigate([`/${route}`]); 
+    }
   }
+  
 }
