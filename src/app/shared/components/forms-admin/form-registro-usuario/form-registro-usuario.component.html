@@ -1,31 +1,76 @@
 <div class="user-form-container">
   <h2>Registro de usuario</h2>
-  <form>
+  <form [formGroup]="usuarioForm" (ngSubmit)="onRegister()">
     <div class="form-row">
-      <input type="text" placeholder="Nombre" />
-      <input type="text" placeholder="Apellido" />
-      <input type="text" placeholder="Tipo de documento" />
+      <input type="text" placeholder="Nombre" formControlName="nombre" />
+      <div *ngIf="usuarioForm.get('nombre')?.invalid && usuarioForm.get('nombre')?.touched" class="error-message">
+        Nombre es obligatorio.
+      </div>
+
+      <input type="text" placeholder="Apellido" formControlName="apellido" />
+      <div *ngIf="usuarioForm.get('apellido')?.invalid && usuarioForm.get('apellido')?.touched" class="error-message">
+        Apellido es obligatorio.
+      </div>
+
+      <select formControlName="tipoDocumento">
+        <option value="" disabled selected>Tipo de documento</option>
+        <option value="cc">Cédula de Ciudadanía</option>
+        <option value="nit">NIT</option>
+        <option value="pasaporte">Pasaporte</option>
+      </select>
+      <div *ngIf="usuarioForm.get('tipoDocumento')?.invalid && usuarioForm.get('tipoDocumento')?.touched"
+        class="error-message">
+        Tipo de documento es obligatorio.
+      </div>
     </div>
+
     <div class="form-row">
-      <input type="text" placeholder="Número de documento" />
-      <select>
+      <input type="text" placeholder="Número de documento" formControlName="numeroDocumento" />
+      <div *ngIf="usuarioForm.get('numeroDocumento')?.invalid && usuarioForm.get('numeroDocumento')?.touched"
+        class="error-message">
+        El número de documento es obligatorio y debe ser numérico.
+      </div>
+
+      <select formControlName="rol">
         <option value="" disabled selected>Rol</option>
         <option value="admin">Administrador</option>
         <option value="investigador">Investigador</option>
         <option value="digitador">Personal de salud</option>
       </select>
-        <input type="date" id="birthdate" placeholder="Fecha de nacimiento" />
+      <div *ngIf="usuarioForm.get('rol')?.invalid && usuarioForm.get('rol')?.touched" class="error-message">
+        El rol es obligatorio.
+      </div>
+
+      <label for="birthdate">Fecha de nacimiento</label>
+      <input type="date" id="birthdate" formControlName="fechaNacimiento" />
+      <div *ngIf="usuarioForm.get('fechaNacimiento')?.invalid && usuarioForm.get('fechaNacimiento')?.touched"
+        class="error-message">
+        La fecha de nacimiento es obligatoria.
+      </div>
     </div>
-    
+
     <div class="form-row">
-      <select>
+      <select formControlName="capaInvestigacion">
         <option value="" disabled selected>Capa de investigación</option>
         <option value="1">Capa 1</option>
         <option value="2">Capa 2</option>
       </select>
-      <input type="email" placeholder="Correo electrónico" />
-      <input type="password" placeholder="Contraseña" />
+      <div *ngIf="usuarioForm.get('capaInvestigacion')?.invalid && usuarioForm.get('capaInvestigacion')?.touched"
+        class="error-message">
+        La capa de investigación es obligatoria.
+      </div>
+
+      <input type="email" placeholder="Correo electrónico" formControlName="email" />
+      <div *ngIf="usuarioForm.get('email')?.invalid && usuarioForm.get('email')?.touched" class="error-message">
+        El correo electrónico es obligatorio y debe ser válido.
+      </div>
+
+      <input type="password" placeholder="Contraseña" formControlName="password" />
+      <div *ngIf="usuarioForm.get('password')?.invalid && usuarioForm.get('password')?.touched" class="error-message">
+        La contraseña es obligatoria y debe tener al menos 6 caracteres.
+      </div>
     </div>
-    <button type="button" class="btn btn-primary" (click)="onRegister()">Registrar</button>
+
+    <button type="submit" class="btn btn-primary" [disabled]="usuarioForm.invalid">Registrar</button>
   </form>
 </div>
