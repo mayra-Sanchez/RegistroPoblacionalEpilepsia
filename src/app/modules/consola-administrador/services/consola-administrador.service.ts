@@ -109,4 +109,31 @@ export class ConsolaAdministradorService {
       })
     );
   }
+
+   // Método para crear un nuevo usuario
+   crearUsuario(usuario: any): Observable<any> {
+    const headers = new HttpHeaders().set('Content-Type', 'application/json');
+
+    // Estructura de datos enviada al backend
+    const usuarioData = {
+      username: usuario.username, 
+      email: usuario.email,       
+      firstName: usuario.firstName, 
+      lastName: usuario.lastName,   
+      password: usuario.password,   
+      roles: usuario.roles || []    
+    };
+
+    console.log('Datos enviados para crear usuario:', usuarioData);
+
+    return this.http.post<any>(`${this.apiUrl}/User/create`, usuarioData, { headers }).pipe(
+      tap((response) => {
+        console.log('Respuesta del servidor al crear usuario:', response);
+      }),
+      catchError((error) => {
+        console.error('Error al crear el usuario:', error);
+        return throwError(() => new Error('No se pudo crear el usuario. Por favor, verifica los datos y vuelve a intentarlo.'));
+      })
+    );
+  }
 }
