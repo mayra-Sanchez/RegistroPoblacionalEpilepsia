@@ -1,28 +1,60 @@
 <div class="header">
   <div class="logo" (click)="navigateTo('')">
-    <span >RPE</span>
+    <span>RPE</span>
   </div>
 
   <div class="nav-buttons">
-    <button class="ingresar" (click)="openModal()">
+    <button class="ingresar" (click)="openModal('login')">
       <i class="fa fa-sign-in-alt"></i> 
       Ingresar
     </button>
-    <button class="help-icon">
+    <button class="help-icon" (click)="openModal('help')">
       <i class="fa fa-question-circle"></i>
     </button>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal de Login y Help -->
 <div class="modal" *ngIf="isModalVisible">
   <div class="modal-content">
     <span class="close" (click)="closeModal()">&times;</span>
     <h2>Selecciona una opción</h2>
     <ul>
-      <li><button (click)="navigateTo('registro')">Opción 1: Registro</button></li>
-      <li><button (click)="navigateTo('administrador')">Opción 2: Administrador</button></li>
-      <li><button (click)="navigateTo('investigador')">Opción 3: Investigador</button></li>
+      <!-- Opción Login -->
+      <li *ngIf="modalType === 'login'">
+        <button (click)="navigateTo('registro')">Opción 1: Registro</button>
+      </li>
+      <li *ngIf="modalType === 'login'">
+        <button (click)="navigateTo('administrador')">Opción 2: Administrador</button>
+      </li>
+      <li *ngIf="modalType === 'login'">
+        <button (click)="navigateTo('investigador')">Opción 3: Investigador</button>
+      </li>
+
+      <!-- Opción Help -->
+      <li *ngIf="modalType === 'help'">
+        <button (click)="showHelpSection('introduccion')">Introducción</button>
+      </li>
+      <li *ngIf="modalType === 'help'">
+        <button (click)="showHelpSection('registro')">Registro de Usuario</button>
+      </li>
+      <li *ngIf="modalType === 'help'">
+        <button (click)="showHelpSection('administrador')">Funciones de Administrador</button>
+      </li>
     </ul>
+
+    <!-- Sección de Guía del Manual -->
+    <div *ngIf="currentHelpSection === 'introduccion'">
+      <h3>Introducción</h3>
+      <p>Bienvenido al sistema RPE, aquí podrás gestionar tus datos y acceder a diferentes funcionalidades dependiendo de tu rol.</p>
+    </div>
+    <div *ngIf="currentHelpSection === 'registro'">
+      <h3>Registro de Usuario</h3>
+      <p>Para registrarte, simplemente haz clic en "Ingresar" y sigue los pasos que se indican en pantalla.</p>
+    </div>
+    <div *ngIf="currentHelpSection === 'administrador'">
+      <h3>Funciones de Administrador</h3>
+      <p>El administrador tiene acceso para gestionar usuarios, productos y configuraciones avanzadas del sistema.</p>
+    </div>
   </div>
 </div>
