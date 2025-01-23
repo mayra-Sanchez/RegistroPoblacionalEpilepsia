@@ -12,7 +12,10 @@ import { ModalConfirmacionComponent } from './shared/components/modal-confirmaci
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ManualComponent } from './manual/manual.component';
-
+import { LoginComponent } from './login/login.component';
+import { FormsModule } from '@angular/forms';
+import { PasswordRecoveryComponent } from './login/password-recovery/password-recovery.component';
+import { ReactiveFormsModule } from '@angular/forms';
 @NgModule({
   declarations: [
     AppComponent,
@@ -21,7 +24,9 @@ import { ManualComponent } from './manual/manual.component';
     NavbarComponent,
     HomeComponent,
     ModalConfirmacionComponent,
-    ManualComponent
+    ManualComponent,
+    LoginComponent,
+    PasswordRecoveryComponent
     
   ],
   imports: [
@@ -30,7 +35,9 @@ import { ManualComponent } from './manual/manual.component';
     BrowserAnimationsModule,
     HttpClientModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    FormsModule,
+    ReactiveFormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

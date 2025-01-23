@@ -10,7 +10,7 @@
   box-sizing: border-box;
   top: 0;
   left: 0;
-  z-index: 1000; /* Asegura que el header quede encima de los demás elementos */
+  z-index: 1000; 
 }
 
 .logo span {
@@ -77,13 +77,30 @@ button.help-icon i {
 }
 
 .modal-content {
+  position: relative;
   background: white;
   padding: 20px;
   border-radius: 8px;
-  width: 800px;
+  width: 90%;
+  max-width: 600px; /* Ajusta este valor según sea necesario */
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin: 20px
 }
+
+.modal-content .close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #888;
+}
+
+.modal-content .close:hover {
+  color: black;
+}
+
 
 .modal-content h2 {
   margin-bottom: 15px;
@@ -98,92 +115,7 @@ button.help-icon i {
   margin-bottom: 10px;
 }
 
-.modal-content .close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 20px;
-  cursor: pointer;
-}
 
-/* Modal del Manual */
-.manual-modal {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.manual-modal.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-.manual-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 400px;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.3s ease;
-}
-
-.manual-content h2 {
-  margin-bottom: 15px;
-  font-size: 22px;
-  font-weight: bold;
-  color: #1976d2;
-}
-
-.manual-content p {
-  margin-bottom: 20px;
-  line-height: 1.6;
-  color: #333;
-}
-
-.manual-navigation {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.manual-navigation button {
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-.manual-navigation button:hover {
-  background-color: #125699;
-}
-
-.manual-content .close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 20px;
-  cursor: pointer;
-  color: #888;
-}
-
-.manual-content .close:hover {
-  color: black;
-}
 
 @keyframes fadeIn {
   from {
@@ -196,130 +128,59 @@ button.help-icon i {
   }
 }
 
-/* Manual - Contenedor Principal */
-.manual-container {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  margin: auto;
-  border-radius: 10px;
-  overflow: hidden;
+
+.manual-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 800px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+.manual-content {
+  position: relative;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 800px;
+  text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Menú de Contenidos */
-.manual-menu {
-  background: #f4f4f4;
-  width: 30%;
-  padding: 20px;
-  box-sizing: border-box;
-  border-right: 1px solid #ddd;
-}
-
-.manual-menu h2 {
-  margin-bottom: 15px;
-  font-size: 20px;
-  color: #1976d2;
-}
-
-.manual-menu ul {
-  list-style: none;
-  padding: 0;
-}
-
-.manual-menu li {
-  margin-bottom: 10px;
-}
-
-.manual-menu button {
-  background: transparent;
-  border: none;
-  font-size: 16px;
-  text-align: left;
-  cursor: pointer;
-  color: #333;
-  padding: 5px 10px;
-  width: 100%;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.manual-menu button:hover {
-  background-color: #1976d2;
-  color: white;
-}
-
-/* Contenedor de Páginas */
-.manual-pages {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-  background: white;
-  min-height: 300px; /* Asegura un tamaño mínimo */
-}
-
-/* Estilo de las Páginas */
-.page {
+.manual-content .close {
   position: absolute;
-  top: 0;
-  left: 100%; /* Inicialmente fuera de vista */
-  width: 100%;
-  height: 100%;
-  background: white;
-  padding: 20px;
-  box-sizing: border-box;
-  opacity: 0; /* Invisible inicialmente */
-  transform: scale(0.9); /* Escala reducida */
-  transition: all 0.5s ease-in-out; /* Animación suave */
-}
-
-.page.active {
-  left: 0; /* Página activa en su lugar */
-  opacity: 1; /* Visible */
-  transform: scale(1); /* Tamaño normal */
-}
-
-.page.previous {
-  left: -100%; /* Página previa fuera de vista */
-  opacity: 0;
-  transform: scale(0.9);
-}
-
-/* Títulos y Contenidos de las Páginas */
-.page h2 {
-  margin-bottom: 15px;
-  font-size: 22px;
-  font-weight: bold;
-  color: #1976d2;
-}
-
-.page p {
-  line-height: 1.6;
-  color: #333;
-}
-
-/* Navegación del Manual */
-.manual-navigation {
-  margin-top: 20px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.manual-navigation button {
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
+  color: #888;
 }
 
-.manual-navigation button:hover {
-  background-color: #125699;
+.manual-content .close:hover {
+  color: black;
 }
 
-.manual-navigation button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+/* Responsividad para el formulario de inicio de sesión y recuperación de contraseña */
+@media (max-width: 600px) {
+  .modal-content {
+    width: 90%;
+  }
+
+  form {
+    padding: 15px;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    width: calc(100% - 20px);
+    padding: 8px;
+  }
+
+  button[type="submit"],
+  button[type="button"] {
+    padding: 8px;
+    font-size: 14px;
+  }
 }

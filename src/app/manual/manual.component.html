@@ -1,35 +1,26 @@
-<div class="modal" *ngIf="isVisible">
-    <div class="modal-content">
-      <span class="close" (click)="onClose()">&times;</span>
-      <div class="manual-container">
-        <!-- Menú de contenido -->
-        <div class="manual-menu">
-          <h2>Contenido</h2>
-          <ul>
-            <li *ngFor="let section of manualSections; let i = index">
-              <button (click)="goToSection(i)">{{ section.title }}</button>
-            </li>
-          </ul>
-        </div>
-  
-        <!-- Páginas -->
-        <div class="manual-pages">
-          <div
-            class="page"
-            *ngFor="let page of manualSections; let i = index"
-            [class.active]="currentSection === i"
-          >
-            <h2>{{ page.title }}</h2>
-            <p>{{ page.content }}</p>
-          </div>
-        </div>
-      </div>
-  
-      <!-- Navegación -->
-      <div class="manual-navigation">
-        <button (click)="prevSection()" [disabled]="currentSection === 0">Anterior</button>
-        <button (click)="nextSection()" [disabled]="currentSection === manualSections.length - 1">Siguiente</button>
-      </div>
+<div class="manual-container">
+  <!-- Menú de contenido -->
+  <div class="manual-menu">
+    <h2>Contenido</h2>
+    <ul>
+      <li><button (click)="goToSection(0)">Introducción</button></li>
+      <li><button (click)="goToSection(1)">Funcionalidades</button></li>
+      <li><button (click)="goToSection(2)">Configuración</button></li>
+      <li><button (click)="goToSection(3)">Soporte</button></li>
+    </ul>
+  </div>
+
+  <!-- Páginas -->
+  <div class="manual-pages">
+    <div class="page" *ngFor="let page of manualSections; let i = index" [class.active]="currentSection === i">
+      <h2>{{ page.title }}</h2>
+      <p>{{ page.content }}</p>
     </div>
   </div>
-  
+</div>
+
+<!-- Navegación -->
+<div class="manual-navigation">
+  <button (click)="prevSection()" [disabled]="currentSection === 0">Anterior</button>
+  <button (click)="nextSection()" [disabled]="currentSection === manualSections.length - 1">Siguiente</button>
+</div>

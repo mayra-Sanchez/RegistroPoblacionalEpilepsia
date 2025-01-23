@@ -14,56 +14,26 @@
   </div>
 </div>
 
-<!-- Modal General -->
 <div class="modal" *ngIf="isModalVisible">
-  <div class="modal-content">
-    <span class="close" (click)="closeModal()">&times;</span>
+  <div>
     <ng-container [ngSwitch]="modalType">
       <!-- Modal de Login -->
-      <div *ngSwitchCase="'login'">
-        <h2>Selecciona una opción</h2>
+      <div class="modal-content" *ngSwitchCase="'login'">
+        <span class="close" (click)="closeModal()">&times;</span>
+        <app-login></app-login>
         <ul>
-          <li>
-            <button (click)="navigateTo('registro')">Opción 1: Registro</button>
-          </li>
-          <li>
-            <button (click)="navigateTo('administrador')">Opción 2: Administrador</button>
-          </li>
-          <li>
-            <button (click)="navigateTo('investigador')">Opción 3: Investigador</button>
-          </li>
+          <li><button (click)="navigateTo('registro')">Opción 1: Registro</button></li>
+          <li><button (click)="navigateTo('administrador')">Opción 2: Administrador</button></li>
+          <li><button (click)="navigateTo('investigador')">Opción 3: Investigador</button></li>
         </ul>
       </div>
-
       <!-- Modal del Manual -->
-      <div *ngSwitchCase="'manual'">
-        <div class="manual-container">
-          <!-- Menú de contenido -->
-          <div class="manual-menu">
-            <h2>Contenido</h2>
-            <ul>
-              <li><button (click)="goToSection(0)">Introducción</button></li>
-              <li><button (click)="goToSection(1)">Funcionalidades</button></li>
-              <li><button (click)="goToSection(2)">Configuración</button></li>
-              <li><button (click)="goToSection(3)">Soporte</button></li>
-            </ul>
-          </div>
-
-          <!-- Páginas -->
-          <div class="manual-pages">
-            <div class="page" *ngFor="let page of manualSections; let i = index" [class.active]="currentSection === i">
-              <h2>{{ page.title }}</h2>
-              <p>{{ page.content }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Navegación -->
-        <div class="manual-navigation">
-          <button (click)="prevSection()" [disabled]="currentSection === 0">Anterior</button>
-          <button (click)="nextSection()" [disabled]="currentSection === manualSections.length - 1">Siguiente</button>
-        </div>
+      <div class="manual-content" *ngSwitchCase="'manual'">
+        <span class="close" (click)="closeModal()">&times;</span>
+        <app-manual></app-manual>
       </div>
     </ng-container>
   </div>
 </div>
+
+

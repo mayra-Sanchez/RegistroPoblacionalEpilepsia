@@ -6,47 +6,40 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./manual.component.css']
 })
 export class ManualComponent {
-  @Input() isVisible = false; 
-  @Input() onClose!: () => void; 
-  currentSection = 0;
+  currentSection: number = 0;
 
-  
   manualSections = [
     {
       title: 'Introducción',
-      content: 'Bienvenido al sistema RPE. Este manual te guiará a través de las funciones principales disponibles para médicos.'
+      content: 'Bienvenido a la introducción del manual. Aquí encontrarás una descripción general de la aplicación.'
     },
     {
-      title: 'Registro de Pacientes',
-      content: 'Aprende cómo registrar nuevos pacientes en el sistema, incluyendo sus datos personales y médicos.'
+      title: 'Funcionalidades',
+      content: 'En esta sección, descubrirás todas las funcionalidades que ofrece nuestra aplicación.'
     },
     {
-      title: 'Gestión de Historial Médico',
-      content: 'Accede y edita el historial médico de los pacientes de forma rápida y segura.'
+      title: 'Configuración',
+      content: 'Aprende cómo configurar la aplicación según tus necesidades en esta sección.'
     },
     {
-      title: 'Generación de Reportes',
-      content: 'Genera reportes médicos detallados para tus pacientes en unos pocos pasos.'
-    },
-    {
-      title: 'Soporte Técnico',
-      content: '¿Tienes dudas? Aprende cómo contactar al equipo de soporte técnico para resolver tus inquietudes.'
+      title: 'Soporte',
+      content: '¿Necesitas ayuda? Encuentra toda la información de soporte aquí.'
     }
   ];
 
-  nextSection(): void {
-    if (this.currentSection < this.manualSections.length - 1) {
-      this.currentSection++;
-    }
+  goToSection(index: number) {
+    this.currentSection = index;
   }
 
-  prevSection(): void {
+  prevSection() {
     if (this.currentSection > 0) {
       this.currentSection--;
     }
   }
 
-  goToSection(index: number): void {
-    this.currentSection = index;
+  nextSection() {
+    if (this.currentSection < this.manualSections.length - 1) {
+      this.currentSection++;
+    }
   }
 }
