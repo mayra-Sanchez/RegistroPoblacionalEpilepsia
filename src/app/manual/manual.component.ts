@@ -1,17 +1,16 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, Input } from '@angular/core';
 
 @Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.css']
+  selector: 'app-manual',
+  templateUrl: './manual.component.html',
+  styleUrls: ['./manual.component.css']
 })
-export class HeaderComponent {
-  isModalVisible = false;
-  modalType: 'login' | 'manual' = 'login';
+export class ManualComponent {
+  @Input() isVisible = false; 
+  @Input() onClose!: () => void; 
   currentSection = 0;
 
-  // Secciones del manual
+  
   manualSections = [
     {
       title: 'Introducción',
@@ -35,25 +34,6 @@ export class HeaderComponent {
     }
   ];
 
-  constructor(private router: Router) {}
-
-  openModal(type: 'login' | 'manual'): void {
-    this.isModalVisible = true;
-    this.modalType = type;
-    if (type === 'manual') {
-      this.currentSection = 0; 
-    }
-  }
-
-  closeModal(): void {
-    this.isModalVisible = false;
-  }
-
-  navigateTo(route: string): void {
-    this.router.navigate([`/${route}`]);
-    this.closeModal();
-  }
-
   nextSection(): void {
     if (this.currentSection < this.manualSections.length - 1) {
       this.currentSection++;
@@ -69,5 +49,4 @@ export class HeaderComponent {
   goToSection(index: number): void {
     this.currentSection = index;
   }
-  
 }

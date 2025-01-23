@@ -11,6 +11,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ModalConfirmacionComponent } from './shared/components/modal-confirmacion/modal-confirmacion.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { ManualComponent } from './manual/manual.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     FooterComponent,
     NavbarComponent,
     HomeComponent,
-    ModalConfirmacionComponent
+    ModalConfirmacionComponent,
+    ManualComponent
     
   ],
   imports: [
