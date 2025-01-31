@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms'; // Asegúrate de que FormsModule e
 import { MatTableModule } from '@angular/material/table'; // Asegúrate de que MatTableModule esté importado
 import { MatPaginatorModule } from '@angular/material/paginator'; // Importa MatPaginatorModule
 import { MatSortModule } from '@angular/material/sort';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -21,10 +22,11 @@ import { MatSortModule } from '@angular/material/sort';
   imports: [
     CommonModule,
     ConsolaRegistroRoutingModule, 
-    FormsModule, // Asegúrate de que FormsModule esté aquí
-    MatTableModule, // Asegúrate de que MatTableModule esté aquí
-    MatPaginatorModule, // Asegúrate de que MatPaginatorModule esté aquí
-    MatSortModule, // Asegúrate de que MatSortModule esté aquí
+    FormsModule, 
+    MatTableModule, 
+    MatPaginatorModule, 
+    MatSortModule, 
+    ReactiveFormsModule
   ]
 })
 export class ConsolaRegistroModule { }
