@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef  } from '@angular/core';
 import { ConsolaAdministradorService } from './services/consola-administrador.service';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-consola-administrador',
@@ -10,13 +12,82 @@ import { Router } from '@angular/router';
 export class ConsolaAdministradorComponent implements OnInit {
   // admin.component.ts
   selectedTab: string = 'inicioAdmin'; // Estado inicial
-  isCreatingUser: boolean = false; // Nuevo estado para mostrar el formulario
+  isCreatingUser: boolean = false;
   isCreatingVar: boolean = false;
-  isCreatingCapa = false;
+  isCreatingCapa: boolean = false;
   capasData: any[] = [];
   variablesData: any[] = [];
+  isLoading: boolean = false;
 
-  constructor(private consolaService: ConsolaAdministradorService, private router: Router) { }
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private consolaService: ConsolaAdministradorService, 
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) { }
+
+  ngOnInit(): void {
+    this.loadCapasData();
+    this.loadVariablesData();
+    this.loadUsuariosData();
+
+    // Escuchar actualizaciones en capas y variables
+    this.consolaService.getCapasUpdatedListener().pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.loadCapasData(); // Recargar datos de capas automáticamente
+    });
+
+    this.consolaService.getVariablesUpdatedListener().pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.loadVariablesData(); // Recargar datos de variables automáticamente
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadCapasData(): void {
+    this.isLoading = true;
+    this.consolaService.getAllLayers().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data: any[]) => {
+        this.capasData = data.map(capa => ({
+          id: capa.id,
+          nombreCapa: capa.nombreCapa,
+          descripcion: capa.descripcion,
+          jefe: capa.jefeCapa.nombre
+        }));
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.mostrarMensajeError('No se pudo cargar la información de las capas');
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadVariablesData(): void {
+    this.isLoading = true;
+    this.consolaService.getAllVariables().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data: any[]) => {
+        this.variablesData = data.map(variable => ({
+          nombre: variable.nombreVariable,
+          descripcion: variable.descripcion,
+          capa: this.getCapaNombreById(variable.idCapaInvestigacion),
+          tipo: variable.tipo
+        }));
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.mostrarMensajeError('No se pudo cargar la información de las variables');
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
+  }
 
   // Método para seleccionar pestaña y navegar
   onTabSelected(tab: string) {
@@ -24,8 +95,17 @@ export class ConsolaAdministradorComponent implements OnInit {
     this.isCreatingUser = false;
     this.isCreatingVar = false;
     this.isCreatingCapa = false;
-  }
 
+    // Cargar los datos solo si la pestaña seleccionada es la correcta
+    if (tab === 'gestionCapas') {
+      this.loadCapasData(); // Recargar los datos de las capas
+    } else if (tab === 'gestionVariables') {
+      this.loadVariablesData(); // Recargar los datos de las variables
+    } else if (tab === 'gestionUsuarios') {
+      this.loadUsuariosData(); // Recargar los datos de los usuarios
+    }
+  }
+  
   usuariosData = [
     { nombre: 'Lorem', apellido: 'Parra', documento: '12345', capa: 'Investigación de depresión', rol: 'Médico' },
     { nombre: 'Lorem', apellido: 'Ipsum', documento: '67890', capa: 'Investigación de ansiedad', rol: 'Médico' },
@@ -61,46 +141,28 @@ export class ConsolaAdministradorComponent implements OnInit {
   ];
 
 
-  ngOnInit(): void {
-    this.consolaService.getAllLayers().subscribe({
-      next: (data: any[]) => {
-        console.log('Capas obtenidas del backend:', data);
-        this.capasData = data.map(capa => ({
-          id: capa.id,               // Asegúrate de guardar el id
-          nombreCapa: capa.nombreCapa,
-          descripcion: capa.descripcion,
-          jefe: capa.jefeCapa.nombre
-        }));
-      },
-      error: (error) => {
-        console.error('Error al cargar capas:', error);
-        this.mostrarMensajeError('No se pudo cargar la información de las capas');
-      }
-    });
-  
-    // Cargar las variables
-    this.consolaService.getAllVariables().subscribe({
-      next: (data: any[]) => {
-        console.log('Variables obtenidas del backend:', data);
-        this.variablesData = data.map(variable => ({
-          nombre: variable.nombreVariable,
-          descripcion: variable.descripcion,
-          capa: this.getCapaNombreById(variable.idCapaInvestigacion), // Obtener nombre de la capa con el ID
-          tipo: variable.tipo
-        }));
-      },
-      error: (error) => {
-        console.error('Error al cargar variables:', error);
-        this.mostrarMensajeError('No se pudo cargar la información de las variables');
-      }
-    });
+  loadUsuariosData(): void {
+    // this.isLoading = true;
+    // this.consolaService.getAllUsuarios().pipe(takeUntil(this.destroy$)).subscribe({
+    //   next: (data: any[]) => {
+    //     this.usuariosData = data;
+    //     this.cdr.detectChanges(); // Forzar la detección de cambios después de modificar usuariosData
+    //   },
+    //   error: (error) => {
+    //     this.mostrarMensajeError('No se pudo cargar la información de los usuarios');
+    //   },
+    //   complete: () => {
+    //     this.isLoading = false;
+    //   }
+    // });
   }
-  
+
   // Método para obtener el nombre de la capa usando su idCapaInvestigacion
   getCapaNombreById(idCapaInvestigacion: string): string {
-    const capa = this.capasData.find(capa => capa.id === idCapaInvestigacion); // Comparar con idCapaInvestigacion
-    return capa ? capa.nombreCapa : 'Capa desconocida';
-  }  
+    const capa = this.capasData.find(capa => capa.id === idCapaInvestigacion);
+    return capa ? capa.nombreCapa : 'Capa desconocida'; // Retorna un valor por defecto si no se encuentra
+  }
+  
 
   mostrarMensajeError(mensaje: string): void {
     alert(mensaje); // Cambiar por un mecanismo más amigable si es necesario
@@ -119,21 +181,14 @@ export class ConsolaAdministradorComponent implements OnInit {
   }
 
   crearNuevaVariable() {
-    // Lógica para abrir un modal o navegar a un formulario
-    console.log('Crear nueva variable');
     this.isCreatingVar = true;
   }
 
   crearNuevoUsuario() {
-    // Lógica para abrir un modal o navegar a un formulario
-    console.log('Crear nueva user');
     this.isCreatingUser = true;
   }
 
   crearNuevaCapa() {
-    // Lógica para abrir un modal o navegar a un formulario
-    console.log('Crear nueva capa');
     this.isCreatingCapa = true;
   }
 }
-

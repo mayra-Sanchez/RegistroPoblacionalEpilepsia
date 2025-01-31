@@ -63,8 +63,9 @@
           </button>
         </div>
         <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
-        </app-table>
+        (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
+      </app-table>
+      
       </div>
       <div *ngIf="isCreatingCapa" class="contentAdmin2">
         <app-form-registro-capas (closeForm)="isCreatingCapa = false"></app-form-registro-capas>

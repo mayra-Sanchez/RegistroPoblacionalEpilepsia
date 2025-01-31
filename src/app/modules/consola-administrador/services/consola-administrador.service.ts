@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs';
+import { Observable, throwError, Subject } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -9,130 +9,130 @@ import { catchError, tap } from 'rxjs';
 export class ConsolaAdministradorService {
   private apiUrl = 'http://localhost:8080';
 
+  private capasUpdated = new Subject<void>(); // Notifica cambios en capas
+  private variablesUpdated = new Subject<void>();
+
   constructor(private http: HttpClient) {}
 
-  // Método para obtener todas las capas
-  getAllLayers(): Observable<any[]> {
-    const headers = new HttpHeaders()
-      .set('Accept', 'application/json');
+  // Escuchadores para actualizaciones en capas y variables
+  getCapasUpdatedListener(): Observable<void> {
+    return this.capasUpdated.asObservable();
+  }
 
-    return this.http.get<any[]>(`${this.apiUrl}/ResearchLayer/GetAll`, { headers }).pipe(
-      tap((data) => {
-        console.log('Capas obtenidas del backend:', data);
-      }),
+  getVariablesUpdatedListener(): Observable<void> {
+    return this.variablesUpdated.asObservable();
+  }
+
+  // Obtener todas las capas
+  getAllLayers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/ResearchLayer/GetAll`).pipe(
+      tap((data) => console.log('Capas obtenidas:', data)),
       catchError((error) => {
         console.error('Error al obtener las capas:', error);
-        return throwError(() => new Error('No se pudieron obtener las capas del servidor.'));
+        return throwError(() => new Error('No se pudieron obtener las capas.'));
       })
     );
   }
 
-  // Método para registrar una nueva capa
+  // Registrar una nueva capa
   registrarCapa(capa: any): Observable<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-
-    // Estructura de datos enviada al backend
     const capaData = {
-      id: capa.id || null, // Si no hay id, enviar null
-      nombreCapa: capa.nombreCapa, // Nombre de la capa
-      descripcion: capa.descripcion, // Descripción de la capa
+      id: capa.id || null,
+      nombreCapa: capa.nombreCapa,
+      descripcion: capa.descripcion,
       jefeCapa: {
-        id: capa.jefeCapa?.id || 1, // ID del jefe de capa, por defecto 1 si no está presente
-        nombre: capa.jefeCapa?.nombre, // Nombre del jefe de capa
-        numero_identificacion: capa.jefeCapa?.numero_identificacion // Número de identificación
+        id: capa.jefeCapa?.id || 1,
+        nombre: capa.jefeCapa?.nombre,
+        numero_identificacion: capa.jefeCapa?.numero_identificacion
       }
     };
 
-    console.log('Datos enviados para registrar la capa:', capaData);
-
-    return this.http.post<any>(`${this.apiUrl}/ResearchLayer`, capaData, { headers }).pipe(
-      tap((response) => {
-        console.log('Respuesta del servidor al registrar capa:', response);
+    return this.http.post<any>(`${this.apiUrl}/ResearchLayer`, capaData).pipe(
+      tap(() => {
+        console.log('Capa registrada:', capaData);
+        this.capasUpdated.next(); // Notificar actualización
       }),
       catchError((error) => {
         console.error('Error al registrar la capa:', error);
-        return throwError(() => new Error('No se pudo registrar la capa. Por favor, verifica los datos y vuelve a intentarlo.'));
+        return throwError(() => new Error('No se pudo registrar la capa.'));
       })
     );
   }
 
-  // Método para obtener una capa de investigación por ID
+  // Obtener capa por ID
   getLayerById(id: string): Observable<any> {
-    const headers = new HttpHeaders().set('Accept', 'application/json');
-    return this.http.get<any>(`${this.apiUrl}/ResearchLayer/${id}`, { headers }).pipe(
-      tap((data) => {
-        console.log(`Capa obtenida del backend con ID ${id}:`, data);
-      }),
+    return this.http.get<any>(`${this.apiUrl}/ResearchLayer/${id}`).pipe(
+      tap((data) => console.log(`Capa obtenida (ID: ${id}):`, data)),
       catchError((error) => {
-        console.error('Error al obtener la capa por ID:', error);
-        return throwError(() => new Error('No se pudo obtener la capa. Verifica el ID.'));
+        console.error('Error al obtener la capa:', error);
+        return throwError(() => new Error('No se pudo obtener la capa.'));
       })
     );
   }
 
-   // Método para crear una nueva variable
-   crearVariable(variable: any): Observable<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-
-    // Estructura de datos enviada al backend
+  // Crear una nueva variable
+  crearVariable(variable: any): Observable<any> {
     const variableData = {
-      id: variable.id || null,  
+      id: variable.id || null,
       idCapaInvestigacion: variable.idCapaInvestigacion,
       nombreVariable: variable.nombreVariable,
       descripcion: variable.descripcion,
       tipo: variable.tipo
     };
 
-    console.log('Datos enviados para crear variable:', variableData);
-
-    return this.http.post<any>(`${this.apiUrl}/Variable`, variableData, { headers }).pipe(
-      tap((response) => {
-        console.log('Respuesta del servidor al crear variable:', response);
+    return this.http.post<any>(`${this.apiUrl}/Variable`, variableData).pipe(
+      tap(() => {
+        console.log('Variable creada:', variableData);
+        this.variablesUpdated.next(); // Notificar actualización
       }),
       catchError((error) => {
         console.error('Error al crear la variable:', error);
-        return throwError(() => new Error('No se pudo crear la variable. Por favor, verifica los datos y vuelve a intentarlo.'));
+        return throwError(() => new Error('No se pudo crear la variable.'));
       })
     );
   }
 
+  // Obtener todas las variables
   getAllVariables(): Observable<any[]> {
-    const headers = new HttpHeaders().set('Accept', 'application/json');
-    
-    return this.http.get<any[]>(`${this.apiUrl}/Variable/GetAll`, { headers }).pipe(
-      tap((data) => {
-        console.log('Variables obtenidas del backend:', data);
-      }),
+    return this.http.get<any[]>(`${this.apiUrl}/Variable/GetAll`).pipe(
+      tap((data) => console.log('Variables obtenidas:', data)),
       catchError((error) => {
         console.error('Error al obtener las variables:', error);
-        return throwError(() => new Error('No se pudieron obtener las variables del servidor.'));
+        return throwError(() => new Error('No se pudieron obtener las variables.'));
       })
     );
   }
 
-   // Método para crear un nuevo usuario
-   crearUsuario(usuario: any): Observable<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-
-    // Estructura de datos enviada al backend
+  // Crear un nuevo usuario
+  crearUsuario(usuario: any): Observable<any> {
     const usuarioData = {
-      username: usuario.username, 
-      email: usuario.email,       
-      firstName: usuario.firstName, 
-      lastName: usuario.lastName,   
-      password: usuario.password,   
-      roles: usuario.roles || []    
+      username: usuario.username,
+      email: usuario.email,
+      firstName: usuario.firstName,
+      lastName: usuario.lastName,
+      password: usuario.password,
+      roles: usuario.roles || []
     };
 
-    console.log('Datos enviados para crear usuario:', usuarioData);
-
-    return this.http.post<any>(`${this.apiUrl}/User/create`, usuarioData, { headers }).pipe(
-      tap((response) => {
-        console.log('Respuesta del servidor al crear usuario:', response);
-      }),
+    return this.http.post<any>(`${this.apiUrl}/User/create`, usuarioData).pipe(
+      tap(() => console.log('Usuario creado:', usuarioData)),
       catchError((error) => {
         console.error('Error al crear el usuario:', error);
-        return throwError(() => new Error('No se pudo crear el usuario. Por favor, verifica los datos y vuelve a intentarlo.'));
+        return throwError(() => new Error('No se pudo crear el usuario.'));
+      })
+    );
+  }
+
+  // Eliminar una capa
+  eliminarCapa(capaId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/ResearchLayer/${capaId}`).pipe(
+      tap(() => {
+        console.log(`Capa eliminada (ID: ${capaId})`);
+        this.capasUpdated.next(); // Notificar actualización
+      }),
+      catchError((error) => {
+        console.error('Error al eliminar la capa:', error);
+        return throwError(() => new Error('No se pudo eliminar la capa.'));
       })
     );
   }
