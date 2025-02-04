@@ -98,4 +98,26 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
     }
     console.log('Usuario registrado:', this.formPaciente.value);
   }
+
+  notasCampos: { [key: string]: { texto: string; historial: { fecha: Date; usuario: string; texto: string }[] } } = {};
+
+agregarNota(campo: string) {
+  const textoActual = this.notasCampos[campo]?.texto || '';
+  const nuevaNota = prompt(`Añadir/Editar nota para ${campo}:`, textoActual);
+  if (nuevaNota !== null) {
+    if (!this.notasCampos[campo]) {
+      this.notasCampos[campo] = { texto: '', historial: [] };
+    }
+    this.notasCampos[campo].historial.push({ fecha: new Date(), usuario: 'Dr. Pérez', texto: nuevaNota });
+    this.notasCampos[campo].texto = nuevaNota;
+  }
+}
+
+verHistorialNotas(campo: string) {
+  if (this.notasCampos[campo]?.historial.length) {
+    console.log(`Historial de notas para ${campo}:`, this.notasCampos[campo].historial);
+  } else {
+    console.log(`No hay historial de notas para ${campo}.`);
+  }
+}
 }

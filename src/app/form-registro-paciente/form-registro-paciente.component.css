@@ -1,5 +1,5 @@
 .user-form-container {
-  width: 700px;
+  width: 1000px;
   background-color: #fff;
   padding: 30px;
   border-radius: 10px;
@@ -62,7 +62,7 @@
 .form-row select {
   flex: 1;
   margin-right: 20px;
-  margin-bottom: 30px;
+  /* margin-bottom: 30px; */
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -172,4 +172,32 @@ canvas {
 
 small{
   color: red;
+}
+
+.input-container {
+  display: flex;
+  align-items: center; /* Alinea verticalmente */
+  gap: 8px; /* Espaciado entre elementos */
+  position: relative; /* Permite posicionar la nota correctamente */
+}
+
+.btn-nota {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.nota-tooltip {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  white-space: nowrap; /* Evita que el texto se divida en varias líneas */
+  position: absolute;
+  left: 110%; /* Coloca la nota justo a la derecha del botón */
+  top: 50%;
+  transform: translateY(-50%); /* Centra verticalmente */
+  z-index: 10; /* Evita que la nota se esconda detrás de otros elementos */
 }

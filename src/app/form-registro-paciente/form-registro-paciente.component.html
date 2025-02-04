@@ -12,6 +12,7 @@ Fecha: 31 Enero 2025
         <div class="form-row">
             <div class="form-group">
                 <label for="tipoDocumento">Tipo de documento</label>
+
                 <select formControlName="tipoDocumento" id="tipo-documento" name="tipo-documento">
                     <option value="" disabled selected>Seleccione un tipo de documento</option>
                     <option value="cc">Cédula de Ciudadanía</option>
@@ -87,16 +88,31 @@ Fecha: 31 Enero 2025
 
         <div class="form-row">
             <div class="form-group">
-                <label for="dateRegister">Fecha de registro</label>
-                <input type="date" id="dateRegister" formControlName="fechaRegistro" placeholder="Fecha de registro" />
+                <label for="fechaRegistro">Fecha de registro</label>
+                <div class="input-container">
+                    <input type="date" id="fechaRegistro" formControlName="fechaRegistro"
+                        placeholder="Fecha de registro" />
+                    <button type="button" class="btn-nota" (click)="agregarNota('fechaRegistro')">📝</button>
+                    <span *ngIf="notasCampos['fechaRegistro']?.texto" class="nota-tooltip">
+                        {{ notasCampos['fechaRegistro'].texto }}
+                    </span>
+                </div>
+
                 <div *ngIf="formPaciente.get('fechaRegistro')?.touched && formPaciente.get('fechaRegistro')?.invalid">
                     <small *ngIf="formPaciente.get('fechaRegistro')?.hasError('required')">Este campo es
                         obligatorio.</small>
                 </div>
             </div>
             <div class="form-group">
-                <label for="deadDate">Fecha de muerte</label>
-                <input type="date" id="deadDate" formControlName="fechaMuerte" placeholder="Fecha de muerte" />
+                <label for="fechaMuerte">Fecha de muerte</label>
+                <div class="input-container">
+                    <input type="date" id="fechaMuerte" formControlName="fechaMuerte" placeholder="Fecha de muerte" />
+                    <button type="button" class="btn-nota" (click)="agregarNota('fechaMuerte')">📝</button>
+                    <span *ngIf="notasCampos['fechaMuerte']?.texto" class="nota-tooltip">
+                        {{ notasCampos['fechaMuerte'].texto }}
+                    </span>
+                </div>
+
             </div>
         </div>
 
@@ -108,7 +124,7 @@ Fecha: 31 Enero 2025
             </div>
         </div>
 
-        
+
     </form>
 </div>
 
