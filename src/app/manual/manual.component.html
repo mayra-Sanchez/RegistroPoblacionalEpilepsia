@@ -1,27 +1,24 @@
-
-<!-- Se agrega manual de usuario
-
--> faltan pruebas
--> falta que sea responsive
--> falta completarlo con información pero no se puede hacer hatsa tener la app funcionando pero esta ok -->
-
 <div class="manual-container">
   <!-- Menú de contenido -->
   <div class="manual-menu">
     <h2>Contenido</h2>
     <ul>
-      <li><button (click)="goToSection(0)">Introducción</button></li>
-      <li><button (click)="goToSection(1)">Funcionalidades</button></li>
-      <li><button (click)="goToSection(2)">Configuración</button></li>
-      <li><button (click)="goToSection(3)">Soporte</button></li>
+      <li *ngFor="let section of manualSections; let i = index">
+        <button (click)="goToSection(i)">{{ section.title }}</button>
+      </li>
     </ul>
   </div>
 
-  <!-- Páginas -->
+  <!-- Páginas del Manual -->
   <div class="manual-pages">
-    <div class="page" *ngFor="let page of manualSections; let i = index" [class.active]="currentSection === i">
+    <div 
+      class="page" 
+      *ngFor="let page of manualSections; let i = index" 
+      [class.active]="currentSection === i">
+      
       <h2>{{ page.title }}</h2>
-      <p>{{ page.content }}</p>
+      <h3>{{ page.subtitle }}</h3>
+      <p *ngFor="let paragraph of page.content">{{ paragraph }}</p>
     </div>
   </div>
 </div>

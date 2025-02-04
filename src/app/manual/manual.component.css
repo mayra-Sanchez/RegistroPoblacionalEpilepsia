@@ -19,7 +19,7 @@
   box-sizing: border-box;
   border-right: 1px solid #ddd;
   overflow-y: auto;
-  max-height: 80vh; /* Ajuste de alto máximo */
+  max-height: 80vh;
 }
 
 .manual-menu h2 {
@@ -57,51 +57,23 @@
 /* Contenedor de Páginas */
 .manual-pages {
   flex: 1;
-  overflow: hidden;
-  position: relative;
   background: white;
-  min-height: 300px; 
-  overflow-y: auto; 
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 20px;
+  border-left: 1px solid #ddd;
 }
 
 /* Estilo de las Páginas */
 .page {
-  position: absolute;
-  top: 0;
-  left: 100%; 
-  width: 100%;
-  height: 100%;
-  background: white;
-  padding: 20px;
-  box-sizing: border-box;
-  opacity: 0; 
-  transform: scale(0.9); 
-  transition: all 0.5s ease-in-out; 
+  display: none;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
 }
 
 .page.active {
-  left: 0; 
-  opacity: 1; 
-  transform: scale(1); 
-}
-
-.page.previous {
-  left: -100%; 
-  opacity: 0;
-  transform: scale(0.9);
-}
-
-/* Títulos y Contenidos de las Páginas */
-.page h2 {
-  margin-bottom: 15px;
-  font-size: 22px;
-  font-weight: bold;
-  color: #1976d2;
-}
-
-.page p {
-  line-height: 1.6;
-  color: #333;
+  display: block;
+  opacity: 1;
 }
 
 /* Navegación */
@@ -131,9 +103,13 @@
   cursor: not-allowed;
 }
 
-/* Responsive Design */
+.page p, h3 {
+  font-size: 14px;
+  text-align: left;
+  justify-content: left;
+}
 
-/* Para pantallas de tablets */
+/* Responsive */
 @media (max-width: 768px) {
   .manual-container {
     flex-direction: column;
@@ -150,7 +126,6 @@
   }
 }
 
-/* Para pantallas de móviles */
 @media (max-width: 480px) {
   .manual-menu h2 {
     font-size: 18px;
@@ -172,5 +147,7 @@
 
   .page p {
     font-size: 14px;
+    text-align: left;
+    justify-content: left;
   }
 }
