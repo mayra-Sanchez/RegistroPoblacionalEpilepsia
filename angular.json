@@ -46,7 +46,7 @@
               }
             ],
             "outputHashing": "all",
-            "localize": ["en", "es"]  
+            "localize": false 
           },
           "development": {
             "buildOptimizer": false,
