@@ -9,16 +9,13 @@ import { Router } from '@angular/router';
 export class HeaderComponent {
   isModalVisible = false;
   modalType: 'login' | 'manual' = 'login';
-  currentSection = 0;
-
-  openModal(type: 'login' | 'manual'): void {
-    this.isModalVisible = true;
-    this.modalType = type;
-  }
 
   constructor(private router: Router) {}
 
-
+  openModal(type: 'login' | 'manual'): void {
+    this.modalType = type;
+    this.isModalVisible = true;
+  }
 
   closeModal(): void {
     this.isModalVisible = false;
@@ -28,5 +25,4 @@ export class HeaderComponent {
     this.router.navigate([`/${route}`]);
     this.closeModal();
   }
-  
 }

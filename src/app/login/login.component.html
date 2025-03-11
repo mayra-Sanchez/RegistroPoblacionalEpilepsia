@@ -1,29 +1,28 @@
-<h2>Iniciar sesión</h2>
-<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <div>
-      <label for="email">Correo Electrónico:</label>
-      <input type="email" id="email" formControlName="email" />
-    </div>
-    <div *ngIf="email.errors && (email.dirty || email.touched)" class="error">
-      <div *ngIf="email.errors['required']">El correo electrónico es obligatorio.</div>
-      <div *ngIf="email.errors['email']">Debe ser un correo electrónico válido.</div>
-    </div>
-    <div>
-      <label for="password">Contraseña:</label>
-      <input type="password" id="password" formControlName="password" />
-    </div>
-    <div *ngIf="password.errors && (password.dirty || password.touched)" class="error">
-      <div *ngIf="password.errors['required']">La contraseña es obligatoria.</div>
-      <div *ngIf="password.errors['minlength']">La contraseña debe tener al menos 6 caracteres.</div>
-    </div>
-    <div>
-      <button type="submit" [disabled]="loginForm.invalid">Iniciar Sesión</button>
-    </div>
-    <div *ngIf="errorMessage" class="error">
-      {{ errorMessage }}
-    </div>
-    <div>
-      <a (click)="openPasswordRecoveryModal()">¿Olvidó su contraseña?</a>
-    </div>
-  </form>
-  
+<form (ngSubmit)="login()">
+  <h2>Iniciar sesión</h2>
+
+  <!-- Campo de Email -->
+  <div>
+    <label for="email">Correo Electrónico:</label>
+    <input type="email" id="email" [(ngModel)]="email" name="email" required />
+  </div>
+
+  <!-- Campo de Password -->
+  <div>
+    <label for="password">Contraseña:</label>
+    <input type="password" id="password" [(ngModel)]="password" name="password" required />
+  </div>
+
+  <!-- Botón de Login -->
+  <div>
+    <button type="submit" [disabled]="loading">
+      <span *ngIf="!loading">Iniciar Sesión</span>
+      <span *ngIf="loading">🔄 Iniciando...</span>
+    </button>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="errorMessage" class="error">
+    {{ errorMessage }}
+  </div>
+</form>

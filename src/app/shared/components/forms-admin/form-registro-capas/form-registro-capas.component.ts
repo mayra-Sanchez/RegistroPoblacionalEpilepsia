@@ -115,7 +115,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((confirmado) => {
       if (confirmado) {
-        this.consolaAdministradorService.eliminarCapa(capaId).subscribe(
+        this.consolaAdministradorService.eliminarCapa(capaId.toString()).subscribe(
           (response) => {
             this.mostrarNotificacion('Capa eliminada con éxito. 🎉', 'success');
             // Refrescar la lista de capas
