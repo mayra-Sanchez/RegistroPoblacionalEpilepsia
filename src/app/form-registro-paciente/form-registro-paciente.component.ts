@@ -1,51 +1,45 @@
-import { Component, ViewChild, AfterViewInit, AfterViewChecked, ElementRef, ChangeDetectorRef  } from '@angular/core';
+import { Component, ViewChild, AfterViewInit, AfterViewChecked, ElementRef, ChangeDetectorRef } from '@angular/core';
 import SignaturePad from 'signature_pad';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
+import { ConsolaRegistroService } from '../modules/consola-registro/services/consola-registro.service';
 @Component({
   selector: 'app-form-registro-paciente',
   templateUrl: './form-registro-paciente.component.html',
   styleUrls: ['./form-registro-paciente.component.css']
 })
 export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewChecked {
-  // usuario = {
-  //   nombre: '',
-  //   apellido: '',
-  //   tipoDocumento: '',
-  //   numeroDocumento: '',
-  //   fechaNacimiento: '',
-  //   email: '',
-  //   fechaRegistro: '',
-  //   fechaMuerte: '',
-  //   numeroTelefonico: '',
-  //   consentimiento: false,
-  //   fechaConsentimiento: '',
-  //   firma: ''
-  // };
-
+  
   formPaciente: FormGroup;
+  mostrarConsentimiento = false;
+  mostrarDatosClinicos = false;
+  private signaturePad!: SignaturePad;
 
-  constructor(private cdr: ChangeDetectorRef,private fb: FormBuilder) {
+  @ViewChild('signatureCanvas') signaturePadElement!: ElementRef<HTMLCanvasElement>;
+
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private fb: FormBuilder,
+    private consolaService: ConsolaRegistroService
+  ) {
     this.formPaciente = this.fb.group({
-      tipoDocumento: ['', Validators.required],
-      numeroDocumento: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
-      sexo: ['', Validators.required],
-      fechaNacimiento: ['', Validators.required],
+      name: ['', Validators.required],
+      identificationType: ['', Validators.required],
+      identificationNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      sex: ['', Validators.required],
+      birthDate: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      numeroTelefonico: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
-      fechaRegistro: ['', Validators.required],
-      fechaMuerte: [''],
+      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      deathDate: ['', Validators.required],
+      economicStatus: ['', Validators.required],
+      maritalStatus: ['', Validators.required],
+      hometown: ['', Validators.required], 
+      currentCity: ['', Validators.required],
+      firstCrisisDate: ['', Validators.required],
+      crisisStatus: ['', Validators.required],
       consentimiento: [false, Validators.requiredTrue],
       firma: ['', Validators.required]  
     });
   }
-
-  mostrarConsentimiento = false;
-  mostrarDatosClinicos = false;
-
-  private signaturePad!: SignaturePad;
-
-  @ViewChild('signatureCanvas') signaturePadElement!: ElementRef<HTMLCanvasElement>;
 
   ngAfterViewInit() {
     console.log('ngAfterViewInit');
@@ -62,7 +56,6 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
     }
   }
 
-  
   clearSignature() {
     this.signaturePad.clear();
   }
@@ -72,7 +65,6 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
     this.mostrarConsentimiento = true;
   }
   
-
   saveSignature() {
     if (this.signaturePad.isEmpty()) {
       alert('Por favor, firma antes de continuar.');
@@ -81,7 +73,6 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
     this.formPaciente.patchValue({ firma: this.signaturePad.toDataURL() });
     this.mostrarConsentimiento = false;
   }
-
 
   onDatosClinicos() {
     if (!this.formPaciente.get('consentimiento')?.value) {
@@ -96,28 +87,75 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
       alert('Por favor, complete todos los campos obligatorios.');
       return;
     }
-    console.log('Usuario registrado:', this.formPaciente.value);
+
+    const paciente = {
+      name: this.formPaciente.value.name,
+      identificationType: this.formPaciente.value.identificationType,
+      identificationNumber: parseInt(this.formPaciente.value.identificationNumber, 10),
+      sex: this.formPaciente.value.sex,
+      birthDate: this.formatDate(this.formPaciente.value.birthDate),
+      age: this.calculateAge(this.formPaciente.value.birthDate),
+      email: this.formPaciente.value.email,
+      phoneNumber: this.formPaciente.value.phoneNumber,
+      deathDate: this.formPaciente.value.deathDate ? this.formatDate(this.formPaciente.value.deathDate) : null,
+      economicStatus: this.formPaciente.value.economicStatus,
+      maritalStatus: this.formPaciente.value.maritalStatus,
+      hometown: this.formPaciente.value.hometown,
+      currentCity: this.formPaciente.value.currentCity,
+      firstCrisisDate: this.formatDate(this.formPaciente.value.firstCrisisDate),
+      crisisStatus: this.formPaciente.value.crisisStatus,
+      firma: this.formPaciente.value.firma
+    };
+
+    this.consolaService.registrarPaciente(paciente).subscribe({
+      next: (response) => {
+        console.log('Paciente registrado:', response);
+        alert('Registro exitoso');
+        this.formPaciente.reset();
+        this.clearSignature();
+      },
+      error: (error) => {
+        console.error('Error en el registro:', error);
+        alert('Error al registrar paciente.');
+      }
+    });
+  }
+
+  private formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // Formato YYYY-MM-DD para LocalDate
+  }
+
+  private calculateAge(dateString: string): number {
+    const birthDate = new Date(dateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
   }
 
   notasCampos: { [key: string]: { texto: string; historial: { fecha: Date; usuario: string; texto: string }[] } } = {};
 
-agregarNota(campo: string) {
-  const textoActual = this.notasCampos[campo]?.texto || '';
-  const nuevaNota = prompt(`Añadir/Editar nota para ${campo}:`, textoActual);
-  if (nuevaNota !== null) {
-    if (!this.notasCampos[campo]) {
-      this.notasCampos[campo] = { texto: '', historial: [] };
+  agregarNota(campo: string) {
+    const textoActual = this.notasCampos[campo]?.texto || '';
+    const nuevaNota = prompt(`Añadir/Editar nota para ${campo}:`, textoActual);
+    if (nuevaNota !== null) {
+      if (!this.notasCampos[campo]) {
+        this.notasCampos[campo] = { texto: '', historial: [] };
+      }
+      this.notasCampos[campo].historial.push({ fecha: new Date(), usuario: 'Dr. Pérez', texto: nuevaNota });
+      this.notasCampos[campo].texto = nuevaNota;
     }
-    this.notasCampos[campo].historial.push({ fecha: new Date(), usuario: 'Dr. Pérez', texto: nuevaNota });
-    this.notasCampos[campo].texto = nuevaNota;
   }
-}
 
-verHistorialNotas(campo: string) {
-  if (this.notasCampos[campo]?.historial.length) {
-    console.log(`Historial de notas para ${campo}:`, this.notasCampos[campo].historial);
-  } else {
-    console.log(`No hay historial de notas para ${campo}.`);
+  verHistorialNotas(campo: string) {
+    if (this.notasCampos[campo]?.historial.length) {
+      console.log(`Historial de notas para ${campo}:`, this.notasCampos[campo].historial);
+    } else {
+      console.log(`No hay historial de notas para ${campo}.`);
+    }
   }
-}
 }

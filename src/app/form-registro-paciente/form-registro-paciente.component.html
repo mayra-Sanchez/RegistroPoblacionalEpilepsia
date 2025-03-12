@@ -1,19 +1,17 @@
-<!-- Se pasa a relese porque esta completo en su rama unicamente faltan servicios y otras cosas como datos clinicos y las pruebas
-
--> informar a laura que se debe tener consentimiento informado para poder registrar 
-
-Fecha: 31 Enero 2025
-
--->
-
-
 <div class="user-form-container">
     <form [formGroup]="formPaciente" (ngSubmit)="onRegister()">
         <div class="form-row">
             <div class="form-group">
-                <label for="tipoDocumento">Tipo de documento</label>
+                <label for="name">Nombre Completo</label>
+                <input type="text" id="name" formControlName="name" placeholder="Nombre completo" />
+                <small *ngIf="formPaciente.get('name')?.touched && formPaciente.get('name')?.invalid">
+                    Este campo es obligatorio.
+                </small>
+            </div>
 
-                <select formControlName="tipoDocumento" id="tipo-documento" name="tipo-documento">
+            <div class="form-group">
+                <label for="identificationType">Tipo de Documento</label>
+                <select formControlName="identificationType" id="identificationType">
                     <option value="" disabled selected>Seleccione un tipo de documento</option>
                     <option value="cc">Cédula de Ciudadanía</option>
                     <option value="ti">Tarjeta de Identidad</option>
@@ -23,165 +21,132 @@ Fecha: 31 Enero 2025
                     <option value="pep">Permiso Especial de Permanencia</option>
                     <option value="nit">Número de Identificación Tributaria (NIT)</option>
                 </select>
-                <div *ngIf="formPaciente.get('tipoDocumento')?.touched && formPaciente.get('tipoDocumento')?.invalid">
-                    <small *ngIf="formPaciente.get('tipoDocumento')?.hasError('required')">Este campo es
-                        obligatorio.</small>
-                </div>
             </div>
 
             <div class="form-group">
-                <label for="numeroDocumento">Número de documento</label>
-                <input type="text" id="numeroDocumento" formControlName="numeroDocumento"
-                    placeholder="Número de documento" />
-                <div
-                    *ngIf="formPaciente.get('numeroDocumento')?.touched && formPaciente.get('numeroDocumento')?.invalid">
-                    <small *ngIf="formPaciente.get('numeroDocumento')?.hasError('required')">Este campo es
-                        obligatorio.</small>
-                    <small *ngIf="formPaciente.get('numeroDocumento')?.hasError('pattern')">El número de documento debe
-                        ser numérico.</small>
-                </div>
+                <label for="identificationNumber">Número de Documento</label>
+                <input type="text" id="identificationNumber" formControlName="identificationNumber" placeholder="Número de documento" />
             </div>
+        </div>
 
+        <div class="form-row">
             <div class="form-group">
-                <label for="sexo">Sexo</label>
-                <select formControlName="sexo" id="sexo" name="sexo">
-                    <option value="" disabled selected>Sexo</option>
+                <label for="sex">Sexo</label>
+                <select formControlName="sex" id="sex">
+                    <option value="" disabled selected>Seleccione el sexo</option>
                     <option value="femenino">Femenino</option>
                     <option value="masculino">Masculino</option>
                 </select>
-                <div *ngIf="formPaciente.get('sexo')?.touched && formPaciente.get('sexo')?.invalid">
-                    <small *ngIf="formPaciente.get('sexo')?.hasError('required')">Este campo es obligatorio.</small>
-                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="birthDate">Fecha de Nacimiento</label>
+                <input type="date" id="birthDate" formControlName="birthDate" />
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="birthdate">Fecha de nacimiento</label>
-                <input type="date" id="birthdate" formControlName="fechaNacimiento" placeholder="Fecha de nacimiento" />
-                <div
-                    *ngIf="formPaciente.get('fechaNacimiento')?.touched && formPaciente.get('fechaNacimiento')?.invalid">
-                    <small *ngIf="formPaciente.get('fechaNacimiento')?.hasError('required')">Este campo es
-                        obligatorio.</small>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="email">Correo electrónico</label>
+                <label for="email">Correo Electrónico</label>
                 <input type="email" id="email" formControlName="email" placeholder="Correo electrónico" />
-                <div *ngIf="formPaciente.get('email')?.touched && formPaciente.get('email')?.invalid">
-                    <small *ngIf="formPaciente.get('email')?.hasError('required')">Este campo es obligatorio.</small>
-                    <small *ngIf="formPaciente.get('email')?.hasError('email')">Debe ser un correo válido.</small>
-                </div>
             </div>
+
             <div class="form-group">
-                <label for="phone">Número telefónico</label>
-                <input type="text" id="phone" formControlName="numeroTelefonico" placeholder="Número telefónico" />
-                <div
-                    *ngIf="formPaciente.get('numeroTelefonico')?.touched && formPaciente.get('numeroTelefonico')?.invalid">
-                    <small *ngIf="formPaciente.get('numeroTelefonico')?.hasError('required')">Este campo es
-                        obligatorio.</small>
-                    <small *ngIf="formPaciente.get('numeroTelefonico')?.hasError('pattern')">El número telefónico debe
-                        ser numérico.</small>
-                </div>
+                <label for="phoneNumber">Número Telefónico</label>
+                <input type="text" id="phoneNumber" formControlName="phoneNumber" placeholder="Número telefónico" />
+            </div>
+        </div>
+
+        <!-- Campos Adicionales -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="deathDate">Fecha de Fallecimiento</label>
+                <input type="date" id="deathDate" formControlName="deathDate" />
+            </div>
+
+            <div class="form-group">
+                <label for="economicStatus">Estado Económico</label>
+                <select formControlName="economicStatus" id="economicStatus">
+                    <option value="" disabled selected>Seleccione una opción</option>
+                    <option value="uno">1</option>
+                    <option value="dos">2</option>
+                    <option value="tres">3</option>
+                    <option value="cuatro">4</option>
+                    <option value="cinco">5</option>
+                    <option value="seis">6</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="maritalStatus">Estado Civil</label>
+                <select formControlName="maritalStatus" id="maritalStatus">
+                    <option value="" disabled selected>Seleccione una opción</option>
+                    <option value="soltero">Soltero</option>
+                    <option value="casado">Casado</option>
+                    <option value="viudo">Viudo</option>
+                    <option value="divorciado">Divorciado</option>
+                </select>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="fechaRegistro">Fecha de registro</label>
-                <div class="input-container">
-                    <input type="date" id="fechaRegistro" formControlName="fechaRegistro"
-                        placeholder="Fecha de registro" />
-                    <button type="button" class="btn-nota" (click)="agregarNota('fechaRegistro')">📝</button>
-                    <span *ngIf="notasCampos['fechaRegistro']?.texto" class="nota-tooltip">
-                        {{ notasCampos['fechaRegistro'].texto }}
-                    </span>
-                </div>
-
-                <div *ngIf="formPaciente.get('fechaRegistro')?.touched && formPaciente.get('fechaRegistro')?.invalid">
-                    <small *ngIf="formPaciente.get('fechaRegistro')?.hasError('required')">Este campo es
-                        obligatorio.</small>
-                </div>
+                <label for="hometown">Ciudad Natal</label>
+                <input type="text" id="hometown" formControlName="hometown" placeholder="Ciudad de nacimiento" />
             </div>
+
             <div class="form-group">
-                <label for="fechaMuerte">Fecha de muerte</label>
-                <div class="input-container">
-                    <input type="date" id="fechaMuerte" formControlName="fechaMuerte" placeholder="Fecha de muerte" />
-                    <button type="button" class="btn-nota" (click)="agregarNota('fechaMuerte')">📝</button>
-                    <span *ngIf="notasCampos['fechaMuerte']?.texto" class="nota-tooltip">
-                        {{ notasCampos['fechaMuerte'].texto }}
-                    </span>
-                </div>
-
+                <label for="currentCity">Ciudad Actual</label>
+                <input type="text" id="currentCity" formControlName="currentCity" placeholder="Ciudad actual" />
             </div>
         </div>
 
-        <div class="form-row-button">
-            <button type="button" class="btn btn-primary" (click)="onConsentimiento()">Consentimiento informado</button>
-            <button type="button" class="btn btn-primary" (click)="onDatosClinicos()">Ingresar datos clínicos</button>
-            <div *ngIf="formPaciente.invalid && formPaciente.touched">
-                <button type="submit" class="btn btn-primary" [disabled]="formPaciente.invalid">Registrar</button>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="firstCrisisDate">Fecha de Primera Crisis</label>
+                <input type="date" id="firstCrisisDate" formControlName="firstCrisisDate" />
+                <small *ngIf="formPaciente.get('firstCrisisDate')?.touched && formPaciente.get('firstCrisisDate')?.invalid">
+                    Este campo es obligatorio.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="crisisStatus">Estado de Crisis</label>
+                <input type="text" id="crisisStatus" formControlName="crisisStatus" placeholder="Estado de crisis" />
+                <small *ngIf="formPaciente.get('crisisStatus')?.touched && formPaciente.get('crisisStatus')?.invalid">
+                    Este campo es obligatorio.
+                </small>
             </div>
         </div>
 
+        <!-- Consentimiento Informado -->
+        <div class="form-group">
+            <input type="checkbox" formControlName="consentimiento" />
+            <label for="consentimiento">Acepto el consentimiento informado</label>
+        </div>
 
+        <div class="form-group">
+            <button type="button" class="btn btn-primary" (click)="onConsentimiento()">Ver Consentimiento Informado</button>
+        </div>
+
+        <!-- Firma Digital -->
+        <div *ngIf="mostrarConsentimiento" class="modal">
+            <div class="modal-content">
+                <h2>Consentimiento Informado</h2>
+                <p>Aquí va el contenido legal del consentimiento informado...</p>
+                <canvas #signatureCanvas width="400" height="100" style="border:1px solid #000;"></canvas>
+                <button (click)="clearSignature()" class="btn btn-secondary">Borrar Firma</button>
+                <button (click)="saveSignature()" class="btn btn-primary">Aceptar y Guardar</button>
+                <button (click)="mostrarConsentimiento = false" class="btn btn-danger">Cancelar</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="button" class="btn btn-primary" (click)="onDatosClinicos()" [disabled]="!formPaciente.get('consentimiento')?.value">
+                Ingresar Datos Clínicos
+            </button>
+        </div>
+
+        <button type="submit" class="btn btn-success" [disabled]="formPaciente.invalid">Registrar</button>
     </form>
-</div>
-
-<!-- Modal de Consentimiento Informado -->
-<div *ngIf="mostrarConsentimiento" class="modal">
-    <div class="modal-content">
-        <h2>Consentimiento Informado para el Tratamiento de Datos Clínicos</h2>
-
-        <div class="modal-body">
-            <div class="scrollable-content">
-                <p>
-                    De conformidad con la <strong>Ley 1581 de 2012</strong> y el <strong>Decreto 1377 de 2013</strong>,
-                    en calidad de titular
-                    de los datos personales, autorizo de manera libre, previa, expresa e informada a <strong>[NOMBRE DE
-                        LA INSTITUCIÓN]</strong>
-                    para el tratamiento de mis datos personales, incluyendo aquellos de carácter sensible relacionados
-                    con mi estado de salud.
-                </p>
-
-                <h3>Finalidad del Tratamiento</h3>
-                <p>Los datos serán utilizados exclusivamente para:</p>
-                <ul>
-                    <li>Registrar y gestionar la historia clínica.</li>
-                    <li>Realizar seguimiento a mi estado de salud y tratamientos médicos.</li>
-                    <li>Cumplir con normativas legales y regulatorias en salud.</li>
-                    <li>Compartir información con entidades médicas cuando sea necesario para mi atención.</li>
-                </ul>
-
-                <h3>Derechos del Titular</h3>
-                <p>Como titular de los datos, tengo derecho a:</p>
-                <ul>
-                    <li>Acceder, rectificar y actualizar mis datos.</li>
-                    <li>Solicitar la eliminación de mis datos en los casos en que aplique.</li>
-                    <li>Revocar esta autorización cuando lo considere necesario.</li>
-                </ul>
-
-                <h3>Firma Digital</h3>
-                <p>Por favor, firme en el siguiente espacio para aceptar los términos del consentimiento informado.</p>
-            </div>
-            <canvas #signatureCanvas width="400" height="100" style="border:1px solid #000;"></canvas>
-        </div>
-
-        <div class="signature-buttons">
-            <button (click)="clearSignature()" class="btn btn-primary">Borrar Firma</button>
-            <button (click)="saveSignature()" class="btn btn-primary">Aceptar y Guardar</button>
-            <button (click)="mostrarConsentimiento = false" class="btn btn-secondary">Cancelar</button>
-        </div>
-    </div>
-</div>
-
-
-<!-- Sección de Datos Clínicos -->
-<div *ngIf="mostrarDatosClinicos" class="datos-clinicos">
-    <h2>Datos Clínicos</h2>
-    <input type="text" placeholder="Diagnóstico" />
-    <input type="text" placeholder="Tratamiento actual" />
-    <textarea placeholder="Notas adicionales"></textarea>
-    <br />
-    <button class="btn btn-success">Guardar Datos Clínicos</button>
 </div>
