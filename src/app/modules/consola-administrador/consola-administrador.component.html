@@ -30,7 +30,7 @@
           </button>
         </div>
         <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
+        (onView)="handleView($event, 'usuario')"  (onEdit)="handleEdit($event, 'usuario')" (onDelete)="handleDelete($event)">
         </app-table>
       </div>
       <div *ngIf="isCreatingUser" class="contentAdmin2">
@@ -46,7 +46,7 @@
           </button>
         </div>
         <app-table [data]="variablesData" [columns]="variablesColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
+        (onView)="handleView($event, 'variable')" (onEdit)="handleEdit($event, 'variable')" (onDelete)="handleDelete($event)">
         </app-table>
       </div>
       <div *ngIf="isCreatingVar" class="contentAdmin2">
@@ -63,7 +63,7 @@
           </button>
         </div>
         <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]"
-        (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
+        (onView)="handleView($event, 'capa')" (onEdit)="handleEdit($event, 'capa')" (onDelete)="handleDelete($event)">
       </app-table>
       
       </div>
@@ -71,5 +71,35 @@
         <app-form-registro-capas (closeForm)="isCreatingCapa = false"></app-form-registro-capas>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal para ver detalles -->
+<div *ngIf="isViewing" class="modal-overlay">
+  <div class="modal-content">
+    <h2>Detalles de {{ viewType }}</h2>
+    
+    <div *ngIf="viewType === 'usuario'">
+      <p><strong>Nombre:</strong> {{ viewedItem.nombre }}</p>
+      <p><strong>Apellido:</strong> {{ viewedItem.apellido }}</p>
+      <p><strong>Documento:</strong> {{ viewedItem.documento }}</p>
+      <p><strong>Capa:</strong> {{ viewedItem.capa }}</p>
+      <p><strong>Rol:</strong> {{ viewedItem.rol }}</p>
+    </div>
+
+    <div *ngIf="viewType === 'variable'">
+      <p><strong>Nombre:</strong> {{ viewedItem.nombre }}</p>
+      <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
+      <p><strong>Capa:</strong> {{ viewedItem.capa }}</p>
+      <p><strong>Tipo:</strong> {{ viewedItem.tipo }}</p>
+    </div>
+
+    <div *ngIf="viewType === 'capa'">
+      <p><strong>Nombre:</strong> {{ viewedItem.nombreCapa }}</p>
+      <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
+      <p><strong>Jefe:</strong> {{ viewedItem.jefe }}</p>
+    </div>
+
+    <button (click)="closeViewModal()" class="btn btn-secondary">Cerrar</button>
   </div>
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef  } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ConsolaAdministradorService } from './services/consola-administrador.service';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -19,10 +19,15 @@ export class ConsolaAdministradorComponent implements OnInit {
   variablesData: any[] = [];
   isLoading: boolean = false;
 
+  isViewing: boolean = false; // Controla la visibilidad del modal
+  viewedItem: any = null; // Almacena el elemento seleccionado
+  viewType: string = ''; // Guarda el tipo de elemento a visualizar
+
+
   private destroy$ = new Subject<void>();
 
   constructor(
-    private consolaService: ConsolaAdministradorService, 
+    private consolaService: ConsolaAdministradorService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) { }
@@ -73,6 +78,7 @@ export class ConsolaAdministradorComponent implements OnInit {
     this.consolaService.getAllVariables().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
         this.variablesData = data.map(variable => ({
+          id: variable.id,  // <-- Asegurar que el ID se almacena
           nombre: variable.nombreVariable,
           descripcion: variable.descripcion,
           capa: this.getCapaNombreById(variable.idCapaInvestigacion),
@@ -88,6 +94,7 @@ export class ConsolaAdministradorComponent implements OnInit {
       }
     });
   }
+
 
   // Método para seleccionar pestaña y navegar
   onTabSelected(tab: string) {
@@ -105,7 +112,7 @@ export class ConsolaAdministradorComponent implements OnInit {
       this.loadUsuariosData(); // Recargar los datos de los usuarios
     }
   }
-  
+
   usuariosData = [
     { nombre: 'Lorem', apellido: 'Parra', documento: '12345', capa: 'Investigación de depresión', rol: 'Médico' },
     { nombre: 'Lorem', apellido: 'Ipsum', documento: '67890', capa: 'Investigación de ansiedad', rol: 'Médico' },
@@ -162,19 +169,83 @@ export class ConsolaAdministradorComponent implements OnInit {
     const capa = this.capasData.find(capa => capa.id === idCapaInvestigacion);
     return capa ? capa.nombreCapa : 'Capa desconocida'; // Retorna un valor por defecto si no se encuentra
   }
-  
+
 
   mostrarMensajeError(mensaje: string): void {
     alert(mensaje); // Cambiar por un mecanismo más amigable si es necesario
   }
 
-  handleView(row: any) {
-    console.log('Ver', row);
+  handleView(event: any, tipo: string): void {
+    this.viewedItem = event; // Guardar el elemento seleccionado
+    this.viewType = tipo; // Guardar el tipo de elemento
+    this.isViewing = true; // Mostrar el modal
+    switch (tipo) {
+      case 'usuario':
+        this.verUsuario(event);
+        break;
+      case 'variable':
+        this.verVariable(event);
+        break;
+      case 'capa':
+        this.verCapa(event);
+        break;
+      default:
+        console.error('Tipo de vista desconocido:', tipo);
+    }
   }
 
-  handleEdit(row: any) {
-    console.log('Editar', row);
+  closeViewModal(): void {
+    this.isViewing = false;
+    this.viewedItem = null;
+    this.viewType = '';
   }
+  
+
+  verUsuario(usuario: any): void {
+    console.log('Viendo usuario:', usuario);
+    // Aquí podrías abrir un modal o navegar a una vista detallada
+  }
+
+  verVariable(variable: any): void {
+    console.log('Viendo variable:', variable);
+  }
+
+  verCapa(capa: any): void {
+    console.log('Viendo capa:', capa);
+  }
+
+  handleEdit(event: any, tipo: string): void {
+    switch (tipo) {
+      case 'usuario':
+        this.editarUsuario(event);
+        break;
+      case 'variable':
+        this.editarVariable(event);
+        break;
+      case 'capa':
+        this.editarCapa(event);
+        break;
+      default:
+        console.error('Tipo de edición desconocido:', tipo);
+    }
+  }
+
+  editarUsuario(usuario: any): void {
+    this.isCreatingUser = true;
+    // Aquí puedes pasar el usuario a un formulario
+    console.log('Editando usuario:', usuario);
+  }
+
+  editarVariable(variable: any): void {
+    this.isCreatingVar = true;
+    console.log('Editando variable:', variable);
+  }
+
+  editarCapa(capa: any): void {
+    this.isCreatingCapa = true;
+    console.log('Editando capa:', capa);
+  }
+
 
   handleDelete(row: any) {
     console.log('Eliminar', row);
@@ -191,4 +262,6 @@ export class ConsolaAdministradorComponent implements OnInit {
   crearNuevaCapa() {
     this.isCreatingCapa = true;
   }
+
+
 }

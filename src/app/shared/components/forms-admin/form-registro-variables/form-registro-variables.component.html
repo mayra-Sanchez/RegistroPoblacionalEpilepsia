@@ -1,6 +1,7 @@
 <div class="user-form-container">
   <h2>Crear variable</h2>
   <form [formGroup]="form" (ngSubmit)="crearVariable()">
+    
     <div class="form-row">
       <input type="text" placeholder="Nombre" formControlName="nombreVariable" required />
       <div *ngIf="campoEsValido('nombreVariable')">
@@ -28,13 +29,27 @@
     </div>
 
     <div class="form-row">
-      <div *ngIf="capasInvestigacion.length === 0">No hay capas disponibles.</div>
-      <select *ngIf="capasInvestigacion.length > 0" formControlName="idCapaInvestigacion" required (change)="onLayerSelect($event)">
+      <select formControlName="idCapaInvestigacion" required>
         <option *ngFor="let capa of capasInvestigacion" [value]="capa.id">{{ capa.nombreCapa }}</option>
       </select>
       <div *ngIf="campoEsValido('idCapaInvestigacion')">
         <small class="error-message" *ngIf="form.get('idCapaInvestigacion')?.hasError('required')">La capa de investigación es obligatoria.</small>
       </div>
+    </div>
+
+    <div class="form-row">
+      <label>
+        <input type="checkbox" formControlName="tieneOpciones" (change)="onTieneOpcionesChange()" /> ¿Tiene opciones?
+      </label>
+    </div>
+
+    <div *ngIf="form.value.tieneOpciones" class="form-row">
+      <label>Opciones:</label>
+      <div *ngFor="let opcion of opciones.controls; let i = index">
+        <input type="text" [formControlName]="i" required />
+        <button type="button" (click)="eliminarOpcion(i)">Eliminar</button>
+      </div>
+      <button type="button" (click)="agregarOpcion()">Agregar opción</button>
     </div>
 
     <div class="form-button">
