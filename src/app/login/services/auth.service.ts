@@ -10,50 +10,46 @@ import { jwtDecode } from 'jwt-decode';
   providedIn: 'root',
 })
 export class AuthService {
-  private backendUrl = 'http://localhost:8080'; // URL del backend Spring Boot
+  private backendUrl = 'http://localhost:8080/auth';
 
   constructor(private http: HttpClient, private router: Router) {}
 
   // Método para iniciar sesión
   login(email: string, password: string): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-    return this.http.post(`${this.backendUrl}/auth/login`, { email, password }, { headers }).pipe(
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+    return this.http.post(`${this.backendUrl}/login`, { email, password }, { headers }).pipe(
       tap((response: any) => {
-        console.log('Respuesta del backend:', response);
+        console.log('🔍 Respuesta del backend:', response);
         if (response && response.token) {
-          // Guardar el token y roles en el localStorage
           localStorage.setItem('kc_token', response.token);
           localStorage.setItem('userRoles', JSON.stringify(response.roles || []));
         } else {
-          console.warn('No se recibió token en la respuesta.');
+          console.warn('⚠️ No se recibió token en la respuesta.');
         }
       }),
-      catchError(this.handleError)
+      catchError((error) => {
+        console.error('❌ Error en la autenticación:', error);
+        throw error;
+      })
     );
   }
 
   // Método para cerrar sesión
-  logout(): void {
+   logout(): void {
     localStorage.removeItem('kc_token');
     localStorage.removeItem('userRoles');
     this.router.navigate(['/']);
   }
 
-  // Verifica si hay un token en el localStorage
   isLoggedIn(): boolean {
     return !!localStorage.getItem('kc_token');
   }
 
-  // Recupera el token almacenado
   getToken(): string | null {
-    const token = localStorage.getItem('kc_token');
-    console.log('Token recuperado:', token);
-    return token;
+    return localStorage.getItem('kc_token');
   }
 
-  // Recupera los roles almacenados
   getStoredRoles(): string[] {
     return JSON.parse(localStorage.getItem('userRoles') || '[]');
   }
