@@ -8,22 +8,20 @@ import { AuthService } from './login/services/auth.service';
 export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
-  async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     try {
-      const isLoggedIn = this.authService.isLoggedIn(); // ✅ Ahora devuelve un booleano
-
+      const isLoggedIn = this.authService.isLoggedIn();
       if (!isLoggedIn) {
         console.warn('⛔ Usuario no autenticado. Redirigiendo al login...');
-        this.router.navigate(['/login']);
+        this.router.navigate(['/']);
         return false;
       }
 
       let userRoles = this.authService.getStoredRoles();
 
       if (!userRoles || userRoles.length === 0) {
-        console.warn('⚠️ No se encontraron roles en localStorage. Cargando...');
-        await this.authService.loadUserRoles();
-        userRoles = this.authService.getStoredRoles();
+        console.warn('⚠️ No se encontraron roles en localStorage.');
+        return false;
       }
 
       const requiredRoles = route.data['roles'];

@@ -10,21 +10,21 @@ const routes: Routes = [
     loadChildren: () =>
       import('./modules/consola-registro/consola-registro.module').then((m) => m.ConsolaRegistroModule),
     canActivate: [AuthGuard],
-    data: { roles: ['Admin', 'Doctor'] },
+    data: { roles: ['Doctor_client_role'] },
   },
   {
     path: 'administrador',
     loadChildren: () =>
       import('./modules/consola-administrador/consola-administrador.module').then((m) => m.AdminModule),
     canActivate: [AuthGuard],
-    data: { roles: ['Admin'] },
+    data: { roles: ['Admin_client_role'] },
   },
   {
     path: 'investigador',
     loadChildren: () =>
       import('./modules/consola-investigador/consola-investigador.module').then((m) => m.ConsolaInvestigadorModule),
     canActivate: [AuthGuard],
-    data: { roles: ['Researcher'] },
+    data: { roles: ['Researcher_client_role'] },
   },
 ];
 

@@ -4,10 +4,19 @@
   </div>
 
   <div class="nav-buttons">
-    <button class="ingresar" (click)="openModal('login')">
+    <!-- Mostrar "Ingresar" solo si el usuario NO está autenticado -->
+    <button class="ingresar" *ngIf="!isLoggedIn" (click)="openModal('login')">
       <i class="fa fa-sign-in-alt"></i>
       Ingresar
     </button>
+
+    <!-- Mostrar "Cerrar sesión" solo si el usuario está autenticado -->
+    <button class="logout" *ngIf="isLoggedIn" (click)="logout()">
+      <i class="fa fa-sign-out-alt"></i>
+      Cerrar sesión
+    </button>
+
+    <!-- Botón para abrir el manual -->
     <button class="help-icon" (click)="openModal('manual')">
       <i class="fa fa-question-circle"></i>
     </button>
@@ -17,12 +26,11 @@
 <!-- Modal -->
 <div class="modal" *ngIf="isModalVisible">
   <div class="modal-container">
-    <span class="close" (click)="closeModal()">&times;</span>
 
     <ng-container [ngSwitch]="modalType">
       <!-- Modal de Login -->
       <div *ngSwitchCase="'login'">
-        <app-login (loginSuccess)="closeModal()"></app-login>
+        <app-login (loginSuccess)="handleLoginSuccess()"></app-login> <!-- 🔹 Capturar evento -->
       </div>
 
       <!-- Modal del Manual -->
