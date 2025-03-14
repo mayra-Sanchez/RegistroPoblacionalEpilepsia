@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -30,7 +30,9 @@ export class FormRegistroVariablesComponent implements OnInit {
       nombreVariable: ['', [Validators.required, Validators.minLength(3)]],
       descripcion: ['', [Validators.required, Validators.minLength(5)]],
       tipo: ['', Validators.required],
-      idCapaInvestigacion: ['', Validators.required]
+      idCapaInvestigacion: ['', Validators.required],
+      tieneOpciones: [false],  // Nuevo campo
+      opciones: this.fb.array([])  // FormArray para manejar múltiples opciones
     });
   }
 
@@ -45,12 +47,21 @@ export class FormRegistroVariablesComponent implements OnInit {
     });
   }
 
-  onLayerSelect(event: Event): void {
-    const selectElement = event.target as HTMLSelectElement;
-    if (selectElement) {
-      this.form.patchValue({
-        idCapaInvestigacion: selectElement.value
-      });
+  get opciones() {
+    return this.form.get('opciones') as FormArray;
+  }
+
+  agregarOpcion() {
+    this.opciones.push(this.fb.control('', Validators.required));
+  }
+
+  eliminarOpcion(index: number) {
+    this.opciones.removeAt(index);
+  }
+
+  onTieneOpcionesChange() {
+    if (!this.form.value.tieneOpciones) {
+      this.opciones.clear(); // Limpiar opciones si se desactiva
     }
   }
 
@@ -61,6 +72,13 @@ export class FormRegistroVariablesComponent implements OnInit {
     }
 
     const variableData = this.form.value;
+    variableData.opciones = this.form.value.tieneOpciones ? this.form.value.opciones : [];
+
+    if (variableData.tieneOpciones && variableData.opciones.length === 0) {
+      this.snackBar.open('Debe agregar al menos una opción.', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
     console.log('Datos enviados para crear variable:', variableData);
 
     const dialogRef = this.dialog.open(ModalConfirmacionComponent, {
@@ -91,11 +109,11 @@ export class FormRegistroVariablesComponent implements OnInit {
 
   limpiarFormulario() {
     this.form.reset();
+    this.opciones.clear();
   }
 
-  // Método para verificar si el campo es inválido y ha sido tocado
   campoEsValido(campo: string): boolean {
     const control = this.form.get(campo);
     return control ? control.invalid && control.touched : false;
   }
-}  
+}

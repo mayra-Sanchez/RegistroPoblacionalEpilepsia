@@ -165,4 +165,36 @@ export class ConsolaAdministradorService {
       `🗑️ Variable eliminada (ID: ${variableId})`
     );
   }
+
+  getVariableById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/api/v1/Variable?id=${id}`).pipe(
+      tap(data => console.log(`Variable obtenida (ID: ${id}):`, data)),
+      catchError(error => {
+        console.error('Error al obtener la variable:', error);
+        return throwError(() => new Error('No se pudo obtener la variable.'));
+      })
+    );
+  }
+  
+  actualizarVariable(variable: any): Observable<any> {
+    const variableData = {
+      id: variable.id,
+      idCapaInvestigacion: variable.idCapaInvestigacion,
+      nombreVariable: variable.nombreVariable,
+      descripcion: variable.descripcion,
+      tipo: variable.tipo
+    };
+  
+    return this.http.put<any>(`${this.apiUrl}/api/v1/Variable`, variableData).pipe(
+      tap(() => {
+        console.log('Variable actualizada:', variableData);
+        this.variablesUpdated.next();
+      }),
+      catchError(error => {
+        console.error('Error al actualizar la variable:', error);
+        return throwError(() => new Error('No se pudo actualizar la variable.'));
+      })
+    );
+  }
+  
 }
