@@ -55,7 +55,25 @@ export class AuthService {
   }
 
   getStoredRoles(): string[] {
-    return JSON.parse(localStorage.getItem('userRoles') || '[]');
+    const token = localStorage.getItem('kc_token');
+    if (!token) return [];
+  
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1])); // Decodificar el token JWT
+      const realmRoles = tokenPayload.realm_access?.roles || [];
+      const clientRoles = tokenPayload.resource_access?.['registers-users-api-rest']?.roles || [];
+      
+      return [...realmRoles, ...clientRoles]; // 🔹 Combinar ambos tipos de roles
+    } catch (error) {
+      console.error('❌ Error al obtener roles del token:', error);
+      return [];
+    }
+  }
+  
+  hasRole(requiredRole: string): boolean {
+    const userRoles = this.getStoredRoles();
+    return userRoles.includes(requiredRole);
+    
   }
 
   getToken(): string | null {

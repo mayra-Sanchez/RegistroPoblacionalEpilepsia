@@ -21,22 +21,42 @@
     </div>
 
     <!-- Gestión de Usuarios -->
-    <div *ngIf="selectedTab === 'gestionUsuarios'">
-      <!-- Verifica si se está creando un nuevo usuario -->
-      <div *ngIf="!isCreatingUser">
-        <div class="action-bar">
-          <button class="btn btn-primary create-button" (click)="crearNuevoUsuario()">
-            Crear nuevo usuario
-          </button>
-        </div>
-        <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
-        </app-table>
-      </div>
-      <div *ngIf="isCreatingUser" class="contentAdmin2">
-        <app-form-registro-usuario (closeForm)="isCreatingUser = false"></app-form-registro-usuario>
-      </div>
+<!-- Gestión de Usuarios -->
+<div *ngIf="selectedTab === 'gestionUsuarios'">
+  <div *ngIf="!isCreatingUser && !isEditingUser">
+    <div class="action-bar">
+      <button class="btn btn-primary create-button" (click)="crearNuevoUsuario()">
+        Crear nuevo usuario
+      </button>
     </div>
+    <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
+      (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
+    </app-table>
+  </div>
+
+  <!-- Formulario de Edición de Usuario -->
+  <div *ngIf="isEditingUser" class="contentAdmin2">
+    <h3>Editar Usuario</h3>
+    <form (submit)="guardarEdicionUsuario(userToEdit)">
+      <label>Nombre:</label>
+      <input type="text" [(ngModel)]="userToEdit.nombre" name="nombre" required />
+      <label>Apellido:</label>
+      <input type="text" [(ngModel)]="userToEdit.apellido" name="apellido" required />
+      <label>Email:</label>
+      <input type="email" [(ngModel)]="userToEdit.email" name="email" required />
+      <label>Usuario:</label>
+      <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required />
+      <button type="submit" class="btn btn-success">Guardar</button>
+      <button type="button" class="btn btn-secondary" (click)="isEditingUser = false">Cancelar</button>
+    </form>
+  </div>
+
+  <!-- Formulario de Creación de Usuario -->
+  <div *ngIf="isCreatingUser" class="contentAdmin2">
+    <app-form-registro-usuario (closeForm)="isCreatingUser = false"></app-form-registro-usuario>
+  </div>
+</div>
+
     <!-- Gestión de Variables -->
     <div *ngIf="selectedTab === 'gestionVariables'">
       <div *ngIf="!isCreatingVar">
