@@ -31,8 +31,8 @@ export class FormRegistroVariablesComponent implements OnInit {
       descripcion: ['', [Validators.required, Validators.minLength(5)]],
       tipo: ['', Validators.required],
       idCapaInvestigacion: ['', Validators.required],
-      tieneOpciones: [false],  // Nuevo campo
-      opciones: this.fb.array([])  // FormArray para manejar múltiples opciones
+      tieneOpciones: [false],
+      opciones: this.fb.array([])
     });
   }
 
@@ -47,12 +47,12 @@ export class FormRegistroVariablesComponent implements OnInit {
     });
   }
 
-  get opciones() {
+  get opciones(): FormArray {
     return this.form.get('opciones') as FormArray;
   }
 
   agregarOpcion() {
-    this.opciones.push(this.fb.control('', Validators.required));
+    this.opciones.push(this.fb.group({ opcion: ['', Validators.required] }));
   }
 
   eliminarOpcion(index: number) {
@@ -61,7 +61,7 @@ export class FormRegistroVariablesComponent implements OnInit {
 
   onTieneOpcionesChange() {
     if (!this.form.value.tieneOpciones) {
-      this.opciones.clear(); // Limpiar opciones si se desactiva
+      this.opciones.clear();
     }
   }
 
@@ -71,8 +71,10 @@ export class FormRegistroVariablesComponent implements OnInit {
       return;
     }
 
-    const variableData = this.form.value;
-    variableData.opciones = this.form.value.tieneOpciones ? this.form.value.opciones : [];
+    const variableData = {
+      ...this.form.value,
+      opciones: this.form.value.tieneOpciones ? this.opciones.value.map((o: any) => o.opcion) : []
+    };
 
     if (variableData.tieneOpciones && variableData.opciones.length === 0) {
       this.snackBar.open('Debe agregar al menos una opción.', 'Cerrar', { duration: 3000 });

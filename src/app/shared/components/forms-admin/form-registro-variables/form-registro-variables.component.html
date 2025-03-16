@@ -30,6 +30,7 @@
 
     <div class="form-row">
       <select formControlName="idCapaInvestigacion" required>
+        <option value="" disabled selected>Selecciona una capa</option>
         <option *ngFor="let capa of capasInvestigacion" [value]="capa.id">{{ capa.nombreCapa }}</option>
       </select>
       <div *ngIf="campoEsValido('idCapaInvestigacion')">
@@ -43,10 +44,10 @@
       </label>
     </div>
 
-    <div *ngIf="form.value.tieneOpciones" class="form-row">
+    <div *ngIf="form.value.tieneOpciones" formArrayName="opciones" class="form-row">
       <label>Opciones:</label>
-      <div *ngFor="let opcion of opciones.controls; let i = index">
-        <input type="text" [formControlName]="i" required />
+      <div *ngFor="let opcion of opciones.controls; let i = index" [formGroupName]="i">
+        <input type="text" formControlName="opcion" required />
         <button type="button" (click)="eliminarOpcion(i)">Eliminar</button>
       </div>
       <button type="button" (click)="agregarOpcion()">Agregar opción</button>
