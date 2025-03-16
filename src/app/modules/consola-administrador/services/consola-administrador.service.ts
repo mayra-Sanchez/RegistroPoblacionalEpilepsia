@@ -8,6 +8,9 @@ import { AuthService } from 'src/app/login/services/auth.service';
   providedIn: 'root'
 })
 export class ConsolaAdministradorService {
+
+  private apiUrl = 'http://localhost:8080/api/v1';
+
   private readonly API_URL = 'http://localhost:8080';
   private readonly API_LAYERS = `${this.API_URL}/api/v1/ResearchLayer`;
   private readonly API_USERS = `${this.API_URL}/Users`;
@@ -17,7 +20,7 @@ export class ConsolaAdministradorService {
   private variablesUpdated = new Subject<void>(); // Notifica cambios en variables
   private usuariosUpdated = new Subject<void>();  // Notifica cambios en usuarios
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   // ✅ Escuchar cambios en listas
   getCapasUpdatedListener(): Observable<void> {
@@ -66,34 +69,41 @@ export class ConsolaAdministradorService {
   }
 
   // 📌 CREAR CAPA
-  registrarCapa(capa: any): Observable<any> {
-    return this.handleRequest(
-      this.http.post<any>(this.API_LAYERS, capa, { headers: this.getAuthHeaders() }),
-      '✅ Capa registrada'
-    );
+  // Registrar una nueva capa
+  registrarCapa(capaData: any): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+    return this.http.post<any>(this.API_LAYERS, JSON.stringify(capaData), { headers });
   }
 
   // 📌 ACTUALIZAR CAPA
-  actualizarCapa(researchLayerId: string, capa: any): Observable<any> {
-    return this.handleRequest(
-      this.http.put<any>(this.API_LAYERS, capa, {
-        headers: this.getAuthHeaders(),
-        params: new HttpParams().set('researchLayerId', researchLayerId)
+  actualizarCapa(id: string, capa: any): Observable<any> {
+    const url = `${this.apiUrl}/ResearchLayer?researchLayerId=${id}`;
+  
+    return this.http.put(url, capa).pipe(
+      catchError(error => {
+        console.error('❌ Error en la petición:', error);
+        return throwError(() => new Error('Ocurrió un error en la solicitud.'));
+      })
+    );
+  }
+  
+
+  // 📌 ELIMINAR CAPA
+  eliminarCapa(capaId: string): Observable<any> {
+    const url = `${this.API_LAYERS}?researchLayerId=${capaId}`; // Pasar el ID como query param
+    return this.http.delete<any>(url).pipe(
+      tap(() => {
+        console.log(`Capa eliminada (ID: ${capaId})`);
+        this.capasUpdated.next(); // Notificar actualización
       }),
-      `✅ Capa actualizada (ID: ${researchLayerId})`
+      catchError((error) => {
+        console.error('Error al eliminar la capa:', error);
+        return throwError(() => new Error('No se pudo eliminar la capa.'));
+      })
     );
   }
 
-  // 📌 ELIMINAR CAPA
-  eliminarCapa(researchLayerId: string): Observable<any> {
-    return this.handleRequest(
-      this.http.delete<any>(this.API_LAYERS, {
-        headers: this.getAuthHeaders(),
-        params: new HttpParams().set('researchLayerId', researchLayerId)
-      }),
-      `🗑️ Capa eliminada (ID: ${researchLayerId})`
-    );
-  }
 
   // 📌 USUARIOS
   getAllUsuarios(): Observable<any[]> {
@@ -167,7 +177,7 @@ export class ConsolaAdministradorService {
   }
 
   getVariableById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/api/v1/Variable?id=${id}`).pipe(
+    return this.http.get<any>(`${this.API_VARIABLES}/api/v1/Variable?id=${id}`).pipe(
       tap(data => console.log(`Variable obtenida (ID: ${id}):`, data)),
       catchError(error => {
         console.error('Error al obtener la variable:', error);
@@ -175,7 +185,7 @@ export class ConsolaAdministradorService {
       })
     );
   }
-  
+
   actualizarVariable(variable: any): Observable<any> {
     const variableData = {
       id: variable.id,
@@ -184,8 +194,8 @@ export class ConsolaAdministradorService {
       descripcion: variable.descripcion,
       tipo: variable.tipo
     };
-  
-    return this.http.put<any>(`${this.apiUrl}/api/v1/Variable`, variableData).pipe(
+
+    return this.http.put<any>(`${this.API_VARIABLES}`, variableData).pipe(
       tap(() => {
         console.log('Variable actualizada:', variableData);
         this.variablesUpdated.next();
@@ -196,5 +206,5 @@ export class ConsolaAdministradorService {
       })
     );
   }
-  
+
 }

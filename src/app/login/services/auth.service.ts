@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { tap, catchError, switchMap } from 'rxjs/operators';
 import {jwtDecode} from 'jwt-decode';
 
 @Injectable({
@@ -14,6 +14,8 @@ export class AuthService {
 
   authStatus$ = this.authStatus.asObservable(); 
 
+  private isRefreshing = false;
+  
   constructor(private http: HttpClient, private router: Router) {}
 
   login(email: string, password: string): Observable<any> {
@@ -81,13 +83,41 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('kc_token');
+    const token = localStorage.getItem('kc_token');
+    return !!token;
+  }
+
+  refreshToken(): Observable<any> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      this.logout();
+      return throwError(() => new Error('No hay refresh token disponible.'));
+    }
+
+    return this.http.post(`${this.backendUrl}/refresh`, { refreshToken }).pipe(
+      tap((response: any) => {
+        if (response.access_token) {
+          console.log('🔄 Token refrescado con éxito');
+          localStorage.setItem('kc_token', response.access_token);
+          localStorage.setItem('refresh_token', response.refresh_token);
+          this.authStatus.next(true);
+        } else {
+          console.warn('⚠️ No se recibió nuevo access_token.');
+          this.logout();
+        }
+      }),
+      catchError(error => {
+        console.error('❌ Error al refrescar el token:', error);
+        this.logout();
+        return throwError(() => error);
+      })
+    );
   }
 
   logout(): void {
     localStorage.removeItem('kc_token');
-    localStorage.removeItem('userRoles');
-    this.authStatus.next(false); // Emitir que el usuario cerró sesión
+    localStorage.removeItem('refresh_token');
+    this.authStatus.next(false);
     this.router.navigate(['/']);
   }
 }

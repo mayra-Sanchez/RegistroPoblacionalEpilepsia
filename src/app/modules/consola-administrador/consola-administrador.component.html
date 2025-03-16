@@ -11,51 +11,48 @@
       <div class="inicio-content">
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-          est laborum.
+          magna aliqua.
         </p>
         <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
       </div>
     </div>
 
     <!-- Gestión de Usuarios -->
-<!-- Gestión de Usuarios -->
-<div *ngIf="selectedTab === 'gestionUsuarios'">
-  <div *ngIf="!isCreatingUser && !isEditingUser">
-    <div class="action-bar">
-      <button class="btn btn-primary create-button" (click)="crearNuevoUsuario()">
-        Crear nuevo usuario
-      </button>
+    <div *ngIf="selectedTab === 'gestionUsuarios'">
+      <div *ngIf="!isCreatingUser && !isEditingUser">
+        <div class="action-bar">
+          <button class="btn btn-primary create-button" (click)="crearNuevoUsuario()">
+            Crear nuevo usuario
+          </button>
+        </div>
+        <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
+          (onView)="handleView($event, 'usuario')" (onEdit)="handleEdit($event, 'usuario')"
+          (onDelete)="handleDelete($event)">
+        </app-table>
+      </div>
+
+      <!-- Formulario de Edición de Usuario -->
+      <div *ngIf="isEditingUser" class="contentAdmin2">
+        <h3>Editar Usuario</h3>
+        <form (submit)="guardarEdicionUsuario(userToEdit)">
+          <label>Nombre:</label>
+          <input type="text" [(ngModel)]="userToEdit.nombre" name="nombre" required />
+          <label>Apellido:</label>
+          <input type="text" [(ngModel)]="userToEdit.apellido" name="apellido" required />
+          <label>Email:</label>
+          <input type="email" [(ngModel)]="userToEdit.email" name="email" required />
+          <label>Usuario:</label>
+          <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required />
+          <button type="submit" class="btn btn-success">Guardar</button>
+          <button type="button" class="btn btn-secondary" (click)="isEditingUser = false">Cancelar</button>
+        </form>
+      </div>
+
+      <!-- Formulario de Creación de Usuario -->
+      <div *ngIf="isCreatingUser" class="contentAdmin2">
+        <app-form-registro-usuario (closeForm)="isCreatingUser = false"></app-form-registro-usuario>
+      </div>
     </div>
-    <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-      (onView)="handleView($event)" (onEdit)="handleEdit($event)" (onDelete)="handleDelete($event)">
-    </app-table>
-  </div>
-
-  <!-- Formulario de Edición de Usuario -->
-  <div *ngIf="isEditingUser" class="contentAdmin2">
-    <h3>Editar Usuario</h3>
-    <form (submit)="guardarEdicionUsuario(userToEdit)">
-      <label>Nombre:</label>
-      <input type="text" [(ngModel)]="userToEdit.nombre" name="nombre" required />
-      <label>Apellido:</label>
-      <input type="text" [(ngModel)]="userToEdit.apellido" name="apellido" required />
-      <label>Email:</label>
-      <input type="email" [(ngModel)]="userToEdit.email" name="email" required />
-      <label>Usuario:</label>
-      <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required />
-      <button type="submit" class="btn btn-success">Guardar</button>
-      <button type="button" class="btn btn-secondary" (click)="isEditingUser = false">Cancelar</button>
-    </form>
-  </div>
-
-  <!-- Formulario de Creación de Usuario -->
-  <div *ngIf="isCreatingUser" class="contentAdmin2">
-    <app-form-registro-usuario (closeForm)="isCreatingUser = false"></app-form-registro-usuario>
-  </div>
-</div>
 
     <!-- Gestión de Variables -->
     <div *ngIf="selectedTab === 'gestionVariables'">
@@ -66,7 +63,8 @@
           </button>
         </div>
         <app-table [data]="variablesData" [columns]="variablesColumns" [itemsPerPageOptions]="[5, 10, 20]"
-        (onView)="handleView($event, 'variable')" (onEdit)="handleEdit($event, 'variable')" (onDelete)="handleDelete($event)">
+          (onView)="handleView($event, 'variable')" (onEdit)="handleEdit($event, 'variable')"
+          (onDelete)="handleDelete($event)">
         </app-table>
       </div>
       <div *ngIf="isCreatingVar" class="contentAdmin2">
@@ -76,20 +74,48 @@
 
     <!-- Gestión de Capas -->
     <div *ngIf="selectedTab === 'gestionCapas'">
-      <div *ngIf="!isCreatingCapa">
+      <div *ngIf="!isCreatingCapa && !isEditingCapa">
         <div class="action-bar">
           <button class="btn btn-primary create-button" (click)="crearNuevaCapa()">
             Crear nueva capa
           </button>
         </div>
         <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]"
-        (onView)="handleView($event, 'capa')" (onEdit)="handleEdit($event, 'capa')" (onDelete)="handleDelete($event)">
-      </app-table>
-      
+          (onView)="handleView($event, 'capa')" (onEdit)="handleEdit($event, 'capa')" (onDelete)="handleDelete($event)">
+        </app-table>
       </div>
+
+      <!-- Modal de Edición de Capa -->
+      <!-- Modal para editar Capa -->
+      <div *ngIf="isEditingCapa" class="modal">
+        <div class="modal-content">
+          <span class="close" (click)="isEditingCapa = false">&times;</span>
+          <h3>Editar Capa</h3>
+          <form (submit)="guardarEdicionCapa(capaToEdit)">
+            <label>Nombre:</label>
+            <input type="text" [(ngModel)]="capaToEdit.nombreCapa" name="nombreCapa" required />
+
+            <label>Descripción:</label>
+            <input type="text" [(ngModel)]="capaToEdit.descripcion" name="descripcion" required />
+
+            <label>Nombre del Jefe de Capa:</label>
+            <input type="text" [(ngModel)]="capaToEdit.jefeCapa.nombre" name="jefeCapaNombre" required />
+
+            <label>Número de Identificación del Jefe de Capa:</label>
+            <input type="text" [(ngModel)]="capaToEdit.jefeCapa.numeroIdentificacion" name="jefeCapaIdentificacion"
+              required />
+
+            <button type="submit" class="btn btn-success">Guardar</button>
+            <button type="button" class="btn btn-secondary" (click)="isEditingCapa = false">Cancelar</button>
+          </form>
+        </div>
+      </div>
+
+
       <div *ngIf="isCreatingCapa" class="contentAdmin2">
         <app-form-registro-capas (closeForm)="isCreatingCapa = false"></app-form-registro-capas>
       </div>
+
     </div>
   </div>
 </div>
@@ -98,7 +124,7 @@
 <div *ngIf="isViewing" class="modal-overlay">
   <div class="modal-content">
     <h2>Detalles de {{ viewType }}</h2>
-    
+
     <div *ngIf="viewType === 'usuario'">
       <p><strong>Nombre:</strong> {{ viewedItem.nombre }}</p>
       <p><strong>Apellido:</strong> {{ viewedItem.apellido }}</p>

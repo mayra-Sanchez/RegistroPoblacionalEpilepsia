@@ -3,12 +3,12 @@
 
   <form [formGroup]="form" (ngSubmit)="registrarCapa()">
 
-    <!-- <input type="hidden" formControlName="id" /> -->
+    <input type="hidden" formControlName="id" />
 
     <!-- Campo: Nombre de la Capa -->
     <div class="form-row">
-      <input type="text" id="nombreCapa" formControlName="nombreCapa" placeholder="Nombre de la capa" />
-      <div *ngIf="form.get('nombreCapa')?.invalid && form.get('nombreCapa')?.touched" class="error-message">
+      <input type="text" id="nombre" formControlName="nombre" placeholder="Nombre de la capa" />
+      <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="error-message">
         <small>El nombre de la capa es obligatorio.</small>
       </div>
     </div>
@@ -25,16 +25,16 @@
     <div formGroupName="jefeCapa">
       <div class="form-row">
         <input type="text" id="jefeCapaNombre" formControlName="nombre" placeholder="Nombre del jefe de capa" />
-        <div *ngIf="form.get('jefeCapa')?.get('nombre')?.invalid && form.get('jefeCapa')?.get('nombre')?.touched" class="error-message">
+        <div *ngIf="form.get('jefeCapa.nombre')?.invalid && form.get('jefeCapa.nombre')?.touched" class="error-message">
           <small>El nombre del jefe de capa es obligatorio.</small>
         </div>
       </div>
 
       <div class="form-row">
         <input type="hidden" formControlName="id" />
-        <input type="text" id="numeroIdentificacion" formControlName="numeroIdentificacion"
+        <input type="text" id="numeroIdentificacion" formControlName="numero_identificacion"
           placeholder="Número de identificación del jefe" />
-        <div *ngIf="form.get('jefeCapa')?.get('numeroIdentificacion')?.invalid && form.get('jefeCapa')?.get('numeroIdentificacion')?.touched"
+        <div *ngIf="form.get('jefeCapa.numero_identificacion')?.invalid && form.get('jefeCapa.numero_identificacion')?.touched"
           class="error-message">
           <small>El número de identificación es obligatorio.</small>
         </div>
@@ -42,7 +42,7 @@
     </div>
 
     <div class="form-button">
-      <button type="submit" class="btn btn-primary" >Registrar capa</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Registrar capa</button>
     </div>
 
   </form>
