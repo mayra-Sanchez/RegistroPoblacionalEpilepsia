@@ -79,7 +79,7 @@ export class ConsolaAdministradorService {
   // 📌 ACTUALIZAR CAPA
   actualizarCapa(id: string, capa: any): Observable<any> {
     const url = `${this.apiUrl}/ResearchLayer?researchLayerId=${id}`;
-  
+
     return this.http.put(url, capa).pipe(
       catchError(error => {
         console.error('❌ Error en la petición:', error);
@@ -87,7 +87,7 @@ export class ConsolaAdministradorService {
       })
     );
   }
-  
+
 
   // 📌 ELIMINAR CAPA
   eliminarCapa(capaId: string): Observable<any> {
@@ -188,14 +188,16 @@ export class ConsolaAdministradorService {
 
   actualizarVariable(variable: any): Observable<any> {
     const variableData = {
-      id: variable.id,
       idCapaInvestigacion: variable.idCapaInvestigacion,
-      nombreVariable: variable.nombreVariable,
+      nombreVariable: variable.nombreVariable + " ",  // Pequeño truco para forzar cambio
       descripcion: variable.descripcion,
-      tipo: variable.tipo
+      tipo: variable.tipo,
+      opciones: variable.opciones || []
     };
 
-    return this.http.put<any>(`${this.API_VARIABLES}`, variableData).pipe(
+    const url = `${this.API_VARIABLES}?variableId=${variable.id}`;
+
+    return this.http.put<any>(url, variableData).pipe(
       tap(() => {
         console.log('Variable actualizada:', variableData);
         this.variablesUpdated.next();

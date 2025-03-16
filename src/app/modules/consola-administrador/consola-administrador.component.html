@@ -67,6 +67,41 @@
           (onDelete)="handleDelete($event)">
         </app-table>
       </div>
+
+      <!-- Modal para Edición de Variable -->
+      <div *ngIf="isEditingVar" class="modal-overlay">
+        <div class="modal-content">
+          <h3>Editar Variable</h3>
+          <form (submit)="guardarEdicionVariable(varToEdit)">
+            <label>Nombre:</label>
+            <input type="text" [(ngModel)]="varToEdit.nombre" name="nombreVariable" required />
+
+            <label>Descripción:</label>
+            <input type="text" [(ngModel)]="varToEdit.descripcion" name="descripcion" required />
+
+            <label>Capa de Investigación:</label>
+            <select [(ngModel)]="varToEdit.capa" name="idCapaInvestigacion" required>
+              <option *ngFor="let capa of capasData" [value]="capa.id">{{ capa.nombreCapa }}</option>
+            </select>
+
+            <label>Tipo:</label>
+            <input type="text" [(ngModel)]="varToEdit.tipo" name="tipo" required />
+
+            <label>Opciones:</label>
+            <div *ngIf="varToEdit.tieneOpciones">
+              <div *ngFor="let opcion of varToEdit.opciones; let i = index">
+                <input type="text" [(ngModel)]="varToEdit.opciones[i]" name="opcion{{i}}" required />
+              </div>
+            </div>
+
+            <div class="modal-buttons">
+              <button type="submit" class="btn btn-success">Guardar</button>
+              <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div *ngIf="isCreatingVar" class="contentAdmin2">
         <app-form-registro-variables (closeForm)="isCreatingVar = false"></app-form-registro-variables>
       </div>
@@ -86,7 +121,6 @@
       </div>
 
       <!-- Modal de Edición de Capa -->
-      <!-- Modal para editar Capa -->
       <div *ngIf="isEditingCapa" class="modal">
         <div class="modal-content">
           <span class="close" (click)="isEditingCapa = false">&times;</span>
@@ -111,11 +145,9 @@
         </div>
       </div>
 
-
       <div *ngIf="isCreatingCapa" class="contentAdmin2">
         <app-form-registro-capas (closeForm)="isCreatingCapa = false"></app-form-registro-capas>
       </div>
-
     </div>
   </div>
 </div>
@@ -138,14 +170,23 @@
       <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
       <p><strong>Capa:</strong> {{ viewedItem.capa }}</p>
       <p><strong>Tipo:</strong> {{ viewedItem.tipo }}</p>
+
+      <!-- Mostrar opciones solo si tiene opciones -->
+      <div *ngIf="viewedItem.tieneOpciones">
+        <p><strong>Opciones:</strong></p>
+        <ul>
+          <li *ngFor="let opcion of viewedItem.opciones">{{ opcion }}</li>
+        </ul>
+      </div>
     </div>
 
     <div *ngIf="viewType === 'capa'">
       <p><strong>Nombre:</strong> {{ viewedItem.nombreCapa }}</p>
       <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
-      <p><strong>Jefe:</strong> {{ viewedItem.jefe }}</p>
+      <p><strong>Jefe de Capa:</strong> {{ viewedItem.jefeCapa.nombre }}</p>
+      <p><strong>ID Jefe:</strong> {{ viewedItem.jefeCapa.numeroIdentificacion }}</p>
     </div>
 
-    <button (click)="closeViewModal()" class="btn btn-secondary">Cerrar</button>
+    <button class="btn btn-secondary" (click)="cerrarModal()">Cerrar</button>
   </div>
 </div>

@@ -24,6 +24,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   isEditingUser: boolean = false;
   userToEdit: any = null;
 
+  isEditingVar: boolean = false;
+  varToEdit: any = null;
+
   isEditingCapa: boolean = false;
   capaToEdit: any = null;
 
@@ -115,7 +118,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           nombre: variable.nombreVariable,
           descripcion: variable.descripcion,
           capa: this.getCapaNombreById(variable.idCapaInvestigacion),
-          tipo: variable.tipo
+          tipo: variable.tipo,
+          tieneOpciones: variable.opciones && variable.opciones.length > 0, // Verifica si tiene opciones
+          opciones: variable.opciones || [] // Asegura que siempre haya un array
         }));
         this.cdr.detectChanges();
       },
@@ -127,6 +132,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
+
 
   loadUsuariosData(): void {
     this.isLoading = true;
@@ -190,20 +196,24 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.isEditingUser = true;
       this.userToEdit = { ...row };
     } else if (tipo === 'capa') {
-      this.capaToEdit = { ...row }; // Clonar el objeto para evitar modificar directamente la referencia
+      this.capaToEdit = { ...row };
       if (!this.capaToEdit.jefeCapa) {
         this.capaToEdit.jefeCapa = { nombre: '', numeroIdentificacion: '' };
       }
       this.isEditingCapa = true;
+    } else if (tipo === 'variable') {
+      this.isEditingVar = true;
+      this.varToEdit = { ...row };
     }
   }
+
 
   guardarEdicionCapa(capaEditada: any): void {
     if (!capaEditada || !capaEditada.id) {
       alert('Error: Falta el ID de la capa.');
       return;
     }
-  
+
     const capaPayload = {
       id: capaEditada.id,
       nombreCapa: capaEditada.nombreCapa,
@@ -214,9 +224,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         numeroIdentificacion: capaEditada.jefeCapa.numeroIdentificacion
       }
     };
-  
+
     console.log('Datos enviados al backend:', capaPayload);
-  
+
     this.consolaService.actualizarCapa(capaEditada.id, capaPayload).subscribe({
       next: () => {
         alert('Capa actualizada con éxito.');
@@ -229,7 +239,49 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  mostrarModal: boolean = false;
+  variableEditada: any = {};
+
+  abrirModal(variable: any) {
+    this.varToEdit = { ...variable };
+    this.isEditingVar = true;
+  }
   
+  cerrarModal() {
+    this.isEditingVar = false;
+  }
+  
+
+  guardarEdicionVariable(variableEditada: any): void {
+    if (!variableEditada || !variableEditada.id) {
+      alert('Error: Falta el ID de la variable.');
+      return;
+    }
+
+    const variablePayload = {
+      id: variableEditada.id,
+      nombreVariable: variableEditada.nombre,
+      descripcion: variableEditada.descripcion,
+      idCapaInvestigacion: variableEditada.capa,
+      tipo: variableEditada.tipo,
+      opciones: variableEditada.opciones || [] // Se aseguran las opciones
+    };
+
+    this.consolaService.actualizarVariable(variablePayload).subscribe({
+      next: () => {
+        alert('Variable actualizada con éxito.');
+        this.isEditingVar = false;
+        this.loadVariablesData(); // Recargar las variables después de actualizar
+        this.cerrarModal(); // Cerrar modal después de guardar
+      },
+      error: (error) => {
+        console.error('Error al actualizar la variable:', error);
+        alert('Error al actualizar la variable.');
+      }
+    });
+  }
+
 
   guardarEdicionUsuario(usuarioEditado: any): void {
     if (!usuarioEditado.id) {
