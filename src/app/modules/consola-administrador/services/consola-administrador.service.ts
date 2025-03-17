@@ -131,14 +131,12 @@ export class ConsolaAdministradorService {
   }
 
   updateUsuario(userId: string, usuario: any): Observable<any> {
-    return this.authService.hasRole('Admin_client_role') ?
-      this.handleRequest(
-        this.http.put<any>(`${this.API_USERS}/update/${userId}`, usuario, { headers: this.getAuthHeaders() }),
-        `✅ Usuario actualizado (ID: ${userId})`
-      ) :
-      throwError(() => new Error('⛔ Acceso denegado.'));
+    // El backend espera /Users/update?userId=xxx con un body que contenga
+    // firstName, lastName, email, etc.
+    const url = `${this.API_USERS}/update?userId=${userId}`;
+    return this.http.put<any>(url, usuario, { headers: this.getAuthHeaders() });
   }
-
+  
   eliminarUsuario(userId: string): Observable<any> {
     return this.authService.hasRole('Admin_client_role') ?
       this.handleRequest(

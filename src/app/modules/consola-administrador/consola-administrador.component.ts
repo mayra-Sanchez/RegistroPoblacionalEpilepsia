@@ -15,9 +15,12 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   isCreatingVar: boolean = false;
   isCreatingCapa: boolean = false;
 
-  capasData: any[] = [];
+  capasData: any[] = [];    // Datos para la tabla de capas
   variablesData: any[] = [];
   usuariosData: any[] = [];
+
+  // Propiedad para almacenar todas las capas (para búsquedas y selects)
+  capas: any[] = [];
 
   isLoading: boolean = false;
 
@@ -30,12 +33,16 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   isEditingCapa: boolean = false;
   capaToEdit: any = null;
 
-  isViewing: boolean = false; // Controla la visibilidad del modal
-  viewedItem: any = null; // Almacena el elemento seleccionado
-  viewType: string = ''; // Guarda el tipo de elemento a visualizar
+  isViewing: boolean = false;
+  viewedItem: any = null;
+  viewType: string = '';
+
+  // Modal para edición de usuario
+  isEditingUserModal: boolean = false;
 
   private destroy$ = new Subject<void>();
 
+  // Columnas para la tabla de usuarios
   usuariosColumns = [
     { field: 'nombre', header: 'Nombre' },
     { field: 'apellido', header: 'Apellido' },
@@ -68,8 +75,27 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.loadCapasData();
-    this.loadUsuariosData();
+    // Cargamos las capas primero para que estén disponibles en selects y para la búsqueda
+    this.consolaService.getAllLayers().subscribe({
+      next: (data: any[]) => {
+        // Asumimos que cada capa tiene 'id' y 'nombreCapa'
+        this.capas = data;
+        // Además, mapeamos para la tabla de capas
+        this.capasData = data.map(capa => ({
+          id: capa.id,
+          nombreCapa: capa.nombreCapa,
+          descripcion: capa.descripcion,
+          jefe: capa.jefeCapa ? capa.jefeCapa.nombre : 'Sin jefe'
+        }));
+        this.cdr.detectChanges();
+        // Ahora cargamos los usuarios
+        this.loadUsuariosData();
+      },
+      error: (err) => {
+        console.error('Error al obtener capas:', err);
+        this.loadUsuariosData(); // Cargar usuarios aunque falle la carga de capas
+      }
+    });
     this.loadVariablesData();
 
     this.consolaService.getCapasUpdatedListener().pipe(takeUntil(this.destroy$)).subscribe(() => {
@@ -88,6 +114,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // Cargar data
   loadCapasData(): void {
     this.isLoading = true;
     this.consolaService.getAllLayers().pipe(takeUntil(this.destroy$)).subscribe({
@@ -96,8 +123,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           id: capa.id,
           nombreCapa: capa.nombreCapa,
           descripcion: capa.descripcion,
-          jefe: capa.jefeCapa.nombre
+          jefeCapa: capa.jefeCapa ? { 
+            id: capa.jefeCapa.id ?? 1, 
+            nombre: capa.jefeCapa.nombre ?? '', 
+            numero_identificacion: capa.jefeCapa.numero_identificacion ?? '' 
+          } : { id: 1, nombre: '', numero_identificacion: '' }
         }));
+        // Actualizamos también la lista general de capas
+        this.capas = this.capasData;
         this.cdr.detectChanges();
       },
       error: () => {
@@ -108,6 +141,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
+  
+  
 
   loadVariablesData(): void {
     this.isLoading = true;
@@ -119,8 +154,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           descripcion: variable.descripcion,
           capa: this.getCapaNombreById(variable.idCapaInvestigacion),
           tipo: variable.tipo,
-          tieneOpciones: variable.opciones && variable.opciones.length > 0, // Verifica si tiene opciones
-          opciones: variable.opciones || [] // Asegura que siempre haya un array
+          tieneOpciones: variable.opciones && variable.opciones.length > 0,
+          opciones: variable.opciones || []
         }));
         this.cdr.detectChanges();
       },
@@ -133,23 +168,32 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-
   loadUsuariosData(): void {
     this.isLoading = true;
     this.consolaService.getAllUsuarios().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
-        this.usuariosData = data.map(user => ({
-          id: user.id,
-          nombre: user.firstName || 'Sin nombre',
-          apellido: user.lastName || 'Sin apellido',
-          email: user.email || 'No disponible',
-          usuario: user.username || 'No disponible',
-          tipoDocumento: user.identificationType || 'No especificado',
-          documento: user.identificationNumber || 'No disponible',
-          fechaNacimiento: user.birthDate || 'No especificada',
-          capa: user.researchLayer || 'No asignada',
-          rol: user.role || 'No especificado'
-        }));
+        this.usuariosData = data.map(user => {
+          // Extraemos atributos personalizados (si existen)
+          const attrs = user.attributes || {};
+          const identificationType = attrs.identificationType ? attrs.identificationType[0] : 'No especificado';
+          const identificationNumber = attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible';
+          const birthDate = attrs.birthDate ? attrs.birthDate[0] : 'No especificada';
+          const researchLayer = attrs.researchLayer ? attrs.researchLayer[0] : 'No asignada';
+
+          return {
+            id: user.id,
+            nombre: user.firstName || 'Sin nombre',
+            apellido: user.lastName || 'Sin apellido',
+            email: user.email || 'No disponible',
+            usuario: user.username || 'No disponible',
+            tipoDocumento: identificationType,
+            documento: identificationNumber,
+            fechaNacimiento: birthDate,
+            // Si researchLayer es distinto a "No asignada", se transforma a nombre usando getCapaNombreById
+            capa: researchLayer !== 'No asignada' ? this.getCapaNombreById(researchLayer) : 'No asignada',
+            rol: user.realmRoles ? user.realmRoles.join(', ') : 'No especificado'
+          };
+        });
         this.cdr.detectChanges();
       },
       error: () => {
@@ -161,8 +205,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  getCapaNombreById(idCapaInvestigacion: string): string {
-    const capa = this.capasData.find(capa => capa.id === idCapaInvestigacion);
+  getCapaNombreById(id: string): string {
+    if (!this.capas || this.capas.length === 0) {
+      return id || 'Capa desconocida';
+    }
+    const capa = this.capas.find((c: any) => c.id === id);
     return capa ? capa.nombreCapa : 'Capa desconocida';
   }
 
@@ -170,6 +217,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     alert(mensaje);
   }
 
+  //Cambio de pestañas
   onTabSelected(tab: string): void {
     this.selectedTab = tab;
     this.isCreatingUser = false;
@@ -185,95 +233,73 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Ver
   handleView(event: any, tipo: string): void {
     this.viewedItem = event;
     this.viewType = tipo;
     this.isViewing = true;
   }
 
+  //Editar
   handleEdit(row: any, tipo: string): void {
     if (tipo === 'usuario') {
-      this.isEditingUser = true;
+      // Para editar usuario abrimos un modal
+      this.isEditingUserModal = true;
       this.userToEdit = { ...row };
     } else if (tipo === 'capa') {
       this.capaToEdit = { ...row };
-      if (!this.capaToEdit.jefeCapa) {
-        this.capaToEdit.jefeCapa = { nombre: '', numeroIdentificacion: '' };
-      }
+
+      console.log('Antes de normalizar:', this.capaToEdit);
+
+      // Si jefeCapa es undefined, se asigna un objeto vacío para evitar errores
+      this.capaToEdit.jefeCapa = this.capaToEdit.jefeCapa || { id: null, nombre: '', numeroIdentificacion: '' };
+
+      console.log('Después de normalizar:', this.capaToEdit);
+
       this.isEditingCapa = true;
+
     } else if (tipo === 'variable') {
       this.isEditingVar = true;
       this.varToEdit = { ...row };
     }
   }
 
-
-  guardarEdicionCapa(capaEditada: any): void {
-    if (!capaEditada || !capaEditada.id) {
-      alert('Error: Falta el ID de la capa.');
-      return;
-    }
-
-    const capaPayload = {
-      id: capaEditada.id,
-      nombreCapa: capaEditada.nombreCapa,
-      descripcion: capaEditada.descripcion,
-      jefeCapa: {
-        id: capaEditada.jefeCapa.id || null, // Asegurar ID
-        nombre: capaEditada.jefeCapa.nombre,
-        numeroIdentificacion: capaEditada.jefeCapa.numeroIdentificacion
-      }
-    };
-
-    console.log('Datos enviados al backend:', capaPayload);
-
-    this.consolaService.actualizarCapa(capaEditada.id, capaPayload).subscribe({
-      next: () => {
-        alert('Capa actualizada con éxito.');
-        this.isEditingCapa = false;
-        this.loadCapasData();
-      },
-      error: (error) => {
-        console.error('Error al actualizar la capa:', error);
-        alert('Error al actualizar la capa.');
-      }
-    });
-  }
-
-  mostrarModal: boolean = false;
-  variableEditada: any = {};
-
+  // Modal para edición de variable y ver
   abrirModal(variable: any) {
     this.varToEdit = { ...variable };
     this.isEditingVar = true;
   }
-  
+
   cerrarModal() {
     this.isEditingVar = false;
   }
-  
 
+  closeViewModal(): void {
+    this.isViewing = false;
+    this.viewedItem = null;
+    this.viewType = '';
+  }
+
+  // Guardar lo que se editó
   guardarEdicionVariable(variableEditada: any): void {
     if (!variableEditada || !variableEditada.id) {
       alert('Error: Falta el ID de la variable.');
       return;
     }
-
     const variablePayload = {
       id: variableEditada.id,
       nombreVariable: variableEditada.nombre,
       descripcion: variableEditada.descripcion,
       idCapaInvestigacion: variableEditada.capa,
       tipo: variableEditada.tipo,
-      opciones: variableEditada.opciones || [] // Se aseguran las opciones
+      opciones: variableEditada.opciones || []
     };
-
     this.consolaService.actualizarVariable(variablePayload).subscribe({
       next: () => {
         alert('Variable actualizada con éxito.');
         this.isEditingVar = false;
-        this.loadVariablesData(); // Recargar las variables después de actualizar
-        this.cerrarModal(); // Cerrar modal después de guardar
+        this.loadVariablesData();
+        this.cerrarModal();
       },
       error: (error) => {
         console.error('Error al actualizar la variable:', error);
@@ -282,18 +308,49 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
+  guardarEdicionCapa(): void {
+    if (!this.capaToEdit || !this.capaToEdit.id) {
+      console.error('Error: Datos de la capa incompletos.');
+      return;
+    }
+  
+    const requestBody = {
+      id: this.capaToEdit.id,
+      nombreCapa: this.capaToEdit.nombreCapa?.trim() || '',
+      descripcion: this.capaToEdit.descripcion?.trim() || '',
+      jefeCapa: this.capaToEdit.jefeCapa ? {
+        id: this.capaToEdit.jefeCapa.id ?? 1,
+        nombre: this.capaToEdit.jefeCapa.nombre?.trim() || '',
+        numeroIdentificacion: this.capaToEdit.jefeCapa.numeroIdentificacion?.trim() || ''
+      } : { id: null, nombre: '', numeroIdentificacion: '' }
+    };
+  
+    this.consolaService.actualizarCapa(this.capaToEdit.id, requestBody)
+      .subscribe({
+        next: () => {
+          alert('Capa actualizada con éxito.');
+          this.isEditingCapa = false;
+          this.loadCapasData();
+        },
+        error: (error) => {
+          console.error('Error al actualizar la capa:', error);
+          alert('Error al actualizar la capa.');
+        }
+      });
+  }
+  
 
   guardarEdicionUsuario(usuarioEditado: any): void {
     if (!usuarioEditado.id) {
       this.mostrarMensajeError('Error: Falta el ID del usuario.');
       return;
     }
-
+    console.log('Datos a actualizar para usuario:', JSON.stringify(usuarioEditado, null, 2));
     this.consolaService.updateUsuario(usuarioEditado.id, usuarioEditado).subscribe({
       next: () => {
-        this.mostrarMensajeError('Usuario actualizado con éxito.');
-        this.isEditingUser = false; // Cierra el formulario de edición
-        this.loadUsuariosData(); // Recarga la lista de usuarios
+        alert('Usuario actualizado con éxito.');
+        this.isEditingUserModal = false;
+        this.loadUsuariosData();
       },
       error: (error) => {
         console.error('Error al actualizar el usuario:', error);
@@ -302,6 +359,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Eliminar
   handleDelete(row: any): void {
     const confirmacion = confirm('¿Estás seguro de que deseas eliminar este elemento?');
     if (confirmacion) {
@@ -340,12 +398,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     }
   }
 
-  closeViewModal(): void {
-    this.isViewing = false;
-    this.viewedItem = null;
-    this.viewType = '';
-  }
-
+  // Crear 
   crearNuevaVariable(): void {
     this.isCreatingVar = true;
   }
