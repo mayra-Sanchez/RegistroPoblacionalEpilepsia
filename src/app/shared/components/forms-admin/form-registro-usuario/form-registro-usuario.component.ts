@@ -61,9 +61,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
         password: this.usuarioForm.value.password,
         identificationType: this.usuarioForm.value.tipoDocumento,
         identificationNumber: Number(this.usuarioForm.value.numeroDocumento),
-        // Se espera que el input de tipo "date" devuelva un valor en formato ISO (ej. "2016-05-03")
         birthDate: this.usuarioForm.value.fechaNacimiento,
-        // Enviar el id de la capa seleccionada
         researchLayer: this.usuarioForm.value.capaInvestigacion,
         role: this.usuarioForm.value.rol
       };
