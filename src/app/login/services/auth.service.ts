@@ -89,30 +89,34 @@ export class AuthService {
 
   refreshToken(): Observable<any> {
     const refreshToken = localStorage.getItem('refresh_token');
+  
     if (!refreshToken) {
+      console.error('⚠️ No hay refresh token en localStorage. Haciendo logout.');
       this.logout();
-      return throwError(() => new Error('No hay refresh token disponible.'));
+      return throwError(() => new Error('No hay refresh token.'));
     }
-
-    return this.http.post(`${this.backendUrl}/refresh`, { refreshToken }).pipe(
+  
+    return this.http.post<any>('http://localhost:8080/auth/refresh', { refreshToken }, {
+      headers: new HttpHeaders().set('Content-Type', 'application/json'),
+    }).pipe(
       tap((response: any) => {
+        console.log('🔄 Token refrescado:', response);
         if (response.access_token) {
-          console.log('🔄 Token refrescado con éxito');
           localStorage.setItem('kc_token', response.access_token);
           localStorage.setItem('refresh_token', response.refresh_token);
-          this.authStatus.next(true);
         } else {
           console.warn('⚠️ No se recibió nuevo access_token.');
           this.logout();
         }
       }),
       catchError(error => {
-        console.error('❌ Error al refrescar el token:', error);
+        console.error('❌ Error al refrescar token:', error);
         this.logout();
-        return throwError(() => error);
+        return throwError(() => new Error('No se pudo refrescar el token.'));
       })
     );
   }
+  
 
   logout(): void {
     localStorage.removeItem('kc_token');

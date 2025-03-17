@@ -65,8 +65,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   capasColumns = [
     { field: 'nombreCapa', header: 'Nombre' },
     { field: 'descripcion', header: 'Descripción' },
-    { field: 'jefeCapa.nombre', header: 'Jefe de capa' }
-  ];
+    { field: 'jefeCapaNombre', header: 'Jefe de capa' }
+];
 
   constructor(
     private consolaService: ConsolaAdministradorService,
@@ -115,21 +115,30 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.consolaService.getAllLayers().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
+        console.log('📊 Datos de capas recibidos:', data);
+  
         this.capasData = data.map(capa => ({
           id: capa.id,
           nombreCapa: capa.nombreCapa,
           descripcion: capa.descripcion,
-          jefeCapa: capa.jefeCapa ? {
-            id: capa.jefeCapa.id ?? 1,
-            nombre: capa.jefeCapa.nombre ?? '',
-            numeroIdentificacion: capa.jefeCapa.numeroIdentificacion ?? ''
-          } : { id: 1, nombre: '', numeroIdentificacion: '' }
+          jefeCapa: capa.jefeCapa
+            ? {
+                id: capa.jefeCapa.id ?? 1,
+                nombre: capa.jefeCapa.nombre,
+                numeroIdentificacion: capa.jefeCapa.numeroIdentificacion?.trim() || 'N/A'
+              }
+            : { id: 1, nombre: 'Sin asignar', numeroIdentificacion: 'N/A' },
+          jefeCapaNombre: capa.jefeCapa?.nombre || 'Sin asignar' // 👀 Nuevo campo solo para la tabla
         }));
-        // Actualizamos también la lista general de capas
+        
+  
+        console.log('✅ Capas procesadas:', this.capasData);
+  
         this.capas = this.capasData;
-        this.cdr.detectChanges();
+        this.cdr.detectChanges(); // Forzar actualización en la vista
       },
-      error: () => {
+      error: (err) => {
+        console.error('❌ Error al obtener capas:', err);
         this.mostrarMensajeError('No se pudo cargar la información de las capas');
       },
       complete: () => {
@@ -137,8 +146,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-
+  
 
   loadVariablesData(): void {
     this.isLoading = true;

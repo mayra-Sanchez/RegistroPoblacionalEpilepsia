@@ -84,7 +84,7 @@ export class ConsolaAdministradorService {
   actualizarCapa(id: string, capaData: any): Observable<any> {
     const url = `http://localhost:8080/api/v1/ResearchLayer?researchLayerId=${id}`;
   
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('kc_token');
   
     if (!token) {
       console.error('❌ No se encontró el token en localStorage');

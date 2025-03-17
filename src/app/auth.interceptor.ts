@@ -38,14 +38,16 @@ export class AuthInterceptor implements HttpInterceptor {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
-
+  
       return this.authService.refreshToken().pipe(
-        switchMap((newToken) => {
+        switchMap((response: any) => {
           this.isRefreshing = false;
-          this.refreshTokenSubject.next(newToken);
-          return next.handle(this.addToken(req, newToken));
+          this.refreshTokenSubject.next(response.access_token);
+  
+          return next.handle(this.addToken(req, response.access_token));
         }),
-        catchError((error) => {
+        catchError(error => {
+          console.error('❌ No se pudo refrescar el token, cerrando sesión.');
           this.isRefreshing = false;
           this.authService.logout();
           return throwError(() => error);
@@ -59,4 +61,5 @@ export class AuthInterceptor implements HttpInterceptor {
       );
     }
   }
+  
 }
