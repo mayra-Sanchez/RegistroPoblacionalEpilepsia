@@ -9,6 +9,8 @@ import { AuthService } from 'src/app/login/services/auth.service';
 })
 export class ConsolaAdministradorService {
 
+  private token: string = '';
+
   private apiUrl = 'http://localhost:8080/api/v1';
 
   private readonly API_URL = 'http://localhost:8080';
@@ -76,18 +78,40 @@ export class ConsolaAdministradorService {
     return this.http.post<any>(this.API_LAYERS, JSON.stringify(capaData), { headers });
   }
 
-  // 📌 ACTUALIZAR CAPA
-  actualizarCapa(id: string, capa: any): Observable<any> {
-    const url = `${this.apiUrl}/ResearchLayer?researchLayerId=${id}`;
 
-    return this.http.put(url, capa).pipe(
+
+  // 📌 ACTUALIZAR USUARIO
+  actualizarCapa(id: string, capaData: any): Observable<any> {
+    const url = `http://localhost:8080/api/v1/ResearchLayer?researchLayerId=${id}`;
+  
+    const token = localStorage.getItem('access_token');
+  
+    if (!token) {
+      console.error('❌ No se encontró el token en localStorage');
+      alert('No autenticado. Por favor, inicia sesión.');
+      return throwError(() => new Error('No autenticado'));
+    }
+  
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  
+    console.log('🔹 URL de la solicitud:', url);
+    console.log('🔹 Token enviado:', token);
+    console.log('🔹 Headers enviados:', headers.keys());
+    console.log('🔹 Cuerpo enviado:', JSON.stringify(capaData, null, 2));
+  
+    return this.http.put(url, capaData, { headers }).pipe(
       catchError(error => {
-        console.error('❌ Error en la petición:', error);
-        return throwError(() => new Error('Ocurrió un error en la solicitud.'));
+        console.error('❌ Error en la solicitud:', error);
+        return throwError(() => new Error('Error en la actualización'));
       })
     );
   }
-
+  
+  
 
   // 📌 ELIMINAR CAPA
   eliminarCapa(capaId: string): Observable<any> {
@@ -136,7 +160,7 @@ export class ConsolaAdministradorService {
     const url = `${this.API_USERS}/update?userId=${userId}`;
     return this.http.put<any>(url, usuario, { headers: this.getAuthHeaders() });
   }
-  
+
   eliminarUsuario(userId: string): Observable<any> {
     return this.authService.hasRole('Admin_client_role') ?
       this.handleRequest(

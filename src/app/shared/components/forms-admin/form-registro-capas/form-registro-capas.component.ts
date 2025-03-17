@@ -29,7 +29,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       jefeCapa: this.fb.group({
         id: [null],
         nombre: ['', [Validators.required, Validators.minLength(3)]],
-        numero_identificacion: ['', [Validators.required, Validators.minLength(5)]],
+        numeroIdentificacion: ['', [Validators.required, Validators.minLength(5)]],
       }),
     });
   }
@@ -48,7 +48,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
         jefeCapa: {
           id: this.form.value.jefeCapa?.id || 1,
           nombre: this.form.value.jefeCapa?.nombre?.trim(),
-          numero_identificacion: this.form.value.jefeCapa?.numero_identificacion?.trim() || 'N/A',
+          numeroIdentificacion: this.form.value.jefeCapa?.numeroIdentificacion?.trim() || 'N/A',
         },
       };
 

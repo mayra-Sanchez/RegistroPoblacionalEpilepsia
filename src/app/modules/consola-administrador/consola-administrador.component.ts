@@ -65,7 +65,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   capasColumns = [
     { field: 'nombreCapa', header: 'Nombre' },
     { field: 'descripcion', header: 'Descripción' },
-    { field: 'jefe', header: 'Jefe de capa' }
+    { field: 'jefeCapa.nombre', header: 'Jefe de capa' }
   ];
 
   constructor(
@@ -75,29 +75,24 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // Cargamos las capas primero para que estén disponibles en selects y para la búsqueda
+    this.isLoading = true;
     this.consolaService.getAllLayers().subscribe({
       next: (data: any[]) => {
-        // Asumimos que cada capa tiene 'id' y 'nombreCapa'
         this.capas = data;
-        // Además, mapeamos para la tabla de capas
-        this.capasData = data.map(capa => ({
-          id: capa.id,
-          nombreCapa: capa.nombreCapa,
-          descripcion: capa.descripcion,
-          jefe: capa.jefeCapa ? capa.jefeCapa.nombre : 'Sin jefe'
-        }));
         this.cdr.detectChanges();
-        // Ahora cargamos los usuarios
         this.loadUsuariosData();
+        this.loadCapasData(); // Cargar datos de capas
+        this.loadVariablesData(); // Cargar datos de variables
       },
       error: (err) => {
         console.error('Error al obtener capas:', err);
-        this.loadUsuariosData(); // Cargar usuarios aunque falle la carga de capas
+        this.loadUsuariosData();
+        this.loadCapasData();
+        this.loadVariablesData();
       }
     });
-    this.loadVariablesData();
 
+    // Listeners para actualización de datos
     this.consolaService.getCapasUpdatedListener().pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.loadCapasData();
     });
@@ -108,6 +103,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.loadUsuariosData();
     });
   }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -123,11 +119,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           id: capa.id,
           nombreCapa: capa.nombreCapa,
           descripcion: capa.descripcion,
-          jefeCapa: capa.jefeCapa ? { 
-            id: capa.jefeCapa.id ?? 1, 
-            nombre: capa.jefeCapa.nombre ?? '', 
-            numero_identificacion: capa.jefeCapa.numero_identificacion ?? '' 
-          } : { id: 1, nombre: '', numero_identificacion: '' }
+          jefeCapa: capa.jefeCapa ? {
+            id: capa.jefeCapa.id ?? 1,
+            nombre: capa.jefeCapa.nombre ?? '',
+            numeroIdentificacion: capa.jefeCapa.numeroIdentificacion ?? ''
+          } : { id: 1, nombre: '', numeroIdentificacion: '' }
         }));
         // Actualizamos también la lista general de capas
         this.capas = this.capasData;
@@ -141,8 +137,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
-  
+
+
 
   loadVariablesData(): void {
     this.isLoading = true;
@@ -310,36 +306,37 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
   guardarEdicionCapa(): void {
     if (!this.capaToEdit || !this.capaToEdit.id) {
-      console.error('Error: Datos de la capa incompletos.');
+      console.error('❌ Error: ID de la capa no proporcionado.');
+      alert('Error: ID de la capa no proporcionado.');
       return;
     }
   
     const requestBody = {
-      id: this.capaToEdit.id,
-      nombreCapa: this.capaToEdit.nombreCapa?.trim() || '',
+      nombreCapa: this.capaToEdit.nombreCapa  + " ",
       descripcion: this.capaToEdit.descripcion?.trim() || '',
-      jefeCapa: this.capaToEdit.jefeCapa ? {
-        id: this.capaToEdit.jefeCapa.id ?? 1,
-        nombre: this.capaToEdit.jefeCapa.nombre?.trim() || '',
-        numeroIdentificacion: this.capaToEdit.jefeCapa.numeroIdentificacion?.trim() || ''
-      } : { id: null, nombre: '', numeroIdentificacion: '' }
+      jefeCapa: {
+        id: this.capaToEdit.jefeCapa?.id ?? 1,
+        nombre: this.capaToEdit.jefeCapa?.nombre?.trim() || 'N/A',
+        numeroIdentificacion: this.capaToEdit.jefeCapa?.numeroIdentificacion?.trim() || 'N/A'
+      }
     };
+  
+    console.log('🔹 Enviando request para actualizar capa:', JSON.stringify(requestBody, null, 2));
   
     this.consolaService.actualizarCapa(this.capaToEdit.id, requestBody)
       .subscribe({
         next: () => {
-          alert('Capa actualizada con éxito.');
+          alert('✅ Capa actualizada con éxito.');
           this.isEditingCapa = false;
           this.loadCapasData();
         },
         error: (error) => {
-          console.error('Error al actualizar la capa:', error);
-          alert('Error al actualizar la capa.');
+          console.error('❌ Error en la actualización:', error);
+          alert(`Error al actualizar la capa: ${error.message || 'Ver consola para más detalles'}`);
         }
       });
   }
   
-
   guardarEdicionUsuario(usuarioEditado: any): void {
     if (!usuarioEditado.id) {
       this.mostrarMensajeError('Error: Falta el ID del usuario.');

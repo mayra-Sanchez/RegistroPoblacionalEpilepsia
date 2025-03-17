@@ -32,9 +32,9 @@
 
       <div class="form-row">
         <input type="hidden" formControlName="id" />
-        <input type="text" id="numeroIdentificacion" formControlName="numero_identificacion"
+        <input type="text" id="numeroIdentificacion" formControlName="numeroIdentificacion"
           placeholder="Número de identificación del jefe" />
-        <div *ngIf="form.get('jefeCapa.numero_identificacion')?.invalid && form.get('jefeCapa.numero_identificacion')?.touched"
+        <div *ngIf="form.get('jefeCapa.numeroIdentificacion')?.invalid && form.get('jefeCapa.numeroIdentificacion')?.touched"
           class="error-message">
           <small>El número de identificación es obligatorio.</small>
         </div>

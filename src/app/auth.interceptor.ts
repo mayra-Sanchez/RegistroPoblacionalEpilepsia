@@ -1,25 +1,24 @@
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
-import { AuthService } from './login/services/auth.service';
+import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, switchMap, filter, take } from 'rxjs/operators';
+import { AuthService } from './login/services/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
-  private refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = localStorage.getItem('kc_token');
-    let authReq = req;
+    const token = this.authService.getToken();
 
     if (token) {
-      authReq = this.addToken(req, token);
+      req = this.addToken(req, token);
     }
 
-    return next.handle(authReq).pipe(
+    return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
           return this.handle401Error(req, next);
@@ -29,37 +28,35 @@ export class AuthInterceptor implements HttpInterceptor {
     );
   }
 
+  private addToken(req: HttpRequest<any>, token: string) {
+    return req.clone({
+      setHeaders: { Authorization: `Bearer ${token}` }
+    });
+  }
+
   private handle401Error(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 
       return this.authService.refreshToken().pipe(
-        switchMap((res) => {
+        switchMap((newToken) => {
           this.isRefreshing = false;
-          this.refreshTokenSubject.next(res.access_token);
-          return next.handle(this.addToken(req, res.access_token));
+          this.refreshTokenSubject.next(newToken);
+          return next.handle(this.addToken(req, newToken));
         }),
-        catchError((err) => {
+        catchError((error) => {
           this.isRefreshing = false;
           this.authService.logout();
-          return throwError(() => new Error('Sesión expirada, inicia sesión nuevamente.'));
+          return throwError(() => error);
         })
       );
     } else {
       return this.refreshTokenSubject.pipe(
         filter(token => token !== null),
         take(1),
-        switchMap(token => next.handle(this.addToken(req, token!)))
+        switchMap((token) => next.handle(this.addToken(req, token)))
       );
     }
-  }
-
-  private addToken(req: HttpRequest<any>, token: string) {
-    return req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
   }
 }
