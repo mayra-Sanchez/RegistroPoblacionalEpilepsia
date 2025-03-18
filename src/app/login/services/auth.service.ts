@@ -9,7 +9,7 @@ import {jwtDecode} from 'jwt-decode';
   providedIn: 'root',
 })
 export class AuthService {
-  private backendUrl = 'http://localhost:8080'; 
+  private backendUrl = 'http://localhost:8080/api/v1'; 
   private authStatus = new BehaviorSubject<boolean>(this.isLoggedIn());
 
   authStatus$ = this.authStatus.asObservable(); 
@@ -41,6 +41,24 @@ export class AuthService {
     );
   }
 
+  getUsername(): string {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return '';
+  
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded.preferred_username || ''; // Ajusta según la estructura de tu token
+    } catch (error) {
+      console.error('❌ Error al obtener el nombre de usuario:', error);
+      return '';
+    }
+  }
+  
+  getUserRole(): string {
+    const roles = this.getStoredRoles();
+    return roles.length > 0 ? roles[0] : 'Usuario'; // Ajusta para mostrar el rol adecuado
+  }
+  
   private storeUserRoles(token: string) {
     try {
       const decoded: any = jwtDecode(token);
@@ -121,6 +139,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('kc_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('userRoles');
     this.authStatus.next(false);
     this.router.navigate(['/']);
   }

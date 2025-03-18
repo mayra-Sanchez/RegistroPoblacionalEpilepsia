@@ -15,7 +15,7 @@ export class ConsolaAdministradorService {
 
   private readonly API_URL = 'http://localhost:8080';
   private readonly API_LAYERS = `${this.API_URL}/api/v1/ResearchLayer`;
-  private readonly API_USERS = `${this.API_URL}/Users`;
+  private readonly API_USERS = `${this.API_URL}/api/v1/users`;
   private readonly API_VARIABLES = `${this.API_URL}/api/v1/Variable`;
 
   private capasUpdated = new Subject<void>();     // Notifica cambios en capas
@@ -37,8 +37,12 @@ export class ConsolaAdministradorService {
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    return new HttpHeaders({ 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' });
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
   }
+
 
   private handleRequest<T>(obs: Observable<T>, successMsg: string): Observable<T> {
     return obs.pipe(
@@ -83,26 +87,26 @@ export class ConsolaAdministradorService {
   // 📌 ACTUALIZAR USUARIO
   actualizarCapa(id: string, capaData: any): Observable<any> {
     const url = `http://localhost:8080/api/v1/ResearchLayer?researchLayerId=${id}`;
-  
+
     const token = localStorage.getItem('kc_token');
-  
+
     if (!token) {
       console.error('❌ No se encontró el token en localStorage');
       alert('No autenticado. Por favor, inicia sesión.');
       return throwError(() => new Error('No autenticado'));
     }
-  
+
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': `Bearer ${token}`
     });
-  
+
     console.log('🔹 URL de la solicitud:', url);
     console.log('🔹 Token enviado:', token);
     console.log('🔹 Headers enviados:', headers.keys());
     console.log('🔹 Cuerpo enviado:', JSON.stringify(capaData, null, 2));
-  
+
     return this.http.put(url, capaData, { headers }).pipe(
       catchError(error => {
         console.error('❌ Error en la solicitud:', error);
@@ -110,8 +114,8 @@ export class ConsolaAdministradorService {
       })
     );
   }
-  
-  
+
+
 
   // 📌 ELIMINAR CAPA
   eliminarCapa(capaId: string): Observable<any> {
@@ -128,49 +132,92 @@ export class ConsolaAdministradorService {
     );
   }
 
+  private isAdmin(): boolean {
+    const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+    return userRoles.includes('Admin_client_role');
+  }
 
-  // 📌 USUARIOS
+  // 📌 CREAR USUARIO
+  // 📌 OBTENER TODOS LOS USUARIOS
   getAllUsuarios(): Observable<any[]> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden obtener la lista de usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
     return this.handleRequest(
       this.http.get<any[]>(`${this.API_USERS}/GetAll`, { headers: this.getAuthHeaders() }),
       '👥 Usuarios obtenidos'
     );
   }
 
+  // 📌 CREAR USUARIO
   crearUsuario(usuario: any): Observable<any> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden crear usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
     return this.handleRequest(
       this.http.post<any>(`${this.API_USERS}/create`, usuario, { headers: this.getAuthHeaders() }),
       '✅ Usuario creado'
     );
   }
 
-  getUsuarioByEmail(email: string): Observable<any> {
+  // 📌 ACTUALIZAR USUARIO
+  updateUsuario(userId: string, usuario: any): Observable<any> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden actualizar usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
+    const url = `${this.API_USERS}/update?userId=${userId}`;
     return this.handleRequest(
-      this.http.get<any>(`${this.API_USERS}/get`, {
-        headers: this.getAuthHeaders(),
-        params: new HttpParams().set('email', email)
-      }),
-      `📩 Usuario obtenido: ${email}`
+      this.http.put<any>(url, usuario, { headers: this.getAuthHeaders() }),
+      `✏️ Usuario actualizado (ID: ${userId})`
     );
   }
 
-  updateUsuario(userId: string, usuario: any): Observable<any> {
-    // El backend espera /Users/update?userId=xxx con un body que contenga
-    // firstName, lastName, email, etc.
-    const url = `${this.API_USERS}/update?userId=${userId}`;
-    return this.http.put<any>(url, usuario, { headers: this.getAuthHeaders() });
+  // 📌 ELIMINAR USUARIO
+  eliminarUsuario(userId: string): Observable<any> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden eliminar usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
+    return this.handleRequest(
+      this.http.delete<any>(`${this.API_USERS}/delete`, {
+        headers: this.getAuthHeaders(),
+        params: new HttpParams().set('userId', userId)
+      }),
+      `🗑️ Usuario eliminado (ID: ${userId})`
+    );
   }
 
-  eliminarUsuario(userId: string): Observable<any> {
-    return this.authService.hasRole('Admin_client_role') ?
-      this.handleRequest(
-        this.http.delete<any>(`${this.API_USERS}/delete`, {
-          headers: this.getAuthHeaders(),
-          params: new HttpParams().set('userId', userId)
-        }),
-        `🗑️ Usuario eliminado (ID: ${userId})`
-      ) :
-      throwError(() => new Error('⛔ Acceso denegado.'));
+  // 📌 DESHABILITAR USUARIO
+  disableUsuario(userId: string): Observable<any> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden deshabilitar usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
+    return this.handleRequest(
+      this.http.post<any>(`${this.API_USERS}/disableUser`, null, {
+        headers: this.getAuthHeaders(),
+        params: new HttpParams().set('userId', userId)
+      }),
+      `🚫 Usuario deshabilitado (ID: ${userId})`
+    );
+  }
+
+  // 📌 HABILITAR USUARIO
+  enableUsuario(userId: string): Observable<any> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden habilitar usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
+    return this.handleRequest(
+      this.http.post<any>(`${this.API_USERS}/enabledUser`, null, {
+        headers: this.getAuthHeaders(),
+        params: new HttpParams().set('userId', userId)
+      }),
+      `✅ Usuario habilitado (ID: ${userId})`
+    );
   }
 
   // 📌 VARIABLES

@@ -66,7 +66,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     { field: 'nombreCapa', header: 'Nombre' },
     { field: 'descripcion', header: 'Descripción' },
     { field: 'jefeCapaNombre', header: 'Jefe de capa' }
-];
+  ];
 
   constructor(
     private consolaService: ConsolaAdministradorService,
@@ -116,24 +116,24 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.consolaService.getAllLayers().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
         console.log('📊 Datos de capas recibidos:', data);
-  
+
         this.capasData = data.map(capa => ({
           id: capa.id,
           nombreCapa: capa.nombreCapa,
           descripcion: capa.descripcion,
           jefeCapa: capa.jefeCapa
             ? {
-                id: capa.jefeCapa.id ?? 1,
-                nombre: capa.jefeCapa.nombre,
-                numeroIdentificacion: capa.jefeCapa.numeroIdentificacion?.trim() || 'N/A'
-              }
+              id: capa.jefeCapa.id ?? 1,
+              nombre: capa.jefeCapa.nombre,
+              numeroIdentificacion: capa.jefeCapa.numeroIdentificacion?.trim() || 'N/A'
+            }
             : { id: 1, nombre: 'Sin asignar', numeroIdentificacion: 'N/A' },
           jefeCapaNombre: capa.jefeCapa?.nombre || 'Sin asignar' // 👀 Nuevo campo solo para la tabla
         }));
-        
-  
+
+
         console.log('✅ Capas procesadas:', this.capasData);
-  
+
         this.capas = this.capasData;
         this.cdr.detectChanges(); // Forzar actualización en la vista
       },
@@ -146,7 +146,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
+
 
   loadVariablesData(): void {
     this.isLoading = true;
@@ -182,7 +182,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           const identificationType = attrs.identificationType ? attrs.identificationType[0] : 'No especificado';
           const identificationNumber = attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible';
           const birthDate = attrs.birthDate ? attrs.birthDate[0] : 'No especificada';
-          const researchLayer = attrs.researchLayer ? attrs.researchLayer[0] : 'No asignada';
+          const researchLayerId = attrs.researchLayerId ? attrs.researchLayerId[0] : 'No asignada';
 
           return {
             id: user.id,
@@ -193,8 +193,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             tipoDocumento: identificationType,
             documento: identificationNumber,
             fechaNacimiento: birthDate,
-            // Si researchLayer es distinto a "No asignada", se transforma a nombre usando getCapaNombreById
-            capa: researchLayer !== 'No asignada' ? this.getCapaNombreById(researchLayer) : 'No asignada',
+            // Convertir el ID de capa a su nombre si es válido
+            capa: researchLayerId !== 'No asignada' ? this.getCapaNombreById(researchLayerId) : 'No asignada',
             rol: user.realmRoles ? user.realmRoles.join(', ') : 'No especificado'
           };
         });
@@ -208,6 +208,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
+
 
   getCapaNombreById(id: string): string {
     if (!this.capas || this.capas.length === 0) {
@@ -247,7 +248,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   //Editar
   handleEdit(row: any, tipo: string): void {
     if (tipo === 'usuario') {
-      // Para editar usuario abrimos un modal
       this.isEditingUserModal = true;
       this.userToEdit = { ...row };
     } else if (tipo === 'capa') {
@@ -276,6 +276,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
   cerrarModal() {
     this.isEditingVar = false;
+  }
+
+  cerrarModalEdicionUsuario(): void {
+    this.isEditingUserModal = false;
+    this.userToEdit = null;
   }
 
   closeViewModal(): void {
@@ -318,9 +323,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       alert('Error: ID de la capa no proporcionado.');
       return;
     }
-  
+
     const requestBody = {
-      nombreCapa: this.capaToEdit.nombreCapa  + " ",
+      nombreCapa: this.capaToEdit.nombreCapa + " ",
       descripcion: this.capaToEdit.descripcion?.trim() || '',
       jefeCapa: {
         id: this.capaToEdit.jefeCapa?.id ?? 1,
@@ -328,9 +333,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         numeroIdentificacion: this.capaToEdit.jefeCapa?.numeroIdentificacion?.trim() || 'N/A'
       }
     };
-  
+
     console.log('🔹 Enviando request para actualizar capa:', JSON.stringify(requestBody, null, 2));
-  
+
     this.consolaService.actualizarCapa(this.capaToEdit.id, requestBody)
       .subscribe({
         next: () => {
@@ -344,7 +349,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         }
       });
   }
-  
+
   guardarEdicionUsuario(usuarioEditado: any): void {
     if (!usuarioEditado.id) {
       this.mostrarMensajeError('Error: Falta el ID del usuario.');
