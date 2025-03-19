@@ -1,8 +1,8 @@
-/* Estilos generales */
+/* ========== Estilos Generales ========== */
 .admin {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Asegura que ocupe toda la altura de la pantalla */
+  height: 100vh;
   justify-content: flex-start;
   width: 100%;
   padding: 0;
@@ -16,7 +16,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 60px); /* Ajuste para compensar el navbar */
+  min-height: calc(100vh - 60px);
   padding: 20px;
   box-sizing: border-box;
   margin-top: 3%;
@@ -27,185 +27,78 @@ h1, h2 {
   color: #333;
 }
 
-/* Estilos para enlaces de consola */
-.console-link {
-  display: inline-block;
-  margin: 10px;
-  padding: 12px 24px;
-  text-decoration: none;
-  background-color: #4a90e2;
-  color: white;
-  border-radius: 6px;
-  font-weight: bold;
-  transition: background-color 0.3s, transform 0.2s;
-}
-
-.console-link:hover {
-  background-color: #357ab8;
-  transform: scale(1.05);
-}
-
-.info-container {
-  text-align: center;
-}
-
-.inicio-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 30px;
-  margin-top: 5%;
-  flex-wrap: wrap;
-}
-
-.inicio-content p {
-  flex: 1;
-  text-align: justify;
-  font-size: 18px;
-  line-height: 1.8;
-  max-width: 600px;
-}
-
-.inicio-content img {
-  flex: 1;
-  max-width: 550px;
-  height: auto;
-  border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Barra de acciones */
-.action-bar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 15px;
-}
-
-.create-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s, box-shadow 0.2s;
-}
-
-.create-button:hover {
-  background-color: #0056b3;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-body ul {
-  list-style-position: inside; /* Asegura que los bullets de la lista estén alineados con el texto */
-}
-
-.modal-body p,
-.modal-body ul {
-  margin-left: 0; /* Elimina cualquier margen adicional */
-  padding-left: 0; /* Elimina el padding izquierdo */
-}
-
-.modal-content {
-  text-align: left;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  width: 90%;
-  max-width: 450px;
-}
-
-.modal-content h2 {
-  margin-top: 0;
-}
-
-/* Botón secundario */
-.btn-secondary {
-  margin-top: 10px;
-}
-
-/* Estilos para el formulario de edición de capas y variables */
+/* ========== Estilos del Formulario de Edición de Usuario ========== */
 .user-form-container {
-  width: 90%; /* Ancho relativo para adaptarse a pantallas pequeñas */
-  max-width: 700px; /* Ancho máximo para pantallas grandes */
+  width: 90%;
+  max-width: 800px;
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   border: 2px solid rgba(0, 0, 0, 0.2);
-  margin: 20px auto; /* Centra el formulario horizontalmente */
+  margin: 20px auto;
   box-sizing: border-box;
 }
 
-.user-form-container h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-  font-weight: bold;
+/* ========== Diseño Grid (2 columnas en pantallas grandes) ========== */
+.user-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
 }
 
-.form-row {
+.user-form-row {
   display: flex;
-  flex-wrap: wrap; /* Permite que los elementos se ajusten automáticamente */
-  justify-content: space-between;
-  gap: 15px; /* Agrega un espacio entre los inputs */
-  margin-bottom: 15px;
+  flex-direction: column;
 }
 
-.form-row label {
+/* Estilos de etiquetas */
+.user-form-row label {
   font-size: 0.9rem;
+  font-weight: bold;
   margin-bottom: 5px;
-  width: 100%; /* Asegura que el label siempre tenga espacio completo */
 }
 
-.form-row input,
-.form-row select {
-  flex: 1 1 45%; /* Ocupan el 45% del ancho disponible */
-  margin-bottom: 15px;
+/* Inputs y Select */
+.user-form-row input,
+.user-form-row select {
+  width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 0.9rem;
 }
 
-.form-row input:last-child,
-.form-row select:last-child {
-  margin-right: 0;
+/* Deshabilitar algunos campos pero que parezcan editables */
+.user-form-row input:disabled,
+.user-form-row select:disabled {
+  background-color: #f4f4f4;
+  color: #888;
+  cursor: not-allowed;
 }
 
-.fecha {
+/* ========== Botones ========== */
+.user-form-actions {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 15px;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
 }
 
-button.btn-primary {
-  width: 100%;
-  padding: 12px;
-  background-color: #007bff;
-  color: #fff;
+button.btn-primary,
+button.btn-secondary {
+  padding: 10px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 1rem;
-  margin-top: 20px;
   transition: background-color 0.3s ease;
+}
+
+
+button.btn-primary {
+  background-color: #007bff;
+  color: #fff;
 }
 
 button.btn-primary:hover {
@@ -213,70 +106,28 @@ button.btn-primary:hover {
 }
 
 button.btn-secondary {
-  width: 100%;
-  padding: 12px;
   background-color: #ff0000;
   color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  margin-top: 20px;
-  transition: background-color 0.3s ease;
 }
 
 button.btn-secondary:hover {
-  background-color: #ff0000;
-}
-/* Mensajes de error al lado de cada campo */
-.form-row .error-message {
-  color: red;
-  font-size: 0.8rem;
-  margin-left: 10px;  /* Espacio entre el input y el mensaje */
-  align-self: center; /* Centrar el mensaje verticalmente */
+  background-color: #cc0000;
 }
 
-/* Asegurar que el label y el mensaje de error no se solapen */
-.form-row input:invalid + .error-message,
-.form-row select:invalid + .error-message {
-  display: block;
-}
-
-/* Responsividad */
+/* ========== Responsividad ========== */
+/* Para pantallas menores a 768px, cambiar a una sola columna */
 @media (max-width: 768px) {
-  .contentAdmin {
-    padding: 20px;
+  .user-form-grid {
+    grid-template-columns: 1fr;
   }
 
-  .inicio-content {
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
+  .user-form-container {
+    padding: 15px;
   }
 
-  .inicio-content p {
-    max-width: 100%;
-  }
-
-  .inicio-content img {
-    max-width: 100%;
-  }
-
-  .create-button {
+  button.btn-primary,
+  button.btn-secondary {
     width: 100%;
-  }
-
-  .form-row {
-    flex-direction: column; /* Los elementos se apilan verticalmente */
-  }
-
-  .form-row input,
-  .form-row select {
-    flex: 1 1 100%; /* Cada elemento ocupa el 100% del ancho disponible */
-    margin-right: 0; /* Sin espacio extra a la derecha */
-  }
-
-  button.btn-primary {
     font-size: 0.9rem;
     padding: 10px;
   }
@@ -288,10 +139,9 @@ button.btn-secondary:hover {
     padding: 25px;
   }
 
-  .form-row input,
-  .form-row select {
-    flex: 1 1 48%; /* Los elementos ocupan el 48% del ancho */
-    margin-right: 2%; /* Espacio entre columnas */
+  .user-form-row input,
+  .user-form-row select {
+    font-size: 0.9rem;
   }
 }
 
@@ -301,9 +151,8 @@ button.btn-secondary:hover {
     padding: 30px;
   }
 
-  .form-row input,
-  .form-row select {
-    flex: 1 1 45%; /* Elementos más anchos */
+  .user-form-row input,
+  .user-form-row select {
     font-size: 1rem;
   }
 
@@ -311,4 +160,83 @@ button.btn-secondary:hover {
     font-size: 1.1rem;
     padding: 15px;
   }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 600px;
+  max-width: 90%;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 12px;
+  column-gap: 30px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+input, select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+}
+
+input:disabled {
+  background: #f2f2f2;
+  color: #999;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
 }

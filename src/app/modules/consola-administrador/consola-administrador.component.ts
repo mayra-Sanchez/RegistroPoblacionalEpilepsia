@@ -172,30 +172,34 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
+  transformarRol(rol: string): string {
+    const rolesMap: { [key: string]: string } = {
+      'Admi': 'Administrador',
+      'Doctor': 'Doctor',
+      'Researcher': 'Investigador'
+    };
+    return rolesMap[rol] || rol; // Si no está en el mapa, mantiene el valor original
+  }
+
   loadUsuariosData(): void {
     this.isLoading = true;
     this.consolaService.getAllUsuarios().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
         this.usuariosData = data.map(user => {
-          // Extraemos atributos personalizados (si existen)
           const attrs = user.attributes || {};
-          const identificationType = attrs.identificationType ? attrs.identificationType[0] : 'No especificado';
-          const identificationNumber = attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible';
-          const birthDate = attrs.birthDate ? attrs.birthDate[0] : 'No especificada';
-          const researchLayerId = attrs.researchLayerId ? attrs.researchLayerId[0] : 'No asignada';
-
+  
           return {
             id: user.id,
             nombre: user.firstName || 'Sin nombre',
             apellido: user.lastName || 'Sin apellido',
             email: user.email || 'No disponible',
             usuario: user.username || 'No disponible',
-            tipoDocumento: identificationType,
-            documento: identificationNumber,
-            fechaNacimiento: birthDate,
-            // Convertir el ID de capa a su nombre si es válido
-            capa: researchLayerId !== 'No asignada' ? this.getCapaNombreById(researchLayerId) : 'No asignada',
-            rol: user.realmRoles ? user.realmRoles.join(', ') : 'No especificado'
+            tipoDocumento: attrs.identificationType ? attrs.identificationType[0] : 'No especificado',
+            documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
+            fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
+            capa: attrs.researchLayerId ? this.getCapaNombreById(attrs.researchLayerId[0]) : 'No asignada',
+            rol: attrs.role ? attrs.role.map(this.transformarRol).join(', ') : 'No especificado',
+            passwordActual: user.password // Guardamos la contraseña actual para reutilizarla si no se cambia
           };
         });
         this.cdr.detectChanges();
@@ -208,7 +212,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-
+  
 
   getCapaNombreById(id: string): string {
     if (!this.capas || this.capas.length === 0) {
@@ -350,13 +354,67 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       });
   }
 
+  // guardarEdicionUsuario(usuarioEditado: any): void {
+  //   if (!usuarioEditado.id) {
+  //     this.mostrarMensajeError('Error: Falta el ID del usuario.');
+  //     return;
+  //   }
+
+  //   const usuarioPayload = {
+  //     firstName: usuarioEditado.nombre,
+  //     lastName: usuarioEditado.apellido,
+  //     email: usuarioEditado.email,
+  //     username: usuarioEditado.usuario,
+  //     password: '', // No enviamos contraseña, solo si es necesaria
+  //     identificationType: usuarioEditado.tipoDocumento || '',
+  //     identificationNumber: usuarioEditado.documento || '',
+  //     birthDate: usuarioEditado.fechaNacimiento || '',
+  //     researchLayer: usuarioEditado.capa || '',
+  //     role: usuarioEditado.rol.split(', ').map((r: string) => r.trim())[0] || '' // Enviar solo un string, no un array
+  //   };
+
+  //   console.log('Datos a actualizar para usuario:', JSON.stringify(usuarioPayload, null, 2));
+
+  //   this.consolaService.updateUsuario(usuarioEditado.id, usuarioPayload).subscribe({
+  //     next: () => {
+  //       alert('Usuario actualizado con éxito.');
+  //       this.isEditingUserModal = false;
+  //       this.loadUsuariosData();
+  //     },
+  //     error: (error) => {
+  //       console.error('Error al actualizar el usuario:', error);
+  //       this.mostrarMensajeError('Error al actualizar el usuario.');
+  //     }
+  //   });
+  // }
+
+
+  // Eliminar
+
   guardarEdicionUsuario(usuarioEditado: any): void {
     if (!usuarioEditado.id) {
       this.mostrarMensajeError('Error: Falta el ID del usuario.');
       return;
     }
-    console.log('Datos a actualizar para usuario:', JSON.stringify(usuarioEditado, null, 2));
-    this.consolaService.updateUsuario(usuarioEditado.id, usuarioEditado).subscribe({
+
+    const usuarioPayload: any = {
+      firstName: usuarioEditado.nombre,
+      lastName: usuarioEditado.apellido,
+      email: usuarioEditado.email,
+      username: usuarioEditado.usuario,
+      identificationType: usuarioEditado.tipoDocumento || '',
+      identificationNumber: usuarioEditado.documento || '',
+      birthDate: usuarioEditado.fechaNacimiento || '',
+      researchLayer: usuarioEditado.capa || '',
+      role: usuarioEditado.rol.split(', ').map((r: string) => r.trim())[0] || '',
+      password: usuarioEditado.password && usuarioEditado.password.trim() !== ''
+        ? usuarioEditado.password  // Nueva contraseña ingresada
+        : usuarioEditado.passwordActual // Mantiene la actual si no se cambia
+    };
+
+    console.log('Datos a actualizar para usuario:', JSON.stringify(usuarioPayload, null, 2));
+
+    this.consolaService.updateUsuario(usuarioEditado.id, usuarioPayload).subscribe({
       next: () => {
         alert('Usuario actualizado con éxito.');
         this.isEditingUserModal = false;
@@ -369,7 +427,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Eliminar
+
   handleDelete(row: any): void {
     const confirmacion = confirm('¿Estás seguro de que deseas eliminar este elemento?');
     if (confirmacion) {

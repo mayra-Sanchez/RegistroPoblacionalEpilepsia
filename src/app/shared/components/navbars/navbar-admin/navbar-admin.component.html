@@ -1,17 +1,16 @@
 <nav class="navbar">
-    <ul class="navbar-links">
-      <li (click)="selectTab('inicioAdmin')" [class.selected]="selectedTab === 'inicioAdmin'">
-        <a routerLink="#InicioAdmin">Inicio</a>
-      </li>
-      <li (click)="selectTab('gestionUsuarios')" [class.selected]="selectedTab === 'gestionUsuarios'">
-        <a routerLink="#GestionUsuarios">Gestión de usuarios</a>
-      </li>
-      <li (click)="selectTab('gestionVariables')" [class.selected]="selectedTab === 'gestionVariables'">
-        <a routerLink="#GestionVariables">Gestión de variable</a>
-      </li>
-      <li (click)="selectTab('gestionCapas')" [class.selected]="selectedTab === 'gestionCapas'">
-        <a routerLink="#GestionCapasInvestigacion">Gestión de capas de investigación</a>
-      </li>
-    </ul>
-  </nav>
-  
+  <ul class="navbar-links">
+    <li (click)="selectTab('inicioAdmin')" [class.selected]="selectedTab === 'inicioAdmin'">
+      <a>Inicio</a>
+    </li>
+    <li (click)="selectTab('gestionUsuarios')" [class.selected]="selectedTab === 'gestionUsuarios'">
+      <a>Gestión de usuarios</a>
+    </li>
+    <li (click)="selectTab('gestionVariables')" [class.selected]="selectedTab === 'gestionVariables'">
+      <a>Gestión de variables</a>
+    </li>
+    <li (click)="selectTab('gestionCapas')" [class.selected]="selectedTab === 'gestionCapas'">
+      <a>Gestión de capas de investigación</a>
+    </li>
+  </ul>
+</nav>
