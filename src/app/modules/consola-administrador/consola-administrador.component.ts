@@ -10,7 +10,12 @@ import { takeUntil } from 'rxjs/operators';
   styleUrls: ['./consola-administrador.component.css']
 })
 export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
+
   selectedTab: string = 'inicioAdmin';
+  activeTab: string = 'usuarios'; // O el valor por defecto adecuado
+  usuarios: any[] = [];  // O el tipo de datos correcto
+  variables: any[] = []; // O el tipo de datos correcto
+
   isCreatingUser: boolean = false;
   isCreatingVar: boolean = false;
   isCreatingCapa: boolean = false;
@@ -69,7 +74,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   ];
 
   constructor(
-    private consolaService: ConsolaAdministradorService,
+    protected consolaService: ConsolaAdministradorService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) { }
@@ -187,7 +192,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       next: (data: any[]) => {
         this.usuariosData = data.map(user => {
           const attrs = user.attributes || {};
-  
+
           return {
             id: user.id,
             nombre: user.firstName || 'Sin nombre',
@@ -212,7 +217,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
+
 
   getCapaNombreById(id: string): string {
     if (!this.capas || this.capas.length === 0) {
@@ -267,8 +272,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.isEditingCapa = true;
 
     } else if (tipo === 'variable') {
+      this.varToEdit = { ...row }; // Clonamos para evitar modificar directamente
+      if (!this.varToEdit.opciones) {
+        this.varToEdit.opciones = []; // Aseguramos que siempre exista el array
+      }
       this.isEditingVar = true;
-      this.varToEdit = { ...row };
     }
   }
 
@@ -291,6 +299,30 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.isViewing = false;
     this.viewedItem = null;
     this.viewType = '';
+  }
+
+  // Manejo del cambio en "Tiene Opciones"
+  onTieneOpcionesChange() {
+    if (!this.varToEdit.tieneOpciones) {
+      this.varToEdit.opciones = []; // Si se desactiva, eliminamos las opciones
+    } else if (this.varToEdit.opciones.length === 0) {
+      this.varToEdit.opciones = ['']; // Si se activa y no hay opciones, agregamos una vacía
+    }
+  }
+
+  // Agregar opción
+  agregarOpcion() {
+    this.varToEdit.opciones.push('');
+  }
+
+  // Eliminar opción
+  eliminarOpcion(index: number) {
+    this.varToEdit.opciones.splice(index, 1);
+  }
+
+  // trackBy para evitar problemas con *ngFor
+  trackByIndex(index: number, item: any) {
+    return index;
   }
 
   // Guardar lo que se editó
@@ -354,43 +386,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       });
   }
 
-  // guardarEdicionUsuario(usuarioEditado: any): void {
-  //   if (!usuarioEditado.id) {
-  //     this.mostrarMensajeError('Error: Falta el ID del usuario.');
-  //     return;
-  //   }
-
-  //   const usuarioPayload = {
-  //     firstName: usuarioEditado.nombre,
-  //     lastName: usuarioEditado.apellido,
-  //     email: usuarioEditado.email,
-  //     username: usuarioEditado.usuario,
-  //     password: '', // No enviamos contraseña, solo si es necesaria
-  //     identificationType: usuarioEditado.tipoDocumento || '',
-  //     identificationNumber: usuarioEditado.documento || '',
-  //     birthDate: usuarioEditado.fechaNacimiento || '',
-  //     researchLayer: usuarioEditado.capa || '',
-  //     role: usuarioEditado.rol.split(', ').map((r: string) => r.trim())[0] || '' // Enviar solo un string, no un array
-  //   };
-
-  //   console.log('Datos a actualizar para usuario:', JSON.stringify(usuarioPayload, null, 2));
-
-  //   this.consolaService.updateUsuario(usuarioEditado.id, usuarioPayload).subscribe({
-  //     next: () => {
-  //       alert('Usuario actualizado con éxito.');
-  //       this.isEditingUserModal = false;
-  //       this.loadUsuariosData();
-  //     },
-  //     error: (error) => {
-  //       console.error('Error al actualizar el usuario:', error);
-  //       this.mostrarMensajeError('Error al actualizar el usuario.');
-  //     }
-  //   });
-  // }
-
-
-  // Eliminar
-
   guardarEdicionUsuario(usuarioEditado: any): void {
     if (!usuarioEditado.id) {
       this.mostrarMensajeError('Error: Falta el ID del usuario.');
@@ -427,43 +422,53 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-
   handleDelete(row: any): void {
     const confirmacion = confirm('¿Estás seguro de que deseas eliminar este elemento?');
-    if (confirmacion) {
-      const id = String(row.id);
-      if (this.selectedTab === 'gestionUsuarios') {
-        this.consolaService.eliminarUsuario(id).subscribe({
-          next: () => {
-            this.loadUsuariosData();
-          },
-          error: (error) => {
-            console.error('Error al eliminar el usuario:', error);
-            this.mostrarMensajeError('Error al eliminar el usuario');
-          }
-        });
-      } else if (this.selectedTab === 'gestionVariables') {
-        this.consolaService.eliminarVariable(id).subscribe({
-          next: () => {
-            this.loadVariablesData();
-          },
-          error: (error) => {
-            console.error('Error al eliminar la variable:', error);
-            this.mostrarMensajeError('Error al eliminar la variable');
-          }
-        });
-      } else if (this.selectedTab === 'gestionCapas') {
-        this.consolaService.eliminarCapa(id).subscribe({
-          next: () => {
-            this.loadCapasData();
-          },
-          error: (error) => {
-            console.error('Error al eliminar la capa:', error);
-            this.mostrarMensajeError('Error al eliminar la capa');
-          }
-        });
-      }
+    if (!confirmacion) return;
+
+    const id = String(row.id);
+    let eliminarObservable;
+
+    switch (this.selectedTab) {
+      case 'gestionUsuarios':
+        eliminarObservable = this.consolaService.eliminarUsuario(id);
+        break;
+      case 'gestionVariables':
+        eliminarObservable = this.consolaService.eliminarVariable(id);
+        break;
+      case 'gestionCapas':
+        eliminarObservable = this.consolaService.eliminarCapa(id);
+        break;
+      default:
+        console.error('❌ Error: pestaña desconocida');
+        return;
     }
+
+    eliminarObservable.subscribe({
+      next: () => {
+        console.log(`✅ ${this.selectedTab} eliminado correctamente`);
+        this.reloadData(); // Llamamos una función para recargar la data según la pestaña actual
+      },
+      error: (error) => {
+        console.error(`❌ Error al eliminar en ${this.selectedTab}:`, error);
+        this.mostrarMensajeError(`Error al eliminar en ${this.selectedTab}`);
+      }
+    });
+  }
+
+  reloadData(): void {
+    switch (this.selectedTab) {
+      case 'gestionUsuarios':
+        this.loadUsuariosData();
+        break;
+      case 'gestionVariables':
+        this.loadVariablesData();
+        break;
+      case 'gestionCapas':
+        this.loadCapasData();
+        break;
+    }
+    this.cdr.detectChanges(); // Forzamos la actualización de la vista
   }
 
   // Crear 

@@ -13,6 +13,13 @@
         Apellido es obligatorio.
       </div>
     </div>
+
+    <div class="form-row">
+      <input type="text" placeholder="Username" formControlName="username" />
+      <div *ngIf="campoEsValido('username')" class="error-message">
+        El username es obligatorio.
+      </div>
+    </div>
     
     <!-- Tipo de documento -->
     <div class="form-row">

@@ -7,7 +7,7 @@ import { AuthService } from './login/services/auth.service';
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
-  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  private refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
   constructor(private authService: AuthService) {}
 
@@ -37,13 +37,13 @@ export class AuthInterceptor implements HttpInterceptor {
   private handle401Error(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
-      this.refreshTokenSubject.next(null);
-  
+      this.refreshTokenSubject.next(null); // Se limpia para indicar que la actualización está en proceso
+
       return this.authService.refreshToken().pipe(
         switchMap((response: any) => {
           this.isRefreshing = false;
-          this.refreshTokenSubject.next(response.access_token);
-  
+          this.refreshTokenSubject.next(response.access_token); // Se emite el nuevo token
+
           return next.handle(this.addToken(req, response.access_token));
         }),
         catchError(error => {
@@ -55,11 +55,10 @@ export class AuthInterceptor implements HttpInterceptor {
       );
     } else {
       return this.refreshTokenSubject.pipe(
-        filter(token => token !== null),
+        filter(token => token !== null), // Esperamos hasta que haya un token válido
         take(1),
-        switchMap((token) => next.handle(this.addToken(req, token)))
+        switchMap((token) => next.handle(this.addToken(req, token!)))
       );
     }
   }
-  
 }

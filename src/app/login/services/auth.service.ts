@@ -14,24 +14,41 @@ export class AuthService {
 
   authStatus$ = this.authStatus.asObservable(); 
 
-  private isRefreshing = false;
+  private tokenRefreshInterval: any; // Para manejar el intervalo de refresco
+  private readonly refreshTimeMs = 13 * 60 * 1000; // 13 minutos en milisegundos
+  
   
   constructor(private http: HttpClient, private router: Router) {}
 
+  private startTokenRefresh() {
+    if (this.tokenRefreshInterval) {
+      clearInterval(this.tokenRefreshInterval);
+    }
+  
+    this.tokenRefreshInterval = setInterval(() => {
+      this.refreshToken().subscribe({
+        error: () => this.stopTokenRefresh() // Si falla, detenemos el refresco
+      });
+    }, this.refreshTimeMs);
+  }
+
+  private stopTokenRefresh() {
+    if (this.tokenRefreshInterval) {
+      clearInterval(this.tokenRefreshInterval);
+      this.tokenRefreshInterval = null;
+    }
+  }
+  
+  
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this.backendUrl}/auth/login`, { email, password }).pipe(
       tap((response: any) => {
-        console.log('🔍 Respuesta del backend:', response);
-
         if (response.access_token) {
           localStorage.setItem('kc_token', response.access_token);
           localStorage.setItem('refresh_token', response.refresh_token);
-          
           this.authStatus.next(true);
-          // Decodificar el token y guardar los roles
           this.storeUserRoles(response.access_token);
-        } else {
-          console.warn('⚠️ No se recibió token en la respuesta.');
+          this.startTokenRefresh(); // Inicia el refresco automático
         }
       }),
       catchError(error => {
@@ -40,6 +57,7 @@ export class AuthService {
       })
     );
   }
+  
 
   getUsername(): string {
     const token = localStorage.getItem('kc_token');
@@ -141,6 +159,8 @@ export class AuthService {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('userRoles');
     this.authStatus.next(false);
+    this.stopTokenRefresh(); // Detener el refresco automático
     this.router.navigate(['/']);
   }
+  
 }

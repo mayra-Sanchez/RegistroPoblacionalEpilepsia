@@ -22,7 +22,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
       numeroDocumento: new FormControl('', [Validators.required, Validators.pattern('^[0-9]+$')]),
       fechaNacimiento: new FormControl('', [Validators.required]),
       rol: new FormControl('', [Validators.required]),
-      // Este control almacenará el id de la capa seleccionada
+      username: new FormControl('', [Validators.required]),
       capaInvestigacion: new FormControl('', [Validators.required]),
       email: new FormControl('', [Validators.required, Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(6)])
@@ -57,7 +57,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
         firstName: this.usuarioForm.value.nombre,
         lastName: this.usuarioForm.value.apellido,
         email: this.usuarioForm.value.email,
-        username: username,
+        username: this.usuarioForm.value.username,
         password: this.usuarioForm.value.password,
         identificationType: this.usuarioForm.value.tipoDocumento,
         identificationNumber: Number(this.usuarioForm.value.numeroDocumento),

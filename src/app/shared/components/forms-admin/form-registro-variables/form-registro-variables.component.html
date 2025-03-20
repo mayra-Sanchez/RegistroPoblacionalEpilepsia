@@ -20,7 +20,7 @@
 
     <div class="form-row">
       <select formControlName="tipo" required>
-        <option value="" disabled selected>Tipo</option>
+        <option value="" disabled selected>Tipo de variable</option>
         <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
       </select>
       <div *ngIf="campoEsValido('tipo')">
@@ -38,21 +38,24 @@
       </div>
     </div>
 
-    <div class="form-row">
+    <div class="form-row checkbox-row">
       <label>
-        <input type="checkbox" formControlName="tieneOpciones" (change)="onTieneOpcionesChange()" /> ¿Tiene opciones?
+        <span>¿Tiene opciones?</span>
+        <input type="checkbox" formControlName="tieneOpciones" (change)="onTieneOpcionesChange()" />
       </label>
-    </div>
+    </div>    
 
     <div *ngIf="form.value.tieneOpciones" formArrayName="opciones" class="form-row">
-      <label>Opciones:</label>
-      <div *ngFor="let opcion of opciones.controls; let i = index" [formGroupName]="i">
-        <input type="text" formControlName="opcion" required />
-        <button type="button" (click)="eliminarOpcion(i)">Eliminar</button>
+      <label class="options">Opciones:</label>
+      <div *ngFor="let opcion of opciones.controls; let i = index" [formGroupName]="i" class="option-item">
+        <input type="text" class="input-options" formControlName="opcion" required />
+        <button type="button" class="btn btn-delete" (click)="eliminarOpcion(i)">
+          <i class="fas fa-trash"></i> 
+        </button>
       </div>
-      <button type="button" (click)="agregarOpcion()">Agregar opción</button>
+      <button type="button" class="btn btn-agregate" (click)="agregarOpcion()">Agregar opción</button>
     </div>
-
+    
     <div class="form-button">
       <button type="submit" class="btn btn-primary">Crear</button>
     </div>

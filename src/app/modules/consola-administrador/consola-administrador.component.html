@@ -115,15 +115,16 @@
       </div>
 
     </div>
+    <div class="form-buttons">
+      <button (click)="closeViewModal()" class="btn btn-secondary">Cerrar</button>
+    </div>
 
-    <button (click)="closeViewModal()" class="btn btn-secondary">Cerrar</button>
   </div>
 </div>
 
 <!-- Modal para editar Capa -->
 <div *ngIf="isEditingCapa" class="modal-overlay">
   <div class="user-form-container">
-    <span class="close" (click)="isEditingCapa = false">&times;</span>
     <h2>Editar Capa</h2>
     <form (submit)="guardarEdicionCapa()">
       <div class="form-row">
@@ -143,8 +144,10 @@
         <input type="text" [(ngModel)]="capaToEdit.jefeCapa.numeroIdentificacion" name="jefeCapaIdentificacion"
           required />
       </div>
-      <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary" (click)="isEditingCapa = false">Cancelar</button>
+      <div class="form-buttons">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-secondary" (click)="isEditingCapa = false">Cancelar</button>
+      </div>
     </form>
   </div>
 </div>
@@ -153,7 +156,7 @@
 <div *ngIf="isEditingVar" class="modal-overlay">
   <div class="user-form-container">
     <h2>Editar Variable</h2>
-    <form (submit)="guardarEdicionVariable(varToEdit)">
+    <form (ngSubmit)="guardarEdicionVariable(varToEdit)">
       <div class="form-row">
         <label>Nombre:</label>
         <input type="text" [(ngModel)]="varToEdit.nombre" name="nombre" required />
@@ -171,21 +174,38 @@
       <div class="form-row">
         <label>Tipo:</label>
         <input type="text" [(ngModel)]="varToEdit.tipo" name="tipo" required />
+      </div>
 
+      <!-- Selector para "Tiene Opciones" -->
+      <div class="form-row checkbox-row">
+        <label>
+          <span>¿Tiene opciones?</span>
+          <input type="checkbox" [(ngModel)]="varToEdit.tieneOpciones" name="tieneOpciones"
+            (change)="onTieneOpcionesChange()" />
+        </label>
       </div>
-      <div class="form-row">
-        <label>Opciones:</label>
-        <div *ngIf="varToEdit.tieneOpciones">
-          <div *ngFor="let opcion of varToEdit.opciones; let i = index">
-            <input type="text" [(ngModel)]="varToEdit.opciones[i]" name="opcion{{i}}" required />
-          </div>
+
+      <!-- Opciones dinámicas -->
+      <div class="form-row" *ngIf="varToEdit.tieneOpciones">
+        <label class="options">Opciones:</label>
+        <div *ngFor="let opcion of varToEdit.opciones; let i = index; trackBy: trackByIndex" class="option-item">
+          <input type="text" class="input-options" [(ngModel)]="varToEdit.opciones[i]" [name]="'opcion' + i" required />
+          <button type="button" (click)="eliminarOpcion(i)" class="btn btn-danger">✖</button>
         </div>
+        <button type="button" class="btn btn-success" (click)="agregarOpcion()">➕ Agregar Opción</button>
       </div>
-      <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary" (click)="isEditingVar = false">Cancelar</button>
+
+      <div class="form-buttons">
+        <button type="submit" class="btn btn-primary">Guardar datos</button>
+        <button type="button" class="btn btn-secondary" (click)="isEditingVar = false">Cancelar edición</button>
+      </div>
+
     </form>
   </div>
 </div>
+
+
+
 
 <div *ngIf="isEditingUserModal" class="modal-overlay">
   <div class="modal-content">
@@ -204,17 +224,17 @@
 
         <div class="form-row">
           <label>Email:</label>
-          <input type="email" [(ngModel)]="userToEdit.email" name="email" required  />
+          <input type="email" [(ngModel)]="userToEdit.email" name="email" required />
         </div>
 
         <div class="form-row">
           <label>Contraseña (la actual o una nueva):</label>
           <input type="password" [(ngModel)]="userToEdit.password" name="password" placeholder="Nueva contraseña" />
-        </div>        
+        </div>
 
         <div class="form-row">
           <label>Usuario:</label>
-          <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required  />
+          <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required />
         </div>
 
         <div class="form-row">
@@ -229,7 +249,7 @@
 
         <div class="form-row">
           <label>Fecha de Nacimiento:</label>
-          <input type="date" [(ngModel)]="userToEdit.fechaNacimiento" name="fechaNacimiento" required disabled/>
+          <input type="date" [(ngModel)]="userToEdit.fechaNacimiento" name="fechaNacimiento" required disabled />
         </div>
 
         <div class="form-row">
@@ -252,10 +272,9 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-success">Guardar</button>
-        <button type="button" class="btn btn-danger" (click)="isEditingUserModal = false">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-secondary" (click)="isEditingUserModal = false">Cancelar</button>
       </div>
     </form>
   </div>
 </div>
-

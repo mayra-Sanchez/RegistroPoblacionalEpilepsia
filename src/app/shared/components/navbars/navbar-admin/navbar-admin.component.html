@@ -1,16 +1,17 @@
 <nav class="navbar">
   <ul class="navbar-links">
     <li (click)="selectTab('inicioAdmin')" [class.selected]="selectedTab === 'inicioAdmin'">
-      <a>Inicio</a>
+      <a class="text">Inicio</a>
     </li>
     <li (click)="selectTab('gestionUsuarios')" [class.selected]="selectedTab === 'gestionUsuarios'">
-      <a>Gestión de usuarios</a>
+      <a class="text">Gestión de usuarios</a>
     </li>
     <li (click)="selectTab('gestionVariables')" [class.selected]="selectedTab === 'gestionVariables'">
-      <a>Gestión de variables</a>
+      <a class="text">Gestión de variables</a>
     </li>
     <li (click)="selectTab('gestionCapas')" [class.selected]="selectedTab === 'gestionCapas'">
-      <a>Gestión de capas de investigación</a>
+      <a class="text">Gestión de capas de investigación</a>
     </li>
   </ul>
 </nav>
+

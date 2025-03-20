@@ -16,13 +16,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 60px);
   padding: 20px;
   box-sizing: border-box;
-  margin-top: 3%;
 }
 
-h1, h2 {
+h1,
+h2 {
   text-align: center;
   color: #333;
 }
@@ -181,6 +180,7 @@ button.btn-secondary:hover {
   width: 600px;
   max-width: 90%;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  text-align: left;
 }
 
 h2 {
@@ -196,8 +196,15 @@ h2 {
 }
 
 .form-row {
-  display: flex;
   flex-direction: column;
+  margin: 10px;
+}
+
+.form-buttons {
+  display: flex;
+    justify-content: center;
+    gap: 10px; /* Espaciado entre botones */
+  
 }
 
 label {
@@ -205,7 +212,8 @@ label {
   margin-bottom: 5px;
 }
 
-input, select {
+input,
+select {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -232,11 +240,53 @@ input:disabled {
 }
 
 .btn-success {
-  background-color: #28a745;
-  color: white;
+  background-color: #4bc47a;
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 15px;
+  margin-top: 15px;
+}
+
+.btn-success:hover {
+  background-color: #3fae63;
 }
 
 .btn-danger {
-  background-color: #dc3545;
-  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ff0000;
+  color: #fff;
+  border: none;
+  padding: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-danger i {
+  font-size: 18px;
+  /* Tamaño del icono */
+}
+
+.btn-danger:hover {
+  background-color: #e60000;
+}
+
+label.options {
+  margin-right: 5px;
+}
+
+.option-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.input-options {
+  flex: 1;
+  /* Hace que el input ocupe el máximo de espacio disponible */
 }

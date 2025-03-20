@@ -1,14 +1,13 @@
 <nav class="navbar">
-    <ul class="navbar-links">
-      <li (click)="selectTab('inicioInvestigador')" [class.selected]="selectedTab === 'inicioInvestigador'">
-        <a routerLink="#InicioInvestigador">Inicio</a>
-      </li>
-      <li (click)="selectTab('consultaDatos')" [class.selected]="selectedTab === 'consultaDatos'">
-        <a routerLink="#ConsultaDatos">Consulta de datos</a>
-      </li>
-      <li (click)="selectTab('consultasGuardadas')" [class.selected]="selectedTab === 'consultasGuardadas'">
-        <a routerLink="#consultasGuardadas">Consultas guardadas</a>
-      </li>
-    </ul>
-  </nav>
-  
+  <ul class="navbar-links">
+    <li (click)="selectTab('inicioInvestigador')" [class.selected]="selectedTab === 'inicioInvestigador'">
+      <a class="text">Inicio</a>
+    </li>
+    <li (click)="selectTab('consultaDatos')" [class.selected]="selectedTab === 'consultaDatos'">
+      <a class="text">Consulta de datos</a>
+    </li>
+    <li (click)="selectTab('consultasGuardadas')" [class.selected]="selectedTab === 'consultasGuardadas'">
+      <a class="text">Consultas guardadas</a>
+    </li>
+  </ul>
+</nav>
