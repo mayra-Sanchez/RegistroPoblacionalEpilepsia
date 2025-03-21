@@ -1,9 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ModalConfirmacionComponent } from '../../modal-confirmacion/modal-confirmacion.component';
+import Swal from 'sweetalert2';
 
 interface CapaInvestigacion {
   id: string;
@@ -16,15 +14,14 @@ interface CapaInvestigacion {
   styleUrls: ['./form-registro-variables.component.css']
 })
 export class FormRegistroVariablesComponent implements OnInit {
+  @Output() variableCreada = new EventEmitter<void>(); // 🔹 Evento para notificar al padre
   form: FormGroup;
   capasInvestigacion: CapaInvestigacion[] = [];
   tipos = ['Entero', 'Real', 'Cadena', 'Fecha', 'Lógico'];
 
   constructor(
     private fb: FormBuilder,
-    private variableService: ConsolaAdministradorService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private variableService: ConsolaAdministradorService
   ) {
     this.form = this.fb.group({
       nombreVariable: ['', [Validators.required, Validators.minLength(3)]],
@@ -67,7 +64,12 @@ export class FormRegistroVariablesComponent implements OnInit {
 
   crearVariable() {
     if (this.form.invalid) {
-      this.snackBar.open('Formulario inválido. Complete todos los campos correctamente.', 'Cerrar', { duration: 3000 });
+      Swal.fire({
+        title: 'Formulario inválido',
+        text: 'Complete todos los campos correctamente.',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar'
+      });
       return;
     }
 
@@ -77,32 +79,56 @@ export class FormRegistroVariablesComponent implements OnInit {
     };
 
     if (variableData.tieneOpciones && variableData.opciones.length === 0) {
-      this.snackBar.open('Debe agregar al menos una opción.', 'Cerrar', { duration: 3000 });
+      Swal.fire({
+        title: 'Error',
+        text: 'Debe agregar al menos una opción.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar'
+      });
       return;
     }
 
     console.log('Datos enviados para crear variable:', variableData);
 
-    const dialogRef = this.dialog.open(ModalConfirmacionComponent, {
-      width: '300px',
-      panelClass: 'custom-modal',
-      data: {
-        titulo: 'Confirmar variable',
-        mensaje: '¿Estás seguro de registrar esta variable?'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe((confirmado) => {
-      if (confirmado) {
+    Swal.fire({
+      title: '¿Confirmar registro?',
+      text: '¿Estás seguro de registrar esta variable?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, registrar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
         this.variableService.crearVariable(variableData).subscribe({
           next: (response) => {
             console.log('Variable registrada en el backend:', response);
-            this.snackBar.open('Variable registrada con éxito', 'Cerrar', { duration: 3000 });
+            Swal.fire({
+              title: '¡Variable Creada! 🎉',
+              html: `
+                <div style="text-align: center;">
+                  <p>La variable ha sido registrada con éxito.</p>
+                  <img src="https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif" 
+                    alt="Éxito" style="width: 150px; margin-top: 10px;">
+                </div>
+              `,
+              icon: 'success',
+              confirmButtonText: 'Aceptar',
+              confirmButtonColor: '#3085d6',
+              background: '#f1f8ff',
+              timer: 5000,
+              timerProgressBar: true
+            });
             this.limpiarFormulario();
+            this.variableCreada.emit(); // 🔹 Notificar al padre que se creó una variable
           },
           error: (error) => {
             console.error('Error al crear la variable:', error);
-            this.snackBar.open('Error al registrar la variable', 'Cerrar', { duration: 3000 });
+            Swal.fire({
+              title: 'Error',
+              text: 'Hubo un problema al registrar la variable.',
+              icon: 'error',
+              confirmButtonText: 'Aceptar'
+            });
           }
         });
       }

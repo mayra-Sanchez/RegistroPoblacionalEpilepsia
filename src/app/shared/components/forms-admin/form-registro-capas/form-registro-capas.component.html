@@ -4,7 +4,9 @@
   <form [formGroup]="form" (ngSubmit)="registrarCapa()">
 
     <!-- Campo: Nombre de la Capa -->
+    <label>Nombre de la capa:</label>
     <div class="form-row">
+
       <input type="text" id="nombre" formControlName="nombre" placeholder="Nombre de la capa" />
       <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="error-message">
         <small>El nombre de la capa es obligatorio.</small>
@@ -13,6 +15,7 @@
 
     <!-- Campo: Descripción -->
     <div class="form-row">
+      <label>Descripción de la capa:</label>
       <textarea id="descripcion" formControlName="descripcion" placeholder="Descripción"></textarea>
       <div *ngIf="form.get('descripcion')?.invalid && form.get('descripcion')?.touched" class="error-message">
         <small>La descripción es obligatoria.</small>
@@ -21,18 +24,21 @@
 
     <!-- Grupo: Jefe de Capa -->
     <div formGroupName="jefeCapa">
+      <label>Nombre del jefe de capa:</label>
       <div class="form-row">
         <input type="text" id="jefeCapaNombre" formControlName="nombre" placeholder="Nombre del jefe de capa" />
         <div *ngIf="form.get('jefeCapa.nombre')?.invalid && form.get('jefeCapa.nombre')?.touched" class="error-message">
           <small>El nombre del jefe de capa es obligatorio.</small>
         </div>
       </div>
-
+      <label>Numero de identificación del jefe:</label>
       <div class="form-row">
+
         <input type="hidden" formControlName="id" />
         <input type="text" id="numeroIdentificacion" formControlName="numeroIdentificacion"
           placeholder="Número de identificación del jefe" />
-        <div *ngIf="form.get('jefeCapa.numeroIdentificacion')?.invalid && form.get('jefeCapa.numeroIdentificacion')?.touched"
+        <div
+          *ngIf="form.get('jefeCapa.numeroIdentificacion')?.invalid && form.get('jefeCapa.numeroIdentificacion')?.touched"
           class="error-message">
           <small>El número de identificación es obligatorio.</small>
         </div>

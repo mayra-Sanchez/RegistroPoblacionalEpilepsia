@@ -6,20 +6,25 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnInit {
-  @Output() loginSuccess = new EventEmitter<void>(); // 🔹 Emitir evento para cerrar modal
+  @Output() loginSuccess = new EventEmitter<void>();
   loginForm!: FormGroup;
   errorMessage: string = '';
   loading: boolean = false;
+  showPassword: boolean = false;
 
-  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(5)]]
+      password: ['', [Validators.required, Validators.minLength(5)]],
     });
   }
 
@@ -31,23 +36,24 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(email, password).subscribe(
       (response) => {
-        console.log('✅ Login exitoso. Token guardado:', localStorage.getItem('kc_token'));
-
         const roles = this.authService.getStoredRoles();
-        console.log('🎭 Roles del usuario:', roles);
-
         this.redirectUser(roles);
-        this.loginSuccess.emit(); // 🔹 Emitir evento para cerrar modal
+        this.loginSuccess.emit();
       },
       (error) => {
-        console.error('❌ Error en el login:', error);
-        this.errorMessage = '❌ Credenciales incorrectas.';
+        this.errorMessage = '❌ Credenciales incorrectas. Inténtalo de nuevo.';
         this.loading = false;
       },
       () => {
         this.loading = false;
       }
     );
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    passwordInput.type = this.showPassword ? 'text' : 'password';
   }
 
   private redirectUser(roles: string[]) {

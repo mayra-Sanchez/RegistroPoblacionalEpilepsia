@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, throwError, Subject } from 'rxjs';
+import { Observable, throwError, Subject  } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from 'src/app/login/services/auth.service';
 
@@ -10,29 +10,25 @@ import { AuthService } from 'src/app/login/services/auth.service';
 export class ConsolaAdministradorService {
 
   private token: string = '';
-
   private apiUrl = 'http://localhost:8080/api/v1';
-
   private readonly API_URL = 'http://localhost:8080';
   private readonly API_LAYERS = `${this.API_URL}/api/v1/ResearchLayer`;
   private readonly API_USERS = `${this.API_URL}/api/v1/users`;
   private readonly API_VARIABLES = `${this.API_URL}/api/v1/Variable`;
 
-  private capasUpdated = new Subject<void>();     // Notifica cambios en capas
-  private variablesUpdated = new Subject<void>(); // Notifica cambios en variables
-  private usuariosUpdated = new Subject<void>();  // Notifica cambios en usuarios
+  // BehaviorSubject para notificar cambios en los datos
+  private dataUpdated = new Subject<void>();
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
-  // ✅ Escuchar cambios en listas
-  getCapasUpdatedListener(): Observable<void> {
-    return this.capasUpdated.asObservable();
+  // Método para obtener el observable
+  getDataUpdatedListener(): Observable<void> {
+    return this.dataUpdated.asObservable();
   }
-  getVariablesUpdatedListener(): Observable<void> {
-    return this.variablesUpdated.asObservable();
-  }
-  getUsuariosUpdatedListener(): Observable<void> {
-    return this.usuariosUpdated.asObservable();
+
+  // Método para notificar cambios
+  private notifyDataUpdated(): void {
+    this.dataUpdated.next();
   }
 
   private getAuthHeaders(): HttpHeaders {
@@ -42,7 +38,6 @@ export class ConsolaAdministradorService {
       'Authorization': `Bearer ${token}`
     });
   }
-
 
   private handleRequest<T>(obs: Observable<T>, successMsg: string): Observable<T> {
     return obs.pipe(
@@ -55,7 +50,6 @@ export class ConsolaAdministradorService {
   }
 
   // 📌 CAPAS
-  // 📌 OBTENER TODAS LAS CAPAS
   getAllLayers(): Observable<any[]> {
     return this.handleRequest(
       this.http.get<any[]>(`${this.API_LAYERS}/GetAll`, { headers: this.getAuthHeaders() }),
@@ -63,7 +57,6 @@ export class ConsolaAdministradorService {
     );
   }
 
-  // 📌 OBTENER CAPA POR ID
   getLayerById(id: string): Observable<any> {
     return this.handleRequest(
       this.http.get<any>(`${this.API_LAYERS}`, {
@@ -74,20 +67,15 @@ export class ConsolaAdministradorService {
     );
   }
 
-  // 📌 CREAR CAPA
-  // Registrar una nueva capa
   registrarCapa(capaData: any): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-
-    return this.http.post<any>(this.API_LAYERS, JSON.stringify(capaData), { headers });
+    return this.http.post<any>(this.API_LAYERS, JSON.stringify(capaData), { headers }).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de crear
+    );
   }
 
-
-
-  // 📌 ACTUALIZAR USUARIO
   actualizarCapa(id: string, capaData: any): Observable<any> {
     const url = `http://localhost:8080/api/v1/ResearchLayer?researchLayerId=${id}`;
-
     const token = localStorage.getItem('kc_token');
 
     if (!token) {
@@ -102,12 +90,8 @@ export class ConsolaAdministradorService {
       'Authorization': `Bearer ${token}`
     });
 
-    console.log('🔹 URL de la solicitud:', url);
-    console.log('🔹 Token enviado:', token);
-    console.log('🔹 Headers enviados:', headers.keys());
-    console.log('🔹 Cuerpo enviado:', JSON.stringify(capaData, null, 2));
-
     return this.http.put(url, capaData, { headers }).pipe(
+      tap(() => this.notifyDataUpdated()), // Notificar después de actualizar
       catchError(error => {
         console.error('❌ Error en la solicitud:', error);
         return throwError(() => new Error('Error en la actualización'));
@@ -115,15 +99,12 @@ export class ConsolaAdministradorService {
     );
   }
 
-
-
-  // 📌 ELIMINAR CAPA
   eliminarCapa(capaId: string): Observable<any> {
-    const url = `${this.API_LAYERS}?researchLayerId=${capaId}`; // Pasar el ID como query param
+    const url = `${this.API_LAYERS}?researchLayerId=${capaId}`;
     return this.http.delete<any>(url).pipe(
       tap(() => {
         console.log(`Capa eliminada (ID: ${capaId})`);
-        this.capasUpdated.next(); // Notificar actualización
+        this.notifyDataUpdated(); // Notificar después de eliminar
       }),
       catchError((error) => {
         console.error('Error al eliminar la capa:', error);
@@ -132,13 +113,12 @@ export class ConsolaAdministradorService {
     );
   }
 
+  // 📌 USUARIOS
   private isAdmin(): boolean {
     const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
     return userRoles.includes('Admin_client_role');
   }
 
-  // 📌 CREAR USUARIO
-  // 📌 OBTENER TODOS LOS USUARIOS
   getAllUsuarios(): Observable<any[]> {
     if (!this.isAdmin()) {
       console.error('⛔ Acceso denegado: solo los administradores pueden obtener la lista de usuarios.');
@@ -150,7 +130,6 @@ export class ConsolaAdministradorService {
     );
   }
 
-  // 📌 CREAR USUARIO
   crearUsuario(usuario: any): Observable<any> {
     if (!this.isAdmin()) {
       console.error('⛔ Acceso denegado: solo los administradores pueden crear usuarios.');
@@ -159,10 +138,11 @@ export class ConsolaAdministradorService {
     return this.handleRequest(
       this.http.post<any>(`${this.API_USERS}/create`, usuario, { headers: this.getAuthHeaders() }),
       '✅ Usuario creado'
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de crear
     );
   }
 
-  // 📌 ACTUALIZAR USUARIO
   updateUsuario(userId: string, usuario: any): Observable<any> {
     if (!this.isAdmin()) {
       console.error('⛔ Acceso denegado: solo los administradores pueden actualizar usuarios.');
@@ -172,10 +152,11 @@ export class ConsolaAdministradorService {
     return this.handleRequest(
       this.http.put<any>(url, usuario, { headers: this.getAuthHeaders() }),
       `✏️ Usuario actualizado (ID: ${userId})`
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de actualizar
     );
   }
 
-  // 📌 ELIMINAR USUARIO
   eliminarUsuario(userId: string): Observable<any> {
     if (!this.isAdmin()) {
       console.error('⛔ Acceso denegado: solo los administradores pueden eliminar usuarios.');
@@ -187,36 +168,8 @@ export class ConsolaAdministradorService {
         params: new HttpParams().set('userId', userId)
       }),
       `🗑️ Usuario eliminado (ID: ${userId})`
-    );
-  }
-
-  // 📌 DESHABILITAR USUARIO
-  disableUsuario(userId: string): Observable<any> {
-    if (!this.isAdmin()) {
-      console.error('⛔ Acceso denegado: solo los administradores pueden deshabilitar usuarios.');
-      return throwError(() => new Error('⛔ Acceso denegado.'));
-    }
-    return this.handleRequest(
-      this.http.post<any>(`${this.API_USERS}/disableUser`, null, {
-        headers: this.getAuthHeaders(),
-        params: new HttpParams().set('userId', userId)
-      }),
-      `🚫 Usuario deshabilitado (ID: ${userId})`
-    );
-  }
-
-  // 📌 HABILITAR USUARIO
-  enableUsuario(userId: string): Observable<any> {
-    if (!this.isAdmin()) {
-      console.error('⛔ Acceso denegado: solo los administradores pueden habilitar usuarios.');
-      return throwError(() => new Error('⛔ Acceso denegado.'));
-    }
-    return this.handleRequest(
-      this.http.post<any>(`${this.API_USERS}/enabledUser`, null, {
-        headers: this.getAuthHeaders(),
-        params: new HttpParams().set('userId', userId)
-      }),
-      `✅ Usuario habilitado (ID: ${userId})`
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de eliminar
     );
   }
 
@@ -232,6 +185,8 @@ export class ConsolaAdministradorService {
     return this.handleRequest(
       this.http.post<any>(this.API_VARIABLES, variable, { headers: this.getAuthHeaders() }),
       '✅ Variable creada'
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de crear
     );
   }
 
@@ -242,16 +197,8 @@ export class ConsolaAdministradorService {
         params: new HttpParams().set('variableId', variableId)
       }),
       `🗑️ Variable eliminada (ID: ${variableId})`
-    );
-  }
-
-  getVariableById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.API_VARIABLES}/api/v1/Variable?id=${id}`).pipe(
-      tap(data => console.log(`Variable obtenida (ID: ${id}):`, data)),
-      catchError(error => {
-        console.error('Error al obtener la variable:', error);
-        return throwError(() => new Error('No se pudo obtener la variable.'));
-      })
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de eliminar
     );
   }
 
@@ -269,7 +216,7 @@ export class ConsolaAdministradorService {
     return this.http.put<any>(url, variableData).pipe(
       tap(() => {
         console.log('Variable actualizada:', variableData);
-        this.variablesUpdated.next();
+        this.notifyDataUpdated(); // Notificar después de actualizar
       }),
       catchError(error => {
         console.error('Error al actualizar la variable:', error);
@@ -277,5 +224,4 @@ export class ConsolaAdministradorService {
       })
     );
   }
-
 }

@@ -3,6 +3,7 @@
   <form [formGroup]="form" (ngSubmit)="crearVariable()">
     
     <div class="form-row">
+      <label>Nombre de la variable:</label>
       <input type="text" placeholder="Nombre" formControlName="nombreVariable" required />
       <div *ngIf="campoEsValido('nombreVariable')">
         <small class="error-message" *ngIf="form.get('nombreVariable')?.hasError('required')">El nombre es obligatorio.</small>
@@ -11,6 +12,7 @@
     </div>
 
     <div class="form-row">
+      <label>Descripción de la variable:</label>
       <textarea placeholder="Descripción" formControlName="descripcion" required></textarea>
       <div *ngIf="campoEsValido('descripcion')">
         <small class="error-message" *ngIf="form.get('descripcion')?.hasError('required')">La descripción es obligatoria.</small>
@@ -19,6 +21,7 @@
     </div>
 
     <div class="form-row">
+      <label>Tipo de variable:</label>
       <select formControlName="tipo" required>
         <option value="" disabled selected>Tipo de variable</option>
         <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
@@ -29,6 +32,7 @@
     </div>
 
     <div class="form-row">
+      <label>Capa de investigación:</label>
       <select formControlName="idCapaInvestigacion" required>
         <option value="" disabled selected>Selecciona una capa</option>
         <option *ngFor="let capa of capasInvestigacion" [value]="capa.id">{{ capa.nombreCapa }}</option>

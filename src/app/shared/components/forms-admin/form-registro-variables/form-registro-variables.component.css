@@ -144,7 +144,7 @@ button.btn-primary:hover {
 
 @media (min-width: 1024px) {
   .user-form-container {
-    width: 700px; 
+    width: 900px; 
   }
 
   button.btn-primary {

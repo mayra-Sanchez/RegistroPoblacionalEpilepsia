@@ -3,6 +3,7 @@
   <form [formGroup]="usuarioForm" (ngSubmit)="onRegister()">
     <!-- Nombre y Apellido -->
     <div class="form-row">
+      <label>Nombre:</label>
       <input type="text" placeholder="Nombre" formControlName="nombre" />
       <div *ngIf="campoEsValido('nombre')" class="error-message">
         Nombre es obligatorio.
@@ -15,6 +16,7 @@
     </div>
 
     <div class="form-row">
+      <label>Apellido:</label>
       <input type="text" placeholder="Username" formControlName="username" />
       <div *ngIf="campoEsValido('username')" class="error-message">
         El username es obligatorio.
@@ -23,6 +25,7 @@
     
     <!-- Tipo de documento -->
     <div class="form-row">
+      <label>Tipo de documento:</label>
       <select formControlName="tipoDocumento">
         <option value="" disabled selected>Tipo de documento</option>
         <option value="Cedula de ciudadania">Cédula de Ciudadanía</option>
@@ -36,6 +39,7 @@
     
     <!-- Número de documento -->
     <div class="form-row">
+      <label>Número de documento:</label>
       <input type="text" placeholder="Número de documento" formControlName="numeroDocumento" />
       <div *ngIf="campoEsValido('numeroDocumento')" class="error-message">
         El número de documento es obligatorio y debe ser numérico.
@@ -53,6 +57,7 @@
     
     <!-- Rol -->
     <div class="form-row">
+      <label>Rol del usuario:</label>
       <select formControlName="rol">
         <option value="" disabled selected>Rol</option>
         <option value="Admin">Administrador</option>
@@ -66,6 +71,7 @@
     
     <!-- Capa de Investigación -->
     <div class="form-row">
+      <label>Capa de investigación:</label>
       <select formControlName="capaInvestigacion">
         <option value="" disabled selected>Selecciona una capa</option>
         <!-- Se usa la propiedad 'nombreCapa' para mostrar el nombre -->
@@ -78,6 +84,7 @@
     
     <!-- Correo electrónico -->
     <div class="form-row">
+      <label>Email:</label>
       <input type="email" placeholder="Correo electrónico" formControlName="email" />
       <div *ngIf="campoEsValido('email')" class="error-message">
         El correo electrónico es obligatorio y debe ser válido.
@@ -86,6 +93,7 @@
     
     <!-- Contraseña -->
     <div class="form-row">
+      <label>Contraseña:</label>
       <input type="password" placeholder="Contraseña" formControlName="password" />
       <div *ngIf="campoEsValido('password')" class="error-message">
         La contraseña es obligatoria y debe tener al menos 6 caracteres.
