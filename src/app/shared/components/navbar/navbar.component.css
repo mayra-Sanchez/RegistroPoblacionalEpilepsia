@@ -10,10 +10,15 @@
     z-index: 50; /* Esto asegura que el navbar no quede debajo del header */
   }
 
+  a.text{
+    text-align: center;
+  }
+
   .navbar-links {
     list-style-type: none;
     display: flex;
     gap: 30px; 
+    align-items: center;
   }
   
   .navbar-links li a {

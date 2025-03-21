@@ -4,31 +4,38 @@
   </div>
 
   <div class="nav-buttons">
-    <button class="ingresar" (click)="openModal('login')">
+    <!-- Si el usuario NO está autenticado, mostrar botón de Ingresar -->
+    <button class="ingresar" *ngIf="!isLoggedIn" (click)="openModal('login')">
       <i class="fa fa-sign-in-alt"></i>
       Ingresar
     </button>
-    <button class="help-icon" (click)="openModal('manual')">
-      <i class="fa fa-question-circle"></i>
-    </button>
+
+    <!-- Si el usuario está autenticado, mostrar el usuario y ajustes -->
+    <div class="user-info" *ngIf="isLoggedIn">
+      <i class="fa fa-user-circle user-icon"></i> <!-- Icono de usuario -->
+      <button class="username-button">{{ username }}</button> <!-- Nombre del usuario -->
+
+      <button class="settings-button" (click)="toggleSettingsMenu()">
+        <i class="fa fa-cog"></i>
+      </button>
+
+      <div class="menu-dropdown" *ngIf="isSettingsMenuVisible">
+        <button (click)="logout()">Cerrar sesión</button>
+        <button (click)="openModal('manual')">Manual</button>
+      </div>
+    </div>
   </div>
 </div>
+
 
 <!-- Modal -->
 <div class="modal" *ngIf="isModalVisible">
   <div class="modal-container">
-    <span class="close" (click)="closeModal()">&times;</span>
-
-    <ng-container [ngSwitch]="modalType">
-      <!-- Modal de Login -->
-      <div *ngSwitchCase="'login'">
-        <app-login (loginSuccess)="closeModal()"></app-login>
-      </div>
-
-      <!-- Modal del Manual -->
-      <div *ngSwitchCase="'manual'">
-        <app-manual></app-manual>
-      </div>
+    <ng-container *ngIf="modalType === 'login'">
+      <app-login (loginSuccess)="handleLoginSuccess()"></app-login>
+    </ng-container>
+    <ng-container *ngIf="modalType === 'manual'">
+      <app-manual (closeManual)="closeModal()"></app-manual>
     </ng-container>
   </div>
 </div>

@@ -5,12 +5,13 @@
   align-items: center;
   background-color: white;
   width: 100%;
-  height: 80px; /* Altura del header */
+  height: 90px; /* Altura del header */
   padding: 0 30px;
   box-sizing: border-box;
   top: 0;
   left: 0;
   z-index: 1000; 
+  flex-wrap: nowrap;
 }
 
 .logo span {
@@ -18,14 +19,17 @@
   font-size: 80px;
   font-weight: bold;
   color: black;
+  white-space: nowrap
 }
 
 .nav-buttons {
   display: flex;
   align-items: center;
   gap: 15px;
+  white-space: nowrap
 }
 
+/* Botón de ingresar */
 button.ingresar {
   background-color: #1976d2;
   color: white;
@@ -37,6 +41,7 @@ button.ingresar {
   display: flex;
   align-items: center;
   gap: 10px;
+  white-space: nowrap
 }
 
 button.ingresar:hover {
@@ -47,6 +52,7 @@ button.ingresar i {
   font-size: 20px;
 }
 
+/* Botón de ayuda */
 button.help-icon {
   background-color: transparent;
   border: none;
@@ -59,10 +65,7 @@ button.help-icon:hover {
   color: #125699;
 }
 
-button.help-icon i {
-  font-size: 30px;
-}
-
+/* Modal */
 .modal {
   display: flex;
   justify-content: center;
@@ -72,20 +75,20 @@ button.help-icon i {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
 }
 
 .modal-content {
-  position: relative;
   background: white;
   padding: 20px;
   border-radius: 8px;
   width: 90%;
-  max-width: 600px; /* Ajusta este valor según sea necesario */
+  max-width: 600px;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  margin: 20px
+  margin: 20px;
+  position: relative;
 }
 
 .modal-content .close {
@@ -94,29 +97,9 @@ button.help-icon i {
   right: 15px;
   font-size: 20px;
   cursor: pointer;
-  color: #888;
 }
 
-.modal-content .close:hover {
-  color: black;
-}
-
-
-.modal-content h2 {
-  margin-bottom: 15px;
-}
-
-.modal-content ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.modal-content li {
-  margin-bottom: 10px;
-}
-
-
-
+/* Animación de entrada */
 @keyframes fadeIn {
   from {
     transform: translateY(-20px);
@@ -128,25 +111,15 @@ button.help-icon i {
   }
 }
 
-
 .manual-content {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  width: 800px;
+  width: 90%;
+  max-width: 800px;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   animation: fadeIn 0.3s ease;
-}
-
-.manual-content {
-  position: relative;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 800px;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .manual-content .close {
@@ -162,25 +135,102 @@ button.help-icon i {
   color: black;
 }
 
-/* Responsividad para el formulario de inicio de sesión y recuperación de contraseña */
-@media (max-width: 600px) {
-  .modal-content {
-    width: 90%;
+/* Usuario y configuración */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.username-button {
+  background-color: #1273c4;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.settings-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: black;
+}
+
+/* Menú desplegable */
+.menu-dropdown {
+  position: absolute;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+  right: 0;
+  top: 40px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+}
+
+.menu-dropdown button {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-size: 14px;
+}
+
+.menu-dropdown button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Responsividad */
+@media (max-width: 1024px) {
+  .header {
+    padding: 10px 20px;
   }
 
-  form {
-    padding: 15px;
+  .logo span {
+    font-size: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: row;
+    height: auto;
+    padding: 10px;
   }
 
-  input[type="email"],
-  input[type="password"] {
-    width: calc(100% - 20px);
-    padding: 8px;
+  .nav-buttons {
+    flex-direction: row;
+    gap: 10px;
   }
 
-  button[type="submit"],
-  button[type="button"] {
-    padding: 8px;
-    font-size: 14px;
+  .modal-content, .manual-content {
+    width: 95%;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo span {
+    font-size: 40px;
+  }
+
+  .nav-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .user-info {
+    flex-direction: column;
   }
 }

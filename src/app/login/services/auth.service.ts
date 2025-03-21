@@ -1,108 +1,166 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { jwtDecode } from 'jwt-decode';
-
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { tap, catchError, switchMap } from 'rxjs/operators';
+import {jwtDecode} from 'jwt-decode';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private backendUrl = 'http://localhost:8080'; // URL del backend Spring Boot
+  private backendUrl = 'http://localhost:8080/api/v1'; 
+  private authStatus = new BehaviorSubject<boolean>(this.isLoggedIn());
 
+  authStatus$ = this.authStatus.asObservable(); 
+
+  private tokenRefreshInterval: any; // Para manejar el intervalo de refresco
+  private readonly refreshTimeMs = 13 * 60 * 1000; // 13 minutos en milisegundos
+  
+  
   constructor(private http: HttpClient, private router: Router) {}
 
-  // Método para iniciar sesión
+  private startTokenRefresh() {
+    if (this.tokenRefreshInterval) {
+      clearInterval(this.tokenRefreshInterval);
+    }
+  
+    this.tokenRefreshInterval = setInterval(() => {
+      this.refreshToken().subscribe({
+        error: () => this.stopTokenRefresh() // Si falla, detenemos el refresco
+      });
+    }, this.refreshTimeMs);
+  }
+
+  private stopTokenRefresh() {
+    if (this.tokenRefreshInterval) {
+      clearInterval(this.tokenRefreshInterval);
+      this.tokenRefreshInterval = null;
+    }
+  }
+  
+  
   login(email: string, password: string): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-    return this.http.post(`${this.backendUrl}/auth/login`, { email, password }, { headers }).pipe(
+    return this.http.post(`${this.backendUrl}/auth/login`, { email, password }).pipe(
       tap((response: any) => {
-        console.log('Respuesta del backend:', response);
-        if (response && response.token) {
-          // Guardar el token y roles en el localStorage
-          localStorage.setItem('kc_token', response.token);
-          localStorage.setItem('userRoles', JSON.stringify(response.roles || []));
-        } else {
-          console.warn('No se recibió token en la respuesta.');
+        if (response.access_token) {
+          localStorage.setItem('kc_token', response.access_token);
+          localStorage.setItem('refresh_token', response.refresh_token);
+          this.authStatus.next(true);
+          this.storeUserRoles(response.access_token);
+          this.startTokenRefresh(); // Inicia el refresco automático
         }
       }),
-      catchError(this.handleError)
+      catchError(error => {
+        console.error('❌ Error en el login:', error);
+        throw error;
+      })
     );
   }
+  
 
-  // Método para cerrar sesión
-  logout(): void {
-    localStorage.removeItem('kc_token');
-    localStorage.removeItem('userRoles');
-    this.router.navigate(['/']);
-  }
-
-  // Verifica si hay un token en el localStorage
-  isLoggedIn(): boolean {
-    return !!localStorage.getItem('kc_token');
-  }
-
-  // Recupera el token almacenado
-  getToken(): string | null {
+  getUsername(): string {
     const token = localStorage.getItem('kc_token');
-    console.log('Token recuperado:', token);
-    return token;
-  }
-
-  // Recupera los roles almacenados
-  getStoredRoles(): string[] {
-    return JSON.parse(localStorage.getItem('userRoles') || '[]');
-  }
-
-  // Retorna headers con el token de autorización
-  getAuthHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      Authorization: `Bearer ${this.getToken()}`,
-    });
-  }
-
-  // Decodifica el token para obtener los roles del usuario
-  getUserRoles(): string[] {
-    const token = this.getToken();
-    if (!token) return [];
-
+    if (!token) return '';
+  
     try {
       const decoded: any = jwtDecode(token);
-
-      return decoded.realm_access?.roles || [];
+      return decoded.preferred_username || ''; // Ajusta según la estructura de tu token
     } catch (error) {
-      console.error('Error al decodificar el token', error);
+      console.error('❌ Error al obtener el nombre de usuario:', error);
+      return '';
+    }
+  }
+  
+  getUserRole(): string {
+    const roles = this.getStoredRoles();
+    return roles.length > 0 ? roles[0] : 'Usuario'; // Ajusta para mostrar el rol adecuado
+  }
+  
+  private storeUserRoles(token: string) {
+    try {
+      const decoded: any = jwtDecode(token);
+      console.log('🔓 Token decodificado:', decoded);
+
+      // Extraer los roles específicos del cliente "registers-users-api-rest"
+      const roles = decoded.resource_access?.["registers-users-api-rest"]?.roles || [];
+      console.log('🎭 Roles extraídos:', roles);
+
+      localStorage.setItem('userRoles', JSON.stringify(roles));
+    } catch (error) {
+      console.error('❌ Error al decodificar el token:', error);
+    }
+  }
+
+  getStoredRoles(): string[] {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return [];
+  
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1])); // Decodificar el token JWT
+      const realmRoles = tokenPayload.realm_access?.roles || [];
+      const clientRoles = tokenPayload.resource_access?.['registers-users-api-rest']?.roles || [];
+      
+      return [...realmRoles, ...clientRoles]; // 🔹 Combinar ambos tipos de roles
+    } catch (error) {
+      console.error('❌ Error al obtener roles del token:', error);
       return [];
     }
   }
-
-  // Carga y guarda los roles desde el token en el localStorage
-  async loadUserRoles(): Promise<void> {
-    const token = this.getToken();
-    if (!token) return;
-
-    try {
-      const decoded: any = jwtDecode(token);
-
-      const roles = decoded.realm_access?.roles || [];
-      localStorage.setItem('userRoles', JSON.stringify(roles));
-    } catch (error) {
-      console.error('Error al cargar roles:', error);
-    }
+  
+  hasRole(requiredRole: string): boolean {
+    const userRoles = this.getStoredRoles();
+    return userRoles.includes(requiredRole);
+    
   }
 
-  // Manejo de errores HTTP
-  private handleError(error: HttpErrorResponse) {
-    console.error('Error en la solicitud:', error);
-    if (error.status === 0) {
-      console.error('El backend no responde o hay un problema de conexión.');
-    } else {
-      console.error(`Código de error: ${error.status}, Mensaje: ${error.message}`);
-    }
-    return throwError(() => new Error('Error en la autenticación. Inténtalo de nuevo más tarde.'));
+  getToken(): string | null {
+    return localStorage.getItem('kc_token');
   }
+
+  isLoggedIn(): boolean {
+    const token = localStorage.getItem('kc_token');
+    return !!token;
+  }
+
+  refreshToken(): Observable<any> {
+    const refreshToken = localStorage.getItem('refresh_token');
+  
+    if (!refreshToken) {
+      console.error('⚠️ No hay refresh token en localStorage. Haciendo logout.');
+      this.logout();
+      return throwError(() => new Error('No hay refresh token.'));
+    }
+  
+    return this.http.post<any>('http://localhost:8080/auth/refresh', { refreshToken }, {
+      headers: new HttpHeaders().set('Content-Type', 'application/json'),
+    }).pipe(
+      tap((response: any) => {
+        console.log('🔄 Token refrescado:', response);
+        if (response.access_token) {
+          localStorage.setItem('kc_token', response.access_token);
+          localStorage.setItem('refresh_token', response.refresh_token);
+        } else {
+          console.warn('⚠️ No se recibió nuevo access_token.');
+          this.logout();
+        }
+      }),
+      catchError(error => {
+        console.error('❌ Error al refrescar token:', error);
+        this.logout();
+        return throwError(() => new Error('No se pudo refrescar el token.'));
+      })
+    );
+  }
+  
+
+  logout(): void {
+    localStorage.removeItem('kc_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('userRoles');
+    this.authStatus.next(false);
+    this.stopTokenRefresh(); // Detener el refresco automático
+    this.router.navigate(['/']);
+  }
+  
 }

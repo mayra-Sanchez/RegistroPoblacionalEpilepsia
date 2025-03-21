@@ -8,10 +8,9 @@ import { AuthService } from './login/services/auth.service';
 export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
-  async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     try {
-      const isLoggedIn = this.authService.isLoggedIn(); // ✅ Ahora devuelve un booleano
-
+      const isLoggedIn = this.authService.isLoggedIn();
       if (!isLoggedIn) {
         console.warn('⛔ Usuario no autenticado. Redirigiendo al login...');
         this.router.navigate(['/login']);
@@ -19,17 +18,18 @@ export class AuthGuard implements CanActivate {
       }
 
       let userRoles = this.authService.getStoredRoles();
-
       if (!userRoles || userRoles.length === 0) {
-        console.warn('⚠️ No se encontraron roles en localStorage. Cargando...');
-        await this.authService.loadUserRoles();
-        userRoles = this.authService.getStoredRoles();
+        console.warn('⚠️ No se encontraron roles en localStorage.');
+        this.router.navigate(['/unauthorized']); // Redirige a una página de acceso denegado
+        return false;
       }
 
-      const requiredRoles = route.data['roles'];
-      if (requiredRoles && !requiredRoles.some((role: string) => userRoles.includes(role))) {
+      const requiredRoles: string[] = route.data['roles'] || [];
+      const hasAccess = requiredRoles.some((role) => userRoles.includes(role));
+
+      if (!hasAccess) {
         console.warn('⛔ Acceso denegado. No tienes los roles necesarios:', requiredRoles);
-        this.router.navigate(['/']);
+        this.router.navigate(['/unauthorized']); // Página de error de acceso denegado
         return false;
       }
 

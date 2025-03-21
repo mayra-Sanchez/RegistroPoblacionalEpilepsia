@@ -1,7 +1,9 @@
 <div class="user-form-container">
   <h2>Crear variable</h2>
   <form [formGroup]="form" (ngSubmit)="crearVariable()">
+    
     <div class="form-row">
+      <label>Nombre de la variable:</label>
       <input type="text" placeholder="Nombre" formControlName="nombreVariable" required />
       <div *ngIf="campoEsValido('nombreVariable')">
         <small class="error-message" *ngIf="form.get('nombreVariable')?.hasError('required')">El nombre es obligatorio.</small>
@@ -10,6 +12,7 @@
     </div>
 
     <div class="form-row">
+      <label>Descripción de la variable:</label>
       <textarea placeholder="Descripción" formControlName="descripcion" required></textarea>
       <div *ngIf="campoEsValido('descripcion')">
         <small class="error-message" *ngIf="form.get('descripcion')?.hasError('required')">La descripción es obligatoria.</small>
@@ -18,8 +21,9 @@
     </div>
 
     <div class="form-row">
+      <label>Tipo de variable:</label>
       <select formControlName="tipo" required>
-        <option value="" disabled selected>Tipo</option>
+        <option value="" disabled selected>Tipo de variable</option>
         <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
       </select>
       <div *ngIf="campoEsValido('tipo')">
@@ -28,8 +32,9 @@
     </div>
 
     <div class="form-row">
-      <div *ngIf="capasInvestigacion.length === 0">No hay capas disponibles.</div>
-      <select *ngIf="capasInvestigacion.length > 0" formControlName="idCapaInvestigacion" required (change)="onLayerSelect($event)">
+      <label>Capa de investigación:</label>
+      <select formControlName="idCapaInvestigacion" required>
+        <option value="" disabled selected>Selecciona una capa</option>
         <option *ngFor="let capa of capasInvestigacion" [value]="capa.id">{{ capa.nombreCapa }}</option>
       </select>
       <div *ngIf="campoEsValido('idCapaInvestigacion')">
@@ -37,6 +42,24 @@
       </div>
     </div>
 
+    <div class="form-row checkbox-row">
+      <label>
+        <span>¿Tiene opciones?</span>
+        <input type="checkbox" formControlName="tieneOpciones" (change)="onTieneOpcionesChange()" />
+      </label>
+    </div>    
+
+    <div *ngIf="form.value.tieneOpciones" formArrayName="opciones" class="form-row">
+      <label class="options">Opciones:</label>
+      <div *ngFor="let opcion of opciones.controls; let i = index" [formGroupName]="i" class="option-item">
+        <input type="text" class="input-options" formControlName="opcion" required />
+        <button type="button" class="btn btn-delete" (click)="eliminarOpcion(i)">
+          <i class="fas fa-trash"></i> 
+        </button>
+      </div>
+      <button type="button" class="btn btn-agregate" (click)="agregarOpcion()">Agregar opción</button>
+    </div>
+    
     <div class="form-button">
       <button type="submit" class="btn btn-primary">Crear</button>
     </div>

@@ -1,28 +1,76 @@
-<form (ngSubmit)="login()">
-  <h2>Iniciar sesión</h2>
+<div class="login-container">
+  <div class="login-card">
+    <span class="close" (click)="loginSuccess.emit()">&times;</span>
+    <h2>Iniciar Sesión</h2>
+    <p>Bienvenido de nuevo. Por favor, ingresa tus credenciales.</p>
 
-  <!-- Campo de Email -->
-  <div>
-    <label for="email">Correo Electrónico:</label>
-    <input type="email" id="email" [(ngModel)]="email" name="email" required />
-  </div>
+    <form [formGroup]="loginForm" (ngSubmit)="login()">
+      <!-- Campo de Email -->
+      <div class="form-group">
+        <label for="email">Correo Electrónico</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="Ingresa tu correo electrónico"
+        />
+        <div
+          class="error"
+          *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        >
+          <div *ngIf="loginForm.get('email')?.errors?.['required']">
+            El correo electrónico es obligatorio.
+          </div>
+          <div *ngIf="loginForm.get('email')?.errors?.['email']">
+            Debe ser un correo válido.
+          </div>
+        </div>
+      </div>
 
-  <!-- Campo de Password -->
-  <div>
-    <label for="password">Contraseña:</label>
-    <input type="password" id="password" [(ngModel)]="password" name="password" required />
-  </div>
+      <!-- Campo de Contraseña -->
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <div class="password-input">
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="Ingresa tu contraseña"
+          />
+          <span class="toggle-password" (click)="togglePasswordVisibility()">
+            <i *ngIf="!showPassword" class="fas fa-eye"></i> <!-- Ojo abierto -->
+            <i *ngIf="showPassword" class="fas fa-eye-slash"></i> <!-- Ojo cerrado -->
+          </span>
+        </div>
+        <div
+          class="error"
+          *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        >
+          <div *ngIf="loginForm.get('password')?.errors?.['required']">
+            La contraseña es obligatoria.
+          </div>
+          <div *ngIf="loginForm.get('password')?.errors?.['minlength']">
+            Mínimo 5 caracteres.
+          </div>
+        </div>
+      </div>
 
-  <!-- Botón de Login -->
-  <div>
-    <button type="submit" [disabled]="loading">
-      <span *ngIf="!loading">Iniciar Sesión</span>
-      <span *ngIf="loading">🔄 Iniciando...</span>
-    </button>
-  </div>
+      <!-- Botón de Login -->
+      <button type="submit" [disabled]="loginForm.invalid || loading">
+        <span *ngIf="!loading">Iniciar Sesión</span>
+        <span *ngIf="loading" class="spinner"></span>
+      </button>
 
-  <!-- Mensaje de error -->
-  <div *ngIf="errorMessage" class="error">
-    {{ errorMessage }}
+      <!-- Enlaces adicionales
+      <div class="links">
+        <a href="#">¿Olvidaste tu contraseña?</a>
+        <a href="#">Registrarse</a>
+      </div> -->
+    </form>
+
+    <!-- Mensaje de error -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
   </div>
-</form>
+</div>

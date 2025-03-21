@@ -1,168 +1,226 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, throwError, Subject } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable, throwError, Subject  } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
+import { AuthService } from 'src/app/login/services/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConsolaAdministradorService {
-  private apiUrl = 'http://localhost:8080';
 
-  private capasUpdated = new Subject<void>();     // Notifica cambios en capas
-  private variablesUpdated = new Subject<void>();  // Notifica cambios en variables
-  private usuariosUpdated = new Subject<void>();   // Notifica cambios en usuarios
+  private token: string = '';
+  private apiUrl = 'http://localhost:8080/api/v1';
+  private readonly API_URL = 'http://localhost:8080';
+  private readonly API_LAYERS = `${this.API_URL}/api/v1/ResearchLayer`;
+  private readonly API_USERS = `${this.API_URL}/api/v1/users`;
+  private readonly API_VARIABLES = `${this.API_URL}/api/v1/Variable`;
 
-  constructor(private http: HttpClient) {}
+  // BehaviorSubject para notificar cambios en los datos
+  private dataUpdated = new Subject<void>();
 
-  // Listeners para actualizaciones
-  getCapasUpdatedListener(): Observable<void> {
-    return this.capasUpdated.asObservable();
+  constructor(private http: HttpClient, private authService: AuthService) { }
+
+  // Método para obtener el observable
+  getDataUpdatedListener(): Observable<void> {
+    return this.dataUpdated.asObservable();
   }
-  getVariablesUpdatedListener(): Observable<void> {
-    return this.variablesUpdated.asObservable();
-  }
-  getUsuariosUpdatedListener(): Observable<void> {
-    return this.usuariosUpdated.asObservable();
+
+  // Método para notificar cambios
+  private notifyDataUpdated(): void {
+    this.dataUpdated.next();
   }
 
-  // Métodos para ResearchLayer (Capas)
-  getAllLayers(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/api/v1/ResearchLayer/GetAll`).pipe(
-      tap(data => console.log('Capas obtenidas:', data)),
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  }
+
+  private handleRequest<T>(obs: Observable<T>, successMsg: string): Observable<T> {
+    return obs.pipe(
+      tap(response => console.log(successMsg, response)),
       catchError(error => {
-        console.error('Error al obtener las capas:', error);
-        return throwError(() => new Error('No se pudieron obtener las capas.'));
+        console.error('❌ Error en la petición:', error);
+        return throwError(() => new Error(error.error?.message || 'Ocurrió un error en la solicitud.'));
       })
     );
   }
 
-  registrarCapa(capa: any): Observable<any> {
-    const capaData = {
-      id: capa.id || null,
-      nombreCapa: capa.nombreCapa,
-      descripcion: capa.descripcion,
-      jefeCapa: {
-        id: capa.jefeCapa?.id || 1,
-        nombre: capa.jefeCapa?.nombre,
-        numero_identificacion: capa.jefeCapa?.numero_identificacion
-      }
-    };
-
-    return this.http.post<any>(`${this.apiUrl}/api/v1/ResearchLayer`, capaData).pipe(
-      tap(() => {
-        console.log('Capa registrada:', capaData);
-        this.capasUpdated.next();
-      }),
-      catchError(error => {
-        console.error('Error al registrar la capa:', error);
-        return throwError(() => new Error('No se pudo registrar la capa.'));
-      })
+  // 📌 CAPAS
+  getAllLayers(): Observable<any[]> {
+    return this.handleRequest(
+      this.http.get<any[]>(`${this.API_LAYERS}/GetAll`, { headers: this.getAuthHeaders() }),
+      '📊 Capas obtenidas'
     );
   }
 
   getLayerById(id: string): Observable<any> {
-    // Se asume que el controlador espera un parámetro "id"
-    return this.http.get<any>(`${this.apiUrl}/api/v1/ResearchLayer?id=${id}`).pipe(
-      tap(data => console.log(`Capa obtenida (ID: ${id}):`, data)),
+    return this.handleRequest(
+      this.http.get<any>(`${this.API_LAYERS}`, {
+        headers: this.getAuthHeaders(),
+        params: new HttpParams().set('id', id)
+      }),
+      `📌 Capa obtenida (ID: ${id})`
+    );
+  }
+
+  registrarCapa(capaData: any): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post<any>(this.API_LAYERS, JSON.stringify(capaData), { headers }).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de crear
+    );
+  }
+
+  actualizarCapa(id: string, capaData: any): Observable<any> {
+    const url = `http://localhost:8080/api/v1/ResearchLayer?researchLayerId=${id}`;
+    const token = localStorage.getItem('kc_token');
+
+    if (!token) {
+      console.error('❌ No se encontró el token en localStorage');
+      alert('No autenticado. Por favor, inicia sesión.');
+      return throwError(() => new Error('No autenticado'));
+    }
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.put(url, capaData, { headers }).pipe(
+      tap(() => this.notifyDataUpdated()), // Notificar después de actualizar
       catchError(error => {
-        console.error('Error al obtener la capa:', error);
-        return throwError(() => new Error('No se pudo obtener la capa.'));
+        console.error('❌ Error en la solicitud:', error);
+        return throwError(() => new Error('Error en la actualización'));
       })
     );
   }
 
   eliminarCapa(capaId: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/api/v1/ResearchLayer?researchLayerId=${capaId}`).pipe(
+    const url = `${this.API_LAYERS}?researchLayerId=${capaId}`;
+    return this.http.delete<any>(url).pipe(
       tap(() => {
         console.log(`Capa eliminada (ID: ${capaId})`);
-        this.capasUpdated.next();
+        this.notifyDataUpdated(); // Notificar después de eliminar
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('Error al eliminar la capa:', error);
         return throwError(() => new Error('No se pudo eliminar la capa.'));
       })
     );
   }
 
-  // Métodos para Variable
-  crearVariable(variable: any): Observable<any> {
-    const variableData = {
-      id: variable.id || null,
-      idCapaInvestigacion: variable.idCapaInvestigacion,
-      nombreVariable: variable.nombreVariable,
-      descripcion: variable.descripcion,
-      tipo: variable.tipo
-    };
+  // 📌 USUARIOS
+  private isAdmin(): boolean {
+    const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+    return userRoles.includes('Admin_client_role');
+  }
 
-    return this.http.post<any>(`${this.apiUrl}/api/v1/Variable`, variableData).pipe(
-      tap(() => {
-        console.log('Variable creada:', variableData);
-        this.variablesUpdated.next();
-      }),
-      catchError(error => {
-        console.error('Error al crear la variable:', error);
-        return throwError(() => new Error('No se pudo crear la variable.'));
-      })
+  getAllUsuarios(): Observable<any[]> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden obtener la lista de usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
+    return this.handleRequest(
+      this.http.get<any[]>(`${this.API_USERS}/GetAll`, { headers: this.getAuthHeaders() }),
+      '👥 Usuarios obtenidos'
     );
   }
 
+  crearUsuario(usuario: any): Observable<any> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden crear usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
+    return this.handleRequest(
+      this.http.post<any>(`${this.API_USERS}/create`, usuario, { headers: this.getAuthHeaders() }),
+      '✅ Usuario creado'
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de crear
+    );
+  }
+
+  updateUsuario(userId: string, usuario: any): Observable<any> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden actualizar usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
+    const url = `${this.API_USERS}/update?userId=${userId}`;
+    return this.handleRequest(
+      this.http.put<any>(url, usuario, { headers: this.getAuthHeaders() }),
+      `✏️ Usuario actualizado (ID: ${userId})`
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de actualizar
+    );
+  }
+
+  eliminarUsuario(userId: string): Observable<any> {
+    if (!this.isAdmin()) {
+      console.error('⛔ Acceso denegado: solo los administradores pueden eliminar usuarios.');
+      return throwError(() => new Error('⛔ Acceso denegado.'));
+    }
+    return this.handleRequest(
+      this.http.delete<any>(`${this.API_USERS}/delete`, {
+        headers: this.getAuthHeaders(),
+        params: new HttpParams().set('userId', userId)
+      }),
+      `🗑️ Usuario eliminado (ID: ${userId})`
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de eliminar
+    );
+  }
+
+  // 📌 VARIABLES
   getAllVariables(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/api/v1/Variable/GetAll`).pipe(
-      tap(data => console.log('Variables obtenidas:', data)),
-      catchError(error => {
-        console.error('Error al obtener las variables:', error);
-        return throwError(() => new Error('No se pudieron obtener las variables.'));
-      })
+    return this.handleRequest(
+      this.http.get<any[]>(`${this.API_VARIABLES}/GetAll`, { headers: this.getAuthHeaders() }),
+      '📊 Variables obtenidas'
+    );
+  }
+
+  crearVariable(variable: any): Observable<any> {
+    return this.handleRequest(
+      this.http.post<any>(this.API_VARIABLES, variable, { headers: this.getAuthHeaders() }),
+      '✅ Variable creada'
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de crear
     );
   }
 
   eliminarVariable(variableId: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/api/v1/Variable?variableId=${variableId}`).pipe(
-      tap(() => {
-        console.log(`Variable eliminada (ID: ${variableId})`);
-        this.variablesUpdated.next();
+    return this.handleRequest(
+      this.http.delete<any>(this.API_VARIABLES, {
+        headers: this.getAuthHeaders(),
+        params: new HttpParams().set('variableId', variableId)
       }),
-      catchError(error => {
-        console.error('Error al eliminar la variable:', error);
-        return throwError(() => new Error('No se pudo eliminar la variable.'));
-      })
+      `🗑️ Variable eliminada (ID: ${variableId})`
+    ).pipe(
+      tap(() => this.notifyDataUpdated()) // Notificar después de eliminar
     );
   }
 
-  // Métodos para Usuario
-  crearUsuario(usuario: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/Users/create`, usuario).pipe(
+  actualizarVariable(variable: any): Observable<any> {
+    const variableData = {
+      idCapaInvestigacion: variable.idCapaInvestigacion,
+      nombreVariable: variable.nombreVariable + " ",  // Pequeño truco para forzar cambio
+      descripcion: variable.descripcion,
+      tipo: variable.tipo,
+      opciones: variable.opciones || []
+    };
+
+    const url = `${this.API_VARIABLES}?variableId=${variable.id}`;
+
+    return this.http.put<any>(url, variableData).pipe(
       tap(() => {
-        console.log('Usuario creado:', usuario);
-        this.usuariosUpdated.next();
+        console.log('Variable actualizada:', variableData);
+        this.notifyDataUpdated(); // Notificar después de actualizar
       }),
       catchError(error => {
-        console.error('Error al crear el usuario:', error);
-        return throwError(() => new Error('No se pudo crear el usuario.'));
-      })
-    );
-  }
-
-  getAllUsuarios(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/Users/GetAll`).pipe(
-      tap(data => console.log('Usuarios obtenidos:', data)),
-      catchError(error => {
-        console.error('Error al obtener los usuarios:', error);
-        return throwError(() => new Error('No se pudieron obtener los usuarios.'));
-      })
-    );
-  }
-
-  eliminarUsuario(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/Users/delete?userId=${id}`).pipe(
-      tap(() => {
-        console.log(`Usuario eliminado (ID: ${id})`);
-        this.usuariosUpdated.next();
-      }),
-      catchError(error => {
-        console.error('Error al eliminar el usuario:', error);
-        return throwError(() => new Error('No se pudo eliminar el usuario.'));
+        console.error('Error al actualizar la variable:', error);
+        return throwError(() => new Error('No se pudo actualizar la variable.'));
       })
     );
   }

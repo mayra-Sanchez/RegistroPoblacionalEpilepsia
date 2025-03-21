@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
   selector: 'app-manual',
@@ -7,6 +7,8 @@ import { Component } from '@angular/core';
 })
 export class ManualComponent {
   currentSection = 0;
+
+  @Output() closeManual = new EventEmitter<void>();
 
   manualSections = [
     {
@@ -104,5 +106,12 @@ export class ManualComponent {
       this.currentSection++;
     }
   }
+
+  isModalOpen = true; // Inicialmente abierto
+
+  closeModal() {
+    this.closeManual.emit(); // Emitir evento para cerrar modal
+  }
+
 }
 

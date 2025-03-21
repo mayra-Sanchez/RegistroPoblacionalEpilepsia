@@ -1,75 +1,174 @@
-form {
-  max-width: 400px;
-  margin: 20px auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  background-color: #f9f9f9;
+/* Estilos generales */
+body {
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
 }
 
-form div {
-  margin-bottom: 15px;
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+}
+
+.login-card {
+  position: relative; /* 🔹 Asegura que el botón de cerrar esté relativo al modal */
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  padding: 30px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+h2 {
+  margin-bottom: 10px;
+  font-size: 24px;
+  color: #333;
+}
+
+p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
 }
 
 label {
   display: block;
-  font-weight: bold;
   margin-bottom: 5px;
-  text-align: left;
+  font-weight: bold;
+  color: #333;
 }
 
-input[type="email"],
-input[type="password"] {
-  width: calc(100% - 22px);
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-}
-
-button[type="submit"],
-button[type="button"] {
+input {
   width: 100%;
   padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
   font-size: 16px;
-  background-color: #007bff;
+  transition: border-color 0.3s ease;
+}
+
+input:focus {
+  border-color: #6a11cb;
+  outline: none;
+}
+
+.password-input {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+  font-size: 18px;
+}
+
+.toggle-password:hover {
+  color: #333;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #6a11cb;
   color: #fff;
   border: none;
-  border-radius: 3px;
+  border-radius: 5px;
+  font-size: 16px;
   cursor: pointer;
+  transition: background 0.3s ease;
 }
 
-button[type="submit"]:hover,
-button[type="button"]:hover {
-  background-color: #0056b3;
+button:hover {
+  background: #2575fc;
 }
 
-.error {
-  color: red;
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #fff;
+  border-top: 3px solid #6a11cb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.links {
+  margin-top: 15px;
+}
+
+.links a {
+  color: #6a11cb;
+  text-decoration: none;
+  margin: 0 10px;
+  transition: color 0.3s ease;
+}
+
+.links a:hover {
+  color: #2575fc;
+}
+
+.error-message {
+  margin-top: 15px;
+  color: #ff4444;
   font-weight: bold;
 }
 
-.message {
-  color: green;
-  font-weight: bold;
+.close {
+  position: absolute;
+  top: 15px; /* 🔹 Ajusta la distancia desde la parte superior */
+  right: 15px; /* 🔹 Ajusta la distancia desde la derecha */
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
 }
 
-/* Responsividad */
-@media (max-width: 600px) {
-  form {
-    padding: 15px;
-  }
-
-  input[type="email"],
-  input[type="password"] {
-    width: calc(100% - 20px);
-    padding: 8px;
-  }
-
-  button[type="submit"],
-  button[type="button"] {
-    padding: 8px;
-    font-size: 14px;
-  }
+.close:hover {
+  color: #333;
 }
