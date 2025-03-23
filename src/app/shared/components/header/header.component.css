@@ -1,32 +1,41 @@
-/* app-header */
+/* ========== Estilos del Header ========== */
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-between; /* Distribuye el espacio entre el logo y los botones */
+  align-items: center; /* Centra verticalmente los elementos */
   background-color: white;
   width: 100%;
-  height: 90px; /* Altura del header */
+  height: 95px; /* Altura del header */
   padding: 0 30px;
   box-sizing: border-box;
   top: 0;
   left: 0;
-  z-index: 1000; 
+  z-index: 1000;
   flex-wrap: nowrap;
 }
 
+/* Logo centrado verticalmente y alineado a la izquierda */
+.logo {
+  display: flex;
+  align-items: center; /* Centra verticalmente el logo */
+  justify-content: flex-start; /* Alinea el logo a la izquierda */
+  flex: 1; /* Ocupa el espacio disponible */
+}
+
 .logo span {
-  font-family: 'Inria Serif', serif;
   font-size: 80px;
   font-weight: bold;
   color: black;
-  white-space: nowrap
+  white-space: nowrap;
+  text-align: left; 
 }
 
+/* Botones de navegación */
 .nav-buttons {
   display: flex;
   align-items: center;
   gap: 15px;
-  white-space: nowrap
+  white-space: nowrap;
 }
 
 /* Botón de ingresar */
@@ -41,7 +50,7 @@ button.ingresar {
   display: flex;
   align-items: center;
   gap: 10px;
-  white-space: nowrap
+  white-space: nowrap;
 }
 
 button.ingresar:hover {
@@ -144,10 +153,9 @@ button.help-icon:hover {
 }
 
 .user-icon {
-  font-size: 25px; 
-  color: black; 
+  font-size: 25px;
+  color: black;
 }
-
 
 .username-button {
   background-color: #1273c4;
@@ -198,14 +206,18 @@ button.help-icon:hover {
   background-color: #f5f5f5;
 }
 
-/* Responsividad */
+.menu-dropdown button:hover {
+  background-color: #f5f5f5;
+}
+
+/* ========== Responsividad ========== */
 @media (max-width: 1024px) {
   .header {
     padding: 10px 20px;
   }
 
   .logo span {
-    font-size: 60px;
+    font-size: 60px; /* Reducir el tamaño del logo */
   }
 }
 
@@ -216,27 +228,35 @@ button.help-icon:hover {
     padding: 10px;
   }
 
+  .logo span {
+    font-size: 40px; /* Reducir aún más el tamaño del logo */
+  }
+
   .nav-buttons {
-    flex-direction: row;
     gap: 10px;
   }
 
-  .modal-content, .manual-content {
-    width: 95%;
+  button.ingresar {
+    padding: 10px 15px; /* Reducir el padding del botón */
+    font-size: 14px; /* Reducir el tamaño del texto */
+  }
+
+  .user-info {
+    flex-direction: row; /* Mantener los elementos en fila */
   }
 }
 
 @media (max-width: 480px) {
   .logo span {
-    font-size: 40px;
+    font-size: 30px; /* Tamaño mínimo del logo */
   }
 
   .nav-buttons {
-    flex-direction: column;
+    flex-direction: row; /* Mantener los botones en fila */
     align-items: center;
   }
 
   .user-info {
-    flex-direction: column;
+    flex-direction: row; /* Mantener los elementos en fila */
   }
 }

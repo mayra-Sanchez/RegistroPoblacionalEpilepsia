@@ -9,12 +9,23 @@ body.modal-open {
 
 body {
   margin: 0;
-  font-family: 'Montserrat', Roboto, "Helvetica Neue", sans-serif; /* Montserrat como fuente principal */
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+.mat-h2, .mat-headline-6, 
+.mat-typography .mat-h2, 
+.mat-typography .mat-headline-6, 
+.mat-typography h2 {
+  font-family: 'Montserrat', sans-serif !important;
 }
 
 /* Aplicar Montserrat a todos los elementos */
 * {
-  font-family: 'Montserrat', Roboto, "Helvetica Neue", sans-serif;
+  font-family: 'Montserrat';
+}
+
+h1, h2, h3 {
+  font-family: 'Montserrat';
 }
 
 /* Estilos para mensajes de snack-bar */

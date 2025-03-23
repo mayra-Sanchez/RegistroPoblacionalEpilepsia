@@ -5,14 +5,111 @@
 
   <!-- Contenedor principal del contenido -->
   <div class="contentAdmin">
-    <!-- Sección de Inicio -->
-    <div *ngIf="selectedTab === 'inicioAdmin'" class="info-container">
-      <h1>Bienvenido administrador</h1>
-      <div class="inicio-content">
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-          magna aliqua.
-        </p>
+    <!-- Sección de Inicio con Dashboard -->
+    <div *ngIf="selectedTab === 'inicioAdmin'" class="dashboard">
+      <!-- Tarjetas de Métricas -->
+      <div class="dashboard-metrics">
+        <div class="metric-card">
+          <div class="metric-content">
+            <i class="fas fa-users"></i> <!-- Icono de usuarios -->
+            <div class="metric-text">
+              <h3>Usuarios Registrados</h3>
+              <p>{{ totalUsuarios }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-content">
+            <i class="fas fa-layer-group"></i> <!-- Icono de capas -->
+            <div class="metric-text">
+              <h3>Capas Creadas</h3>
+              <p>{{ totalCapas }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-content">
+            <i class="fas fa-cogs"></i> <!-- Icono de configuración -->
+            <div class="metric-text">
+              <h3>Variables Definidas</h3>
+              <p>{{ totalVariables }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registro de Actividad Reciente -->
+      <div class="dashboard">
+        <div class="dashboard-container">
+          <!-- Columna izquierda: Accesos Rápidos y Últimos usuarios creados -->
+          <div class="left-column">
+            <div class="accesos-rapidos">
+              <h2>Accesos Rápidos</h2>
+              <div class="dashboard-actions">
+                <button mat-button color="primary" (click)="crearNuevoUsuario()">
+                  <mat-icon>person_add</mat-icon> Crear Usuario
+                </button>
+                <button mat-button color="accent" (click)="crearNuevaCapa()">
+                  <mat-icon>layers</mat-icon> Agregar Capa
+                </button>
+                <button mat-button color="warn" (click)="crearNuevaVariable()">
+                  <mat-icon>settings</mat-icon> Agregar Variable
+                </button>
+              </div>
+              <ul>
+                <h2> Últimos usuarios creados</h2>
+                <li *ngFor="let usuario of ultimosUsuarios" (click)="handleView(usuario, 'usuario')">
+                  👤 {{ usuario.nombre }} - {{ usuario.rol }}
+                </li>
+              </ul>
+              <button mat-raised-button color="primary" (click)="exportarCSV()">
+                <mat-icon>download</mat-icon> Exportar datos de todos los usuarios
+              </button>
+            </div>
+          </div>
+
+          <!-- Columna derecha: Últimos Registros -->
+          <div class="right-column">
+            <h2>Últimos Registros de Administrador</h2>
+            <table *ngIf="dataSource && dataSource.data.length > 0" mat-table [dataSource]="dataSource"
+              class="table">
+              <!-- Tipo -->
+              <ng-container matColumnDef="tipo">
+                <th mat-header-cell *matHeaderCellDef> Tipo </th>
+                <td mat-cell *matCellDef="let registro"> {{ registro.tipo }} </td>
+              </ng-container>
+
+              <!-- Detalles Específicos -->
+              <ng-container matColumnDef="detalles">
+                <th mat-header-cell *matHeaderCellDef> Detalles </th>
+                <td mat-cell *matCellDef="let registro">
+                  <ng-container *ngIf="registro.tipo === 'usuario'">
+                    <b>Usuario:</b> {{ registro.data.username }} <br>
+                    <b>Email:</b> {{ registro.data.email }} <br>
+                    <b>Rol:</b> {{ registro.data.attributes?.role?.join(', ') || 'Sin rol' }}
+                  </ng-container>
+
+                  <ng-container *ngIf="registro.tipo === 'capa'">
+                    <b>Nombre Capa:</b> {{ registro.data.nombreCapa }} <br>
+                    <b>Jefe:</b> {{ registro.data.jefeCapa.nombre }} <br>
+                  </ng-container>
+
+                  <ng-container *ngIf="registro.tipo === 'variable'">
+                    <b>Nombre Variable:</b> {{ registro.data.nombreVariable }} <br>
+                    <b>Tipo:</b> {{ registro.data.tipo }} <br>
+                    <b>Opciones:</b> {{ registro.data.opciones?.join(', ') || 'Ninguna' }}
+                  </ng-container>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['tipo', 'detalles']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['tipo', 'detalles'];"></tr>
+            </table>
+
+            <!-- Paginación -->
+            <mat-paginator [pageSize]="3" [pageSizeOptions]="[3, 5, 10]" showFirstLastButtons></mat-paginator>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -25,7 +122,7 @@
           </button>
         </div>
         <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleView($event, 'usuario')" (onEdit)="handleEdit($event, 'usuario')"
+          (onView)="handleViewUser($event, 'usuario')" (onEdit)="handleEdit($event, 'usuario')"
           (onDelete)="handleDelete($event)">
         </app-table>
       </div>
@@ -136,11 +233,11 @@
       </div>
       <div class="form-row">
         <label>Nombre del Jefe de Capa:</label>
-        <input type="text" [(ngModel)]="capaToEdit.jefeCapa.nombre" name="jefeCapaNombre" required />
+        <input type="text" [(ngModel)]="capaToEdit.jefeCapaNombre" name="jefeCapaNombre" required />
       </div>
       <div class="form-row">
         <label>Número de Identificación del Jefe de Capa:</label>
-        <input type="text" [(ngModel)]="capaToEdit.jefeCapa.numeroIdentificacion" name="jefeCapaIdentificacion"
+        <input type="text" [(ngModel)]="capaToEdit.jefeIdentificacion" name="jefeCapaIdentificacion"
           required />
       </div>
       <div class="form-buttons">
@@ -175,7 +272,7 @@
         <select formControlName="tipo" class="form-control">
           <option *ngFor="let tipo of tiposVariables" [value]="tipo">{{ tipo }}</option>
         </select>
-        
+
 
       </div>
 
@@ -206,9 +303,6 @@
     </form>
   </div>
 </div>
-
-
-
 
 <div *ngIf="isEditingUserModal" class="modal-overlay">
   <div class="modal-content">
