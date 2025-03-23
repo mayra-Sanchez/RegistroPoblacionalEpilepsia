@@ -7,22 +7,33 @@ interface CapaInvestigacion {
   id: string;
   nombreCapa: string;
 }
-
+/**
+ * El componente FormRegistroVariablesComponent es un formulario Angular diseñado para registrar nuevas variables. Este componente se integra con el 
+ * servicio ConsolaAdministradorService para enviar los datos al backend y notificar al componente padre cuando se ha creado una variable.
+ */
 @Component({
   selector: 'app-form-registro-variables',
   templateUrl: './form-registro-variables.component.html',
   styleUrls: ['./form-registro-variables.component.css']
 })
 export class FormRegistroVariablesComponent implements OnInit {
-  @Output() variableCreada = new EventEmitter<void>(); // 🔹 Evento para notificar al padre
+  /** Evento
+   * Se emite cuando se crea una variable exitosamente.
+   */
+  @Output() variableCreada = new EventEmitter<void>();
   form: FormGroup;
+
+  // Almacena la lista de capas de investigación obtenidas del backend.
   capasInvestigacion: CapaInvestigacion[] = [];
+
+  // Define los tipos de variables que se pueden registrar (por ejemplo, 'Entero', 'Real', etc.).
   tipos = ['Entero', 'Real', 'Cadena', 'Fecha', 'Lógico'];
 
   constructor(
     private fb: FormBuilder,
     private variableService: ConsolaAdministradorService
   ) {
+    // Formulario reactivo
     this.form = this.fb.group({
       nombreVariable: ['', [Validators.required, Validators.minLength(3)]],
       descripcion: ['', [Validators.required, Validators.minLength(5)]],
@@ -33,6 +44,9 @@ export class FormRegistroVariablesComponent implements OnInit {
     });
   }
 
+  /** Ciclo de vida
+   * Se ejecuta al inicializar el componente. Carga las capas de investigación desde el backend.
+   */
   ngOnInit(): void {
     this.variableService.getAllLayers().subscribe({
       next: (data) => {
@@ -44,24 +58,39 @@ export class FormRegistroVariablesComponent implements OnInit {
     });
   }
 
+  /** Métodos del Formulario
+   *  Devuelve el FormArray de opciones.
+   */
   get opciones(): FormArray {
     return this.form.get('opciones') as FormArray;
   }
 
+  /** Métodos del Formulario
+   * Agrega un nuevo campo de opción al formulario.
+   */
   agregarOpcion() {
     this.opciones.push(this.fb.group({ opcion: ['', Validators.required] }));
   }
 
+  /** Métodos del Formulario
+   *  Elimina un campo de opción del formulario.
+   */
   eliminarOpcion(index: number) {
     this.opciones.removeAt(index);
   }
 
+  /** Métodos del Formulario
+   *  Limpia las opciones si tieneOpciones se desactiva.
+   */
   onTieneOpcionesChange() {
     if (!this.form.value.tieneOpciones) {
       this.opciones.clear();
     }
   }
 
+  /** Creación de Variables
+   *  Valida el formulario y envía los datos al backend para crear una nueva variable.
+   */
   crearVariable() {
     if (this.form.invalid) {
       Swal.fire({
@@ -135,11 +164,17 @@ export class FormRegistroVariablesComponent implements OnInit {
     });
   }
 
+  /** Utilidades
+   * Limpia el formulario y las opciones.
+   */
   limpiarFormulario() {
     this.form.reset();
     this.opciones.clear();
   }
 
+  /** Utilidades
+   *  Verifica si un campo del formulario es inválido y ha sido tocado.
+   */
   campoEsValido(campo: string): boolean {
     const control = this.form.get(campo);
     return control ? control.invalid && control.touched : false;

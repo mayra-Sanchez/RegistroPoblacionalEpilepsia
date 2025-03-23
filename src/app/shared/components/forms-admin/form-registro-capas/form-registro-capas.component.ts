@@ -5,6 +5,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
+/**
+ * El componente FormRegistroCapasComponent es un formulario Angular diseñado para registrar nuevas 
+ * capas de investigación. Este componente se integra con el servicio ConsolaAdministradorService 
+ * para enviar los datos al backend y manejar la lógica de registro.
+ */
 @Component({
   selector: 'app-form-registro-capas',
   templateUrl: './form-registro-capas.component.html',
@@ -12,6 +17,8 @@ import Swal from 'sweetalert2';
 })
 export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   form!: FormGroup;
+
+  // Suscripción para gestionar la desuscripción de observables y evitar fugas de memoria.
   private capasSubscription: Subscription = Subscription.EMPTY;
 
   constructor(
@@ -20,7 +27,9 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     private dialog: MatDialog
   ) {}
 
+  // Se ejecuta al inicializar el componente. Inicializa el formulario reactivo.
   ngOnInit(): void {
+    // Formulario reactivo
     this.form = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3)]],
       descripcion: ['', [Validators.required, Validators.minLength(5)]],
@@ -32,12 +41,14 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Se ejecuta al destruir el componente. Limpia las suscripciones para evitar fugas de memoria.
   ngOnDestroy(): void {
     if (this.capasSubscription) {
       this.capasSubscription.unsubscribe();
     }
   }
 
+  // Valida el formulario y envía los datos al backend para registrar una nueva capa.
   registrarCapa(): void {
     if (this.form.invalid) {
       Swal.fire({

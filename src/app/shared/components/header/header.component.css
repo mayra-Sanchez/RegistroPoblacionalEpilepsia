@@ -140,8 +140,14 @@ button.help-icon:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  position: relative;
+  cursor: pointer;
 }
+
+.user-icon {
+  font-size: 25px; 
+  color: black; 
+}
+
 
 .username-button {
   background-color: #1273c4;

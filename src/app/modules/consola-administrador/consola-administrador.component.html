@@ -110,12 +110,12 @@
       <div class="modal-body">
         <p><strong>Nombre:</strong> {{ viewedItem.nombreCapa }}</p>
         <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
-        <p><strong>Jefe:</strong> {{ viewedItem.jefeCapa.nombre }}</p>
+        <p><strong>Jefe:</strong> {{ viewedItem.jefeCapaNombre }}</p>
       </div>
 
     </div>
     <div class="form-buttons">
-      <button (click)="closeViewModal()" class="btn btn-secondary">Cerrar</button>
+      <button (click)="cerrarModal()" class="btn btn-secondary">Cerrar</button>
     </div>
 
   </div>
@@ -171,8 +171,12 @@
         </select>
       </div>
       <div class="form-row">
-        <label>Tipo:</label>
-        <input type="text" [(ngModel)]="varToEdit.tipo" name="tipo" required />
+        <label for="tipo">Tipo de Variable</label>
+        <select formControlName="tipo" class="form-control">
+          <option *ngFor="let tipo of tiposVariables" [value]="tipo">{{ tipo }}</option>
+        </select>
+        
+
       </div>
 
       <!-- Selector para "Tiene Opciones" -->
@@ -227,13 +231,13 @@
         </div>
 
         <div class="form-row">
-          <label>Contraseña (la actual o una nueva):</label>
+          <label>Contraseña (Solo si desea actualizar):</label>
           <input type="password" [(ngModel)]="userToEdit.password" name="password" placeholder="Nueva contraseña" />
         </div>
 
         <div class="form-row">
           <label>Usuario:</label>
-          <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required />
+          <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required disabled />
         </div>
 
         <div class="form-row">

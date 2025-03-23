@@ -8,7 +8,8 @@
       <div *ngIf="campoEsValido('nombre')" class="error-message">
         Nombre es obligatorio.
       </div>
-      
+
+      <label>Apellido:</label>
       <input type="text" placeholder="Apellido" formControlName="apellido" />
       <div *ngIf="campoEsValido('apellido')" class="error-message">
         Apellido es obligatorio.
@@ -16,13 +17,14 @@
     </div>
 
     <div class="form-row">
-      <label>Apellido:</label>
-      <input type="text" placeholder="Username" formControlName="username" />
+      <label>Username:</label>
+      <input type="text" formControlName="username" [attr.disabled]="'disabled'" />
       <div *ngIf="campoEsValido('username')" class="error-message">
         El username es obligatorio.
       </div>
     </div>
-    
+
+
     <!-- Tipo de documento -->
     <div class="form-row">
       <label>Tipo de documento:</label>
@@ -36,7 +38,7 @@
         Tipo de documento es obligatorio.
       </div>
     </div>
-    
+
     <!-- Número de documento -->
     <div class="form-row">
       <label>Número de documento:</label>
@@ -45,7 +47,7 @@
         El número de documento es obligatorio y debe ser numérico.
       </div>
     </div>
-    
+
     <!-- Fecha de nacimiento -->
     <div class="form-row">
       <label for="birthdate">Fecha de nacimiento</label>
@@ -54,7 +56,7 @@
         La fecha de nacimiento es obligatoria.
       </div>
     </div>
-    
+
     <!-- Rol -->
     <div class="form-row">
       <label>Rol del usuario:</label>
@@ -68,7 +70,7 @@
         El rol es obligatorio.
       </div>
     </div>
-    
+
     <!-- Capa de Investigación -->
     <div class="form-row">
       <label>Capa de investigación:</label>
@@ -81,7 +83,7 @@
         La capa de investigación es obligatoria.
       </div>
     </div>
-    
+
     <!-- Correo electrónico -->
     <div class="form-row">
       <label>Email:</label>
@@ -90,7 +92,7 @@
         El correo electrónico es obligatorio y debe ser válido.
       </div>
     </div>
-    
+
     <!-- Contraseña -->
     <div class="form-row">
       <label>Contraseña:</label>
@@ -99,7 +101,7 @@
         La contraseña es obligatoria y debe tener al menos 6 caracteres.
       </div>
     </div>
-    
+
     <!-- Botón de envío -->
     <div class="form-button">
       <button type="submit" class="btn btn-primary" [disabled]="usuarioForm.invalid">Registrar</button>
