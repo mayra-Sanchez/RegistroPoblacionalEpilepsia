@@ -5,14 +5,116 @@
 
   <!-- Contenedor principal del contenido -->
   <div class="contentAdmin">
-    <!-- Sección de Inicio -->
-    <div *ngIf="selectedTab === 'inicioAdmin'" class="info-container">
-      <h1>Bienvenido administrador</h1>
-      <div class="inicio-content">
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-          magna aliqua.
-        </p>
+    <!-- Sección de Inicio con Dashboard -->
+    <div *ngIf="selectedTab === 'inicioAdmin'" class="dashboard">
+      <!-- Tarjetas de Métricas -->
+      <div class="dashboard-metrics">
+        <div class="metric-card">
+          <div class="metric-content">
+            <i class="fas fa-users"></i> <!-- Icono de usuarios -->
+            <div class="metric-text">
+              <h3>Usuarios Registrados</h3>
+              <p>{{ totalUsuarios }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-content">
+            <i class="fas fa-layer-group"></i> <!-- Icono de capas -->
+            <div class="metric-text">
+              <h3>Capas Creadas</h3>
+              <p>{{ totalCapas }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-content">
+            <i class="fas fa-cogs"></i> <!-- Icono de configuración -->
+            <div class="metric-text">
+              <h3>Variables Definidas</h3>
+              <p>{{ totalVariables }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registro de Actividad Reciente -->
+      <div class="dashboard">
+        <div class="dashboard-container">
+          <!-- Columna izquierda: Accesos Rápidos y Últimos usuarios creados -->
+          <div class="left-column">
+            <div class="accesos-rapidos">
+              <h2>Accesos Rápidos</h2>
+              <div class="dashboard-actions">
+                <button mat-button color="primary" (click)="crearNuevoUsuario()">
+                  <mat-icon>person_add</mat-icon> Crear Usuario
+                </button>
+                <button mat-button color="accent" (click)="crearNuevaCapa()">
+                  <mat-icon>layers</mat-icon> Agregar Capa
+                </button>
+                <button mat-button color="warn" (click)="crearNuevaVariable()">
+                  <mat-icon>settings</mat-icon> Agregar Variable
+                </button>
+              </div>
+              <ul>
+                <h2> Últimos usuarios creados</h2>
+                <li *ngFor="let usuario of ultimosUsuarios" (click)="handleView(usuario, 'usuario')">
+                  👤 {{ usuario.nombre }} - {{ usuario.rol }}
+                </li>
+              </ul>
+              <div class="descarga">
+                <button mat-raised-button color="primary" (click)="exportarCSV()">
+                  <mat-icon>download</mat-icon> Exportar datos de todos los usuarios
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Columna derecha: Últimos Registros -->
+          <div class="right-column">
+            <h2>Últimos Registros de Administrador</h2>
+            <table *ngIf="dataSource && dataSource.data.length > 0" mat-table [dataSource]="dataSource" class="table">
+              <!-- Tipo -->
+              <ng-container matColumnDef="tipo">
+                <th mat-header-cell *matHeaderCellDef> Tipo </th>
+                <td mat-cell *matCellDef="let registro"> {{ registro.tipo }} </td>
+              </ng-container>
+
+              <!-- Detalles Específicos -->
+              <ng-container matColumnDef="detalles">
+                <th mat-header-cell *matHeaderCellDef> Detalles </th>
+                <td mat-cell *matCellDef="let registro">
+                  <ng-container *ngIf="registro.tipo === 'usuario'">
+                    <b>Usuario:</b> {{ registro.data.username }} <br>
+                    <b>Email:</b> {{ registro.data.email }} <br>
+                    <b>Rol:</b> {{ registro.data.attributes?.role?.join(', ') || 'Sin rol' }}
+                  </ng-container>
+
+                  <ng-container *ngIf="registro.tipo === 'capa'">
+                    <b>Nombre Capa:</b> {{ registro.data.layerName || registro.data.nombreCapa }} <br>
+                    <b>Jefe:</b> {{ registro.data.layerBoss?.name || registro.data.jefeCapa?.nombre }} <br>
+                    <b>Identificación Jefe:</b> {{ registro.data.layerBoss?.identificationNumber ||
+                    registro.data.jefeCapa?.numeroIdentificacion || 'N/A' }}
+                  </ng-container>
+
+                  <ng-container *ngIf="viewType === 'variable'">
+                    <b>Nombre Variable:</b> {{ viewedItem.variableName }} <br>
+                    <b>Descripción:</b> {{ viewedItem.description }} <br>
+                    <b>Tipo:</b> {{ viewedItem.type }} <br>
+                    <b>Opciones:</b> {{ viewedItem.options?.join(', ') || 'Ninguna' }}
+                  </ng-container>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['tipo', 'detalles']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['tipo', 'detalles'];"></tr>
+            </table>
+
+            <!-- Paginación -->
+            <mat-paginator [pageSize]="3" [pageSizeOptions]="[3, 5, 10]" showFirstLastButtons></mat-paginator>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -25,7 +127,7 @@
           </button>
         </div>
         <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleView($event, 'usuario')" (onEdit)="handleEdit($event, 'usuario')"
+          (onView)="handleViewUser($event, 'usuario')" (onEdit)="handleEdit($event, 'usuario')"
           (onDelete)="handleDelete($event)">
         </app-table>
       </div>
@@ -91,15 +193,16 @@
 
     <div *ngIf="viewType === 'variable'" class="modal-content">
       <div class="modal-body">
-        <p><strong>Nombre:</strong> {{ viewedItem.nombre }}</p>
-        <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
-        <p><strong>Capa:</strong> {{ viewedItem.capa }}</p>
-        <p><strong>Tipo:</strong> {{ viewedItem.tipo}}</p>
+        <p><strong>Nombre:</strong> {{ viewedItem.variableName || viewedItem.nombre }}</p>
+        <p><strong>Descripción:</strong> {{ viewedItem.description || viewedItem.descripcion }}</p>
+        <p><strong>Capa:</strong> {{ getCapaNombreById(viewedItem.researchLayerId || viewedItem.idCapaInvestigacion) }}
+        </p>
+        <p><strong>Tipo:</strong> {{ viewedItem.type || viewedItem.tipo }}</p>
 
-        <div *ngIf="viewedItem.opciones && viewedItem.opciones.length > 0">
+        <div *ngIf="(viewedItem.options || viewedItem.opciones)?.length > 0">
           <p><strong>Opciones:</strong></p>
           <ul>
-            <li *ngFor="let opcion of viewedItem.opciones">{{ opcion }}</li>
+            <li *ngFor="let opcion of (viewedItem.options || viewedItem.opciones)">{{ opcion }}</li>
           </ul>
         </div>
       </div>
@@ -108,14 +211,15 @@
 
     <div *ngIf="viewType === 'capa'" class="modal-content">
       <div class="modal-body">
-        <p><strong>Nombre:</strong> {{ viewedItem.nombreCapa }}</p>
-        <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
-        <p><strong>Jefe:</strong> {{ viewedItem.jefeCapa.nombre }}</p>
+        <p><strong>Nombre:</strong> {{ viewedItem.layerName || viewedItem.nombreCapa }}</p>
+        <p><strong>Descripción:</strong> {{ viewedItem.description || viewedItem.descripcion }}</p>
+        <p><strong>Jefe:</strong> {{ viewedItem.layerBoss?.name || viewedItem.jefeCapaNombre }}</p>
+        <p><strong>Identificación Jefe:</strong> {{ viewedItem.layerBoss?.identificationNumber ||
+          viewedItem.jefeIdentificacion }}</p>
       </div>
-
     </div>
     <div class="form-buttons">
-      <button (click)="closeViewModal()" class="btn btn-secondary">Cerrar</button>
+      <button (click)="cerrarModal()" class="btn btn-secondary">Cerrar</button>
     </div>
 
   </div>
@@ -136,12 +240,11 @@
       </div>
       <div class="form-row">
         <label>Nombre del Jefe de Capa:</label>
-        <input type="text" [(ngModel)]="capaToEdit.jefeCapa.nombre" name="jefeCapaNombre" required />
+        <input type="text" [(ngModel)]="capaToEdit.jefeCapaNombre" name="jefeCapaNombre" required />
       </div>
       <div class="form-row">
         <label>Número de Identificación del Jefe de Capa:</label>
-        <input type="text" [(ngModel)]="capaToEdit.jefeCapa.numeroIdentificacion" name="jefeCapaIdentificacion"
-          required />
+        <input type="text" [(ngModel)]="capaToEdit.jefeIdentificacion" name="jefeIdentificacion" required />
       </div>
       <div class="form-buttons">
         <button type="submit" class="btn btn-primary">Guardar</button>
@@ -158,24 +261,30 @@
     <form (ngSubmit)="guardarEdicionVariable(varToEdit)">
       <div class="form-row">
         <label>Nombre:</label>
-        <input type="text" [(ngModel)]="varToEdit.nombre" name="nombre" required />
+        <input type="text" [(ngModel)]="varToEdit.variableName" name="variableName" required />
       </div>
       <div class="form-row">
         <label>Descripción:</label>
-        <input type="text" [(ngModel)]="varToEdit.descripcion" name="descripcion" required />
+        <input type="text" [(ngModel)]="varToEdit.description" name="description" required />
       </div>
       <div class="form-row">
         <label>Capa de Investigación:</label>
-        <select [(ngModel)]="varToEdit.capa" name="idCapaInvestigacion" required>
-          <option *ngFor="let capa of capasData" [value]="capa.id">{{ capa.nombreCapa }}</option>
+        <select [(ngModel)]="varToEdit.researchLayerId" name="researchLayerId" required>
+          <option *ngFor="let capa of capasData" [value]="capa.id" [selected]="capa.id === varToEdit.researchLayerId">
+            {{ capa.layerName || capa.nombreCapa }}
+          </option>
         </select>
       </div>
+
       <div class="form-row">
-        <label>Tipo:</label>
-        <input type="text" [(ngModel)]="varToEdit.tipo" name="tipo" required />
+        <label>Tipo de Variable:</label>
+        <select [(ngModel)]="varToEdit.type" name="type" required>
+          <option *ngFor="let tipo of tiposVariables" [value]="tipo" [selected]="tipo === varToEdit.type">
+            {{ tipo }}
+          </option>
+        </select>
       </div>
 
-      <!-- Selector para "Tiene Opciones" -->
       <div class="form-row checkbox-row">
         <label>
           <span>¿Tiene opciones?</span>
@@ -184,11 +293,10 @@
         </label>
       </div>
 
-      <!-- Opciones dinámicas -->
       <div class="form-row" *ngIf="varToEdit.tieneOpciones">
         <label class="options">Opciones:</label>
-        <div *ngFor="let opcion of varToEdit.opciones; let i = index; trackBy: trackByIndex" class="option-item">
-          <input type="text" class="input-options" [(ngModel)]="varToEdit.opciones[i]" [name]="'opcion' + i" required />
+        <div *ngFor="let opcion of varToEdit.options; let i = index; trackBy: trackByIndex" class="option-item">
+          <input type="text" [(ngModel)]="varToEdit.options[i]" [name]="'option' + i" required />
           <button type="button" (click)="eliminarOpcion(i)" class="btn btn-danger">✖</button>
         </div>
         <button type="button" class="btn btn-success" (click)="agregarOpcion()">➕ Agregar Opción</button>
@@ -198,14 +306,11 @@
         <button type="submit" class="btn btn-primary">Guardar datos</button>
         <button type="button" class="btn btn-secondary" (click)="isEditingVar = false">Cancelar edición</button>
       </div>
-
     </form>
   </div>
 </div>
 
-
-
-
+<!-- Modal para editar Variable -->
 <div *ngIf="isEditingUserModal" class="modal-overlay">
   <div class="modal-content">
     <h2>Editar Usuario</h2>
@@ -227,13 +332,13 @@
         </div>
 
         <div class="form-row">
-          <label>Contraseña (la actual o una nueva):</label>
+          <label>Contraseña (Solo si desea actualizar):</label>
           <input type="password" [(ngModel)]="userToEdit.password" name="password" placeholder="Nueva contraseña" />
         </div>
 
         <div class="form-row">
           <label>Usuario:</label>
-          <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required />
+          <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required disabled />
         </div>
 
         <div class="form-row">
@@ -253,9 +358,13 @@
 
         <div class="form-row">
           <label>Capa de Investigación:</label>
-          <select [(ngModel)]="userToEdit.capa" name="capa" required>
-            <option value="" disabled selected>Selecciona una capa</option>
-            <option *ngFor="let capa of capas" [value]="capa.id">{{ capa.nombreCapa }}</option>
+          <select [(ngModel)]="userToEdit.researchLayerId" name="researchLayerId" required>
+            <option value="" disabled>Selecciona una capa</option>
+            <option *ngFor="let capa of capas" 
+                    [value]="capa.layerName || capa.nombreCapa"
+                    [selected]="(capa.layerName || capa.nombreCapa) === userToEdit.capaRawValue">
+              {{ capa.layerName || capa.nombreCapa }}
+            </option>
           </select>
         </div>
 

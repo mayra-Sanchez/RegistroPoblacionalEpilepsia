@@ -1,12 +1,13 @@
 /* Estilos generales */
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Montserrat', sans-serif; /* 🔹 Corregido el nombre de la fuente */
   background: linear-gradient(135deg, #6a11cb, #2575fc);
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   margin: 0;
+  overflow: hidden; /* 🔹 Evita el desplazamiento innecesario */
 }
 
 .login-container {
@@ -18,15 +19,16 @@ body {
 }
 
 .login-card {
-  position: relative; /* 🔹 Asegura que el botón de cerrar esté relativo al modal */
+  position: relative;
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  padding: 30px;
+  border-radius: 15px; /* 🔹 Bordes más redondeados */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* 🔹 Sombra más pronunciada */
+  padding: 40px; /* 🔹 Más espacio interno */
   max-width: 400px;
   width: 100%;
   text-align: center;
   animation: fadeIn 0.5s ease-in-out;
+  overflow: hidden; /* 🔹 Evita que el contenido se desborde */
 }
 
 @keyframes fadeIn {
@@ -41,14 +43,16 @@ body {
 }
 
 h2 {
-  margin-bottom: 10px;
-  font-size: 24px;
+  margin-bottom: 15px;
+  font-size: 28px; /* 🔹 Título más grande */
   color: #333;
+  font-weight: 600; /* 🔹 Texto más grueso */
 }
 
 p {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   color: #666;
+  font-size: 14px; /* 🔹 Texto más pequeño */
 }
 
 .form-group {
@@ -58,23 +62,25 @@ p {
 
 label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #333;
+  margin-bottom: 8px; /* 🔹 Más espacio entre label e input */
+  font-weight: 500; /* 🔹 Texto semi-negrita */
+  color: #444;
+  font-size: 14px;
 }
 
 input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
+  border-radius: 8px; /* 🔹 Bordes más redondeados */
+  font-size: 14px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 input:focus {
-  border-color: #6a11cb;
+  border-color: #3367f8;
   outline: none;
+  box-shadow: 0 0 8px rgba(106, 17, 203, 0.3); /* 🔹 Sombra al enfocar */
 }
 
 .password-input {
@@ -83,12 +89,13 @@ input:focus {
 
 .toggle-password {
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
   color: #666;
   font-size: 18px;
+  transition: color 0.3s ease;
 }
 
 .toggle-password:hover {
@@ -97,23 +104,27 @@ input:focus {
 
 button {
   width: 100%;
-  padding: 12px;
-  background: #6a11cb;
+  padding: 14px;
+  background: #4c79c7;
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.2s ease;
+  margin-top: 10px; /* 🔹 Espacio superior para separarlo de los inputs */
 }
 
 button:hover {
   background: #2575fc;
+  transform: translateY(-2px); /* 🔹 Efecto de elevación */
 }
 
 button:disabled {
   background: #ccc;
   cursor: not-allowed;
+  transform: none;
 }
 
 .spinner {
@@ -136,30 +147,34 @@ button:disabled {
 }
 
 .links {
-  margin-top: 15px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between; /* 🔹 Espacio entre enlaces */
 }
 
 .links a {
   color: #6a11cb;
   text-decoration: none;
-  margin: 0 10px;
+  font-size: 14px;
   transition: color 0.3s ease;
 }
 
 .links a:hover {
   color: #2575fc;
+  text-decoration: underline; /* 🔹 Subrayado al pasar el mouse */
 }
 
 .error-message {
   margin-top: 15px;
   color: #ff4444;
-  font-weight: bold;
+  font-weight: 500;
+  font-size: 14px;
 }
 
 .close {
   position: absolute;
-  top: 15px; /* 🔹 Ajusta la distancia desde la parte superior */
-  right: 15px; /* 🔹 Ajusta la distancia desde la derecha */
+  top: 15px;
+  right: 15px;
   font-size: 24px;
   cursor: pointer;
   color: #666;
@@ -167,6 +182,7 @@ button:disabled {
   border: none;
   padding: 0;
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 .close:hover {

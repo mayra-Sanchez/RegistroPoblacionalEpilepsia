@@ -1,162 +1,238 @@
+/* Estilos base (ya los tienes) */
 .table-container {
-    width: 100%;
-    margin: 20px auto;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .pagination-controls {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-  }
-  
-  .pagination-controls button {
-    padding: 8px 16px;
-    font-size: 14px;
-    color: white;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
+  width: 100%;
+  margin: 30px auto;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
-  .pagination-controls button:hover {
-    padding: 8px 16px;
-    font-size: 14px;
-    color: white;
-    background-color: #0051a8;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .pagination-controls button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  thead th {
-    padding: 15px;
-    text-align: left;
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-    border-bottom: 2px solid #ddd;
-  }
-  
-  tbody td {
-    padding: 12px 15px;
-    font-size: 14px;
-    color: #333;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  tbody tr:hover {
-    background-color: #f9f9f9;
-  }
-  
-  .actions {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-  }
-  
-  .action-btn {
-    padding: 8px 12px;
-    font-size: 14px;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .action-btn.view {
-    background-color: #4caf50;
-  }
-  
-  .action-btn.edit {
-    background-color: #1f5a9f;
-  }
-  
-  .action-btn.delete {
-    background-color: #f44336;
-  }
+/* Controles de paginación */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
 
-  .action-btn.view:hover {
-    background-color: #3c883f;
-  }
+.pagination-controls button {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.pagination-controls button:hover {
+  background-color: #0051a8;
+}
+
+.pagination-controls button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Estilos de la tabla */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  padding: 15px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  border-bottom: 2px solid #ddd;
+}
+
+tbody td {
+  padding: 12px 15px;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+}
+
+tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Botones de acción */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.action-btn.view {
+  background-color: #4caf50;
+}
+
+.action-btn.edit {
+  background-color: #1f5a9f;
+}
+
+.action-btn.delete {
+  background-color: #f44336;
+}
+
+.action-btn.view:hover {
+  background-color: #3c883f;
+}
+
+.action-btn.edit:hover {
+  background-color: #194b83;
+}
+
+.action-btn.delete:hover {
+  background-color: #ce382d;
+}
+
+/* Controles de la tabla */
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+  align-items: flex-end;
   
-  .action-btn.edit:hover {
-    background-color: #194b83;
-  }
-  
-  .action-btn.delete:hover {
-    background-color: #ce382d;
-  }
-  
-  .table-controls {
-    display: flex;
-    justify-content: flex-end; 
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
 }
 
 .items-per-page,
 .sort-options {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
 }
 
 .items-per-page label,
 .sort-options label {
-    font-size: 14px;
-    color: #333;
-    white-space: nowrap; 
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
 }
 
 .items-per-page select,
 .sort-options select {
-    padding: 5px 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    appearance: none;
-    background-color: #fff;
-    cursor: pointer;
+  padding: 5px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  appearance: none;
+  background-color: #fff;
+  cursor: pointer;
 }
 
 .search-bar {
-    position: relative;
-    max-width: 300px; 
-    flex-shrink: 0; 
+  position: relative;
+  max-width: 300px;
+  flex-shrink: 0;
 }
 
 .search-bar input {
-    width: 100%;
-    padding: 10px 40px 10px 15px; 
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
 }
 
 .search-bar i {
-    position: absolute;
-    top: 50%;
-    right: 15px; 
-    transform: translateY(-50%);
-    font-size: 16px;
-    color: #999;
-    pointer-events: none;
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #999;
+  pointer-events: none;
+}
+
+/* Media Queries para hacerlo responsive */
+@media (max-width: 768px) {
+  .table-controls {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+  }
+
+  .items-per-page,
+  .sort-options {
+      width: 100%;
+      justify-content: space-between;
+  }
+
+  .search-bar {
+      width: 100%;
+      max-width: none;
+  }
+
+  table {
+      display: block;
+      overflow-x: auto;
+  }
+
+  thead th,
+  tbody td {
+      white-space: nowrap;
+  }
+
+  .actions {
+      flex-wrap: wrap;
+  }
+
+  .action-btn {
+      margin: 5px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .pagination-controls {
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+  }
+
+  .pagination-controls button {
+      width: 100%;
+  }
+
+  .items-per-page label,
+  .sort-options label {
+      font-size: 12px;
+  }
+
+  .items-per-page select,
+  .sort-options select {
+      font-size: 12px;
+  }
+
+  .search-bar input {
+      font-size: 12px;
+  }
+
+  thead th,
+  tbody td {
+      font-size: 12px;
+      padding: 8px 10px;
+  }
+
+  .action-btn {
+      font-size: 12px;
+      padding: 6px 10px;
+  }
 }

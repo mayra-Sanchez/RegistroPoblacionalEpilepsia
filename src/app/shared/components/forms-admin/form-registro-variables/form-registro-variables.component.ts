@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 
 interface CapaInvestigacion {
   id: string;
-  nombreCapa: string;
+  layerName: string;
 }
 
 @Component({
@@ -14,7 +14,7 @@ interface CapaInvestigacion {
   styleUrls: ['./form-registro-variables.component.css']
 })
 export class FormRegistroVariablesComponent implements OnInit {
-  @Output() variableCreada = new EventEmitter<void>(); // 🔹 Evento para notificar al padre
+  @Output() variableCreada = new EventEmitter<void>();
   form: FormGroup;
   capasInvestigacion: CapaInvestigacion[] = [];
   tipos = ['Entero', 'Real', 'Cadena', 'Fecha', 'Lógico'];
@@ -24,12 +24,12 @@ export class FormRegistroVariablesComponent implements OnInit {
     private variableService: ConsolaAdministradorService
   ) {
     this.form = this.fb.group({
-      nombreVariable: ['', [Validators.required, Validators.minLength(3)]],
-      descripcion: ['', [Validators.required, Validators.minLength(5)]],
-      tipo: ['', Validators.required],
-      idCapaInvestigacion: ['', Validators.required],
-      tieneOpciones: [false],
-      opciones: this.fb.array([])
+      variableName: ['', [Validators.required, Validators.minLength(3)]],
+      description: ['', [Validators.required, Validators.minLength(5)]],
+      type: ['', Validators.required],
+      researchLayerId: ['', Validators.required],
+      hasOptions: [false],
+      options: this.fb.array([])
     });
   }
 
@@ -44,21 +44,21 @@ export class FormRegistroVariablesComponent implements OnInit {
     });
   }
 
-  get opciones(): FormArray {
-    return this.form.get('opciones') as FormArray;
+  get options(): FormArray {
+    return this.form.get('options') as FormArray;
   }
 
   agregarOpcion() {
-    this.opciones.push(this.fb.group({ opcion: ['', Validators.required] }));
+    this.options.push(this.fb.control('', Validators.required));
   }
 
   eliminarOpcion(index: number) {
-    this.opciones.removeAt(index);
+    this.options.removeAt(index);
   }
 
-  onTieneOpcionesChange() {
-    if (!this.form.value.tieneOpciones) {
-      this.opciones.clear();
+  onHasOptionsChange() {
+    if (!this.form.value.hasOptions) {
+      this.options.clear();
     }
   }
 
@@ -72,13 +72,18 @@ export class FormRegistroVariablesComponent implements OnInit {
       });
       return;
     }
-
+  
+    const formValue = this.form.value;
     const variableData = {
-      ...this.form.value,
-      opciones: this.form.value.tieneOpciones ? this.opciones.value.map((o: any) => o.opcion) : []
+      variableName: formValue.variableName,
+      description: formValue.description,
+      type: formValue.type,
+      researchLayerId: formValue.researchLayerId,
+      options: formValue.hasOptions ? this.options.value : []
     };
-
-    if (variableData.tieneOpciones && variableData.opciones.length === 0) {
+  
+    // Check if options are required but empty
+    if (formValue.hasOptions && variableData.options.length === 0) {
       Swal.fire({
         title: 'Error',
         text: 'Debe agregar al menos una opción.',
@@ -87,9 +92,7 @@ export class FormRegistroVariablesComponent implements OnInit {
       });
       return;
     }
-
-    console.log('Datos enviados para crear variable:', variableData);
-
+  
     Swal.fire({
       title: '¿Confirmar registro?',
       text: '¿Estás seguro de registrar esta variable?',
@@ -101,7 +104,6 @@ export class FormRegistroVariablesComponent implements OnInit {
       if (result.isConfirmed) {
         this.variableService.crearVariable(variableData).subscribe({
           next: (response) => {
-            console.log('Variable registrada en el backend:', response);
             Swal.fire({
               title: '¡Variable Creada! 🎉',
               html: `
@@ -119,7 +121,7 @@ export class FormRegistroVariablesComponent implements OnInit {
               timerProgressBar: true
             });
             this.limpiarFormulario();
-            this.variableCreada.emit(); // 🔹 Notificar al padre que se creó una variable
+            this.variableCreada.emit();
           },
           error: (error) => {
             console.error('Error al crear la variable:', error);
@@ -137,7 +139,7 @@ export class FormRegistroVariablesComponent implements OnInit {
 
   limpiarFormulario() {
     this.form.reset();
-    this.opciones.clear();
+    this.options.clear();
   }
 
   campoEsValido(campo: string): boolean {

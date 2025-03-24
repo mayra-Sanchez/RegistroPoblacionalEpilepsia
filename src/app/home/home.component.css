@@ -1,112 +1,646 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 .home {
-    display: flex;
-    flex-direction: column;  
-    height: 100%;            
-    justify-content: flex-start; 
-    width: 100%;             
-    padding: 0;
-  }
-  
-  h2, h1 {
-    text-align: center;
-    color: #333;
-    margin-top: 3%;
-  }
-  
-  .console-link {
-    display: inline-block;
-    margin: 10px;
-    padding: 10px 20px;
-    text-decoration: none;
-    background-color: #4a90e2;
-    color: white;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.3s;
-  }
-  
-  .console-link:hover {
-    background-color: #357ab8;
-  }
+  width: 100%;
+  margin: 0 auto;
+}
 
-  .contentHome {
-    padding: 30px;
-  }
-  
+h2,
+h1 {
+  text-align: center;
+  color: #333;
+  margin-top: 3%;
+}
+
+.contentHome {
+  padding: 60px 30px;
+  height: 100%;
+}
+
+.info-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Inicio */
+.card,
+.card1 {
+  background-color: #ffffff;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  text-align: center;
+  flex: 1 1 calc(33.333% - 40px);
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover,
+.card1:hover {
+  transform: scale(1.03);
+}
+
+.card-header .icon {
+  font-size: 40px;
+  color: #4a90e2;
+  margin-bottom: 10px;
+}
+
+.card-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin: 10px 0;
+}
+
+.card-body p {
+  font-size: 16px;
+  color: #555;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 1200px;
+  height: auto;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #000;
+}
+
+.modal-content h2 {
+  text-align: center;
+  color: #4a90e2;
+  margin-bottom: 20px;
+}
+
+.instituciones-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+.instituciones-container-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.institucion {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.institucion:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.institucion-img {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.institucion-nombre {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.institucion-descripcion {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.personas-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.personas-container-centrado {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.persona {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.persona:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.persona-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.persona-nombre {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.persona-rol {
+  font-size: 14px;
+  color: #4a90e2;
+  margin-bottom: 10px;
+}
+
+.persona-descripcion {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
   .info-container {
-    text-align: center;
-  }
-  
-  .info-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    margin-top: 5%;
-  }
-  
-  .info-content p {
-    flex: 1;
-    text-align: justify;
-    font-size: 17px;
-    line-height: 2;
-  }
-  
-  .info-content img {
-    flex: 1;
-    max-width: 550px;
-    height: auto;
-    border-radius: 10px;
-  }
-
-  .contact-container {
-    text-align: center;
-  }
-  
-  .contact-content {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 40px;
-    margin-top: 5%;
-  }
-  
-  .contact-content p {
-    flex: 2;
-    text-align: justify;
-    font-size: 18px;
-    line-height: 2;
-    margin-top: 4%;
-  }
-  
-  .contact-info {
-    flex: 1;
-    display: flex;
     flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
-    margin-top: 5%;
-
-    font-size: 19px;
-  }
-  
-  .contact-item {
-    display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 19px;
+  }
 
+  .card,
+  .card1 {
+    max-width: 100%;
+    margin: 10px 0;
+  }
+
+  .instituciones-container,
+  .personas-container,
+  .instituciones-container-center,
+  .personas-container-centrado {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .institucion-img,
+  .persona-img {
+    height: 120px;
+  }
+
+  .institucion-nombre,
+  .persona-nombre {
+    font-size: 16px;
+  }
+
+  .institucion-descripcion,
+  .persona-descripcion {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentHome {
+    padding: 10px;
+  }
+
+  .instituciones-container,
+  .personas-container,
+  .instituciones-container-center,
+  .personas-container-centrado {
+    grid-template-columns: 1fr;
+  }
+
+  .institucion,
+  .persona {
+    width: 100%;
+  }
+
+  .institucion-img,
+  .persona-img {
+    height: 100px;
+  }
+
+  .institucion-nombre,
+  .persona-nombre {
+    font-size: 14px;
+  }
+
+  .institucion-descripcion,
+  .persona-descripcion {
+    font-size: 12px;
+  }
+}
+
+/* Sistema de información */
+.container {
+  display: flex;
+  justify-content: center;
+}
+
+.card-sistema {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  color: #333;
+  max-width: 1300px;
+  width: 100%;
+}
+
+.card-content-sistema {
+  display: flex;
+  flex-direction: row; /* Horizontal en desktop */
+  align-items: center;
+  gap: 50px;
+}
+
+.image-left-sistema {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-left-sistema img {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.image-credit {
+  font-size: 0.6rem;
+  color: #777;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.text-right-sistema {
+  flex: 2;
+  text-align: left;
+}
+
+.card-title-sistema {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  color: #4a90e2;
+  margin-bottom: 15px;
+}
+
+.card-description-sistema {
+  font-size: clamp(1rem, 1.2vw, 1.125rem);
+  color: #555;
+  line-height: 1.8;
+  margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+  .card-content-sistema {
+    flex-direction: column;
+    gap: 30px;
   }
   
-  .contact-item i {
-    font-size: 19px;
-    color: #4a90e2;
+  .text-right-sistema {
+    order: -1; 
+    text-align: center;
+    width: 100%;
   }
   
-  .contact-info span {
-    font-size: 19px;
-    color: #333;
+  .image-left-sistema {
+    width: 100%;
   }
   
+  .image-left-sistema img {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
   
+  .card-sistema {
+    padding: 20px;
+  }
   
+  .card-content-sistema {
+    gap: 20px;
+  }
+}
+
+/* Contacto */
+/* Contacto - Versión Mejorada */
+.contact-container {
+  width: 100%;
+  padding: 1rem 3rem;
+  box-sizing: border-box;
+}
+
+.contact-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.contact-card {
+  flex: 1;
+  min-width: 300px;
+  max-width: 550px;
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+/* Efecto hover solo para dispositivos con mouse */
+@media (hover: hover) {
+  .contact-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Card izquierda (Instrucciones) */
+.instruction-card {
+  border-top: 4px solid #4a90e2;
+}
+
+/* Card derecha (Información) */
+.info-card {
+  border-top: 4px solid #2ecc71;
+}
+
+/* Estilos comunes */
+.card-icon {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-icon i {
+  font-size: 2.5rem;
+  color: #4a90e2;
+}
+
+.contact-card h2 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.contact-card h2:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: #4a90e2;
+}
+
+.info-card h2:after {
+  background: #2ecc71;
+}
+
+/* Estilos para lista de pasos */
+.steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.steps-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 0.75rem;
+}
+
+.steps-list i {
+  color: #4a90e2;
+  font-size: 1.25rem;
+  min-width: 24px;
+  margin-top: 0.25rem;
+}
+
+/* Botón de descarga mejorado */
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem auto 0;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: none;
+  width: auto;
+  transition: background 0.3s ease;
+}
+
+.download-btn i {
+  font-size: 1rem;
+}
+
+.download-btn:hover {
+  background: #357ab8;
+}
+
+/* Nota informativa */
+.note-box {
+  background-color: #f0f7ff;
+  border-left: 3px solid #4a90e2;
+  padding: 1rem;
+  border-radius: 0 6px 6px 0;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.note-box i {
+  color: #4a90e2;
+  font-size: 1.25rem;
+}
+
+.note-box p {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Métodos de contacto */
+.contact-method {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  align-items: flex-start;
+}
+
+.contact-method i {
+  color: #2ecc71;
+  font-size: 1.25rem;
+  min-width: 24px;
+  margin-top: 0.25rem;
+}
+
+.contact-method h3 {
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.contact-method p {
+  margin: 0;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Redes sociales */
+.social-media {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.social-media h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.social-icons a {
+  color: white;
+  background: #4a90e2;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+  background: #357ab8;
+  transform: scale(1.1);
+}
+
+.social-icons a i {
+  font-size: 1rem;
+}
+
+/* Media Queries específicos para contacto */
+@media (max-width: 1024px) {
+  .contact-card {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  
+  .contact-card {
+    width: 100%;
+    max-width: 500px;
+    min-width: auto;
+  }
+  
+  .contact-card h2 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-container {
+    padding: 1.5rem 0.75rem;
+  }
+  
+  .contact-card {
+    padding: 1.25rem;
+  }
+  
+  .steps-list li,
+  .contact-method {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .download-btn {
+    width: 100%;
+    padding: 0.75rem;
+  }
+  
+  .note-box {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+}

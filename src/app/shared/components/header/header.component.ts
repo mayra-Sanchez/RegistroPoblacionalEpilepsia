@@ -45,7 +45,6 @@ export class HeaderComponent implements OnInit {
   
 
   navigateTo(route: string): void {
-    this.router.navigate([`/${route}`]);
     this.closeModal();
   }
 

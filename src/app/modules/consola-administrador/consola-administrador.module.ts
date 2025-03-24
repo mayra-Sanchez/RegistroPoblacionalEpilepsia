@@ -14,6 +14,7 @@ import { FormRegistroVariablesComponent } from '../../shared/components/forms-ad
 import { FormRegistroCapasComponent } from '../../shared/components/forms-admin/form-registro-capas/form-registro-capas.component'; // Importa MatSortModule
 import { HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatSortModule, // Asegúrate de que MatSortModule esté aquí
     HttpClientModule,
     ReactiveFormsModule,
+    MatIconModule,
   ]
 })
 export class AdminModule { }

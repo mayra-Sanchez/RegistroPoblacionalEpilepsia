@@ -1,32 +1,54 @@
-/* app-header */
+/* ========== Estilos del Header ========== */
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-between; /* Distribuye el espacio entre el logo y los botones */
+  align-items: center; /* Centra verticalmente los elementos */
   background-color: white;
   width: 100%;
-  height: 90px; /* Altura del header */
+  height: 95px; /* Altura del header */
   padding: 0 30px;
   box-sizing: border-box;
   top: 0;
   left: 0;
-  z-index: 1000; 
+  z-index: 1000;
   flex-wrap: nowrap;
 }
 
-.logo span {
-  font-family: 'Inria Serif', serif;
-  font-size: 80px;
-  font-weight: bold;
-  color: black;
-  white-space: nowrap
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  gap: 40px;
 }
 
+.uv-logo {
+  width:50px;
+  height: auto;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.90;
+}
+
+.main-title {
+  font-size: 80px; /* Tamaño del título principal */
+  font-weight: bold;
+}
+
+.subtitle {
+  font-size: 10px; /* Tamaño más pequeño para el subtítulo */
+  color: gray; /* Color más sutil */
+}
+
+/* Botones de navegación */
 .nav-buttons {
   display: flex;
   align-items: center;
   gap: 15px;
-  white-space: nowrap
+  white-space: nowrap;
 }
 
 /* Botón de ingresar */
@@ -41,7 +63,7 @@ button.ingresar {
   display: flex;
   align-items: center;
   gap: 10px;
-  white-space: nowrap
+  white-space: nowrap;
 }
 
 button.ingresar:hover {
@@ -140,7 +162,12 @@ button.help-icon:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  position: relative;
+  cursor: pointer;
+}
+
+.user-icon {
+  font-size: 25px;
+  color: black;
 }
 
 .username-button {
@@ -176,6 +203,7 @@ button.help-icon:hover {
   display: flex;
   flex-direction: column;
   border-radius: 5px;
+  z-index: 100;
 }
 
 .menu-dropdown button {
@@ -192,14 +220,22 @@ button.help-icon:hover {
   background-color: #f5f5f5;
 }
 
-/* Responsividad */
+/* ========== Responsividad ========== */
 @media (max-width: 1024px) {
   .header {
     padding: 10px 20px;
   }
 
-  .logo span {
-    font-size: 60px;
+  .main-title {
+    font-size: 60px; /* Reducir el tamaño del título principal */
+  }
+
+  .subtitle {
+    font-size: 8px; /* Reducir el tamaño del subtítulo */
+  }
+
+  .uv-logo {
+    width: 30px; /* Reducir el tamaño del logo UV */
   }
 }
 
@@ -210,27 +246,51 @@ button.help-icon:hover {
     padding: 10px;
   }
 
+  .main-title {
+    font-size: 40px; /* Reducir aún más el tamaño del título principal */
+  }
+
+  .subtitle {
+    font-size: 6px; /* Reducir aún más el tamaño del subtítulo */
+  }
+
+  .uv-logo {
+    width: 30px; /* Reducir aún más el tamaño del logo UV */
+  }
+
   .nav-buttons {
-    flex-direction: row;
     gap: 10px;
   }
 
-  .modal-content, .manual-content {
-    width: 95%;
+  button.ingresar {
+    padding: 10px 15px; /* Reducir el padding del botón */
+    font-size: 14px; /* Reducir el tamaño del texto */
+  }
+
+  .user-info {
+    flex-direction: row; /* Mantener los elementos en fila */
   }
 }
 
 @media (max-width: 480px) {
-  .logo span {
-    font-size: 40px;
+  .main-title {
+    font-size: 30px; /* Tamaño mínimo del título principal */
+  }
+
+  .subtitle {
+    font-size: 5px; /* Tamaño mínimo del subtítulo */
+  }
+
+  .uv-logo {
+    width: 30px; /* Tamaño mínimo del logo UV */
   }
 
   .nav-buttons {
-    flex-direction: column;
+    flex-direction: row; /* Mantener los botones en fila */
     align-items: center;
   }
 
   .user-info {
-    flex-direction: column;
+    flex-direction: row; /* Mantener los elementos en fila */
   }
 }
