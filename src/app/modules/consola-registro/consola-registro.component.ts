@@ -1,18 +1,49 @@
-import { Component } from '@angular/core';
-
+import { Component, OnInit } from '@angular/core';
+import { AuthService } from 'src/app/login/services/auth.service';
+import { ConsolaRegistroService } from './services/consola-registro.service';
 @Component({
   selector: 'app-consola-registro',
   templateUrl: './consola-registro.component.html',
   styleUrls: ['./consola-registro.component.css']
 })
-export class ConsolaRegistroComponent {
+export class ConsolaRegistroComponent implements OnInit {
   selectedTab: string = 'inicioDigitador';
 
-  jefeInvestigacion: string = 'Dr. Juan Pérez';
-  contactoInvestigacion: string = 'juan.perez@investigacion.com';
-  capaUsuario: string = 'Capa 3';
+  jefeInvestigacion: string = '';
+  contactoInvestigacion: string = '';
+  capaUsuario: string = '';
   totalPacientes: number = 124;
-  DescripcionInvestigacion: string = "Este proyecto de investigación tiene como objetivo analizar los efectos del uso prolongado de tecnologías digitales en la salud mental de individuos entre 18 y 35 años. A través de encuestas, entrevistas y estudios de casos, se busca identificar patrones de comportamiento, niveles de estrés y posibles trastornos asociados con el uso constante de dispositivos electrónicos";
+  DescripcionInvestigacion: string = '';
+
+  usuarioAutenticado: any = null;
+
+  constructor(
+    private consolaRegistroService: ConsolaRegistroService,
+    private authService: AuthService
+  ) {}
+  
+  ngOnInit(): void {
+    this.cargarDatosUsuario();
+  }
+
+  private cargarDatosUsuario(): void {
+    const email = this.authService.getUserEmail();
+    if (!email) {
+      console.error('⚠️ No se pudo obtener el email del usuario autenticado.');
+      return;
+    }
+  
+    this.consolaRegistroService.obtenerUsuarioAutenticado(email).subscribe({
+      next: (usuario) => {
+        this.usuarioAutenticado = usuario;
+        console.log('👤 Usuario autenticado:', usuario);
+      },
+      error: (error) => {
+        console.error('❌ Error obteniendo usuario autenticado:', error);
+      }
+    });
+  }
+  
 
   onTabSelected(tab: string): void {
     this.selectedTab = tab;
@@ -28,9 +59,8 @@ export class ConsolaRegistroComponent {
     { nombre: 'Carla', apellido: 'Fernández', documento: '667788990', fechaRegistro: '19/10/2023', registradoPor: 'Carlos Pérez' },
     { nombre: 'Isabel', apellido: 'Pérez', documento: '445566778', fechaRegistro: '27/06/2023', registradoPor: 'Ana Gómez' },
     { nombre: 'Ricardo', apellido: 'García', documento: '556677889', fechaRegistro: '13/04/2023', registradoPor: 'Laura Jaimes' },
-    { nombre: 'Raúl', apellido: 'Cordero', documento: '223355667', fechaRegistro: '29/05/2023', registradoPor: 'Carlos Pérez' },
+    { nombre: 'Raúl', apellido: 'Cordero', documento: '223355667', fechaRegistro: '29/05/2023', registradoPor: 'Carlos Pérez' }
   ];
-  
 
   usuariosColumns = [
     { field: 'nombre', header: 'Nombre' },

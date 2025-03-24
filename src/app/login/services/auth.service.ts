@@ -123,6 +123,20 @@ export class AuthService {
     return !!token;
   }
 
+  getUserEmail(): string | null {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return null;
+  
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded.email || null; // Asegúrate de que el campo "email" está presente en tu token JWT
+    } catch (error) {
+      console.error('❌ Error al obtener el email del token:', error);
+      return null;
+    }
+  }
+  
+
   refreshToken(): Observable<any> {
     const refreshToken = localStorage.getItem('refresh_token');
   
