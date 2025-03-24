@@ -4,55 +4,55 @@
     
     <div class="form-row">
       <label>Nombre de la variable:</label>
-      <input type="text" placeholder="Nombre" formControlName="nombreVariable" required />
-      <div *ngIf="campoEsValido('nombreVariable')">
-        <small class="error-message" *ngIf="form.get('nombreVariable')?.hasError('required')">El nombre es obligatorio.</small>
-        <small class="error-message" *ngIf="form.get('nombreVariable')?.hasError('minlength')">El nombre debe tener al menos 3 caracteres.</small>
+      <input type="text" placeholder="Nombre" formControlName="variableName" required />
+      <div *ngIf="campoEsValido('variableName')">
+        <small class="error-message" *ngIf="form.get('variableName')?.hasError('required')">El nombre es obligatorio.</small>
+        <small class="error-message" *ngIf="form.get('variableName')?.hasError('minlength')">El nombre debe tener al menos 3 caracteres.</small>
       </div>
     </div>
 
     <div class="form-row">
       <label>Descripción de la variable:</label>
-      <textarea placeholder="Descripción" formControlName="descripcion" required></textarea>
-      <div *ngIf="campoEsValido('descripcion')">
-        <small class="error-message" *ngIf="form.get('descripcion')?.hasError('required')">La descripción es obligatoria.</small>
-        <small class="error-message" *ngIf="form.get('descripcion')?.hasError('minlength')">La descripción debe tener al menos 5 caracteres.</small>
+      <textarea placeholder="Descripción" formControlName="description" required></textarea>
+      <div *ngIf="campoEsValido('description')">
+        <small class="error-message" *ngIf="form.get('description')?.hasError('required')">La descripción es obligatoria.</small>
+        <small class="error-message" *ngIf="form.get('description')?.hasError('minlength')">La descripción debe tener al menos 5 caracteres.</small>
       </div>
     </div>
 
     <div class="form-row">
       <label>Tipo de variable:</label>
-      <select formControlName="tipo" required>
+      <select formControlName="type" required>
         <option value="" disabled selected>Tipo de variable</option>
         <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
       </select>
-      <div *ngIf="campoEsValido('tipo')">
-        <small class="error-message" *ngIf="form.get('tipo')?.hasError('required')">El tipo es obligatorio.</small>
+      <div *ngIf="campoEsValido('type')">
+        <small class="error-message" *ngIf="form.get('type')?.hasError('required')">El tipo es obligatorio.</small>
       </div>
     </div>
 
     <div class="form-row">
       <label>Capa de investigación:</label>
-      <select formControlName="idCapaInvestigacion" required>
+      <select formControlName="researchLayerId" required>
         <option value="" disabled selected>Selecciona una capa</option>
-        <option *ngFor="let capa of capasInvestigacion" [value]="capa.id">{{ capa.nombreCapa }}</option>
+        <option *ngFor="let capa of capasInvestigacion" [value]="capa.id">{{ capa.layerName }}</option>
       </select>
-      <div *ngIf="campoEsValido('idCapaInvestigacion')">
-        <small class="error-message" *ngIf="form.get('idCapaInvestigacion')?.hasError('required')">La capa de investigación es obligatoria.</small>
+      <div *ngIf="campoEsValido('researchLayerId')">
+        <small class="error-message" *ngIf="form.get('researchLayerId')?.hasError('required')">La capa de investigación es obligatoria.</small>
       </div>
     </div>
 
     <div class="form-row checkbox-row">
       <label>
         <span>¿Tiene opciones?</span>
-        <input type="checkbox" formControlName="tieneOpciones" (change)="onTieneOpcionesChange()" />
+        <input type="checkbox" formControlName="hasOptions" (change)="onHasOptionsChange()" />
       </label>
     </div>    
 
-    <div *ngIf="form.value.tieneOpciones" formArrayName="opciones" class="form-row">
+    <div *ngIf="form.value.hasOptions" formArrayName="options" class="form-row">
       <label class="options">Opciones:</label>
-      <div *ngFor="let opcion of opciones.controls; let i = index" [formGroupName]="i" class="option-item">
-        <input type="text" class="input-options" formControlName="opcion" required />
+      <div *ngFor="let opcion of options.controls; let i = index" class="option-item">
+        <input type="text" class="input-options" [formControlName]="i" required />
         <button type="button" class="btn btn-delete" (click)="eliminarOpcion(i)">
           <i class="fas fa-trash"></i> 
         </button>

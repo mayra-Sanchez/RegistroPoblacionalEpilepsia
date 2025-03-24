@@ -49,9 +49,14 @@ export class FormRegistroUsuarioComponent implements OnInit {
   obtenerCapas() {
     this.consolaAdministradorService.getAllLayers().subscribe(
       (capas) => {
-        this.capas = capas;
+        console.log('Capas recibidas:', capas); // Verifica en consola
+        this.capas = capas.map(capa => ({
+          id: capa.id,
+          nombreCapa: capa.layerName || capa.nombreCapa // Usa el campo correcto
+        }));
       },
       (error) => {
+        console.error('Error al obtener capas:', error);
         Swal.fire({
           title: 'Error',
           text: 'No se pudieron cargar las capas de investigación.',

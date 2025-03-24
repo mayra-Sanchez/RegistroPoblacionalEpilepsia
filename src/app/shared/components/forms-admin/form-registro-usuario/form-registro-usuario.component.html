@@ -76,8 +76,10 @@
       <label>Capa de investigación:</label>
       <select formControlName="capaInvestigacion">
         <option value="" disabled selected>Selecciona una capa</option>
-        <!-- Se usa la propiedad 'nombreCapa' para mostrar el nombre -->
-        <option *ngFor="let capa of capas" [value]="capa.id">{{ capa.nombreCapa }}</option>
+        <!-- Usa el campo correcto para mostrar el nombre -->
+        <option *ngFor="let capa of capas" [value]="capa.id">
+          {{ capa.nombreCapa || capa.layerName }}
+        </option>
       </select>
       <div *ngIf="campoEsValido('capaInvestigacion')" class="error-message">
         La capa de investigación es obligatoria.

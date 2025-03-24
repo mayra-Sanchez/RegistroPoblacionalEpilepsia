@@ -56,7 +56,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   todosLosUsuarios: any[] = [];
 
   ultimosUsuarios: any[] = [];
-  ultimosRegistros: Registro[] = []; 
+  ultimosRegistros: Registro[] = [];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   dataSource: MatTableDataSource<any> = new MatTableDataSource();
   displayedColumns: string[] = ['tipo', 'nombre', 'fecha'];
@@ -80,15 +80,16 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     { field: 'apellido', header: 'Apellido' },
     { field: 'email', header: 'Correo Electrónico' },
     { field: 'usuario', header: 'Usuario' },
-    { field: 'capa', header: 'Capa de Investigación' },
+    { field: 'capa', header: 'Capa de Investigación', 
+      formatter: (value: string, row: any) => this.getCapaNombreById(row.capaId) },
     { field: 'rol', header: 'Rol' }
   ];
 
   variablesColumns = [
-    { field: 'nombre', header: 'Nombre' },
-    { field: 'descripcion', header: 'Descripción' },
-    { field: 'capa', header: 'Capa de investigación' },
-    { field: 'tipo', header: 'Tipo' }
+    { field: 'variableName', header: 'Nombre' },
+    { field: 'description', header: 'Descripción' },
+    { field: 'type', header: 'Tipo' },
+    { field: 'capaNombre', header: 'Capa' } // Usamos el campo calculado
   ];
 
   capasColumns = [
@@ -162,12 +163,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       next: (data: any[]) => {
         this.capasData = data.map(capa => ({
           id: capa.id,
-          nombreCapa: capa.nombreCapa,
-          descripcion: capa.descripcion,
-          jefeCapaNombre: capa.jefeCapa?.nombre || 'Sin asignar',
-          jefeIdentificacion: capa.jefeCapa?.numeroIdentificacion || 'Sin asignar'
+          nombreCapa: capa.layerName,
+          descripcion: capa.description,
+          jefeCapa: capa.layerBoss || {},
+          jefeCapaNombre: capa.layerBoss?.name || 'Sin asignar',
+          jefeIdentificacion: capa.layerBoss?.identificationNumber || 'Sin asignar'
         }));
         this.capas = this.capasData;
+        this.totalCapas = this.capasData.length;
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -188,17 +191,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.consolaService.getAllVariables().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
         this.variablesData = data.map(variable => ({
-          id: variable.id,
-          nombre: variable.nombreVariable,
-          descripcion: variable.descripcion,
-          capa: this.getCapaNombreById(variable.idCapaInvestigacion),
-          tipo: variable.tipo,
-          tieneOpciones: variable.opciones && variable.opciones.length > 0,
-          opciones: variable.opciones || []
+          ...variable,
+          capaNombre: this.getCapaNombreById(variable.researchLayerId) // Agregamos este campo
         }));
         this.cdr.detectChanges();
-        this.totalVariables = this.variablesData.length; // Actualiza la cantidad de variables
-        this.updateDashboard();
       },
       error: () => {
         this.mostrarMensajeError('No se pudo cargar la información de las variables');
@@ -218,6 +214,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       next: (data: any[]) => {
         this.usuariosData = data.map(user => {
           const attrs = user.attributes || {};
+          const capaValue = attrs.researchLayerId?.[0]; // Obtener el valor de researchLayerId
+          
           return {
             id: user.id,
             nombre: user.firstName || 'Sin nombre',
@@ -227,13 +225,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             tipoDocumento: attrs.identificationType ? attrs.identificationType[0] : 'No especificado',
             documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
             fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
-            capa: attrs.researchLayerId ? this.getCapaNombreById(attrs.researchLayerId[0]) : 'No asignada',
+            capa: this.getCapaNombreById(capaValue), // Usar el valor directamente
+            capaRawValue: capaValue, // Guardar el valor original
             rol: attrs.role ? attrs.role.map(this.transformarRol).join(', ') : 'No especificado',
             passwordActual: user.password
           };
         });
         this.cdr.detectChanges();
-        this.totalUsuarios = this.usuariosData.length; // Actualiza la cantidad de usuarios
+        this.totalUsuarios = this.usuariosData.length;
         this.updateDashboard();
       },
       error: () => {
@@ -282,16 +281,16 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         rol: user.attributes?.role ? user.attributes.role[0] : 'No especificado',
         email: user.email || 'No disponible'
       }));
-  
+
       // Ordenar usuarios por fecha de creación (más recientes primero)
       const usuariosOrdenados = data.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
-  
+
       // Tomar los últimos 2 usuarios creados para "Accesos Rápidos"
       this.ultimosUsuarios = usuariosOrdenados.slice(0, 5).map(user => ({
         nombre: `${user.firstName || 'Desconocido'} ${user.lastName || ''}`.trim(),
         rol: user.attributes?.role ? user.attributes.role[0] : 'No especificado',
         email: user.email || 'No disponible',
-        detalles: { 
+        detalles: {
           nombre: user.firstName || 'Desconocido',
           apellido: user.lastName || '',
           username: user.username || 'No disponible',
@@ -303,12 +302,12 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           rol: user.attributes?.role ? user.attributes.role.join(', ') : 'No especificado'
         }
       }));
-  
+
       console.log('📌 Últimos 2 usuarios cargados:', this.ultimosUsuarios);
       console.log('📌 Todos los usuarios para exportar:', this.todosLosUsuarios);
     });
   }
-  
+
   /**
    * Función que exporta los usuarios registrados
    * @returns Download csv
@@ -318,23 +317,23 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       console.warn('⚠️ No hay usuarios para exportar.');
       return;
     }
-  
+
     const encabezados = "Nombre;Rol;Email\n";
-  
+
     const filas = this.todosLosUsuarios
       .map(u => `${u.nombre};${u.rol};${u.email}`)
       .join("\n");
-  
+
     const csvContent = encabezados + filas;
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-  
+
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `usuarios_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-  
+
     console.log('✅ Archivo CSV generado con éxito.');
   }
 
@@ -344,43 +343,43 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   cargarUltimosRegistros() {
     this.consolaService.getAllUsuarios().subscribe(usuarios => {
       console.log('Usuarios obtenidos:', usuarios);
-  
+
       const ultimosUsuarios: Registro[] = usuarios.map((usuario, index) => ({
         tipo: 'usuario',
         data: usuario,
         orderIndex: index
       }));
-  
+
       this.consolaService.getAllLayers().subscribe(capas => {
         console.log('Capas obtenidas:', capas);
-  
+
         const ultimasCapas: Registro[] = capas.map((capa, index) => ({
           tipo: 'capa',
           data: capa,
           orderIndex: index
         }));
-  
+
         this.consolaService.getAllVariables().subscribe(variables => {
           console.log('Variables obtenidas:', variables);
-  
+
           const ultimasVariables: Registro[] = variables.map((variable, index) => ({
             tipo: 'variable',
             data: variable,
             orderIndex: index
           }));
-  
+
           // 🔹 Combinar todos los registros
           this.ultimosRegistros = [...ultimosUsuarios, ...ultimasCapas, ...ultimasVariables];
-  
+
           // 🔹 Ordenar de más reciente a más antiguo
           this.ultimosRegistros.sort((a, b) => b.orderIndex - a.orderIndex);
-  
+
           console.log('📌 Últimos registros ordenados:', this.ultimosRegistros);
-  
+
           // Inicializar el dataSource con los registros ordenados
           this.dataSource = new MatTableDataSource(this.ultimosRegistros);
           this.dataSource.paginator = this.paginator;
-  
+
           this.cdr.detectChanges(); // ✅ Forzar actualización de la vista
         });
       });
@@ -390,9 +389,22 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   /* Funciones de Utilidad
   * Devuelve el nombre de una capa basado en su ID.
   */
-  getCapaNombreById(id: string): string {
-    const capa = this.capas.find((c: any) => c.id === id);
-    return capa ? capa.nombreCapa : 'Capa desconocida';
+  getCapaNombreById(idOrName: string): string {
+    if (!idOrName || idOrName === 'undefined' || idOrName === 'null') return 'Sin asignar';
+    
+    // Si el valor ya es un nombre de capa (como en tus datos actuales)
+    if (typeof idOrName === 'string' && !idOrName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      return idOrName; // Ya es un nombre, lo devolvemos directamente
+    }
+    
+    // Buscar por ID en diferentes formatos
+    const capa = this.capas.find(c => 
+      c.id === idOrName || 
+      c._id === idOrName || 
+      c.layerId === idOrName
+    );
+    
+    return capa ? (capa.layerName || capa.nombreCapa || 'Capa sin nombre') : 'Capa no encontrada';
   }
 
   /* Funciones de Utilidad
@@ -442,13 +454,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   * Abre el modal de visualización para un elemento.
   */
   handleView(event: any, tipo: string): void {
-    console.log('📌 handleView recibido:', event); 
-  
+    console.log('📌 handleView recibido:', event);
+
     if (!event) {
       console.error('🚨 Error: event es undefined o null');
       return;
     }
-  
+
     if (tipo === 'usuario') {
       if (!event.detalles) {
         console.error('🚨 Error: event.detalles es undefined');
@@ -458,13 +470,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     } else {
       this.viewedItem = event;
     }
-  
+
     console.log('📌 Datos en viewedItem:', this.viewedItem);
-  
+
     this.viewType = tipo;
     this.isViewing = true;
   }
-  
+
 
   /* Gestión de Modales
   * Abre el modal de edición para un elemento.
@@ -472,15 +484,38 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   handleEdit(row: any, tipo: string): void {
     if (tipo === 'usuario') {
       this.isEditingUserModal = true;
-      this.userToEdit = { ...row };
+      this.userToEdit = { 
+        ...row,
+        firstName: row.nombre,
+        lastName: row.apellido,
+        email: row.email,
+        username: row.usuario,
+        identificationType: row.tipoDocumento,
+        identificationNumber: row.documento,
+        birthDate: row.fechaNacimiento,
+        researchLayerId: row.capaRawValue, // Usar el valor original
+        role: row.rol.split(', ')[0],
+        password: row.passwordActual
+      };
     } else if (tipo === 'capa') {
-      this.capaToEdit = { ...row };
+      this.capaToEdit = {
+        ...row,
+        nombreCapa: row.layerName || row.nombreCapa,
+        descripcion: row.description || row.descripcion,
+        jefeCapaNombre: row.layerBoss?.name || row.jefeCapaNombre,
+        jefeIdentificacion: row.layerBoss?.identificationNumber || row.jefeIdentificacion
+      };
       this.isEditingCapa = true;
     } else if (tipo === 'variable') {
-      this.varToEdit = { ...row };
-      if (!this.tiposVariables.includes(this.varToEdit.tipo)) {
-        this.varToEdit.tipo = this.tiposVariables[0];
-      }
+      this.varToEdit = {
+        ...row,
+        variableName: row.variableName,
+        description: row.description,
+        type: row.type,  // Asegurar que el tipo se asigne correctamente
+        researchLayerId: row.researchLayerId,  // Asegurar que el ID de capa se asigne
+        options: row.options || [],
+        tieneOpciones: (row.options && row.options.length > 0)
+      };
       this.isEditingVar = true;
     }
   }
@@ -508,11 +543,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
     const variablePayload = {
       id: variableEditada.id,
-      nombreVariable: variableEditada.nombre,
-      descripcion: variableEditada.descripcion,
-      idCapaInvestigacion: variableEditada.capa,
-      tipo: variableEditada.tipo,
-      opciones: variableEditada.opciones || []
+      variableName: variableEditada.variableName,
+      description: variableEditada.description,
+      researchLayerId: variableEditada.researchLayerId,
+      type: variableEditada.type,
+      options: variableEditada.tieneOpciones ? variableEditada.options.filter((opt: string) => opt.trim() !== '') : []
     };
 
     Swal.fire({
@@ -530,6 +565,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           next: () => {
             Swal.fire('Éxito', 'Variable actualizada con éxito.', 'success');
             this.isEditingVar = false;
+            this.loadVariablesData();
           },
           error: (error) => {
             console.error('Error al actualizar la variable:', error);
@@ -550,9 +586,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     }
 
     const requestBody = {
-      nombreCapa: this.capaToEdit.nombreCapa,
-      descripcion: this.capaToEdit.descripcion,
-      jefeCapa: this.capaToEdit.jefeCapa
+      layerName: this.capaToEdit.nombreCapa,
+      description: this.capaToEdit.descripcion,
+      layerBoss: {
+        id: this.capaToEdit.jefeCapa?.id || 0,
+        name: this.capaToEdit.jefeCapaNombre,
+        identificationNumber: this.capaToEdit.jefeIdentificacion
+      }
     };
 
     Swal.fire({
@@ -570,6 +610,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           next: () => {
             Swal.fire('Éxito', 'Capa actualizada con éxito.', 'success');
             this.isEditingCapa = false;
+            this.loadCapasData(); // Refresh the data
           },
           error: (error) => {
             console.error('Error al actualizar la capa:', error);
@@ -633,7 +674,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-
 
   /* Eliminar Elementos
   *  Elimina un elemento (usuario, variable o capa) después de confirmar.
@@ -710,24 +750,18 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   */
   onTieneOpcionesChange() {
     if (!this.varToEdit.tieneOpciones) {
-      this.varToEdit.opciones = [];
-    } else if (this.varToEdit.opciones.length === 0) {
-      this.varToEdit.opciones = [''];
+      this.varToEdit.options = [];
+    } else if (!this.varToEdit.options || this.varToEdit.options.length === 0) {
+      this.varToEdit.options = [''];
     }
   }
 
-  /* Gestión de Opciones (Variables)
-  * Agrega una nueva opción a una variable.
-  */
   agregarOpcion() {
-    this.varToEdit.opciones.push('');
+    this.varToEdit.options.push('');
   }
 
-  /* Gestión de Opciones (Variables)
-  * Elimina una opción de una variable.
-  */
   eliminarOpcion(index: number) {
-    this.varToEdit.opciones.splice(index, 1);
+    this.varToEdit.options.splice(index, 1);
   }
 
   /* Gestión de Opciones (Variables)

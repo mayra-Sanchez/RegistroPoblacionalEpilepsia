@@ -92,14 +92,17 @@
                   </ng-container>
 
                   <ng-container *ngIf="registro.tipo === 'capa'">
-                    <b>Nombre Capa:</b> {{ registro.data.nombreCapa }} <br>
-                    <b>Jefe:</b> {{ registro.data.jefeCapa.nombre }} <br>
+                    <b>Nombre Capa:</b> {{ registro.data.layerName || registro.data.nombreCapa }} <br>
+                    <b>Jefe:</b> {{ registro.data.layerBoss?.name || registro.data.jefeCapa?.nombre }} <br>
+                    <b>Identificación Jefe:</b> {{ registro.data.layerBoss?.identificationNumber ||
+                    registro.data.jefeCapa?.numeroIdentificacion || 'N/A' }}
                   </ng-container>
 
-                  <ng-container *ngIf="registro.tipo === 'variable'">
-                    <b>Nombre Variable:</b> {{ registro.data.nombreVariable }} <br>
-                    <b>Tipo:</b> {{ registro.data.tipo }} <br>
-                    <b>Opciones:</b> {{ registro.data.opciones?.join(', ') || 'Ninguna' }}
+                  <ng-container *ngIf="viewType === 'variable'">
+                    <b>Nombre Variable:</b> {{ viewedItem.variableName }} <br>
+                    <b>Descripción:</b> {{ viewedItem.description }} <br>
+                    <b>Tipo:</b> {{ viewedItem.type }} <br>
+                    <b>Opciones:</b> {{ viewedItem.options?.join(', ') || 'Ninguna' }}
                   </ng-container>
                 </td>
               </ng-container>
@@ -190,15 +193,16 @@
 
     <div *ngIf="viewType === 'variable'" class="modal-content">
       <div class="modal-body">
-        <p><strong>Nombre:</strong> {{ viewedItem.nombre }}</p>
-        <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
-        <p><strong>Capa:</strong> {{ viewedItem.capa }}</p>
-        <p><strong>Tipo:</strong> {{ viewedItem.tipo}}</p>
+        <p><strong>Nombre:</strong> {{ viewedItem.variableName || viewedItem.nombre }}</p>
+        <p><strong>Descripción:</strong> {{ viewedItem.description || viewedItem.descripcion }}</p>
+        <p><strong>Capa:</strong> {{ getCapaNombreById(viewedItem.researchLayerId || viewedItem.idCapaInvestigacion) }}
+        </p>
+        <p><strong>Tipo:</strong> {{ viewedItem.type || viewedItem.tipo }}</p>
 
-        <div *ngIf="viewedItem.opciones && viewedItem.opciones.length > 0">
+        <div *ngIf="(viewedItem.options || viewedItem.opciones)?.length > 0">
           <p><strong>Opciones:</strong></p>
           <ul>
-            <li *ngFor="let opcion of viewedItem.opciones">{{ opcion }}</li>
+            <li *ngFor="let opcion of (viewedItem.options || viewedItem.opciones)">{{ opcion }}</li>
           </ul>
         </div>
       </div>
@@ -207,11 +211,12 @@
 
     <div *ngIf="viewType === 'capa'" class="modal-content">
       <div class="modal-body">
-        <p><strong>Nombre:</strong> {{ viewedItem.nombreCapa }}</p>
-        <p><strong>Descripción:</strong> {{ viewedItem.descripcion }}</p>
-        <p><strong>Jefe:</strong> {{ viewedItem.jefeCapaNombre }}</p>
+        <p><strong>Nombre:</strong> {{ viewedItem.layerName || viewedItem.nombreCapa }}</p>
+        <p><strong>Descripción:</strong> {{ viewedItem.description || viewedItem.descripcion }}</p>
+        <p><strong>Jefe:</strong> {{ viewedItem.layerBoss?.name || viewedItem.jefeCapaNombre }}</p>
+        <p><strong>Identificación Jefe:</strong> {{ viewedItem.layerBoss?.identificationNumber ||
+          viewedItem.jefeIdentificacion }}</p>
       </div>
-
     </div>
     <div class="form-buttons">
       <button (click)="cerrarModal()" class="btn btn-secondary">Cerrar</button>
@@ -239,7 +244,7 @@
       </div>
       <div class="form-row">
         <label>Número de Identificación del Jefe de Capa:</label>
-        <input type="text" [(ngModel)]="capaToEdit.jefeIdentificacion" name="jefeCapaIdentificacion" required />
+        <input type="text" [(ngModel)]="capaToEdit.jefeIdentificacion" name="jefeIdentificacion" required />
       </div>
       <div class="form-buttons">
         <button type="submit" class="btn btn-primary">Guardar</button>
@@ -256,28 +261,30 @@
     <form (ngSubmit)="guardarEdicionVariable(varToEdit)">
       <div class="form-row">
         <label>Nombre:</label>
-        <input type="text" [(ngModel)]="varToEdit.nombre" name="nombre" required />
+        <input type="text" [(ngModel)]="varToEdit.variableName" name="variableName" required />
       </div>
       <div class="form-row">
         <label>Descripción:</label>
-        <input type="text" [(ngModel)]="varToEdit.descripcion" name="descripcion" required />
+        <input type="text" [(ngModel)]="varToEdit.description" name="description" required />
       </div>
       <div class="form-row">
         <label>Capa de Investigación:</label>
-        <select [(ngModel)]="varToEdit.capa" name="idCapaInvestigacion" required>
-          <option *ngFor="let capa of capasData" [value]="capa.id">{{ capa.nombreCapa }}</option>
+        <select [(ngModel)]="varToEdit.researchLayerId" name="researchLayerId" required>
+          <option *ngFor="let capa of capasData" [value]="capa.id" [selected]="capa.id === varToEdit.researchLayerId">
+            {{ capa.layerName || capa.nombreCapa }}
+          </option>
         </select>
       </div>
+
       <div class="form-row">
-        <label for="tipo">Tipo de Variable</label>
-        <select formControlName="tipo" class="form-control">
-          <option *ngFor="let tipo of tiposVariables" [value]="tipo">{{ tipo }}</option>
+        <label>Tipo de Variable:</label>
+        <select [(ngModel)]="varToEdit.type" name="type" required>
+          <option *ngFor="let tipo of tiposVariables" [value]="tipo" [selected]="tipo === varToEdit.type">
+            {{ tipo }}
+          </option>
         </select>
-
-
       </div>
 
-      <!-- Selector para "Tiene Opciones" -->
       <div class="form-row checkbox-row">
         <label>
           <span>¿Tiene opciones?</span>
@@ -286,11 +293,10 @@
         </label>
       </div>
 
-      <!-- Opciones dinámicas -->
       <div class="form-row" *ngIf="varToEdit.tieneOpciones">
         <label class="options">Opciones:</label>
-        <div *ngFor="let opcion of varToEdit.opciones; let i = index; trackBy: trackByIndex" class="option-item">
-          <input type="text" class="input-options" [(ngModel)]="varToEdit.opciones[i]" [name]="'opcion' + i" required />
+        <div *ngFor="let opcion of varToEdit.options; let i = index; trackBy: trackByIndex" class="option-item">
+          <input type="text" [(ngModel)]="varToEdit.options[i]" [name]="'option' + i" required />
           <button type="button" (click)="eliminarOpcion(i)" class="btn btn-danger">✖</button>
         </div>
         <button type="button" class="btn btn-success" (click)="agregarOpcion()">➕ Agregar Opción</button>
@@ -300,11 +306,11 @@
         <button type="submit" class="btn btn-primary">Guardar datos</button>
         <button type="button" class="btn btn-secondary" (click)="isEditingVar = false">Cancelar edición</button>
       </div>
-
     </form>
   </div>
 </div>
 
+<!-- Modal para editar Variable -->
 <div *ngIf="isEditingUserModal" class="modal-overlay">
   <div class="modal-content">
     <h2>Editar Usuario</h2>
@@ -352,9 +358,13 @@
 
         <div class="form-row">
           <label>Capa de Investigación:</label>
-          <select [(ngModel)]="userToEdit.capa" name="capa" required>
-            <option value="" disabled selected>Selecciona una capa</option>
-            <option *ngFor="let capa of capas" [value]="capa.id">{{ capa.nombreCapa }}</option>
+          <select [(ngModel)]="userToEdit.researchLayerId" name="researchLayerId" required>
+            <option value="" disabled>Selecciona una capa</option>
+            <option *ngFor="let capa of capas" 
+                    [value]="capa.layerName || capa.nombreCapa"
+                    [selected]="(capa.layerName || capa.nombreCapa) === userToEdit.capaRawValue">
+              {{ capa.layerName || capa.nombreCapa }}
+            </option>
           </select>
         </div>
 

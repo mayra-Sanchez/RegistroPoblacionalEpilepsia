@@ -5,11 +5,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
-/**
- * El componente FormRegistroCapasComponent es un formulario Angular diseñado para registrar nuevas 
- * capas de investigación. Este componente se integra con el servicio ConsolaAdministradorService 
- * para enviar los datos al backend y manejar la lógica de registro.
- */
 @Component({
   selector: 'app-form-registro-capas',
   templateUrl: './form-registro-capas.component.html',
@@ -17,38 +12,32 @@ import Swal from 'sweetalert2';
 })
 export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   form!: FormGroup;
-
-  // Suscripción para gestionar la desuscripción de observables y evitar fugas de memoria.
   private capasSubscription: Subscription = Subscription.EMPTY;
 
   constructor(
     private fb: FormBuilder,
     private consolaAdministradorService: ConsolaAdministradorService,
     private dialog: MatDialog
-  ) {}
+  ) { }
 
-  // Se ejecuta al inicializar el componente. Inicializa el formulario reactivo.
   ngOnInit(): void {
-    // Formulario reactivo
     this.form = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
-      descripcion: ['', [Validators.required, Validators.minLength(5)]],
-      jefeCapa: this.fb.group({
-        id: [null],
-        nombre: ['', [Validators.required, Validators.minLength(3)]],
-        numeroIdentificacion: ['', [Validators.required, Validators.minLength(5)]],
+      layerName: ['', [Validators.required, Validators.minLength(3)]],
+      description: ['', [Validators.required, Validators.minLength(5)]],
+      layerBoss: this.fb.group({
+        id: [1],
+        name: ['', [Validators.required, Validators.minLength(3)]],
+        identificationNumber: ['', [Validators.required, Validators.minLength(5)]],
       }),
     });
   }
 
-  // Se ejecuta al destruir el componente. Limpia las suscripciones para evitar fugas de memoria.
   ngOnDestroy(): void {
     if (this.capasSubscription) {
       this.capasSubscription.unsubscribe();
     }
   }
-
-  // Valida el formulario y envía los datos al backend para registrar una nueva capa.
+ 
   registrarCapa(): void {
     if (this.form.invalid) {
       Swal.fire({
@@ -62,12 +51,12 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     }
 
     const capaData = {
-      nombreCapa: this.form.value.nombre?.trim(),
-      descripcion: this.form.value.descripcion?.trim(),
-      jefeCapa: {
-        id: this.form.value.jefeCapa?.id || 1,
-        nombre: this.form.value.jefeCapa?.nombre?.trim(),
-        numeroIdentificacion: this.form.value.jefeCapa?.numeroIdentificacion?.trim() || 'N/A',
+      layerName: this.form.value.layerName?.trim(),
+      description: this.form.value.description?.trim(),
+      layerBoss: {
+        id: this.form.value.layerBoss?.id || 0,
+        name: this.form.value.layerBoss?.name?.trim(),
+        identificationNumber: this.form.value.layerBoss?.identificationNumber?.trim(),
       },
     };
 
@@ -80,17 +69,17 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.consolaAdministradorService.registrarCapa(capaData).subscribe(
-          () => {
+        this.capasSubscription = this.consolaAdministradorService.registrarCapa(capaData).subscribe({
+          next: () => {
             Swal.fire({
               title: '¡Registro exitoso! 🎉',
               html: `
-                <div style="text-align: center;">
-                  <p>La capa ha sido registrada correctamente.</p>
-                  <img src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" 
-                    alt="Éxito" style="width: 150px; margin-top: 10px;">
-                </div>
-              `,
+              <div style="text-align: center;">
+                <p>La capa ha sido registrada correctamente.</p>
+                <img src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" 
+                  alt="Éxito" style="width: 150px; margin-top: 10px;">
+              </div>
+            `,
               icon: 'success',
               confirmButtonText: 'Aceptar',
               confirmButtonColor: '#3085d6',
@@ -100,15 +89,26 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
             });
             this.form.reset();
           },
-          () => {
+          error: (error) => {
+            let errorMessage = 'Ocurrió un problema al registrar la capa.';
+
+            // Manejo específico de errores
+            if (error.error && typeof error.error === 'string') {
+              if (error.error.includes('ya existe')) {
+                errorMessage = 'El nombre de la capa ya existe.';
+              } else if (error.error.includes('demasiado largo')) {
+                errorMessage = 'Algunos campos exceden la longitud máxima permitida.';
+              }
+            }
+
             Swal.fire({
               title: 'Error',
-              text: 'Ocurrió un problema al registrar la capa.',
+              text: errorMessage,
               icon: 'error',
               confirmButtonText: 'Aceptar'
             });
           }
-        );
+        });
       }
     });
   }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, throwError, Subject  } from 'rxjs';
+import { Observable, throwError, Subject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from 'src/app/login/services/auth.service';
 
@@ -78,13 +78,17 @@ export class ConsolaAdministradorService {
   }
 
   // Registra una nueva capa de investigación
+  // En ConsolaAdministradorService
   registrarCapa(capaData: any): Observable<any> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.post<any>(this.API_LAYERS, JSON.stringify(capaData), { headers }).pipe(
-      tap(() => this.notifyDataUpdated()) // Notificar después de crear
+    const headers = this.getAuthHeaders(); // Usar headers con autenticación
+
+    return this.handleRequest(
+      this.http.post<any>(this.API_LAYERS, capaData, { headers }),
+      '✅ Capa registrada'
+    ).pipe(
+      tap(() => this.notifyDataUpdated())
     );
   }
-
   // Actualiza una capa de investigación existente
   actualizarCapa(id: string, capaData: any): Observable<any> {
     const url = `http://localhost:8080/api/v1/ResearchLayer?researchLayerId=${id}`;
@@ -219,26 +223,22 @@ export class ConsolaAdministradorService {
       }),
       `🗑️ Variable eliminada (ID: ${variableId})`
     ).pipe(
-      tap(() => this.notifyDataUpdated()) 
+      tap(() => this.notifyDataUpdated())
     );
   }
 
   actualizarVariable(variable: any): Observable<any> {
     const variableData = {
-      idCapaInvestigacion: variable.idCapaInvestigacion,
-      nombreVariable: variable.nombreVariable,  
-      descripcion: variable.descripcion,
-      tipo: variable.tipo,
-      opciones: variable.opciones || []
+      variableName: variable.variableName,  
+      description: variable.description,
+      researchLayerId: variable.researchLayerId,
+      type: variable.type,
+      options: variable.options || []
     };
-
+  
     const url = `${this.API_VARIABLES}?variableId=${variable.id}`;
-
-    return this.http.put<any>(url, variableData).pipe(
-      tap(() => {
-        console.log('Variable actualizada:', variableData);
-        this.notifyDataUpdated(); // Notificar después de actualizar
-      }),
+    return this.http.put<any>(url, variableData, { headers: this.getAuthHeaders() }).pipe(
+      tap(() => this.notifyDataUpdated()),
       catchError(error => {
         console.error('Error al actualizar la variable:', error);
         return throwError(() => new Error('No se pudo actualizar la variable.'));
