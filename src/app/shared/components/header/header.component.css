@@ -14,20 +14,33 @@
   flex-wrap: nowrap;
 }
 
-/* Logo centrado verticalmente y alineado a la izquierda */
 .logo {
   display: flex;
-  align-items: center; /* Centra verticalmente el logo */
-  justify-content: flex-start; /* Alinea el logo a la izquierda */
-  flex: 1; /* Ocupa el espacio disponible */
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  gap: 40px;
 }
 
-.logo span {
-  font-size: 80px;
+.uv-logo {
+  width:50px;
+  height: auto;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.90;
+}
+
+.main-title {
+  font-size: 80px; /* Tamaño del título principal */
   font-weight: bold;
-  color: black;
-  white-space: nowrap;
-  text-align: left; 
+}
+
+.subtitle {
+  font-size: 10px; /* Tamaño más pequeño para el subtítulo */
+  color: gray; /* Color más sutil */
 }
 
 /* Botones de navegación */
@@ -206,18 +219,22 @@ button.help-icon:hover {
   background-color: #f5f5f5;
 }
 
-.menu-dropdown button:hover {
-  background-color: #f5f5f5;
-}
-
 /* ========== Responsividad ========== */
 @media (max-width: 1024px) {
   .header {
     padding: 10px 20px;
   }
 
-  .logo span {
-    font-size: 60px; /* Reducir el tamaño del logo */
+  .main-title {
+    font-size: 60px; /* Reducir el tamaño del título principal */
+  }
+
+  .subtitle {
+    font-size: 8px; /* Reducir el tamaño del subtítulo */
+  }
+
+  .uv-logo {
+    width: 30px; /* Reducir el tamaño del logo UV */
   }
 }
 
@@ -228,8 +245,16 @@ button.help-icon:hover {
     padding: 10px;
   }
 
-  .logo span {
-    font-size: 40px; /* Reducir aún más el tamaño del logo */
+  .main-title {
+    font-size: 40px; /* Reducir aún más el tamaño del título principal */
+  }
+
+  .subtitle {
+    font-size: 6px; /* Reducir aún más el tamaño del subtítulo */
+  }
+
+  .uv-logo {
+    width: 30px; /* Reducir aún más el tamaño del logo UV */
   }
 
   .nav-buttons {
@@ -247,8 +272,16 @@ button.help-icon:hover {
 }
 
 @media (max-width: 480px) {
-  .logo span {
-    font-size: 30px; /* Tamaño mínimo del logo */
+  .main-title {
+    font-size: 30px; /* Tamaño mínimo del título principal */
+  }
+
+  .subtitle {
+    font-size: 5px; /* Tamaño mínimo del subtítulo */
+  }
+
+  .uv-logo {
+    width: 30px; /* Tamaño mínimo del logo UV */
   }
 
   .nav-buttons {

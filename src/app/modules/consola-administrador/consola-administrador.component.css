@@ -413,6 +413,13 @@ button {
   gap: 8px; /* Espacio entre el icono y el texto */
 }
 
+.descarga{
+  display: flex;
+  margin-top: 30px;
+  justify-content: center;
+  align-items: center;
+}
+
 button:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);

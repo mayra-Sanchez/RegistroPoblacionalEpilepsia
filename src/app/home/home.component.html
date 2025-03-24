@@ -3,43 +3,206 @@
 
   <div class="contentHome">
     <div *ngIf="selectedTab === 'inicio'" class="info-container">
-      <h1>REGISTRO DE PACIENTES CON EPILEPSIA</h1>
-      <div class="info-content">
-        <p>
-          Bienvenido al Registro de Pacientes con Epilepsia, un sistema diseñado para facilitar el seguimiento y gestión de información clínica. Nuestra plataforma permite a los profesionales de la salud registrar, consultar y analizar datos relevantes, contribuyendo a una mejor atención y tratamiento para los pacientes.
-        </p>
-        <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
-      </div>
-    </div>
-    <div *ngIf="selectedTab === 'sistema'">
-      <h1>SISTEMA DE INFORMACIÓN</h1>
-      <div class="info-content">
-        <p>
-          Nuestro Sistema de Información está desarrollado para optimizar la administración de datos de pacientes con epilepsia. Con una interfaz intuitiva y segura, los médicos pueden acceder a historiales clínicos, generar reportes y tomar decisiones basadas en información actualizada y confiable.
-        </p>
-        <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
-      </div>
-    </div>
-    <div *ngIf="selectedTab === 'contacto'">
-      <h1>CONTÁCTENOS</h1>
-      <div class="contact-content">
-        <p>
-          ¿Tienes preguntas o necesitas más información? Estamos aquí para ayudarte. Puedes comunicarte con nosotros a través de los siguientes medios:
-        </p>
-        <div class="contact-info">
-          <div class="contact-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>Ubicación #x x</span>
-          </div>
-          <div class="contact-item">
-            <i class="fas fa-phone"></i>
-            <span>1234567890</span>
-          </div>
-          <div class="contact-item">
-            <i class="fas fa-envelope"></i>
-            <span>correo&#64;gmail.com</span>
-          </div>
+      <!-- Card: ¿Qué es RPE? -->
+      <div class="card1">
+        <div class="card-header">
+          <i class="fas fa-brain icon"></i> <!-- Icono alusivo -->
+          <h2>¿Qué es RPE?</h2>
+        </div>
+        <div class="card-body">
+          <p>
+            El Registro Poblacional de Epilepsia (RPE) es una herramienta diseñada para recopilar, organizar y analizar
+            datos relacionados con pacientes diagnosticados con epilepsia. Su objetivo es facilitar la investigación,
+            mejorar el tratamiento y brindar información valiosa para la toma de decisiones en el ámbito de la salud
+            pública
+          </p>
         </div>
       </div>
+
+      <!-- Card: Instituciones -->
+      <div class="card" (click)="openModal('institucionesModal')">
+        <div class="card-header">
+          <i class="fas fa-university icon"></i> <!-- Icono para instituciones -->
+          <h2>Instituciones</h2>
+        </div>
+        <div class="card-body">
+          <p>
+            Colaboramos con diversas instituciones de salud e investigación para mejorar la calidad de vida de los
+            pacientes con epilepsia
+          </p>
+        </div>
+      </div>
+
+      <!-- Card: Grupo Humano -->
+      <div class="card" (click)="openModal('grupoHumanoModal')">
+        <div class="card-header">
+          <i class="fas fa-users icon"></i> <!-- Icono para grupo humano -->
+          <h2>Grupo Humano</h2>
+        </div>
+        <div class="card-body">
+          <p>
+            Conoce al equipo detrás del RPE. Nuestro grupo humano está comprometido con la excelencia y la innovación en
+            el tratamiento de la epilepsia
+          </p>
+        </div>
+      </div>
+    </div>
+
+
+    <div *ngIf="selectedTab === 'sistema'">
+      Aqui va la info
+    </div>
+
+    <div *ngIf="selectedTab === 'contacto'">
+      Aqui va la info
+  </div>
+</div>
+
+<!-- Modal para Instituciones -->
+<div id="institucionesModal" class="modal">
+  <div class="modal-content">
+    <span class="close" (click)="closeModal('institucionesModal')">&times;</span>
+    <h2>Instituciones Colaboradoras</h2>
+    <p>
+      Trabajamos en conjunto con las siguientes instituciones y laboratorios para mejorar la calidad de vida de los
+      pacientes con epilepsia:
+    </p>
+
+    <!-- Contenedor de instituciones -->
+    <div class="instituciones-container">
+      <div class="institucion">
+        <img src="../../assets/img/hupdv.jpg" alt="Institución 4" class="institucion-img" />
+        <h3 class="institucion-nombre">Hospital Universitario Psiquiátrico del Valle</h3>
+        <p class="institucion-descripcion">
+          El Hospital Universitario Psiquiátrico del Valle se especializa en el tratamiento de trastornos mentales y
+          neurológicos, brindando atención integral a pacientes con epilepsia y otras condiciones relacionadas
+        </p>
+      </div>
+
+      <!-- Institución 2 -->
+      <div class="institucion">
+        <img src="../../assets/img/huv.png" alt="Institución 2" class="institucion-img" />
+        <h3 class="institucion-nombre">Hospital Universitario del Valle</h3>
+        <p class="institucion-descripcion">
+          El Hospital Universitario del Valle es un referente en atención médica e investigación clínica en el
+          suroccidente colombiano, especializado en el tratamiento de enfermedades complejas como la epilepsia
+        </p>
+      </div>
+
+      <!-- Institución 3 -->
+      <div class="institucion">
+        <img src="../../assets/img/clinica-imbanaco-logo.jpg" alt="Institución 3" class="institucion-img" />
+        <h3 class="institucion-nombre">Clínica Imbanaco</h3>
+        <p class="institucion-descripcion">
+          Clínica Imbanaco es una institución de salud de alta complejidad, reconocida por su enfoque en la innovación
+          médica y el tratamiento de enfermedades neurológicas, incluyendo la epilepsia
+        </p>
+      </div>
+    </div>
+
+    <div class="instituciones-container-center">
+      <div class="institucion">
+        <img src="../../assets/logo_uv.png" alt="Institución 1" class="institucion-img" />
+        <h3 class="institucion-nombre">Universidad del Valle</h3>
+        <p class="institucion-descripcion">
+          La Universidad del Valle es una de las instituciones educativas más prestigiosas de Colombia, reconocida por
+          su excelencia académica y su contribución a la investigación en salud y tecnología
+        </p>
+      </div>
+
+      <!-- Laboratorio de Investigación -->
+      <div class="institucion">
+        <img src="../../assets/img/Multimedia-y-visión.png" alt="Laboratorio de Investigación"
+          class="institucion-img" />
+        <h3 class="institucion-nombre">Laboratorio Multimedia y Visión por computador</h3>
+        <p class="institucion-descripcion">
+          El Laboratorio Multimedia y Visión por Computador de la Universidad del Valle es un centro de investigación
+          líder en el desarrollo de tecnologías innovadoras aplicadas a la salud
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Grupo Humano -->
+<div id="grupoHumanoModal" class="modal">
+  <div class="modal-content">
+    <span class="close" (click)="closeModal('grupoHumanoModal')">&times;</span>
+    <h2>Grupo Humano</h2>
+
+    <!-- Contenedor de personas -->
+    <div class="personas-container">
+      <!-- Persona 1: Director -->
+      <div class="persona">
+        <img src="../../assets/directores_estudiantes/paty.png" alt="Director 1" class="persona-img" />
+        <h3 class="persona-nombre">Maria Patricia Trujillo Uribe</h3>
+        <p class="persona-rol">Directora</p>
+        <!-- <p class="persona-descripcion">
+          Breve descripción del director 1 y su contribución al proyecto.
+        </p> -->
+      </div>
+
+      <!-- Persona 2: Director -->
+      <div class="persona">
+        <img src="../../assets/directores_estudiantes/deisy.jpg" alt="Director 2" class="persona-img" />
+        <h3 class="persona-nombre">Deisy Chaves Sánchez</h3>
+        <p class="persona-rol">Directora</p>
+        <!-- <p class="persona-descripcion">
+          Breve descripción del director 2 y su contribución al proyecto.
+        </p> -->
+      </div>
+
+      <!-- Persona 3: Director -->
+      <div class="persona">
+        <img src="../../assets/directores_estudiantes/jhonma.jpg" alt="Director 3" class="persona-img" />
+        <h3 class="persona-nombre">Jhon Mauro Gómez Benitez</h3>
+        <p class="persona-rol">Director</p>
+        <!-- <p class="persona-descripcion">
+          Breve descripción del director 3 y su contribución al proyecto.
+        </p> -->
+      </div>
+
+      <!-- Persona 4: Director -->
+      <div class="persona">
+        <img src="../../assets/directores_estudiantes/Alejandro_Herrera_Trujillo.png" alt="Director 4"
+          class="persona-img" />
+        <h3 class="persona-nombre">Alejandro Herrera Trujillo</h3>
+        <p class="persona-rol">Director</p>
+        <!-- <p class="persona-descripcion">
+          Breve descripción del director 4 y su contribución al proyecto.
+        </p> -->
+      </div>
+
+    </div>
+    <div class="personas-container-centrado">
+      <div class="persona">
+        <img src="../../assets/directores_estudiantes/Rivas.jpg" alt="Director 5" class="persona-img" />
+        <h3 class="persona-nombre">Juan Carlos Rivas Nieto</h3>
+        <p class="persona-rol">Director</p>
+        <!-- <p class="persona-descripcion">
+          Breve descripción del director 5 y su contribución al proyecto.
+        </p> -->
+      </div>
+
+      <!-- Persona 6: Estudiante -->
+      <div class="persona">
+        <img src="../../assets/directores_estudiantes/may.jpg" alt="Estudiante 1" class="persona-img" />
+        <h3 class="persona-nombre">Mayra Alejandra Sánchez Salinas</h3>
+        <p class="persona-rol">Estudiante</p>
+        <!-- <p class="persona-descripcion">
+          Breve descripción del estudiante 1 y su contribución al proyecto.
+        </p> -->
+      </div>
+
+      <!-- Persona 7: Estudiante -->
+      <div class="persona">
+        <img src="../../assets/directores_estudiantes/laura.jpg" alt="Estudiante 2" class="persona-img" />
+        <h3 class="persona-nombre">Laura Daniela Jaimes Cardenas</h3>
+        <p class="persona-rol">Estudiante</p>
+        <!-- <p class="persona-descripcion">
+          Breve descripción del estudiante 2 y su contribución al proyecto.
+        </p> -->
+      </div>
+    </div>
   </div>
 </div>

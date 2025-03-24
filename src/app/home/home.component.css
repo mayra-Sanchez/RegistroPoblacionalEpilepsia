@@ -1,112 +1,336 @@
+/* Estilos generales */
 .home {
-    display: flex;
-    flex-direction: column;  
-    height: 100%;            
-    justify-content: flex-start; 
-    width: 100%;             
-    padding: 0;
-  }
-  
-  h2, h1 {
-    text-align: center;
-    color: #333;
-    margin-top: 3%;
-  }
-  
-  .console-link {
-    display: inline-block;
-    margin: 10px;
-    padding: 10px 20px;
-    text-decoration: none;
-    background-color: #4a90e2;
-    color: white;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.3s;
-  }
-  
-  .console-link:hover {
-    background-color: #357ab8;
-  }
+  width: 100%;
+  padding: 0;
+}
 
-  .contentHome {
-    padding: 30px;
-  }
-  
+h2,
+h1 {
+  text-align: center;
+  color: #333;
+  margin-top: 3%;
+}
+
+.console-link {
+  display: inline-block;
+  margin: 10px;
+  padding: 10px 20px;
+  text-decoration: none;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.console-link:hover {
+  background-color: #357ab8;
+}
+
+.contentHome {
+  padding: 60px 30px;
+}
+
+/* Contenedor principal de las cards */
+.info-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  /* Permite que las cards se envuelvan en pantallas pequeñas */
+  gap: 20px;
+  /* Espacio entre las cards */
+}
+
+/* Estilos para las cards */
+.card,
+.card1 {
+  background-color: #ffffff;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  text-align: center;
+  flex: 1 1 calc(33.333% - 40px);
+  /* Tres cards en una fila con espacio entre ellas */
+  box-sizing: border-box;
+  /* Asegura que el padding no afecte el ancho */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover,
+.card1:hover {
+  transform: scale(1.03);
+}
+
+.card-header .icon {
+  font-size: 40px;
+  color: #4a90e2;
+  margin-bottom: 10px;
+}
+
+.card-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin: 10px 0;
+}
+
+.card-body p {
+  font-size: 16px;
+  color: #555;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* Estilos para el modal */
+.modal {
+  display: none;
+  /* Oculto por defecto */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.8);
+  /* Fondo oscuro */
+}
+
+/* Contenido del modal */
+.modal-content {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 1200px;
+  /* Más ancho para un diseño horizontal */
+  height: auto;
+  max-height: 80vh;
+  /* Altura máxima del modal */
+  overflow-y: auto;
+  /* Scroll vertical si el contenido es muy largo */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Botón para cerrar el modal */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #000;
+}
+
+/* Título del modal */
+.modal-content h2 {
+  text-align: center;
+  color: #4a90e2;
+  margin-bottom: 20px;
+}
+
+/* Contenedor de instituciones */
+.instituciones-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* Tres columnas en pantallas grandes */
+  gap: 20px;
+  /* Espacio entre las cards */
+  padding: 20px;
+}
+
+.instituciones-container-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Estilos para cada institución */
+.institucion {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.institucion:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Imagen de la institución */
+.institucion-img {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  /* Ajusta la imagen sin recortar */
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+/* Nombre de la institución */
+.institucion-nombre {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* Descripción de la institución */
+.institucion-descripcion {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Contenedor de personas */
+.personas-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  /* Tarjetas responsivas */
+  gap: 20px;
+  /* Espacio entre las tarjetas */
+  padding: 20px;
+}
+
+.personas-container-centrado {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Estilos para cada persona */
+.persona {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.persona:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Imagen de la persona */
+.persona-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  /* Imagen circular */
+  object-fit: cover;
+  /* Ajusta la imagen sin recortar */
+  margin-bottom: 10px;
+}
+
+/* Nombre de la persona */
+.persona-nombre {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+/* Rol de la persona */
+.persona-rol {
+  font-size: 14px;
+  color: #4a90e2;
+  margin-bottom: 10px;
+}
+
+/* Descripción de la persona */
+.persona-descripcion {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Media Queries para Responsive Design */
+
+/* Pantallas medianas (tablets) */
+@media (max-width: 768px) {
   .info-container {
-    text-align: center;
-  }
-  
-  .info-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    margin-top: 5%;
-  }
-  
-  .info-content p {
-    flex: 1;
-    text-align: justify;
-    font-size: 17px;
-    line-height: 2;
-  }
-  
-  .info-content img {
-    flex: 1;
-    max-width: 550px;
-    height: auto;
-    border-radius: 10px;
-  }
-
-  .contact-container {
-    text-align: center;
-  }
-  
-  .contact-content {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 40px;
-    margin-top: 5%;
-  }
-  
-  .contact-content p {
-    flex: 2;
-    text-align: justify;
-    font-size: 18px;
-    line-height: 2;
-    margin-top: 4%;
-  }
-  
-  .contact-info {
-    flex: 1;
-    display: flex;
     flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
-    margin-top: 5%;
-
-    font-size: 19px;
-  }
-  
-  .contact-item {
-    display: flex;
+    /* Cambia a una columna en pantallas pequeñas */
     align-items: center;
-    gap: 10px;
-    font-size: 19px;
+    /* Centra las cards */
+  }
 
+  .card,
+  .card1 {
+    max-width: 100%;
+    /* Ocupa el 100% del ancho en pantallas pequeñas */
+    margin: 10px 0;
+    /* Reduce el margen */
   }
-  
-  .contact-item i {
-    font-size: 19px;
-    color: #4a90e2;
+
+  .instituciones-container,
+  .personas-container {
+    grid-template-columns: repeat(2, 1fr);
+    /* Dos columnas en pantallas medianas */
   }
-  
-  .contact-info span {
-    font-size: 19px;
-    color: #333;
+
+  .institucion-img,
+  .persona-img {
+    height: 120px;
+    /* Reducir el tamaño de la imagen en pantallas pequeñas */
   }
-  
-  
-  
+
+  .institucion-nombre,
+  .persona-nombre {
+    font-size: 16px;
+    /* Reducir el tamaño del nombre */
+  }
+
+  .institucion-descripcion,
+  .persona-descripcion {
+    font-size: 12px;
+    /* Reducir el tamaño de la descripción */
+  }
+}
+
+/* Pantallas pequeñas (móviles) */
+@media (max-width: 480px) {
+  .contentHome {
+    padding: 10px;
+    /* Reduce el padding en pantallas muy pequeñas */
+  }
+
+  .instituciones-container,
+  .personas-container {
+    grid-template-columns: 1fr;
+    /* Una columna en pantallas pequeñas */
+  }
+
+  .institucion,
+  .persona {
+    width: 100%;
+    /* Ocupa el 100% del ancho en pantallas pequeñas */
+  }
+
+  .institucion-img,
+  .persona-img {
+    height: 100px;
+    /* Reducir el tamaño de la imagen en pantallas muy pequeñas */
+  }
+
+  .institucion-nombre,
+  .persona-nombre {
+    font-size: 14px;
+    /* Reducir el tamaño del nombre */
+  }
+
+  .institucion-descripcion,
+  .persona-descripcion {
+    font-size: 12px;
+    /* Reducir el tamaño de la descripción */
+  }
+}

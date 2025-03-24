@@ -11,4 +11,20 @@ export class HomeComponent {
   onTabSelected(tab: string): void {
     this.selectedTab = tab;
   }
+
+  // Función para abrir el modal
+  openModal(modalId: string): void {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = 'block';
+    }
+  }
+
+  // Función para cerrar el modal
+  closeModal(modalId: string): void {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
 }

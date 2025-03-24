@@ -62,17 +62,19 @@
                   👤 {{ usuario.nombre }} - {{ usuario.rol }}
                 </li>
               </ul>
-              <button mat-raised-button color="primary" (click)="exportarCSV()">
-                <mat-icon>download</mat-icon> Exportar datos de todos los usuarios
-              </button>
+              <div class="descarga">
+                <button mat-raised-button color="primary" (click)="exportarCSV()">
+                  <mat-icon>download</mat-icon> Exportar datos de todos los usuarios
+                </button>
+              </div>
+
             </div>
           </div>
 
           <!-- Columna derecha: Últimos Registros -->
           <div class="right-column">
             <h2>Últimos Registros de Administrador</h2>
-            <table *ngIf="dataSource && dataSource.data.length > 0" mat-table [dataSource]="dataSource"
-              class="table">
+            <table *ngIf="dataSource && dataSource.data.length > 0" mat-table [dataSource]="dataSource" class="table">
               <!-- Tipo -->
               <ng-container matColumnDef="tipo">
                 <th mat-header-cell *matHeaderCellDef> Tipo </th>
@@ -237,8 +239,7 @@
       </div>
       <div class="form-row">
         <label>Número de Identificación del Jefe de Capa:</label>
-        <input type="text" [(ngModel)]="capaToEdit.jefeIdentificacion" name="jefeCapaIdentificacion"
-          required />
+        <input type="text" [(ngModel)]="capaToEdit.jefeIdentificacion" name="jefeCapaIdentificacion" required />
       </div>
       <div class="form-buttons">
         <button type="submit" class="btn btn-primary">Guardar</button>
