@@ -172,6 +172,7 @@ h1 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 15px;
   text-align: center;
+  cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -328,7 +329,7 @@ h1 {
 .card-title-sistema {
   font-size: clamp(1.5rem, 2.5vw, 2rem);
   color: #4a90e2;
-  margin-bottom: 15px;
+  margin-bottom: 30px;
 }
 
 .card-description-sistema {
@@ -644,3 +645,283 @@ h1 {
     align-items: center;
   }
 }
+
+/* Estilos específicos para el detalle de persona */
+.modal-persona-detalle {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content-persona-detalle {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 0;
+  width: 80%;
+  max-width: 700px;
+  border-radius: 10px;
+  box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+  animation: modalopen 0.4s;
+}
+
+@keyframes modalopen {
+  from { opacity: 0; transform: translateY(-50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.close-persona-detalle {
+  color: #000;
+  position: absolute;  /* Posicionamiento absoluto */
+  top: 20px;          /* Distancia desde arriba */
+  right: 20px;        /* Distancia desde la derecha */
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1001;      /* Asegura que esté por encima de otros elementos */
+  background: rgba(255, 255, 255, 0.8);  /* Fondo semitransparente */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+
+.close-persona-detalle:hover {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+  transform: rotate(90deg);
+}
+
+.persona-detalle-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.persona-detalle-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 25px;
+  z-index: 0;
+  background: linear-gradient(135deg, #1976D2, #11A6DA);
+  color: white;
+  border-radius: 10px 10px 0 0;
+}
+
+.persona-icono {
+  font-size: 3rem;
+  margin-right: 20px;
+  background: rgba(255,255,255,0.2);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.persona-nombre-detalle {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.persona-rol-detalle {
+  margin: 5px 0 0;
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.persona-etiquetas {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.etiqueta {
+  background: rgba(255,255,255,0.2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.persona-detalle-content {
+  padding: 25px;
+}
+
+.persona-detalle-section {
+  margin-bottom: 25px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  color: #4a4a4a;
+}
+
+.section-header i {
+  margin-right: 10px;
+  color: #6e8efb;
+  font-size: 1.2rem;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.persona-descripcion-detalle {
+  line-height: 1.6;
+  color: #555;
+  margin-left: 28px; /* Para alinear con el icono */
+}
+
+.persona-contacto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-left: 28px;
+}
+
+.persona-contacto p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.persona-contacto i {
+  color: #6e8efb;
+  width: 20px;
+  text-align: center;
+}
+
+.persona-formacion, .persona-proyectos {
+  margin-left: 28px;
+  padding-left: 0;
+  list-style-type: none;
+}
+
+.persona-formacion li, .persona-proyectos li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 8px;
+}
+
+.persona-formacion li:before, .persona-proyectos li:before {
+  content: "•";
+  color: #6e8efb;
+  font-size: 1.5rem;
+  position: absolute;
+  left: 0;
+  top: -5px;
+}
+
+/* Estilos para la sección de redes sociales */
+.redes-sociales-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.redes-sociales-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.red-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  color: #555;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.red-social-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Colores específicos para cada red social */
+.red-social-link:nth-child(1) { color: #0077b5; } /* LinkedIn */
+.red-social-link:nth-child(1):hover { background-color: #0077b5; color: white; }
+
+.red-social-link:nth-child(2) { color: #00ccbb; } /* ResearchGate */
+.red-social-link:nth-child(2):hover { background-color: #00ccbb; color: white; }
+
+.red-social-link:nth-child(3) { color: #4285f4; } /* Google Scholar */
+.red-social-link:nth-child(3):hover { background-color: #4285f4; color: white; }
+
+.red-social-link:nth-child(4) { color: #1da1f2; } /* Twitter */
+.red-social-link:nth-child(4):hover { background-color: #1da1f2; color: white; }
+
+.red-social-link:nth-child(5) { color: #1877f2; } /* Facebook */
+.red-social-link:nth-child(5):hover { background-color: #1877f2; color: white; }
+
+.red-social-link:nth-child(6) { color: #e4405f; } /* Instagram */
+.red-social-link:nth-child(6):hover { background-color: #e4405f; color: white; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .redes-sociales-container {
+    gap: 10px;
+  }
+  
+  .red-social-link {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 90%;
+    margin: 10% auto;
+  }
+  
+  .persona-detalle-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .persona-icono {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .close-persona-detalle {
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .modal-content-persona-detalle {
+    width: 95%;
+    margin: 20px auto;
+  }
+}
+

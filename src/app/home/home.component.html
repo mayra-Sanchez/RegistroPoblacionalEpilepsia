@@ -58,10 +58,18 @@
           </div>
           <div class="text-right-sistema">
             <h2 class="card-title-sistema">¿Qué es un sistema de información?</h2>
-            <p class="card-description-sistema">Un sistema de información es un conjunto ordenado de personas, procesos y herramientas cuyo fin es administrar datos e información, de manera que puedan ser recuperados y procesados fácil y rápidamente</p>
-            <p class="card-description-sistema">Todo sistema de información se compone de una serie de recursos interconectados y en interacción, bien organizados y dispuestos del modo más conveniente en relación con un propósito informativo determinado, que puede ser recabar información personal, procesar estadísticas, organizar archivos, entre otros</p>
-            <p class="card-description-sistema">Los sistemas de información pueden presentar diferencias, pero generalmente recolectan y clasifican datos, que son procesados por personas y/o con recursos informáticos, para que sean fáciles de comprender y recuperar. Así, esta información queda almacenada para ser consultada de manera sencilla o para ser divulgada cuando sea necesario</p>
-        
+            <p class="card-description-sistema">Un sistema de información es un conjunto ordenado de personas, procesos
+              y herramientas cuyo fin es administrar datos e información, de manera que puedan ser recuperados y
+              procesados fácil y rápidamente</p>
+            <p class="card-description-sistema">Todo sistema de información se compone de una serie de recursos
+              interconectados y en interacción, bien organizados y dispuestos del modo más conveniente en relación con
+              un propósito informativo determinado, que puede ser recabar información personal, procesar estadísticas,
+              organizar archivos, entre otros</p>
+            <p class="card-description-sistema">Los sistemas de información pueden presentar diferencias, pero
+              generalmente recolectan y clasifican datos, que son procesados por personas y/o con recursos informáticos,
+              para que sean fáciles de comprender y recuperar. Así, esta información queda almacenada para ser
+              consultada de manera sencilla o para ser divulgada cuando sea necesario</p>
+
           </div>
         </div>
       </div>
@@ -76,7 +84,7 @@
           </div>
           <h2>Registro en el Sistema</h2>
           <p>Para registrarse en nuestra plataforma, por favor siga estos pasos:</p>
-          
+
           <ol class="steps-list">
             <li>
               <i class="fas fa-download"></i>
@@ -99,20 +107,20 @@
               <span>Espere nuestra confirmación por correo electrónico (48 horas hábiles)</span>
             </li>
           </ol>
-          
+
           <div class="note-box">
             <i class="fas fa-info-circle"></i>
             <p>Por seguridad, todos los registros son verificados manualmente por nuestro equipo.</p>
           </div>
         </div>
-        
+
         <!-- Card de Información de Contacto -->
         <div class="contact-card info-card">
           <div class="card-icon">
             <i class="fas fa-envelope-open-text"></i>
           </div>
           <h2>Contacto Directo</h2>
-          
+
           <div class="contact-method">
             <i class="fas fa-map-marker-alt"></i>
             <div>
@@ -121,7 +129,7 @@
               <p>Edificion B13 - Laboratorio MVC</p>
             </div>
           </div>
-          
+
           <div class="contact-method">
             <i class="fas fa-phone-alt"></i>
             <div>
@@ -129,25 +137,25 @@
               <p>+57 302 6929375<br>+57 305 3934905</p>
             </div>
           </div>
-          
+
           <div class="contact-method">
             <i class="fas fa-at"></i>
             <div>
               <h3>Correos Electrónicos</h3>
               <p>Soporte: <strong>soporte@sistemainfo.com</strong><br>
-              Registros: <strong>registros@sistemainfo.com</strong></p>
+                Registros: <strong>registros@sistemainfo.com</strong></p>
             </div>
           </div>
-          
+
           <div class="contact-method">
             <i class="fas fa-business-time"></i>
             <div>
               <h3>Horario de Atención</h3>
               <p>Lunes a Viernes: 8:00 - 18:00 hrs<br>
-              Sábados: 9:00 - 13:00 hrs</p>
+                Sábados: 9:00 - 13:00 hrs</p>
             </div>
           </div>
-          
+
           <div class="social-media">
             <h3>Síguenos en:</h3>
             <div class="social-icons">
@@ -238,11 +246,11 @@
     <div class="modal-content">
       <span class="close" (click)="closeModal('grupoHumanoModal')">&times;</span>
       <h2>Grupo Humano</h2>
-
+      <p>Para conocer más de las personas, da click</p>
       <!-- Contenedor de personas -->
       <div class="personas-container">
         <!-- Persona 1: Director -->
-        <div class="persona">
+        <div class="persona" (click)="openPersonaModal('patricia')">
           <img src="../../assets/directores_estudiantes/paty.png" alt="Director 1" class="persona-img" />
           <h3 class="persona-nombre">Maria Patricia Trujillo Uribe</h3>
           <p class="persona-rol">Directora</p>
@@ -252,7 +260,7 @@
         </div>
 
         <!-- Persona 2: Director -->
-        <div class="persona">
+        <div class="persona" (click)="openPersonaModal('deisy')">
           <img src="../../assets/directores_estudiantes/deisy.jpg" alt="Director 2" class="persona-img" />
           <h3 class="persona-nombre">Deisy Chaves Sánchez</h3>
           <p class="persona-rol">Directora</p>
@@ -262,7 +270,7 @@
         </div>
 
         <!-- Persona 3: Director -->
-        <div class="persona">
+        <div class="persona" (click)="openPersonaModal('jhon')" >
           <img src="../../assets/directores_estudiantes/jhonma.jpg" alt="Director 3" class="persona-img" />
           <h3 class="persona-nombre">Jhon Mauro Gómez Benitez</h3>
           <p class="persona-rol">Director</p>
@@ -272,7 +280,7 @@
         </div>
 
         <!-- Persona 4: Director -->
-        <div class="persona">
+        <div class="persona" (click)="openPersonaModal('alejandro')">
           <img src="../../assets/directores_estudiantes/Alejandro_Herrera_Trujillo.png" alt="Director 4"
             class="persona-img" />
           <h3 class="persona-nombre">Alejandro Herrera Trujillo</h3>
@@ -284,7 +292,7 @@
 
       </div>
       <div class="personas-container-centrado">
-        <div class="persona">
+        <div class="persona" (click)="openPersonaModal('juan')">
           <img src="../../assets/directores_estudiantes/Rivas.jpg" alt="Director 5" class="persona-img" />
           <h3 class="persona-nombre">Juan Carlos Rivas Nieto</h3>
           <p class="persona-rol">Director</p>
@@ -294,7 +302,7 @@
         </div>
 
         <!-- Persona 6: Estudiante -->
-        <div class="persona">
+        <div class="persona" (click)="openPersonaModal('mayra')">
           <img src="../../assets/directores_estudiantes/may.jpg" alt="Estudiante 1" class="persona-img" />
           <h3 class="persona-nombre">Mayra Alejandra Sánchez Salinas</h3>
           <p class="persona-rol">Estudiante</p>
@@ -304,13 +312,120 @@
         </div>
 
         <!-- Persona 7: Estudiante -->
-        <div class="persona">
+        <div class="persona" (click)="openPersonaModal('laura')">
           <img src="../../assets/directores_estudiantes/laura.jpg" alt="Estudiante 2" class="persona-img" />
           <h3 class="persona-nombre">Laura Daniela Jaimes Cardenas</h3>
           <p class="persona-rol">Estudiante</p>
           <!-- <p class="persona-descripcion">
           Breve descripción del estudiante 2 y su contribución al proyecto.
         </p> -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal único reutilizable -->
+  <div id="personaDetailModal" class="modal" *ngIf="personaSeleccionada">
+    <div class="modal-content-persona-detalle">
+
+      <div class="persona-detalle-container">
+        <!-- Encabezado -->
+        <div class="persona-detalle-header">
+          <span class="close-persona-detalle" (click)="closeModal('personaDetailModal')">&times;</span>
+          <div class="persona-icono">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <div class="persona-detalle-info-basica">
+            <h2 class="persona-nombre-detalle">{{personaSeleccionada.nombre}}</h2>
+            <p class="persona-rol-detalle">{{personaSeleccionada.rol}}</p>
+            <div class="persona-etiquetas">
+              <span class="etiqueta" *ngFor="let etiqueta of personaSeleccionada.etiquetas">{{etiqueta}}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="persona-detalle-content">
+          <!-- Sección de Biografía -->
+          <div class="persona-detalle-section">
+            <div class="section-header">
+              <i class="fas fa-book-open"></i>
+              <h3>Biografía Profesional</h3>
+            </div>
+            <p class="persona-descripcion-detalle">
+              {{personaSeleccionada.biografia}}
+            </p>
+          </div>
+
+          <!-- Sección de Formación -->
+          <div class="persona-detalle-section">
+            <div class="section-header">
+              <i class="fas fa-user-graduate"></i>
+              <h3>Formación Académica</h3>
+            </div>
+            <ul class="persona-formacion">
+              <li *ngFor="let item of personaSeleccionada.formacion">{{item}}</li>
+            </ul>
+          </div>
+
+          <!-- Sección de Contacto -->
+          <div class="persona-detalle-section">
+            <div class="section-header">
+              <i class="fas fa-envelope"></i>
+              <h3>Contacto</h3>
+            </div>
+            <div class="persona-contacto">
+              <p><i class="fas fa-envelope"></i> {{personaSeleccionada.contacto.email}}</p>
+              <p><i class="fas fa-phone"></i> {{personaSeleccionada.contacto.telefono}}</p>
+              <p><i class="fas fa-building"></i> {{personaSeleccionada.contacto.oficina}}</p>
+            </div>
+          </div>
+
+          <!-- Sección de Proyectos -->
+          <div class="persona-detalle-section">
+            <div class="section-header">
+              <i class="fas fa-project-diagram"></i>
+              <h3>Proyectos Destacados</h3>
+            </div>
+            <ul class="persona-proyectos">
+              <li *ngFor="let proyecto of personaSeleccionada.proyectos">{{proyecto}}</li>
+            </ul>
+          </div>
+
+          <!-- Sección de Redes Sociales -->
+          <div class="persona-detalle-section redes-sociales-section" *ngIf="personaSeleccionada.redesSociales">
+            <div class="section-header">
+              <i class="fas fa-share-alt"></i>
+              <h3>Redes Sociales</h3>
+            </div>
+            <div class="redes-sociales-container">
+              <a *ngIf="personaSeleccionada.redesSociales.linkedin" [href]="personaSeleccionada.redesSociales.linkedin"
+                class="red-social-link" target="_blank" title="LinkedIn">
+                <i class="fab fa-linkedin-in"></i>
+              </a>
+              <a *ngIf="personaSeleccionada.redesSociales.researchgate"
+                [href]="personaSeleccionada.redesSociales.researchgate" class="red-social-link" target="_blank"
+                title="ResearchGate">
+                <i class="fab fa-researchgate"></i>
+              </a>
+              <a *ngIf="personaSeleccionada.redesSociales.scholar" [href]="personaSeleccionada.redesSociales.scholar"
+                class="red-social-link" target="_blank" title="Google Scholar">
+                <i class="fas fa-graduation-cap"></i>
+              </a>
+              <a *ngIf="personaSeleccionada.redesSociales.twitter" [href]="personaSeleccionada.redesSociales.twitter"
+                class="red-social-link" target="_blank" title="Twitter">
+                <i class="fab fa-twitter"></i>
+              </a>
+              <a *ngIf="personaSeleccionada.redesSociales.facebook" [href]="personaSeleccionada.redesSociales.facebook"
+                class="red-social-link" target="_blank" title="Facebook">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+              <a *ngIf="personaSeleccionada.redesSociales.instagram"
+                [href]="personaSeleccionada.redesSociales.instagram" class="red-social-link" target="_blank"
+                title="Instagram">
+                <i class="fab fa-instagram"></i>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
