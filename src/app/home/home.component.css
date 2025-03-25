@@ -925,3 +925,15 @@ h1 {
   }
 }
 
+.persona-imagen-detalle {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Versión con borde decorativo */
+.persona-imagen-detalle {
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0px;
+}

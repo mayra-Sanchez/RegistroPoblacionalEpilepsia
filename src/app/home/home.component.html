@@ -333,7 +333,7 @@
         <div class="persona-detalle-header">
           <span class="close-persona-detalle" (click)="closeModal('personaDetailModal')">&times;</span>
           <div class="persona-icono">
-            <i class="fas fa-user-tie"></i>
+            <img [src]="personaSeleccionada.imagen" alt="Foto de {{personaSeleccionada.nombre}}" class="persona-imagen-detalle" *ngIf="personaSeleccionada.imagen">
           </div>
           <div class="persona-detalle-info-basica">
             <h2 class="persona-nombre-detalle">{{personaSeleccionada.nombre}}</h2>

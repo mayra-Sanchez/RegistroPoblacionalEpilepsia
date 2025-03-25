@@ -75,9 +75,10 @@ export class HomeComponent {
       etiquetas: ['Docente', 'Investigadora'],
       biografia: 'Directora con amplia experiencia en gestión académica. Especialista en desarrollo curricular y proyectos de investigación. Lideró múltiples iniciativas de innovación educativa y publicó varios artículos en revistas indexadas.',
       formacion: [
-        'PhD en Educación - Universidad Nacional',
-        'Máster en Gestión Universitaria - Universidad de Buenos Aires',
-        'Licenciatura en Pedagogía - Universidad del Valle'
+        'Doctorado en Ingeniería con Énfasis en Ciencias de la Computación - Universidad del Valle',
+        'Doctorado en Ingeniería y Producción - Universidad de León',
+        'Maestría en Ingeniería con Énfasis en Ciencias de la Computación - Universidad del Valle',
+        'Licenciatura en Ingeniería de Sistemas - Universidad del valle'
       ],
       contacto: {
         email: 'dchaves@universidad.edu',
@@ -101,8 +102,8 @@ export class HomeComponent {
     {
       id: 'jhon',
       nombre: 'Jhon Mauro Gómez Benitez',
-      rol: 'Directora',
-      imagen: '',
+      rol: 'Director',
+      imagen: '../../assets/directores_estudiantes/jhonma.jpg',
       etiquetas: ['Director', ''],
       biografia: '',
       formacion: [
@@ -133,7 +134,7 @@ export class HomeComponent {
       id: 'alejandro',
       nombre: 'Alejandro Herrera Trujillo',
       rol: 'Director',
-      imagen: '',
+      imagen: '../../assets/directores_estudiantes/Alejandro_Herrera_Trujillo.png',
       etiquetas: ['Director', ''],
       biografia: '',
       formacion: [
@@ -164,7 +165,7 @@ export class HomeComponent {
       id: 'juan',
       nombre: 'Juan Carlos Rivas Nieto',
       rol: 'Director',
-      imagen: '',
+      imagen: '../../assets/directores_estudiantes/Rivas.jpg',
       etiquetas: ['Director', ''],
       biografia: '',
       formacion: [
@@ -193,7 +194,7 @@ export class HomeComponent {
       id: 'mayra',
       nombre: 'Mayra Alejandra Sánchez Salinas',
       rol: 'Estudiante',
-      imagen: '',
+      imagen: '../../assets/directores_estudiantes/may.jpg',
       etiquetas: ['Estudiante', ''],
       biografia: '',
       formacion: [
@@ -224,7 +225,7 @@ export class HomeComponent {
       id: 'laura',
       nombre: 'Laura Daniela Jaimes Cardenas',
       rol: 'Estudiante',
-      imagen: '',
+      imagen: '../../assets/directores_estudiantes/laura.jpg',
       etiquetas: ['Estudiante', ''],
       biografia: '',
       formacion: [
