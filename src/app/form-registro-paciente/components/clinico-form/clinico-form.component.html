@@ -1,0 +1,126 @@
+<form [formGroup]="form" class="form-step">
+    <h2 class="form-title">
+      <i class="fas fa-flask"></i> Variables Clínicas
+      <span class="badge">{{variablesClinicas.length}} variables</span>
+    </h2>
+  
+    <!-- Filtros y búsqueda -->
+    <div class="filters-container">
+      <div class="search-box">
+        <input #searchInput type="text" placeholder="Buscar variable..." 
+              (input)="searchTerm = searchInput.value; applyFilters()">
+        <i class="fas fa-search"></i>
+      </div>
+  
+      <div class="type-filters">
+        <button *ngFor="let type of availableTypes" 
+                [class.active]="activeTypeFilter === type"
+                (click)="filterByType(type)">
+          {{getTypeLabel(type)}}
+        </button>
+        <button [class.active]="!activeTypeFilter" (click)="clearTypeFilter()">
+          Todas
+        </button>
+      </div>
+    </div>
+  
+    <!-- Loading state -->
+    <div *ngIf="loading" class="loading-state">
+      <i class="fas fa-spinner fa-spin"></i> Cargando variables...
+    </div>
+  
+    <!-- Error state -->
+    <div *ngIf="errorMessage" class="error-state">
+      <i class="fas fa-exclamation-triangle"></i> {{errorMessage}}
+    </div>
+  
+    <!-- Variables -->
+    <div class="variables-grid-container">
+      <div *ngFor="let variableGroup of filteredVariables; let i = index" 
+           [formGroup]="variableGroup" class="variable-card"
+           [class.required-highlight]="variableGroup.get('required')?.value"
+           [class.has-value]="variableGroup.get('valor')?.value !== null">
+        
+        <div class="variable-header">
+          <h3>
+            <i class="fas" 
+              [class.fa-check-circle]="variableGroup.valid" 
+              [class.fa-exclamation-circle]="!variableGroup.valid"></i>
+            {{ variableGroup.get('variableName')?.value }}
+            <span *ngIf="variableGroup.get('required')?.value" class="required-asterisk">*</span>
+          </h3>
+          <span class="variable-type-badge" [class]="variableGroup.get('type')?.value">
+            {{getTypeLabel(variableGroup.get('type')?.value)}}
+          </span>
+        </div>
+  
+        <div class="variable-control">
+          <ng-container [ngSwitch]="variableGroup.get('type')?.value">
+            <!-- Input numérico -->
+            <input *ngSwitchCase="'Entero'" type="number" formControlName="valor"
+                  [placeholder]="getPlaceholder(variableGroup)"
+                  [required]="variableGroup.get('required')?.value">
+  
+            <!-- Input decimal -->
+            <input *ngSwitchCase="'Decimal'" type="number" step="0.01" formControlName="valor"
+                  [placeholder]="getPlaceholder(variableGroup)"
+                  [required]="variableGroup.get('required')?.value">
+  
+            <!-- Input texto -->
+            <input *ngSwitchCase="'Texto'" type="text" formControlName="valor"
+                  [placeholder]="getPlaceholder(variableGroup)"
+                  [required]="variableGroup.get('required')?.value">
+  
+            <!-- Selector booleano -->
+            <select *ngSwitchCase="'Booleano'" formControlName="valor"
+                    [required]="variableGroup.get('required')?.value">
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              <option [ngValue]="true">Sí</option>
+              <option [ngValue]="false">No</option>
+            </select>
+  
+            <!-- Selector de opciones -->
+            <select *ngSwitchCase="'Opciones'" formControlName="valor"
+                    [required]="variableGroup.get('required')?.value">
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              <option *ngFor="let opcion of variableGroup.get('options')?.value" [ngValue]="opcion">
+                {{opcion}}
+              </option>
+            </select>
+  
+            <!-- Selector de fecha -->
+            <input *ngSwitchCase="'Fecha'" type="date" formControlName="valor"
+                  [required]="variableGroup.get('required')?.value">
+          </ng-container>
+  
+          <div class="variable-footer">
+            <div *ngIf="variableGroup.get('valor')?.invalid && variableGroup.get('valor')?.touched" 
+                class="error-message">
+              <i class="fas fa-exclamation-circle"></i> Campo requerido
+            </div>
+            <div *ngIf="variableGroup.get('description')?.value" class="variable-description">
+              {{variableGroup.get('description')?.value}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Navegación -->
+    <div class="form-navigation">
+      <div class="form-progress">
+        <span>Completado: {{completedVariables}}/{{filteredVariables.length}}</span>
+        <progress [value]="completedVariables" [max]="filteredVariables.length"></progress>
+      </div>
+  
+      <div class="form-actions">
+        <button type="button" class="btn btn-prev" (click)="onPrevious()">
+          <i class="fas fa-arrow-left"></i> Anterior
+        </button>
+        <button type="button" class="btn btn-next" (click)="onSubmit()" 
+                [disabled]="!form.valid || !allRequiredFieldsFilled()">
+          Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </form>

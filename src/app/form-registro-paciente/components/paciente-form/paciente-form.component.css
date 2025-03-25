@@ -1,0 +1,158 @@
+.user-form-container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  .form-title {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #3498db;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .form-step {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+  }
+  
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #dfe6e9;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    background-color: #f8fafc;
+    max-width: 90%;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    background-color: white;
+  }
+  
+  /* Estilos para checkbox */
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-top: 1.5rem;
+  }
+  
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: #2c3e50;
+  }
+  
+  .checkbox-label input {
+    width: 18px;
+    height: 18px;
+    margin-right: 0.75rem;
+    cursor: pointer;
+  }
+  
+  /* Estilos para botones */
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .btn-next {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .btn-next:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+  }
+  
+  /* Estilos para mensajes de error */
+  .error-message {
+    color: #e74c3c;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: block;
+  }
+  
+  /* Estilos para campos inválidos */
+  .ng-invalid.ng-touched {
+    border-color: #e74c3c !important;
+  }
+  
+  .ng-valid.ng-touched {
+    border-color: #2ecc71 !important;
+  }
+  
+  /* Estilos responsivos */
+  @media (max-width: 768px) {
+    .user-form-container {
+      padding: 1.5rem;
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+  
+    .form-group input,
+    .form-group select {
+      max-width: 100%;
+    }
+  }
+  
+  /* Estilos para acciones del formulario */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+  }
+  
+  /* Estilos para iconos */
+  .fas {
+    font-size: 1.2rem;
+    color: #3498db;
+  }

@@ -194,6 +194,19 @@ export class AuthService {
       return '';
     }
   }
+
+  getUserIdentificationNumber(): string {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return '';
+    
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded.identification_number || decoded.document_number || decoded.preferred_username || '';
+    } catch (error) {
+      console.error('Error al obtener número de identificación:', error);
+      return '';
+    }
+  }
   
   // Método para obtener nombre completo
   getUserFullName(): string {

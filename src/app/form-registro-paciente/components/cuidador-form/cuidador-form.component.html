@@ -1,0 +1,87 @@
+<form [formGroup]="cuidadorForm" class="form-step">
+    <h2 class="form-title">
+      <i class="fas fa-user-nurse"></i> Datos del Cuidador
+    </h2>
+  
+    <div *ngIf="!tieneCuidador" class="no-caregiver">
+      <p>El paciente no tiene cuidador asignado.</p>
+    </div>
+  
+    <div *ngIf="tieneCuidador" class="form-fields">
+      <!-- Nombre del cuidador -->
+      <div class="form-group">
+        <label for="caregiverName">Nombre completo del cuidador</label>
+        <input type="text" id="caregiverName" formControlName="caregiverName">
+      </div>
+  
+      <!-- Tipo de identificación -->
+      <div class="form-group">
+        <label for="caregiverIdentificationType">Tipo de identificación</label>
+        <select id="caregiverIdentificationType" formControlName="caregiverIdentificationType">
+          <option value="">Seleccione...</option>
+          <option value="CC">Cédula de ciudadanía</option>
+          <option value="TI">Tarjeta de identidad</option>
+          <option value="CE">Cédula de extranjería</option>
+        </select>
+      </div>
+  
+      <!-- Número de identificación -->
+      <div class="form-group">
+        <label for="caregiverIdentificationNumber">Número de identificación</label>
+        <input type="text" id="caregiverIdentificationNumber" 
+               formControlName="caregiverIdentificationNumber">
+        <div *ngIf="cuidadorForm.get('caregiverIdentificationNumber')?.invalid && 
+                   cuidadorForm.get('caregiverIdentificationNumber')?.touched" 
+             class="error-message">
+          Solo se permiten números
+        </div>
+      </div>
+  
+      <!-- Edad -->
+      <div class="form-group">
+        <label for="caregiverAge">Edad</label>
+        <input type="number" id="caregiverAge" formControlName="caregiverAge">
+        <div *ngIf="cuidadorForm.get('caregiverAge')?.invalid && 
+                   cuidadorForm.get('caregiverAge')?.touched" 
+             class="error-message">
+          La edad debe ser mayor a 0
+        </div>
+      </div>
+  
+      <!-- Nivel educativo -->
+      <div class="form-group">
+        <label for="caregiverEducationLevel">Nivel educativo</label>
+        <select id="caregiverEducationLevel" formControlName="caregiverEducationLevel">
+          <option value="">Seleccione...</option>
+          <option value="primaria">Primaria</option>
+          <option value="secundaria">Secundaria</option>
+          <option value="tecnico">Técnico</option>
+          <option value="universitario">Universitario</option>
+          <option value="posgrado">Posgrado</option>
+        </select>
+      </div>
+  
+      <!-- Ocupación -->
+      <div class="form-group">
+        <label for="caregiverOccupation">Ocupación</label>
+        <input type="text" id="caregiverOccupation" formControlName="caregiverOccupation">
+      </div>
+    </div>
+  
+    <!-- Navegación -->
+    <div class="form-navigation">
+      <div class="form-actions">
+        <button type="button" class="btn btn-prev" (click)="onPrevious()">
+          <i class="fas fa-arrow-left"></i> Anterior
+        </button>
+        <button *ngIf="tieneCuidador" type="button" class="btn btn-next" 
+                (click)="onSubmit()" [disabled]="!cuidadorForm.valid">
+          Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
+        <button *ngIf="!tieneCuidador" type="button" class="btn btn-next" 
+                (click)="next.emit(null)">
+          Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </form>

@@ -114,12 +114,13 @@ export class ConsolaRegistroService {
 
   // 📌 Registrar un nuevo registro (solo doctores)
   registrarRegistro(registerData: any): Observable<any> {
-    return this.handleRequest(
-      this.http.post(`${this.API_URL}`, registerData, {
-        headers: this.getAuthHeaders()
-      }),
-      '✅ Registro creado'
-    ).pipe(tap(() => this.notifyDataUpdated()));
+    const headers = this.getAuthHeaders();
+    return this.http.post(this.API_URL, registerData, { headers }).pipe(
+      catchError(error => {
+        console.error('Error en el registro:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // 📌 Obtener todos los registros paginados (solo doctores)
@@ -174,7 +175,7 @@ export class ConsolaRegistroService {
     return this.obtenerTodasLasCapas().pipe(
       map(capas => {
         const capaEncontrada = capas.find(c =>
-          c.layerName.toLowerCase().includes(nombreCapa.toLowerCase())
+          c.layerName.toLowerCase() === nombreCapa.toLowerCase()
         );
 
         if (!capaEncontrada) {
@@ -225,18 +226,18 @@ export class ConsolaRegistroService {
 
   obtenerVariablesPorCapa(researchLayerId: string): Observable<Variable[]> {
     const headers = this.getAuthHeaders();
-    const params = new HttpParams().set('researchLayerId', researchLayerId); // 🔹 Corrección aquí
-  
+    const params = new HttpParams().set('researchLayerId', researchLayerId);
+
     return this.http.get<Variable[]>(`${this.API_VARIABLE_URL}/ResearchLayerId`, {
       headers,
       params
     }).pipe(
-      tap(response => console.log('✅ Variables obtenidas:', response)),
+      tap(response => console.log('Variables obtenidas:', response)),
       catchError(error => {
-        console.error('❌ Error al obtener variables:', error);
+        console.error('Error al obtener variables:', error);
         return throwError(() => new Error('Error al obtener variables de la capa'));
       })
     );
   }
-  
+
 }
