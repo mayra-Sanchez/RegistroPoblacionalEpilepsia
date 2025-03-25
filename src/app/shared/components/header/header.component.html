@@ -16,8 +16,8 @@
 
     <!-- Si el usuario está autenticado, mostrar el usuario y ajustes -->
     <div class="user-info" *ngIf="isLoggedIn">
-      <i class="fa fa-user-circle user-icon"></i> <!-- Icono de usuario -->
-      <button class="username-button">{{ username }}</button> <!-- Nombre del usuario -->
+      <i [class]="userIcon"></i> 
+      <button class="username-button">{{ username }}</button>
 
       <button class="settings-button" (click)="toggleSettingsMenu()">
         <i class="fa fa-cog"></i>

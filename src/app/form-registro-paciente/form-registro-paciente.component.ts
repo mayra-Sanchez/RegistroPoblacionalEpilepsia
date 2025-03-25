@@ -1,41 +1,41 @@
-import { Component, ViewChild, AfterViewInit, AfterViewChecked, ElementRef, ChangeDetectorRef } from '@angular/core';
-import SignaturePad from 'signature_pad';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { ConsolaRegistroService } from '../modules/consola-registro/services/consola-registro.service';
+import { AuthService } from 'src/app/login/services/auth.service';
+import SignaturePad from 'signature_pad';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-form-registro-paciente',
   templateUrl: './form-registro-paciente.component.html',
   styleUrls: ['./form-registro-paciente.component.css']
 })
-export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewChecked {
-
-  formPaciente: FormGroup = this.fb.group({});
-  formClinico: FormGroup = this.fb.group({});
-  formCuidador: FormGroup = this.fb.group({});
-  formProfesional: FormGroup = this.fb.group({});
-
-  mostrarConsentimiento = false;
-  mostrarDatosClinicos = false;
-  mostrarDatosCuidador = false;
-  mostrarDatosProfesional = false;
+export class FormRegistroPacienteComponent implements OnInit {
+  @ViewChild('signatureCanvas') signaturePadElement!: ElementRef<HTMLCanvasElement>;
   private signaturePad!: SignaturePad;
 
-  capas = ['Capa 1', 'Capa 2', 'Capa 3'];
-  pasoActual = 1;
-  variables: any[] = [];
+  // Formularios principales
+  formPaciente: FormGroup;
+  formClinico: FormGroup;
+  formCuidador: FormGroup;
+  formProfesional: FormGroup;
 
-  @ViewChild('signatureCanvas') signaturePadElement!: ElementRef<HTMLCanvasElement>;
+  // Estado del formulario
+  pasoActual = 1;
+  mostrarConsentimiento = false;
+  tieneCuidador = false;
+
+  // Variables dinámicas
+  variablesDeCapa: any[] = [];
+  currentResearchLayer: any = null;
+  loadingVariables = false;
 
   constructor(
-    private cdr: ChangeDetectorRef,
     private fb: FormBuilder,
-    private consolaService: ConsolaRegistroService
+    private consolaService: ConsolaRegistroService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {
-    this.inicializarFormularios();
-  }
-
-  inicializarFormularios() {
     this.formPaciente = this.fb.group({
       name: ['', Validators.required],
       identificationType: ['', Validators.required],
@@ -53,21 +53,21 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
       firstCrisisDate: ['', Validators.required],
       crisisStatus: ['', Validators.required],
       consentimiento: [false, Validators.requiredTrue],
-      firma: ['', Validators.required]
+      firma: ['', Validators.required],
+      tieneCuidador: [false]
     });
 
     this.formClinico = this.fb.group({
-      capa: ['', Validators.required],
       variablesClinicas: this.fb.array([])
     });
 
     this.formCuidador = this.fb.group({
-      caregiverName: ['', Validators.required],
-      caregiverIdentificationType: ['', Validators.required],
-      caregiverIdentificationNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
-      caregiverAge: ['', [Validators.required, Validators.min(1)]],
-      caregiverEducationLevel: ['', Validators.required],
-      caregiverOccupation: ['', Validators.required]
+      caregiverName: [''],
+      caregiverIdentificationType: [''],
+      caregiverIdentificationNumber: ['', [Validators.pattern('^[0-9]+$')]],
+      caregiverAge: ['', [Validators.min(1)]],
+      caregiverEducationLevel: [''],
+      caregiverOccupation: ['']
     });
 
     this.formProfesional = this.fb.group({
@@ -77,69 +77,160 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
     });
   }
 
-  isFormularioCompleto(): boolean {
-    return (
-      this.formPaciente.valid &&
-      this.formClinico.valid &&
-      this.formCuidador.valid &&
-      this.formProfesional.valid
-    );
+  ngOnInit() {
+    this.loadUserData();
+    this.formPaciente.get('tieneCuidador')?.valueChanges.subscribe(value => {
+      console.log('Valor de tieneCuidador:', value);
+      this.toggleCuidadorValidators(value);
+      this.cdr.detectChanges(); // Forzar actualización de la vista
+    });
   }
 
-  onRegister() {
-    if (!this.isFormularioCompleto()) {
-      alert('Por favor, complete todos los campos obligatorios.');
+  ngAfterViewInit() {
+    this.signaturePad = new SignaturePad(this.signaturePadElement.nativeElement, {
+      backgroundColor: 'rgb(255, 255, 255)',
+      penColor: 'rgb(0, 0, 0)'
+    });
+  }
+
+  loadUserData() {
+    const email = this.authService.getUserEmail();
+    if (!email) {
+      console.error('No se pudo obtener el email del usuario');
       return;
     }
-  
-    const requestData = {
-      variables: this.variables,
-      patient: {
-        ...this.formPaciente.value,
-        deathDate: this.formPaciente.value.deathDate ? this.formatDate(this.formPaciente.value.deathDate) : 'No aplica'
+
+    this.consolaService.obtenerUsuarioAutenticado(email).subscribe({
+      next: (response) => {
+        if (!response?.[0]) {
+          console.error('Respuesta del servicio inválida');
+          return;
+        }
+
+        const researchLayerName = response[0]?.attributes?.researchLayerId?.[0];
+        if (researchLayerName) {
+          this.consolaService.buscarCapaPorNombre(researchLayerName).subscribe({
+            next: (capa) => {
+              this.currentResearchLayer = capa;
+              if (capa.id) {
+                this.loadVariablesDeCapa(capa.id);
+              }
+            },
+            error: (err) => console.error('Error al obtener la capa:', err)
+          });
+        }
       },
-      clinical: this.formClinico.value,
-      caregiver: this.formCuidador.value,
-      healthProfessional: this.formProfesional.value
-    };
-  
-    this.consolaService.registrarRegistro(requestData).subscribe({
-      next: (response: any) => {
-        console.log('Registro exitoso:', response);
-        alert('Registro exitoso');
-        this.formPaciente.reset();
-        this.formClinico.reset();
-        this.formCuidador.reset();
-        this.formProfesional.reset();
-        this.clearSignature();
+      error: (err) => console.error('Error al cargar usuario:', err)
+    });
+  }
+
+  loadVariablesDeCapa(researchLayerId: string) {
+    this.loadingVariables = true;
+    this.variablesDeCapa = [];
+
+    this.consolaService.obtenerVariablesPorCapa(researchLayerId).subscribe({
+      next: (variables) => {
+        this.variablesDeCapa = variables.filter(v => v.isEnabled);
+        this.loadingVariables = false;
+        this.actualizarFormularioClinico();
       },
-      error: (error: any) => {
-        console.error('Error en el registro:', error);
-        alert('Error al registrar.');
+      error: (err) => {
+        console.error('Error al cargar variables:', err);
+        this.loadingVariables = false;
+        alert('Error al cargar las variables clínicas. Por favor, intente nuevamente.');
       }
     });
   }
-  
 
-  ngAfterViewInit() { }
+  actualizarFormularioClinico() {
+    const variablesArray = this.formClinico.get('variablesClinicas') as FormArray;
+    variablesArray.clear();
 
-  ngAfterViewChecked() {
-    if (this.signaturePadElement && !this.signaturePad) {
-      this.signaturePad = new SignaturePad(this.signaturePadElement.nativeElement, {
-        minWidth: 1,
-        maxWidth: 3,
-        penColor: 'black',
-        backgroundColor: 'white'
+    this.variablesDeCapa.forEach(variable => {
+      const group = this.fb.group({
+        id: [variable.id],
+        variableName: [variable.variableName],
+        description: [variable.description],
+        type: [variable.type],
+        hasOptions: [variable.hasOptions],
+        options: [variable.options || []],
+        valor: [null, Validators.required]
       });
+
+      variablesArray.push(group);
+    });
+
+    this.cdr.detectChanges();
+  }
+
+  get variablesClinicasFormArray() {
+    return this.formClinico.get('variablesClinicas') as FormArray;
+  }
+
+  toggleCuidadorValidators(tieneCuidador: boolean) {
+    const camposCuidador = [
+      'caregiverName',
+      'caregiverIdentificationType',
+      'caregiverIdentificationNumber',
+      'caregiverAge',
+      'caregiverEducationLevel',
+      'caregiverOccupation'
+    ];
+
+    camposCuidador.forEach(campo => {
+      const control = this.formCuidador.get(campo);
+      if (tieneCuidador) {
+        // Añadir validadores requeridos
+        if (campo === 'caregiverIdentificationNumber') {
+          control?.setValidators([Validators.required, Validators.pattern('^[0-9]+$')]);
+        } else if (campo === 'caregiverAge') {
+          control?.setValidators([Validators.required, Validators.min(1)]);
+        } else {
+          control?.setValidators([Validators.required]);
+        }
+      } else {
+        // Remover validadores requeridos
+        if (campo === 'caregiverIdentificationNumber') {
+          control?.setValidators([Validators.pattern('^[0-9]+$')]);
+        } else if (campo === 'caregiverAge') {
+          control?.setValidators([Validators.min(1)]);
+        } else {
+          control?.clearValidators();
+        }
+        control?.reset();
+      }
+      control?.updateValueAndValidity();
+    });
+    this.cdr.detectChanges(); // Forzar actualización de la vista
+  }
+
+
+  siguientePaso() {
+    if (this.pasoActual === 1 && !this.formPaciente.valid) {
+      alert('Por favor complete todos los campos obligatorios del paciente');
+      return;
     }
+    if (this.pasoActual === 2 && !this.formClinico.valid) {
+      alert('Por favor complete todos los campos clínicos obligatorios');
+      return;
+    }
+    if (this.pasoActual === 3 && this.tieneCuidador && !this.formCuidador.valid) {
+      alert('Por favor complete todos los campos del cuidador');
+      return;
+    }
+
+    this.pasoActual++;
+  }
+
+  pasoAnterior() {
+    this.pasoActual--;
   }
 
   clearSignature() {
-    this.signaturePad.clear();
-  }
-
-  onConsentimiento() {
-    this.mostrarConsentimiento = true;
+    if (this.signaturePad) {
+      this.signaturePad.clear();
+      this.formPaciente.patchValue({ firma: '' });
+    }
   }
 
   saveSignature() {
@@ -147,8 +238,15 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
       alert('Por favor, firma antes de continuar.');
       return;
     }
-    this.formPaciente.patchValue({ firma: this.signaturePad.toDataURL() });
+    this.formPaciente.patchValue({
+      firma: this.signaturePad.toDataURL(),
+      consentimiento: true
+    });
     this.mostrarConsentimiento = false;
+  }
+
+  onConsentimiento() {
+    this.mostrarConsentimiento = true;
   }
 
   onDatosClinicos() {
@@ -156,108 +254,79 @@ export class FormRegistroPacienteComponent implements AfterViewInit, AfterViewCh
       alert('Debe aceptar el consentimiento informado antes de continuar.');
       return;
     }
-    this.mostrarDatosClinicos = true;
+    this.pasoActual = 2; // Navega al paso de datos clínicos
   }
 
-  cargarVariables() {
-    // Lógica para cargar las variables según la capa seleccionada
-    const capaSeleccionada = this.formPaciente.get('capa')?.value;
-    if (capaSeleccionada) {
-      this.consolaService.obtenerVariablesPorCapa(capaSeleccionada).subscribe((data) => {
-        this.variables = data;
-      });
-    }
-  }
-
-  onDatosCuidador() {
-    if (this.formPaciente.get('capa')?.invalid) {
-      alert('Debe seleccionar una capa antes de continuar.');
+  onRegister() {
+    if (!this.isFormularioCompleto()) {
+      alert('Por favor, complete todos los campos obligatorios.');
       return;
     }
-    this.mostrarDatosCuidador = true;
-  }
 
-  onDatosProfesional() {
-    this.mostrarDatosProfesional = true;
-  }
+    const formData = {
+      patient: { ...this.formPaciente.value },
+      clinicalData: {
+        researchLayerId: this.currentResearchLayer?.id,
+        variables: this.variablesClinicasFormArray.controls.map(control => ({
+          id: control.get('id')?.value,
+          variableName: control.get('variableName')?.value,
+          value: control.get('valor')?.value,
+          type: control.get('type')?.value
+        }))
+      },
+      caregiver: this.tieneCuidador ? this.formCuidador.value : null,
+      healthProfessional: this.formProfesional.value
+    };
 
-  // onRegister() {
-  //   if (this.formPaciente.invalid) {
-  //     alert('Por favor, complete todos los campos obligatorios.');
-  //     return;
-  //   }
-
-  //   const requestData = {
-  //     variables: this.variables, // Enviar las variables clínicas seleccionadas
-  //     patient: {
-  //       name: this.formPaciente.value.name,
-  //       identificationType: this.formPaciente.value.identificationType,
-  //       identificationNumber: parseInt(this.formPaciente.value.identificationNumber, 10),
-  //       sex: this.formPaciente.value.sex,
-  //       birthDate: this.formatDate(this.formPaciente.value.birthDate),
-  //       age: this.calculateAge(this.formPaciente.value.birthDate),
-  //       email: this.formPaciente.value.email,
-  //       phoneNumber: this.formPaciente.value.phoneNumber,
-  //       deathDate: this.formPaciente.value.deathDate ? this.formatDate(this.formPaciente.value.deathDate) : null,
-  //       economicStatus: this.formPaciente.value.economicStatus,
-  //       educationLevel: this.formPaciente.value.educationLevel,
-  //       maritalStatus: this.formPaciente.value.maritalStatus,
-  //       hometown: this.formPaciente.value.hometown,
-  //       currentCity: this.formPaciente.value.currentCity,
-  //       firstCrisisDate: this.formatDate(this.formPaciente.value.firstCrisisDate),
-  //       crisisStatus: this.formPaciente.value.crisisStatus
-  //     },
-  //     caregiver: {
-  //       name: this.formPaciente.value.caregiverName,
-  //       identificationType: this.formPaciente.value.caregiverIdentificationType,
-  //       identificationNumber: parseInt(this.formPaciente.value.caregiverIdentificationNumber, 10),
-  //       age: parseInt(this.formPaciente.value.caregiverAge, 10),
-  //       educationLevel: this.formPaciente.value.caregiverEducationLevel,
-  //       occupation: this.formPaciente.value.caregiverOccupation
-  //     },
-  //     healthProfessional: {
-  //       id: this.formPaciente.value.healthProfessionalId,
-  //       name: this.formPaciente.value.healthProfessionalName,
-  //       identificationNumber: parseInt(this.formPaciente.value.healthProfessionalIdentificationNumber, 10)
-  //     }
-  //   };
-
-  //   this.consolaService.registrarRegistro(requestData).subscribe({
-  //     next: (response: any) => {
-  //       console.log('Registro exitoso:', response);
-  //       alert('Registro exitoso');
-  //       this.formPaciente.reset();
-  //       this.clearSignature();
-  //     },
-  //     error: (error: any) => {
-  //       console.error('Error en el registro:', error);
-  //       alert('Error al registrar.');
-  //     }
-  //   });
-  // }
-
-  private formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
-  }
-
-  private calculateAge(dateString: string): number {
-    const birthDate = new Date(dateString);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    // Limpiar datos si no tiene cuidador
+    if (!this.tieneCuidador) {
+      formData.caregiver = null;
     }
-    return age;
+
+    this.consolaService.registrarRegistro(formData).subscribe({
+      next: (response) => {
+        console.log('Registro exitoso', response);
+        this.resetForms();
+        alert('Registro completado con éxito');
+      },
+      error: (error) => {
+        console.error('Error en el registro', error);
+        alert('Error al registrar los datos');
+      }
+    });
   }
 
-  // Métodos para avanzar y retroceder en el formulario por pasos
-  siguientePaso() {
-    this.pasoActual++;
+  isFormularioCompleto(): boolean {
+    const pacienteValido = this.formPaciente.valid;
+    const clinicoValido = this.formClinico.valid;
+    const profesionalValido = this.formProfesional.valid;
+    const cuidadorValido = !this.tieneCuidador || this.formCuidador.valid;
+
+    return pacienteValido && clinicoValido && profesionalValido && cuidadorValido;
   }
 
-  pasoAnterior() {
-    this.pasoActual--;
+  resetForms() {
+    this.formPaciente.reset();
+    this.formClinico.reset();
+    this.formCuidador.reset();
+    this.formProfesional.reset();
+    this.clearSignature();
+    this.pasoActual = 1;
+    this.tieneCuidador = false;
+  }
+
+  getInputType(variableType: string): string {
+    const typeMap: { [key: string]: string } = {
+      'Entero': 'number',
+      'Real': 'number',
+      'Decimal': 'number',
+      'Cadena': 'text',
+      'Texto': 'text',
+      'Fecha': 'date',
+      'Lógico': 'checkbox',
+      'Booleano': 'checkbox',
+      'Opciones': 'select'
+    };
+    return typeMap[variableType] || 'text';
   }
 }

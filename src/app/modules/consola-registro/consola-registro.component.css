@@ -5,6 +5,7 @@
   justify-content: flex-start; 
   width: 100%;             
   padding: 0;
+  font-family: 'Montserrat';
 }
 
 .contentDigitador {
@@ -131,4 +132,256 @@ hr {
   padding: 20px;
   box-sizing: border-box;
   margin-top: 3%;
+}
+
+/* Inicio */
+.digitador-dashboard {
+  font-family: 'Montserrat', sans-serif;
+  color: #333;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.dashboard-header h1 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.welcome-message {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+/* Grid principal */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 25px;
+}
+
+.description-card {
+  grid-column: span 7;
+}
+
+.stats-card {
+  grid-column: span 5;
+}
+
+.actions-card {
+  grid-column: span 4;
+}
+
+.recent-card {
+  grid-column: span 8;
+}
+
+/* Estilos de tarjetas */
+.dashboard-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.card-icon {
+  font-size: 1.5rem;
+  color: #3498db;
+  margin-right: 15px;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.3rem;
+}
+
+/* Estilos específicos para cada tarjeta */
+.description-card .card-content {
+  line-height: 1.6;
+  color: #555;
+}
+
+.research-info {
+  margin-top: 25px;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.info-item i {
+  margin-right: 10px;
+  color: #3498db;
+  width: 20px;
+  text-align: center;
+}
+
+/* Estadísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-circle {
+  width: 50px;
+  height: 50px;
+  background: #3498db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+/* Acciones rápidas */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-btn i {
+  font-size: 1.5rem;
+  color: #3498db;
+  margin-bottom: 10px;
+}
+
+.action-btn span {
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.action-btn:hover {
+  background: #3498db;
+  color: white;
+}
+
+.action-btn:hover i, .action-btn:hover span {
+  color: white;
+}
+
+/* Registros recientes */
+.recent-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.recent-item:last-child {
+  border-bottom: none;
+}
+
+.recent-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.recent-date {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.recent-status {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: #f39c12;
+  color: white;
+}
+
+.recent-status.completed {
+  background: #2ecc71;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .description-card,
+  .stats-card,
+  .actions-card,
+  .recent-card {
+    grid-column: span 1;
+  }
 }

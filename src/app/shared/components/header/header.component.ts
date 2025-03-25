@@ -16,22 +16,25 @@ export class HeaderComponent implements OnInit {
   userIcon: string = 'fa fa-user'; // Ícono por defecto
   isSettingsMenuVisible = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) { }
 
   ngOnInit() {
     this.isLoggedIn = this.authService.isLoggedIn();
     this.username = this.authService.getUsername();
-    this.userRole = this.authService.getUserRole(); 
-  
+    this.userRole = this.authService.getUserRole();
+    this.setUserIcon(this.userRole); // Llamar aquí para el estado inicial
+
     this.authService.authStatus$.subscribe(status => {
       this.isLoggedIn = status;
       if (status) {
         this.username = this.authService.getUsername();
         this.userRole = this.authService.getUserRole();
+        this.setUserIcon(this.userRole); // Llamar aquí cuando cambia el estado
+      } else {
+        this.userIcon = 'fa fa-user'; // Resetear a ícono por defecto al cerrar sesión
       }
     });
   }
-  
 
   openModal(type: 'login' | 'manual'): void {
     this.modalType = type;
@@ -40,9 +43,9 @@ export class HeaderComponent implements OnInit {
 
   closeModal(): void {
     this.isModalVisible = false;
-  
+
   }
-  
+
 
   navigateTo(route: string): void {
     this.closeModal();

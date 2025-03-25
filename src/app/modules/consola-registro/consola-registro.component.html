@@ -2,42 +2,137 @@
   <app-navbar-registro (tabSelected)="onTabSelected($event)"></app-navbar-registro>
 
   <div class="contentDigitador">
-    <div *ngIf="selectedTab === 'inicioDigitador'" class="info-container">
-      <div class="inicio-content">
-        <!-- Descripción de la investigación -->
-        <div class="box">
-          <h3>Descripción de la investigación</h3>
-          <p>
-            {{ DescripcionInvestigacion }}
-          </p>
-          <div class="info-investigador">
-            <p>Jefe de la investigación: {{ jefeInvestigacion }}</p>
+    <div *ngIf="selectedTab === 'inicioDigitador'" class="digitador-dashboard">
+      <!-- Encabezado con título y bienvenida -->
+      <div class="dashboard-header">
+        <p class="welcome-message">Bienvenido/a, {{ username }}</p>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="dashboard-grid">
+        <!-- Sección de descripción (ocupará más espacio) -->
+        <div class="dashboard-card description-card">
+          <div class="card-header">
+            <i class="fas fa-book-open card-icon"></i>
+            <h3>Descripción de la Investigación</h3>
+          </div>
+          <div class="card-content">
+            <p>
+              {{ DescripcionInvestigacion }}
+            </p>
+            <div class="research-info">
+              <div class="info-item">
+                <i class="fas fa-user-tie"></i>
+                <span><strong>Jefe de investigación:</strong> {{ jefeInvestigacion }}</span>
+              </div>
+              <div class="info-item">
+                <i class="fas fa-envelope"></i>
+                <span><strong>Contacto:</strong> {{ contactoInvestigacion }}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Tarjetas de información -->
-        <div class="info-cards">
-          <div class="box capa">
-            <h4>Usted pertenece a la capa</h4>
-            <h2>{{ capaUsuario }}</h2>
+        <!-- Sección de estadísticas rápidas -->
+        <div class="dashboard-card stats-card">
+          <div class="card-header">
+            <i class="fas fa-chart-line card-icon"></i>
+            <h3>Tus Estadísticas</h3>
           </div>
-          <div class="box total-pacientes">
-            <h4>Total de pacientes en la investigación</h4>
-            <h2>{{ totalPacientes }}</h2>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-circle">
+                <i class="fas fa-layer-group"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Capa asignada</span>
+                <span class="stat-value">{{ currentResearchLayer?.layerName || 'No asignada' }}</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-circle">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Pacientes totales</span>
+                <span class="stat-value">{{ totalPacientes }}</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-circle">
+                <i class="fas fa-user-plus"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Pacientes hoy</span>
+                <span class="stat-value">{{ pacientesHoy }}</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-circle">
+                <i class="fas fa-tasks"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Registros pendientes</span>
+                <span class="stat-value">{{ registrosPendientes }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de acciones rápidas -->
+        <div class="dashboard-card actions-card">
+          <div class="card-header">
+            <i class="fas fa-bolt card-icon"></i>
+            <h3>Acciones Rápidas</h3>
+          </div>
+          <div class="actions-grid">
+            <button class="action-btn" (click)="navigateTo('registroPaciente')">
+              <i class="fas fa-user-plus"></i>
+              <span>Nuevo Paciente</span>
+            </button>
+            <button class="action-btn" (click)="navigateTo('listadoPacientes')">
+              <i class="fas fa-list"></i>
+              <span>Ver Lista de Registros</span>
+            </button>
+            <button class="action-btn" (click)="navigateTo('consultaDatosDigitador')">
+              <i class="fas fa-file-alt"></i>
+              <span>Generar Reporte</span>
+            </button>
+            <button class="action-btn" (click)="navigateTo('configuracion')">
+              <i class="fas fa-cog"></i>
+              <span>Configuración</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sección de últimos registros -->
+        <div class="dashboard-card recent-card">
+          <div class="card-header">
+            <i class="fas fa-history card-icon"></i>
+            <h3>Registros Recientes</h3>
+          </div>
+          <div class="recent-list">
+            <div class="recent-item" *ngFor="let registro of registrosRecientes">
+              <div class="recent-info">
+                <span class="recent-name">{{ registro.nombre }}</span>
+                <span class="recent-date">{{ registro.fecha | date:'medium' }}</span>
+              </div>
+              <div class="recent-status" [class.completed]="registro.completado">
+                {{ registro.completado ? 'Completado' : 'Pendiente' }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div *ngIf="selectedTab === 'registroPaciente'">
-      <h1>REGISTRO BÁSICO</h1>
-      <h1>Ingrese las variables necesarias para el registro del paciente</h1>
-      <div class="contentRegistro2">
-        <app-form-registro-paciente></app-form-registro-paciente>
-      </div>
+
+      <app-form-registro-paciente></app-form-registro-paciente>
+
     </div>
     <div *ngIf="selectedTab === 'listadoPacientes'">
       <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-      (onView)="handleView($event)" (onEdit)="handleEdit($event)"></app-table-ver-usuarios>
+        (onView)="handleView($event)" (onEdit)="handleEdit($event)"></app-table-ver-usuarios>
     </div>
     <div *ngIf="selectedTab === 'consultaDatosDigitador'">
       <h1>Consultas de datos digitador</h1>

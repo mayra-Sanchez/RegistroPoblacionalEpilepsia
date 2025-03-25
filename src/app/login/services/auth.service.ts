@@ -167,7 +167,41 @@ export class AuthService {
     );
   }
   
-
+  getUserFirstName(): string {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return '';
+    
+    try {
+      const decoded: any = jwtDecode(token);
+      // Ajusta estos campos según la estructura de tu token JWT
+      return decoded.given_name || decoded.name || decoded.preferred_username || '';
+    } catch (error) {
+      console.error('❌ Error al obtener el nombre del usuario:', error);
+      return '';
+    }
+  }
+  
+  getUserLastName(): string {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return '';
+    
+    try {
+      const decoded: any = jwtDecode(token);
+      // Ajusta estos campos según la estructura de tu token JWT
+      return decoded.family_name || decoded.last_name || '';
+    } catch (error) {
+      console.error('❌ Error al obtener el apellido del usuario:', error);
+      return '';
+    }
+  }
+  
+  // Método para obtener nombre completo
+  getUserFullName(): string {
+    const firstName = this.getUserFirstName();
+    const lastName = this.getUserLastName();
+    return `${firstName} ${lastName}`.trim();
+  }
+  
   logout(): void {
     localStorage.removeItem('kc_token');
     localStorage.removeItem('refresh_token');
