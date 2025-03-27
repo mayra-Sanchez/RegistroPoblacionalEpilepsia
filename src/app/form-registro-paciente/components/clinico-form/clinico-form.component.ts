@@ -36,8 +36,9 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   completedVariables = 0;
   loading = false;
   errorMessage = '';
-  
+
   private destroy$ = new Subject<void>();
+  private currentValues: Record<string, any> = {};
 
   constructor(
     private fb: FormBuilder,
@@ -91,6 +92,9 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   }
 
   initializeForm(variables: Variable[]): void {
+    // Guardar valores actuales antes de limpiar
+    this.saveCurrentValues();
+
     const variablesArray = this.variablesClinicas;
     variablesArray.clear();
 
@@ -98,40 +102,56 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       .filter(v => v.isEnabled)
       .forEach(variable => {
         const variableGroup = this.createVariableGroup(variable);
-        
-        // Cargar valor inicial desde localStorage o input
-        const savedValue = this.getSavedValue(variable.id);
-        if (savedValue !== undefined && savedValue !== null) {
-          variableGroup.patchValue({ valor: savedValue });
+
+        // Restaurar valor si existe en currentValues
+        if (this.currentValues[variable.id] !== undefined) {
+          variableGroup.patchValue({ valor: this.currentValues[variable.id] });
+        } else {
+          // Si no, cargar de localStorage o initialData
+          const savedValue = this.getSavedValue(variable.id);
+          if (savedValue !== undefined && savedValue !== null) {
+            variableGroup.patchValue({ valor: savedValue });
+          }
         }
-        
+
         variablesArray.push(variableGroup);
       });
 
     this.applyFilters();
   }
 
+  private saveCurrentValues(): void {
+    this.currentValues = {};
+    this.variablesClinicas.controls.forEach(control => {
+      this.currentValues[control.get('id')?.value] = control.get('valor')?.value;
+    });
+  }
+
   private getSavedValue(variableId: string): any {
-    // Primero verificar localStorage
-    const savedData = localStorage.getItem('clinicalFormData');
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      const savedVar = parsedData.find((v: any) => v.id === variableId);
-      if (savedVar) return savedVar.valor;
-    }
-    
-    // Luego verificar initialData
-    if (this.initialData) {
+    // Primero verificar initialData (datos pasados desde el componente padre)
+    if (this.initialData && this.initialData.length > 0) {
       const initialVar = this.initialData.find((v: any) => v.id === variableId);
       if (initialVar) return initialVar.valor;
     }
-    
+
+    // Luego verificar localStorage
+    const savedData = localStorage.getItem('clinicalFormData');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        const savedVar = parsedData.find((v: any) => v.id === variableId);
+        if (savedVar) return savedVar.valor;
+      } catch (e) {
+        console.error('Error parsing saved form data:', e);
+      }
+    }
+
     return null;
   }
 
   createVariableGroup(variable: Variable): FormGroup {
     const validators = variable.required ? [Validators.required] : [];
-    
+
     return this.fb.group({
       id: [variable.id],
       variableName: [variable.variableName],
@@ -156,7 +176,10 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     const savedData = localStorage.getItem('clinicalFormData');
     if (savedData) {
       try {
-        this.initialData = JSON.parse(savedData);
+        const parsedData = JSON.parse(savedData);
+        if (parsedData && !this.initialData) {
+          this.initialData = parsedData;
+        }
       } catch (e) {
         console.error('Error parsing saved form data:', e);
       }
@@ -168,8 +191,8 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    let filtered = [...this.variablesClinicas.controls] as FormGroup[];
-    
+    let filtered = this.variablesClinicas.controls as FormGroup[];
+
     if (this.searchTerm) {
       const searchTermLower = this.searchTerm.toLowerCase();
       filtered = filtered.filter(control => {
@@ -180,7 +203,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     }
 
     if (this.activeTypeFilter) {
-      filtered = filtered.filter(control => 
+      filtered = filtered.filter(control =>
         control.get('type')?.value === this.activeTypeFilter
       );
     }
@@ -216,7 +239,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   getPlaceholder(variableGroup: FormGroup): string {
     const type = variableGroup.get('type')?.value;
     const name = variableGroup.get('variableName')?.value;
-    
+
     const placeholders: Record<string, string> = {
       'Entero': `Ingrese ${name} (número entero)`,
       'Decimal': `Ingrese ${name} (número decimal)`,
@@ -231,11 +254,11 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
 
   getTypeLabel(type: string): string {
     const labels: Record<string, string> = {
-      'Entero': 'Número', 
-      'Decimal': 'Decimal', 
+      'Entero': 'Número',
+      'Decimal': 'Decimal',
       'Texto': 'Texto',
-      'Booleano': 'Sí/No', 
-      'Opciones': 'Opciones', 
+      'Booleano': 'Sí/No',
+      'Opciones': 'Opciones',
       'Fecha': 'Fecha'
     };
     return labels[type] || type;
@@ -246,7 +269,9 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       this.saveToLocalStorage();
       const currentValues = this.variablesClinicas.controls.map(control => ({
         id: control.get('id')?.value,
-        valor: control.get('valor')?.value
+        value: control.get('valor')?.value,
+        type: this.mapToBackendType(control.get('type')?.value),
+        researchLayerId: this.researchLayerId
       }));
       this.next.emit(currentValues);
     } else {
@@ -255,8 +280,35 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     }
   }
 
+  onInputChange(variableGroup: FormGroup) {
+    // Forzar la actualización de la validación
+    variableGroup.get('valor')?.updateValueAndValidity();
+    this.updateCompletedCount();
+
+    // Opcional: Guardar automáticamente en localStorage
+    this.saveToLocalStorage();
+  }
+
+  // Añade este método para mapear tipos
+  private mapToBackendType(frontendType: string): string {
+    const typeMap: Record<string, string> = {
+      'Entero': 'number',
+      'Decimal': 'number',
+      'Texto': 'string',
+      'Booleano': 'boolean',
+      'Opciones': 'string',
+      'Fecha': 'date'
+    };
+    return typeMap[frontendType] || 'string';
+  }
+
+
   onPrevious(): void {
     this.saveToLocalStorage();
     this.prev.emit();
+  }
+
+  trackByVariableId(index: number, item: FormGroup): string {
+    return item.get('id')?.value;
   }
 }

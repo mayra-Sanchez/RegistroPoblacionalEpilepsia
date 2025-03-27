@@ -7,7 +7,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   styleUrls: ['./paciente-form.component.css']
 })
 export class PacienteFormComponent {
-  @Output() next = new EventEmitter<void>();
+  @Output() next = new EventEmitter<any>(); // Cambiado de void a any
   form: FormGroup;
 
   constructor(private fb: FormBuilder) {
@@ -37,7 +37,22 @@ export class PacienteFormComponent {
 
   onSubmit(): void {
     if (this.form.valid) {
-      this.next.emit();
+      // Emitir el valor completo del formulario
+      this.next.emit(this.form.value);
+    } else {
+      // Marcar todos los campos como tocados para mostrar errores
+      this.markFormGroupTouched(this.form);
     }
+  }
+
+  // Método para marcar todos los campos como touched
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 }

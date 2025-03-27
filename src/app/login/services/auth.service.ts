@@ -3,28 +3,28 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError, switchMap } from 'rxjs/operators';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private backendUrl = 'http://localhost:8080/api/v1'; 
+  private backendUrl = 'http://localhost:8080/api/v1';
   private authStatus = new BehaviorSubject<boolean>(this.isLoggedIn());
 
-  authStatus$ = this.authStatus.asObservable(); 
+  authStatus$ = this.authStatus.asObservable();
 
   private tokenRefreshInterval: any; // Para manejar el intervalo de refresco
   private readonly refreshTimeMs = 13 * 60 * 1000; // 13 minutos en milisegundos
-  
-  
-  constructor(private http: HttpClient, private router: Router) {}
+
+
+  constructor(private http: HttpClient, private router: Router) { }
 
   private startTokenRefresh() {
     if (this.tokenRefreshInterval) {
       clearInterval(this.tokenRefreshInterval);
     }
-  
+
     this.tokenRefreshInterval = setInterval(() => {
       this.refreshToken().subscribe({
         error: () => this.stopTokenRefresh() // Si falla, detenemos el refresco
@@ -38,8 +38,8 @@ export class AuthService {
       this.tokenRefreshInterval = null;
     }
   }
-  
-  
+
+
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this.backendUrl}/auth/login`, { email, password }).pipe(
       tap((response: any) => {
@@ -57,12 +57,12 @@ export class AuthService {
       })
     );
   }
-  
+
 
   getUsername(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';
-  
+
     try {
       const decoded: any = jwtDecode(token);
       return decoded.preferred_username || ''; // Ajusta según la estructura de tu token
@@ -71,12 +71,12 @@ export class AuthService {
       return '';
     }
   }
-  
+
   getUserRole(): string {
     const roles = this.getStoredRoles();
     return roles.length > 0 ? roles[0] : 'Usuario'; // Ajusta para mostrar el rol adecuado
   }
-  
+
   private storeUserRoles(token: string) {
     try {
       const decoded: any = jwtDecode(token);
@@ -95,23 +95,23 @@ export class AuthService {
   getStoredRoles(): string[] {
     const token = localStorage.getItem('kc_token');
     if (!token) return [];
-  
+
     try {
       const tokenPayload = JSON.parse(atob(token.split('.')[1])); // Decodificar el token JWT
       const realmRoles = tokenPayload.realm_access?.roles || [];
       const clientRoles = tokenPayload.resource_access?.['registers-users-api-rest']?.roles || [];
-      
+
       return [...realmRoles, ...clientRoles]; // 🔹 Combinar ambos tipos de roles
     } catch (error) {
       console.error('❌ Error al obtener roles del token:', error);
       return [];
     }
   }
-  
+
   hasRole(requiredRole: string): boolean {
     const userRoles = this.getStoredRoles();
     return userRoles.includes(requiredRole);
-    
+
   }
 
   getToken(): string | null {
@@ -126,7 +126,7 @@ export class AuthService {
   getUserEmail(): string | null {
     const token = localStorage.getItem('kc_token');
     if (!token) return null;
-  
+
     try {
       const decoded: any = jwtDecode(token);
       return decoded.email || null; // Asegúrate de que el campo "email" está presente en tu token JWT
@@ -135,17 +135,17 @@ export class AuthService {
       return null;
     }
   }
-  
+
 
   refreshToken(): Observable<any> {
     const refreshToken = localStorage.getItem('refresh_token');
-  
+
     if (!refreshToken) {
       console.error('⚠️ No hay refresh token en localStorage. Haciendo logout.');
       this.logout();
       return throwError(() => new Error('No hay refresh token.'));
     }
-  
+
     return this.http.post<any>('http://localhost:8080/auth/refresh', { refreshToken }, {
       headers: new HttpHeaders().set('Content-Type', 'application/json'),
     }).pipe(
@@ -166,11 +166,32 @@ export class AuthService {
       })
     );
   }
-  
+
+
+  // In your AuthService
+  getUserData(): any {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return null;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      return {
+        id: decoded.sub || '', // Use the 'sub' claim which is the user ID in Keycloak
+        firstName: decoded.given_name || decoded.firstName || '',
+        lastName: decoded.family_name || decoded.lastName || '',
+        email: decoded.email || '',
+        attributes: decoded.attributes || {}
+      };
+    } catch (error) {
+      console.error('Error decoding user data:', error);
+      return null;
+    }
+  }
+
   getUserFirstName(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';
-    
+
     try {
       const decoded: any = jwtDecode(token);
       // Ajusta estos campos según la estructura de tu token JWT
@@ -180,11 +201,11 @@ export class AuthService {
       return '';
     }
   }
-  
+
   getUserLastName(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';
-    
+
     try {
       const decoded: any = jwtDecode(token);
       // Ajusta estos campos según la estructura de tu token JWT
@@ -198,23 +219,31 @@ export class AuthService {
   getUserIdentificationNumber(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';
-    
+
     try {
       const decoded: any = jwtDecode(token);
-      return decoded.identification_number || decoded.document_number || decoded.preferred_username || '';
+      console.log('Decoded token:', decoded); // For debugging
+
+      // Check multiple possible locations for the identification number
+      return decoded.identificationNumber ||
+        decoded.identification_number ||
+        decoded.documentNumber ||
+        decoded.document_number ||
+        decoded.attributes?.identificationNumber?.[0] || // Keycloak style
+        '';
     } catch (error) {
       console.error('Error al obtener número de identificación:', error);
       return '';
     }
   }
-  
+
   // Método para obtener nombre completo
   getUserFullName(): string {
     const firstName = this.getUserFirstName();
     const lastName = this.getUserLastName();
     return `${firstName} ${lastName}`.trim();
   }
-  
+
   logout(): void {
     localStorage.removeItem('kc_token');
     localStorage.removeItem('refresh_token');
@@ -223,5 +252,5 @@ export class AuthService {
     this.stopTokenRefresh(); // Detener el refresco automático
     this.router.navigate(['/']);
   }
-  
+
 }
