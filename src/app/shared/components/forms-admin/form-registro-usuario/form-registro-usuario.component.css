@@ -1,139 +1,185 @@
+/* Estilos generales - consistentes con el anterior */
 .user-form-container {
-  width: 90%; /* Ancho relativo para adaptarse a pantallas pequeñas */
-  max-width: 700px; /* Ancho máximo para pantallas grandes */
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  margin: 20px auto; /* Centra el formulario horizontalmente */
-  box-sizing: border-box;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.user-form-container h2 {
+h2 {
+  color: #2c3e50;
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-  font-weight: bold;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+/* Estilos del formulario */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
 }
 
 .form-row {
   display: flex;
-  flex-wrap: wrap; /* Permite que los elementos se ajusten automáticamente */
-  justify-content: space-between;
-  gap: 15px; /* Agrega un espacio entre los inputs */
-  margin-bottom: 15px;
-}
-
-.form-row label {
-  font-size: 0.9rem;
-  margin-bottom: 5px;
-  width: 100%; /* Asegura que el label siempre tenga espacio completo */
-}
-
-.form-row input,
-.form-row select {
-  flex: 1 1 45%; /* Ocupan el 45% del ancho disponible */
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 0.9rem;
-}
-
-.form-row input:last-child,
-.form-row select:last-child {
-  margin-right: 0;
-}
-
-.fecha {
-  display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
+  gap: 0.5rem;
 }
 
-button.btn-primary {
-  width: 100%;
-  padding: 12px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+label {
+  font-weight: 600;
+  color: #34495e;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+input, select, textarea {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   font-size: 1rem;
-  margin-top: 20px;
+  transition: all 0.3s ease;
+  background-color: white;
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+input[type="date"] {
+  position: relative;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  color: transparent;
+  background: transparent;
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none;
+}
+
+input[disabled] {
+  background-color: #f0f0f0;
+  color: #777;
+  cursor: not-allowed;
+}
+
+/* Estilos para los botones */
+.form-button {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-button.btn-primary:hover {
-  background-color: #0056b3;
+.btn-primary {
+  background-color: #3498db;
+  color: white;
 }
 
-/* Media Queries */
+.btn-primary:hover {
+  background-color: #2980b9;
+}
 
-/* Pantallas pequeñas (max-width: 480px) */
+.btn-primary:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Mensajes de error */
+.error-message {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* Estilos responsive */
+@media (max-width: 768px) {
+  .user-form-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  /* Para pantallas medianas, podemos ajustar el layout de nombre y apellido */
+  .form-row {
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 480px) {
   .user-form-container {
-    padding: 15px;
+    padding: 1rem;
+    margin: 0.5rem;
   }
-
-  .form-row {
-    flex-direction: column; /* Los elementos se apilan verticalmente */
+  
+  .form-button {
+    justify-content: center;
   }
-
-  .form-row input,
-  .form-row select {
-    flex: 1 1 100%; /* Cada elemento ocupa el 100% del ancho disponible */
-    margin-right: 0; /* Sin espacio extra a la derecha */
+  
+  .btn {
+    width: 100%;
+    padding: 0.85rem;
   }
-
-  button.btn-primary {
-    font-size: 0.9rem;
-    padding: 10px;
-  }
-}
-
-/* Pantallas medianas (481px a 768px) */
-@media (min-width: 481px) and (max-width: 768px) {
-  .user-form-container {
-    padding: 25px;
-  }
-
-  .form-row input,
-  .form-row select {
-    flex: 1 1 48%; /* Los elementos ocupan el 48% del ancho */
-    margin-right: 2%; /* Espacio entre columnas */
+  
+  input, select {
+    padding: 0.65rem;
   }
 }
 
-/* Pantallas grandes (mínimo 1024px) */
-@media (min-width: 1024px) {
-  .user-form-container {
-    padding: 30px;
+/* Estilo especial para campos en línea (nombre y apellido) */
+@media (min-width: 600px) {
+  .form-row:has(> input + label) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
   }
-
-  .form-row input,
-  .form-row select {
-    flex: 1 1 45%; /* Elementos más anchos */
-    font-size: 1rem;
+  
+  .form-row:has(> input + label) label:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 1;
   }
-
-  button.btn-primary {
-    font-size: 1.1rem;
-    padding: 15px;
+  
+  .form-row:has(> input + label) input:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 2;
   }
-}
-
-/* Mensajes de error al lado de cada campo */
-.form-row .error-message {
-  color: red;
-  font-size: 0.8rem;
-  margin-left: 10px;  /* Espacio entre el input y el mensaje */
-  align-self: center; /* Centrar el mensaje verticalmente */
-}
-
-/* Asegurar que el label y el mensaje de error no se solapen */
-.form-row input:invalid + .error-message,
-.form-row select:invalid + .error-message {
-  display: block;
+  
+  .form-row:has(> input + label) div:nth-of-type(2) {
+    grid-column: 2;
+  }
 }
