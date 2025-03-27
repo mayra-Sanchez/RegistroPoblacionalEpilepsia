@@ -37,6 +37,7 @@ export interface ResearchLayer {
   };
 }
 
+// interfaces.ts
 export interface Register {
   registerId: string;
   registerDate: string;
@@ -67,10 +68,10 @@ export interface Register {
     age: number;
     educationLevel: string;
     occupation: string;
-  };
+  } | null; // Añadir null aquí
   healthProfessional: {
     id: string;
     name: string;
     identificationNumber: number;
-  };
+  } | null; // Añadir null aquí
 }

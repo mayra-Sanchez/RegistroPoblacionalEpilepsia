@@ -169,11 +169,16 @@
 
         <div class="form-group">
             <label for="crisisStatus">Estado de Crisis</label>
-            <input type="text" id="crisisStatus" formControlName="crisisStatus" placeholder="Describa el estado actual">
+            <select formControlName="crisisStatus" id="crisisStatus" class="form-input">
+              <option value="" disabled selected>Seleccione el estado...</option>
+              <option *ngFor="let estado of estadosCrisis" [value]="estado">
+                {{ estado }}
+              </option>
+            </select>
             <small *ngIf="form.get('crisisStatus')?.touched && form.get('crisisStatus')?.invalid" class="error-message">
-                Este campo es obligatorio
+              Seleccione un estado de crisis
             </small>
-        </div>
+          </div>
     </div>
 
     <!-- Sexta fila - Checkboxes -->

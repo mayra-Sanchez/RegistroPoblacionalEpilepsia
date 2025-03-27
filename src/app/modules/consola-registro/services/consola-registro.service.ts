@@ -119,19 +119,69 @@ export class ConsolaRegistroService {
 
 
   // 📌 Actualizar un registro (solo doctores)
-  // consola-registro.service.ts
-  actualizarRegistro(registerId: string, registerData: Partial<Register>) {
-    return this.http.put<Register>(`/api/v1/registers?registerId=${registerId}`, registerData);
+  // In consola-registro.service.ts
+
+  actualizarRegistro(registerId: string, data: any): Observable<any> {
+    // First verify doctor role
+    if (!this.isDoctor()) {
+      return throwError(() => new Error('⛔ Acceso denegado: solo los doctores pueden realizar esta acción.'));
+    }
+
+    // Ensure we have a valid token
+    const token = this.authService.getToken();
+    if (!token) {
+      return throwError(() => new Error('⚠️ No hay token disponible.'));
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    // Format dates before sending
+    const formattedData = this.formatRegisterData(data);
+
+    return this.http.put(this.API_URL, formattedData, {
+      headers: headers,
+      params: { registerId }
+    }).pipe(
+      tap(() => console.log('✅ Registro actualizado exitosamente')),
+      catchError(error => {
+        console.error('❌ Error al actualizar registro:', error);
+
+        if (error.status === 401) {
+          // Handle token refresh or re-authentication
+          return throwError(() => new Error('🔐 Sesión expirada. Por favor inicie sesión nuevamente.'));
+        } else if (error.status === 403) {
+          return throwError(() => new Error('⛔ No tiene permisos para realizar esta acción.'));
+        } else {
+          return throwError(() => new Error(error.error?.message || 'Error desconocido al actualizar el registro.'));
+        }
+      })
+    );
   }
 
-  // 📌 Eliminar un registro (solo doctores) - Ejemplo adicional
-  eliminarRegistro(registerId: string): Observable<any> {
-    return this.handleRequest(
-      this.http.delete(`${this.API_URL}?registerId=${registerId}`, {
-        headers: this.getAuthHeaders()
-      }),
-      `🗑️ Registro eliminado (ID: ${registerId})`
-    ).pipe(tap(() => this.notifyDataUpdated()));
+  private formatRegisterData(data: any): any {
+    // Clone the data to avoid modifying the original
+    const formattedData = { ...data };
+
+    // Format dates to 'dd-MM-yyyy'
+    if (formattedData.patient?.birthDate) {
+      formattedData.patient.birthDate = this.formatDateToBackend(data.patient.birthDate);
+    }
+    if (formattedData.patient?.deathDate) {
+      formattedData.patient.deathDate = this.formatDateToBackend(data.patient.deathDate);
+    }
+
+    return formattedData;
+  }
+
+  private formatDateToBackend(dateString: string): string {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   }
 
   /**

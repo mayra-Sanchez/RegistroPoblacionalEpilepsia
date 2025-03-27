@@ -172,7 +172,7 @@
     
     .form-group input,
     .form-group select {
-      max-width: 100%;
+      max-width: 90%;
     }
   
     .form-actions {

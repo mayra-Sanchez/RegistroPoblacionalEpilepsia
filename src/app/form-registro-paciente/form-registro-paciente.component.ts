@@ -3,32 +3,76 @@ import { ConsolaRegistroService } from '../modules/consola-registro/services/con
 import { AuthService } from 'src/app/login/services/auth.service';
 import Swal from 'sweetalert2';
 
+/**
+ * Componente para el registro de pacientes en un sistema médico.
+ * Maneja un formulario multipaso que incluye:
+ * 1. Datos personales del paciente
+ * 2. Datos clínicos
+ * 3. Datos del cuidador (opcional)
+ * 4. Datos del profesional de salud
+ * 
+ * @example
+ * <app-form-registro-paciente></app-form-registro-paciente>
+ */
 @Component({
   selector: 'app-form-registro-paciente',
   templateUrl: './form-registro-paciente.component.html',
   styleUrls: ['./form-registro-paciente.component.css']
 })
 export class FormRegistroPacienteComponent implements OnInit {
+  /** Paso actual del formulario (1-4) */
   pasoActual = 1;
+  
+  /** Indica si el paciente tiene cuidador asociado */
   tieneCuidador = false;
+  
+  /** ID de la capa de investigación asociada al usuario */
   currentResearchLayerId: string = '';
+  
+  /** Bandera que indica si se está enviando el formulario */
   isSending = false;
 
-  // Almacenamiento de datos
+  // Objetos para almacenar los datos del formulario
+  /** Almacena los datos personales del paciente */
   pacienteData: any = {};
+  
+  /** Almacena los datos clínicos del paciente */
   clinicalData: any[] = [];
+  
+  /** Almacena los datos del cuidador (si aplica) */
   cuidadorData: any = {};
+  
+  /** Almacena los datos del profesional de salud */
   profesionalData: any = {};
 
+  /** Controla la visibilidad del modal de previsualización */
+  showPreviewModal = false;
+  
+  /** Datos formateados para mostrar en la previsualización */
+  previewData: any = {};
+
+  /**
+   * Constructor del componente
+   * @param consolaService Servicio para operaciones de registro
+   * @param authService Servicio de autenticación
+   */
   constructor(
     private consolaService: ConsolaRegistroService,
     private authService: AuthService
   ) { }
 
+  /**
+   * Método del ciclo de vida de Angular que se ejecuta al inicializar el componente
+   * Carga la capa de investigación asociada al usuario
+   */
   ngOnInit(): void {
     this.loadUserResearchLayer();
   }
 
+  /**
+   * Carga la información del usuario autenticado para obtener su capa de investigación
+   * @private
+   */
   private loadUserResearchLayer(): void {
     const email = this.authService.getUserEmail();
     if (!email) return;
@@ -47,6 +91,11 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Busca y carga el ID de la capa de investigación por su nombre
+   * @param nombreCapa Nombre de la capa de investigación a buscar
+   * @private
+   */
   private loadResearchLayerId(nombreCapa: string): void {
     this.consolaService.buscarCapaPorNombre(nombreCapa).subscribe({
       next: (capa) => {
@@ -62,17 +111,30 @@ export class FormRegistroPacienteComponent implements OnInit {
   }
 
   // Métodos para manejar datos de los formularios hijos
+
+  /**
+   * Maneja los datos recibidos del formulario del paciente
+   * @param data Datos del paciente
+   */
   handlePacienteData(data: any): void {
     this.pacienteData = data;
     this.tieneCuidador = Boolean(data.tieneCuidador);
     this.siguientePaso();
   }
 
+  /**
+   * Maneja los datos clínicos recibidos
+   * @param data Array con los datos clínicos
+   */
   handleClinicalData(data: any[]): void {
     this.clinicalData = data;
     this.siguientePaso();
   }
 
+  /**
+   * Maneja los datos recibidos del formulario del cuidador
+   * @param data Datos del cuidador
+   */
   handleCuidadorData(data: any): void {
     console.log('Datos recibidos del cuidador:', data);
     this.cuidadorData = {
@@ -86,26 +148,76 @@ export class FormRegistroPacienteComponent implements OnInit {
     this.siguientePaso();
   }
 
+  /**
+   * Maneja los datos recibidos del formulario del profesional
+   * @param data Datos del profesional
+   */
   handleProfesionalData(data: any): void {
     this.profesionalData = data;
     this.prepareAndSendData();
   }
 
-  // Navegación
+  // Métodos de navegación
+
+  /** Avanza al siguiente paso del formulario */
   siguientePaso(): void {
     this.pasoActual++;
   }
 
+  /** Retrocede al paso anterior del formulario */
   pasoAnterior(): void {
     this.pasoActual--;
   }
 
-  // Preparar y enviar datos
+
+  /**
+   * Muestra diálogo de confirmación para registrar los datos
+   */
+  confirmRegistration(): void {
+    this.showPreviewModal = false;
+    
+    Swal.fire({
+      title: '¿Confirmar registro?',
+      text: '¿Está seguro que desea registrar estos datos?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, registrar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.sendDataToServer();
+      }
+    });
+  }
+  
+  /**
+   * Cancela el registro y cierra el modal de previsualización
+   */
+  cancelRegistration(): void {
+    this.showPreviewModal = false;
+    Swal.fire({
+      title: 'Registro cancelado',
+      text: 'Puede seguir editando los datos antes de enviar',
+      icon: 'info',
+      confirmButtonText: 'Entendido'
+    });
+  }
+
+  // Métodos para preparar y enviar datos
+
+  /**
+   * Prepara los datos para el envío y muestra diálogo de confirmación
+   * @private
+   */
   private prepareAndSendData(): void {
     if (!this.validateBeforeSend()) {
       this.showErrorAlert('Por favor complete todos los campos requeridos');
       return;
     }
+  
+    this.showPreviewModal = true;
 
     Swal.fire({
       title: '¿Confirmar registro?',
@@ -123,9 +235,13 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Envía los datos al servidor
+   * @private
+   */
   private sendDataToServer(): void {
     const requestBody = this.buildRequestBody();
-    
+
     Swal.fire({
       title: 'Registrando datos...',
       html: 'Por favor espere mientras procesamos su solicitud',
@@ -142,6 +258,11 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Construye el objeto para la petición HTTP
+   * @returns Objeto con los datos formateados para el servidor
+   * @private
+   */
   private buildRequestBody(): any {
     return {
       variables: this.clinicalData.map(item => ({
@@ -184,6 +305,11 @@ export class FormRegistroPacienteComponent implements OnInit {
     };
   }
 
+  /**
+   * Maneja una respuesta exitosa del servidor
+   * @param response Respuesta del servidor
+   * @private
+   */
   private handleSuccess(response: any): void {
     this.isSending = false;
     Swal.fire({
@@ -200,10 +326,15 @@ export class FormRegistroPacienteComponent implements OnInit {
     console.log('Registro exitoso', response);
   }
 
+  /**
+   * Maneja errores en la comunicación con el servidor
+   * @param error Objeto de error
+   * @private
+   */
   private handleError(error: any): void {
     this.isSending = false;
     Swal.close();
-    
+
     let errorMessage = 'Ocurrió un error al registrar los datos';
     if (error.status === 400) {
       errorMessage = 'Datos inválidos. Verifique la información ingresada';
@@ -215,6 +346,11 @@ export class FormRegistroPacienteComponent implements OnInit {
     console.error('Error en el registro', error);
   }
 
+  /**
+   * Muestra un diálogo de error
+   * @param message Mensaje de error a mostrar
+   * @private
+   */
   private showErrorAlert(message: string): void {
     Swal.fire({
       title: 'Error',
@@ -224,6 +360,10 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Reinicia el formulario a su estado inicial
+   * @private
+   */
   private resetForm(): void {
     this.pasoActual = 1;
     this.pacienteData = {};
@@ -234,8 +374,16 @@ export class FormRegistroPacienteComponent implements OnInit {
   }
 
   // Métodos auxiliares
+
+  /**
+   * Convierte un valor al tipo especificado
+   * @param value Valor a convertir
+   * @param type Tipo de conversión ('number', 'boolean', 'string')
+   * @returns Valor convertido
+   * @private
+   */
   private convertValue(value: any, type: string): any {
-    switch(type) {
+    switch (type) {
       case 'number': return Number(value);
       case 'boolean': return Boolean(value);
       case 'string': return String(value);
@@ -243,6 +391,11 @@ export class FormRegistroPacienteComponent implements OnInit {
     }
   }
 
+  /**
+   * Valida que todos los campos requeridos estén completos antes de enviar
+   * @returns true si todos los campos requeridos están completos, false en caso contrario
+   * @private
+   */
   private validateBeforeSend(): boolean {
     const requiredFields = [
       this.pacienteData?.name,
@@ -257,9 +410,9 @@ export class FormRegistroPacienteComponent implements OnInit {
     }
 
     if (this.tieneCuidador) {
-      const hasRequiredFields = this.cuidadorData?.name && 
-                              this.cuidadorData?.identificationNumber;
-      
+      const hasRequiredFields = this.cuidadorData?.name &&
+        this.cuidadorData?.identificationNumber;
+
       if (!hasRequiredFields) {
         console.error('Faltan datos del cuidador');
         return false;
@@ -269,30 +422,42 @@ export class FormRegistroPacienteComponent implements OnInit {
     return true;
   }
 
+  /**
+   * Formatea una fecha al formato YYYY-MM-DD
+   * @param date Fecha a formatear (puede ser string, Date, etc.)
+   * @returns Fecha formateada como string o null si no se puede formatear
+   * @private
+   */
   private formatDate(date: any): string | null {
     if (!date) return null;
-    
+
     try {
       const d = new Date(date);
-      return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+      return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
     } catch (e) {
       console.error('Error formateando fecha:', date, e);
       return null;
     }
   }
-  
+
+  /**
+   * Calcula la edad a partir de una fecha de nacimiento
+   * @param birthdate Fecha de nacimiento
+   * @returns Edad calculada en años
+   * @private
+   */
   private calculateAge(birthdate: any): number {
     if (!birthdate) return 0;
-    
+
     const birthDate = new Date(birthdate);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-    
+
     return age;
   }
 }

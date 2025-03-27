@@ -3,50 +3,155 @@ import { AuthService } from 'src/app/login/services/auth.service';
 import { ConsolaRegistroService } from './services/consola-registro.service';
 import { Variable, UserResponse, ResearchLayer, Register } from './interfaces';
 import { ChangeDetectorRef } from '@angular/core';
+
+/**
+ * Componente principal de la consola de registro
+ * 
+ * Este componente gestiona la interfaz de usuario para el registro y consulta de datos
+ * de pacientes en un contexto de investigación médica. Proporciona:
+ * - Visualización de datos del usuario y su capa de investigación asignada
+ * - Gestión de registros de pacientes con paginación
+ * - Modales para ver/editar registros
+ * - Estadísticas de registros
+ * - Navegación entre diferentes vistas
+ * 
+ * @example
+ * <app-consola-registro></app-consola-registro>
+ */
 @Component({
   selector: 'app-consola-registro',
   templateUrl: './consola-registro.component.html',
   styleUrls: ['./consola-registro.component.css']
 })
 export class ConsolaRegistroComponent implements OnInit {
+  /**
+   * Pestaña actualmente seleccionada
+   * @default 'inicioDigitador'
+   */
   selectedTab: string = 'inicioDigitador';
+
+  /**
+   * Indica si se está cargando información inicial
+   */
   isLoading: boolean = true;
+
+  /**
+   * Mensaje de error para mostrar al usuario
+   */
   errorMessage: string | null = null;
 
-  // Variables de la capa
+  /**
+   * Listado de variables asociadas a la capa de investigación
+   */
   variablesDeCapa: Variable[] = [];
+
+  /**
+   * Indica si se están cargando las variables
+   */
   loadingVariables: boolean = false;
 
-  // Datos del usuario
+  /**
+   * Datos del usuario autenticado
+   */
   userData: UserResponse | null = null;
+
+  /**
+   * Capa de investigación asignada al usuario
+   */
   currentResearchLayer: ResearchLayer | null = null;
 
+  /**
+   * Página actual en la paginación
+   */
   currentPage: number = 0;
+
+  /**
+   * Tamaño de página para la paginación
+   * @default 10
+   */
   pageSize: number = 10;
+
+  /**
+   * Total de elementos disponibles
+   */
   totalElements: number = 0;
+
+  /**
+   * Total de páginas disponibles
+   */
   totalPages: number = 0;
+
+  /**
+   * Listado de registros de pacientes
+   */
   registros: Register[] = [];
+
+  /**
+   * Indica si se están cargando los registros
+   */
   loadingRegistros: boolean = false;
 
-  // Propiedades para la vista con valores por defecto
+  /**
+   * Nombre del jefe de investigación
+   * @default 'Cargando...'
+   */
   jefeInvestigacion: string = 'Cargando...';
+
+  /**
+   * Contacto de investigación
+   * @default 'Cargando...'
+   */
   contactoInvestigacion: string = 'Cargando...';
+
+  /**
+   * Descripción de la investigación
+   * @default 'Cargando descripción...'
+   */
   DescripcionInvestigacion: string = 'Cargando descripción...';
 
-  // Estadísticas
+  /**
+   * Total de pacientes registrados
+   */
   totalPacientes: number = 0;
+
+  /**
+   * Pacientes registrados hoy
+   */
   pacientesHoy: number = 0;
+
+  /**
+   * Registros pendientes de revisión
+   */
   registrosPendientes: number = 0;
 
+  /**
+   * Controla la visibilidad del modal de visualización
+   */
   showViewModal: boolean = false;
+
+  /**
+   * Controla la visibilidad del modal de edición
+   */
   showEditModal: boolean = false;
+
+  /**
+   * Registro seleccionado para visualización/edición
+   */
   selectedRegistro: Register | null = null;
 
-  // Datos para registros recientes
+  /**
+   * Registros más recientes para el dashboard
+   */
   registrosRecientes: any[] = [];
 
-  // Datos para la tabla de usuarios
+  /**
+   * Datos para la tabla de usuarios
+   */
   usuariosData: any[] = [];
+
+  /**
+   * Columnas para la tabla de usuarios
+   */
   usuariosColumns = [
     { field: 'nombre', header: 'Nombre' },
     { field: 'documento', header: 'Número de documento' },
@@ -54,28 +159,50 @@ export class ConsolaRegistroComponent implements OnInit {
     { field: 'registradoPor', header: 'Registrado por' }
   ];
 
+  /**
+   * Constructor del componente
+   * 
+   * @param authService Servicio de autenticación
+   * @param consolaService Servicio para operaciones de registro
+   * @param cdr Servicio para detección de cambios
+   */
   constructor(
     private authService: AuthService,
     private consolaService: ConsolaRegistroService,
     private cdr: ChangeDetectorRef
   ) { }
 
+  /**
+   * Método del ciclo de vida que se ejecuta al inicializar el componente
+   */
   ngOnInit() {
     this.loadUserData();
   }
 
+  /**
+   * Obtiene el nombre completo del usuario
+   */
   get username(): string {
     return this.userData ? `${this.userData.firstName} ${this.userData.lastName}` : 'Usuario';
   }
 
+  /**
+   * Obtiene el nombre de la capa de investigación asignada
+   */
   get capaUsuario(): string {
     return this.currentResearchLayer?.layerName || 'No asignada';
   }
 
+  /**
+   * Obtiene el rol del usuario
+   */
   get userRole(): string {
     return this.userData?.attributes?.role?.[0] || 'Usuario';
   }
 
+  /**
+   * Carga los datos del usuario autenticado
+   */
   loadUserData() {
     this.isLoading = true;
     this.errorMessage = null;
@@ -104,19 +231,20 @@ export class ConsolaRegistroComponent implements OnInit {
     });
   }
 
+  /**
+   * Carga la capa de investigación asignada al usuario
+   */
   loadCapaInvestigacion() {
     const nombreCapa = this.userData?.attributes?.researchLayerId?.[0];
-    console.log('Nombre de capa a buscar:', nombreCapa); // Debug 1
 
     if (!nombreCapa) {
-      console.warn('No se encontró nombre de capa en userData'); // Debug 2
+      console.warn('No se encontró nombre de capa en userData');
       this.isLoading = false;
       return;
     }
 
     this.consolaService.buscarCapaPorNombre(nombreCapa).subscribe({
       next: (capa) => {
-        console.log('Respuesta del servicio:', capa); // Debug 3
         this.currentResearchLayer = capa;
         this.updateDatosCapa(capa);
 
@@ -127,13 +255,18 @@ export class ConsolaRegistroComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Error al cargar capa:', err); // Debug 4
+        console.error('Error al cargar capa:', err);
         this.handleError(err.message);
         this.setDefaultCapaValues();
       }
     });
   }
 
+  /**
+   * Carga las variables asociadas a una capa de investigación
+   * 
+   * @param researchLayerId ID de la capa de investigación
+   */
   loadVariablesDeCapa(researchLayerId: string) {
     this.loadingVariables = true;
     this.variablesDeCapa = [];
@@ -151,23 +284,29 @@ export class ConsolaRegistroComponent implements OnInit {
     });
   }
 
-  // Modifica el método loadDoctorData para usar loadRegistros
+  /**
+   * Carga los datos específicos para usuarios con rol Doctor
+   */
   loadDoctorData() {
     this.loadRegistros();
-
-    // Mantén los valores de ejemplo para estadísticas o actualízalos con datos reales
-    this.totalPacientes = 124;
-    this.pacientesHoy = 5;
-    this.registrosPendientes = 3;
   }
 
-  // Agrega métodos para manejar la paginación
+  /**
+   * Maneja el cambio de página en la paginación
+   * 
+   * @param event Evento de cambio de página
+   */
   onPageChange(event: any) {
     this.currentPage = event.page;
     this.pageSize = event.rows;
     this.loadRegistros(event.page, event.rows);
   }
 
+  /**
+   * Navega a una vista específica
+   * 
+   * @param destination Destino de la navegación
+   */
   navigateTo(destination: string): void {
     switch (destination) {
       case 'registroPaciente':
@@ -187,17 +326,41 @@ export class ConsolaRegistroComponent implements OnInit {
     }
   }
 
+  /**
+   * Cambia la pestaña seleccionada
+   * 
+   * @param tab Nombre de la pestaña a seleccionar
+   */
   onTabSelected(tab: string): void {
     this.selectedTab = tab;
   }
 
-  // Métodos para manejar los modales
-  handleView(row: any) {
-    this.selectedRegistro = this.registros.find(r =>
-      r.patientIdentificationNumber === row.documento) || null;
-    this.showViewModal = true;
+  /**
+   * Maneja la visualización de un registro
+   * 
+   * @param registro Registro a visualizar
+   */
+  handleView(registro: any) {
+    if (registro.registerId) {
+      this.selectedRegistro = registro;
+    } 
+    else {
+      this.selectedRegistro = this.registros.find(r => 
+        r.patientIdentificationNumber === registro.documento) || null;
+    }
+    
+    if (this.selectedRegistro) {
+      this.showViewModal = true;
+    } else {
+      console.error('Registro no encontrado');
+    }
   }
 
+  /**
+   * Maneja la edición de un registro
+   * 
+   * @param row Fila con los datos del registro a editar
+   */
   handleEdit(row: any) {
     const registroEncontrado = this.registros.find(r => 
       r.patientIdentificationNumber === row.documento);
@@ -207,21 +370,31 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
   
-    // Copia profunda del registro
     this.selectedRegistro = JSON.parse(JSON.stringify(registroEncontrado)) as Register;
     this.showEditModal = true;
   }
 
+  /**
+   * Cierra el modal de visualización
+   */
   closeViewModal() {
     this.showViewModal = false;
     this.selectedRegistro = null;
   }
 
+  /**
+   * Cierra el modal de edición
+   */
   closeEditModal() {
     this.showEditModal = false;
     this.selectedRegistro = null;
   }
 
+  /**
+   * Guarda los cambios realizados a un registro
+   * 
+   * @param updatedRegistro Registro con los cambios
+   */
   onSaveChanges(updatedRegistro: Register) {
     if (!updatedRegistro.registerId) {
       console.error('No se puede actualizar: registerId es requerido');
@@ -240,17 +413,52 @@ export class ConsolaRegistroComponent implements OnInit {
     });
   }
 
+  /**
+   * Carga los registros de pacientes con paginación
+   * 
+   * @param page Página a cargar
+   * @param size Tamaño de la página
+   * @param query Término de búsqueda (opcional)
+   */
+  loadRegistros(page: number = 0, size: number = 10, query: string = '') {
+    this.loadingRegistros = true;
+  
+    this.consolaService.obtenerRegistros(page, size).subscribe({
+      next: (response) => {
+        this.registros = response.registers || [];
+        this.usuariosData = this.mapearDatosUsuarios(this.registros);
+        this.totalElements = response.totalElements || 0;
+        
+        this.totalPacientes = this.totalElements;
+        
+        this.actualizarRegistrosRecientes(this.registros);
+        
+        this.loadingRegistros = false;
+        this.cdr.detectChanges();
+        console.log("estos son lso registros, ", this.registros);
+      },
+      error: (err) => {
+        console.error('Error al cargar registros:', err);
+        this.usuariosData = [];
+        this.registrosRecientes = [];
+        this.totalElements = 0;
+        this.totalPacientes = 0;
+        this.pacientesHoy = 0;
+        this.loadingRegistros = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /**
+   * Actualiza los datos de la capa de investigación en la vista
+   * 
+   * @param capa Datos de la capa de investigación
+   */
   private updateDatosCapa(capa: ResearchLayer) {
-    // Asignación con valores por defecto
     this.DescripcionInvestigacion = capa?.description || 'Descripción no disponible';
     this.jefeInvestigacion = capa?.layerBoss?.name || 'Jefe no asignado';
 
-    const contactoBase = capa?.layerBoss?.identificationNumber;
-    this.contactoInvestigacion = contactoBase
-      ? `${contactoBase}@investigacion.com`
-      : 'contacto@investigacion.com';
-
-    // Detección de cambios segura
     try {
       this.cdr.detectChanges();
     } catch (e) {
@@ -258,12 +466,20 @@ export class ConsolaRegistroComponent implements OnInit {
     }
   }
 
+  /**
+   * Establece valores por defecto para los datos de la capa
+   */
   private setDefaultCapaValues() {
     this.DescripcionInvestigacion = 'Información no disponible';
     this.jefeInvestigacion = 'No asignado';
     this.contactoInvestigacion = 'contacto@investigacion.com';
   }
 
+  /**
+   * Maneja errores durante la carga de datos
+   * 
+   * @param message Mensaje de error
+   */
   private handleError(message: string) {
     console.error(message);
     this.errorMessage = message;
@@ -271,33 +487,22 @@ export class ConsolaRegistroComponent implements OnInit {
     this.setDefaultCapaValues();
   }
 
+  /**
+   * Muestra errores relacionados con la carga de variables
+   * 
+   * @param mensaje Mensaje de error
+   */
   private mostrarErrorVariables(mensaje: string) {
-    // Puedes implementar notificación toast o similar
     console.error(mensaje);
     this.errorMessage = mensaje;
   }
 
-  loadRegistros(page: number = 0, size: number = 10, query: string = '') {
-    this.loadingRegistros = true;
-
-    this.consolaService.obtenerRegistros(page, size).subscribe({
-      next: (response) => {
-        this.registros = response.registers || [];
-        this.usuariosData = this.mapearDatosUsuarios(this.registros);
-        this.totalElements = response.totalElements || 0;
-        this.loadingRegistros = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error al cargar registros:', err);
-        this.usuariosData = [];
-        this.totalElements = 0;
-        this.loadingRegistros = false;
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
+  /**
+   * Mapea los registros al formato necesario para la tabla de usuarios
+   * 
+   * @param registros Listado de registros
+   * @returns Datos formateados para la tabla
+   */
   private mapearDatosUsuarios(registros: Register[]): any[] {
     return registros.map(registro => ({
       nombre: registro.patientBasicInfo?.name || 'No disponible',
@@ -305,5 +510,22 @@ export class ConsolaRegistroComponent implements OnInit {
       fechaRegistro: new Date(registro.registerDate).toLocaleDateString(),
       registradoPor: registro.healthProfessional?.name || 'Desconocido'
     }));
+  }
+
+  /**
+   * Actualiza la lista de registros recientes
+   * 
+   * @param registros Listado completo de registros
+   */
+  private actualizarRegistrosRecientes(registros: Register[]): void {
+    this.registrosRecientes = registros
+      .sort((a, b) => new Date(b.registerDate).getTime() - new Date(a.registerDate).getTime())
+      .slice(0, 5)
+      .map(registro => ({
+        ...registro,
+        nombre: registro.patientBasicInfo?.name || 'Nombre no disponible',
+        fecha: registro.registerDate,
+        documento: registro.patientIdentificationNumber
+      }));
   }
 }

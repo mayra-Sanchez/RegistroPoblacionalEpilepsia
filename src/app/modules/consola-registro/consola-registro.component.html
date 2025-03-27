@@ -58,24 +58,6 @@
                 <span class="stat-value">{{ totalPacientes }}</span>
               </div>
             </div>
-            <div class="stat-item">
-              <div class="stat-circle">
-                <i class="fas fa-user-plus"></i>
-              </div>
-              <div class="stat-info">
-                <span class="stat-label">Pacientes hoy</span>
-                <span class="stat-value">{{ pacientesHoy }}</span>
-              </div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-circle">
-                <i class="fas fa-tasks"></i>
-              </div>
-              <div class="stat-info">
-                <span class="stat-label">Registros pendientes</span>
-                <span class="stat-value">{{ registrosPendientes }}</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -112,13 +94,13 @@
             <h3>Registros Recientes</h3>
           </div>
           <div class="recent-list">
-            <div class="recent-item" *ngFor="let registro of registrosRecientes">
+            <div class="recent-item" 
+                 *ngFor="let registro of registrosRecientes"
+                 (click)="handleView(registro)"
+                 [class.clickable]="true">
               <div class="recent-info">
                 <span class="recent-name">{{ registro.nombre }}</span>
                 <span class="recent-date">{{ registro.fecha | date:'medium' }}</span>
-              </div>
-              <div class="recent-status" [class.completed]="registro.completado">
-                {{ registro.completado ? 'Completado' : 'Pendiente' }}
               </div>
             </div>
           </div>

@@ -3,6 +3,9 @@ import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConsolaRegistroService } from 'src/app/modules/consola-registro/services/consola-registro.service';
 import { Subject, takeUntil } from 'rxjs';
 
+/**
+ * Interfaz que define la estructura de una variable clínica
+ */
 interface Variable {
   id: string;
   researchLayerId: string;
@@ -23,44 +26,57 @@ interface Variable {
   styleUrls: ['./clinico-form.component.css']
 })
 export class ClinicoFormComponent implements OnInit, OnDestroy {
-  @Input() researchLayerId: string = '';
-  @Input() initialData: any[] = [];
-  @Output() next = new EventEmitter<any[]>();
-  @Output() prev = new EventEmitter<void>();
+  // Inputs: Recibe datos del componente padre
+  @Input() researchLayerId: string = ''; // ID de la capa de investigación
+  @Input() initialData: any[] = []; // Datos iniciales para el formulario
+  
+  // Outputs: Emite eventos al componente padre
+  @Output() next = new EventEmitter<any[]>(); // Evento al avanzar
+  @Output() prev = new EventEmitter<void>(); // Evento al retroceder
 
-  form: FormGroup;
-  availableTypes: string[] = ['Entero', 'Decimal', 'Texto', 'Booleano', 'Opciones', 'Fecha'];
-  filteredVariables: FormGroup[] = [];
-  searchTerm: string = '';
-  activeTypeFilter: string = '';
-  completedVariables = 0;
-  loading = false;
-  errorMessage = '';
+  form: FormGroup; // Formulario reactivo principal
+  availableTypes: string[] = ['Entero', 'Decimal', 'Texto', 'Booleano', 'Opciones', 'Fecha']; // Tipos de variables disponibles
+  filteredVariables: FormGroup[] = []; // Variables filtradas para mostrar
+  searchTerm: string = ''; // Término de búsqueda
+  activeTypeFilter: string = ''; // Filtro activo por tipo
+  completedVariables = 0; // Contador de variables completadas
+  loading = false; // Estado de carga
+  errorMessage = ''; // Mensaje de error
 
-  private destroy$ = new Subject<void>();
-  private currentValues: Record<string, any> = {};
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción del componente
+  private currentValues: Record<string, any> = {}; // Almacena valores actuales de las variables
 
   constructor(
-    private fb: FormBuilder,
-    private consolaService: ConsolaRegistroService
+    private fb: FormBuilder, // Servicio para construir formularios
+    private consolaService: ConsolaRegistroService // Servicio para obtener variables clínicas
   ) {
+    // Inicializa el formulario con un array de variables clínicas vacío
     this.form = this.fb.group({
       variablesClinicas: this.fb.array([])
     });
   }
 
+  /**
+   * Método del ciclo de vida: Se ejecuta al inicializar el componente
+   */
   ngOnInit(): void {
-    this.loadFromLocalStorage();
+    this.loadFromLocalStorage(); // Carga datos guardados en localStorage
     if (this.researchLayerId) {
-      this.loadVariables();
+      this.loadVariables(); // Carga variables si hay un researchLayerId
     }
   }
 
+  /**
+   * Método del ciclo de vida: Se ejecuta al destruir el componente
+   */
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.destroy$.next(); // Emite señal de destrucción
+    this.destroy$.complete(); // Completa el subject
   }
 
+  /**
+   * Carga las variables clínicas desde el servicio
+   */
   loadVariables(): void {
     if (!this.researchLayerId) {
       this.errorMessage = 'No se ha especificado una capa de investigación válida';
@@ -69,15 +85,15 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     this.errorMessage = '';
-    this.variablesClinicas.clear();
+    this.variablesClinicas.clear(); // Limpia el array de variables
     this.filteredVariables = [];
 
     this.consolaService.obtenerVariablesPorCapa(this.researchLayerId)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntil(this.destroy$)) // Cancela la suscripción al destruir
       .subscribe({
         next: (variables) => {
           if (variables?.length > 0) {
-            this.initializeForm(variables);
+            this.initializeForm(variables); // Inicializa el formulario con las variables
           } else {
             this.errorMessage = 'No se encontraron variables clínicas para esta capa';
           }
@@ -91,23 +107,28 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Inicializa el formulario con las variables recibidas
+   * @param variables Array de variables clínicas
+   */
   initializeForm(variables: Variable[]): void {
-    // Guardar valores actuales antes de limpiar
+    // Guarda los valores actuales antes de limpiar
     this.saveCurrentValues();
 
     const variablesArray = this.variablesClinicas;
-    variablesArray.clear();
+    variablesArray.clear(); // Limpia el array de variables
 
+    // Filtra variables habilitadas y crea controles para cada una
     variables
       .filter(v => v.isEnabled)
       .forEach(variable => {
         const variableGroup = this.createVariableGroup(variable);
 
-        // Restaurar valor si existe en currentValues
+        // Restaura el valor si existe en currentValues
         if (this.currentValues[variable.id] !== undefined) {
           variableGroup.patchValue({ valor: this.currentValues[variable.id] });
         } else {
-          // Si no, cargar de localStorage o initialData
+          // Si no, carga de localStorage o initialData
           const savedValue = this.getSavedValue(variable.id);
           if (savedValue !== undefined && savedValue !== null) {
             variableGroup.patchValue({ valor: savedValue });
@@ -117,9 +138,12 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
         variablesArray.push(variableGroup);
       });
 
-    this.applyFilters();
+    this.applyFilters(); // Aplica los filtros actuales
   }
 
+  /**
+   * Guarda los valores actuales de las variables en currentValues
+   */
   private saveCurrentValues(): void {
     this.currentValues = {};
     this.variablesClinicas.controls.forEach(control => {
@@ -127,14 +151,19 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Obtiene el valor guardado para una variable específica
+   * @param variableId ID de la variable
+   * @returns Valor guardado o null si no existe
+   */
   private getSavedValue(variableId: string): any {
-    // Primero verificar initialData (datos pasados desde el componente padre)
+    // Primero verifica initialData (datos pasados desde el componente padre)
     if (this.initialData && this.initialData.length > 0) {
       const initialVar = this.initialData.find((v: any) => v.id === variableId);
       if (initialVar) return initialVar.valor;
     }
 
-    // Luego verificar localStorage
+    // Luego verifica localStorage
     const savedData = localStorage.getItem('clinicalFormData');
     if (savedData) {
       try {
@@ -149,6 +178,11 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  /**
+   * Crea un grupo de formulario para una variable
+   * @param variable Variable clínica
+   * @returns FormGroup configurado para la variable
+   */
   createVariableGroup(variable: Variable): FormGroup {
     const validators = variable.required ? [Validators.required] : [];
 
@@ -164,6 +198,9 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Guarda los valores actuales en localStorage
+   */
   private saveToLocalStorage(): void {
     const values = this.variablesClinicas.controls.map(control => ({
       id: control.get('id')?.value,
@@ -172,6 +209,9 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     localStorage.setItem('clinicalFormData', JSON.stringify(values));
   }
 
+  /**
+   * Carga datos guardados desde localStorage
+   */
   private loadFromLocalStorage(): void {
     const savedData = localStorage.getItem('clinicalFormData');
     if (savedData) {
@@ -186,13 +226,20 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Getter para el array de variables clínicas
+   */
   get variablesClinicas(): FormArray {
     return this.form.get('variablesClinicas') as FormArray;
   }
 
+  /**
+   * Aplica los filtros de búsqueda y tipo a las variables
+   */
   applyFilters(): void {
     let filtered = this.variablesClinicas.controls as FormGroup[];
 
+    // Filtra por término de búsqueda
     if (this.searchTerm) {
       const searchTermLower = this.searchTerm.toLowerCase();
       filtered = filtered.filter(control => {
@@ -202,6 +249,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       });
     }
 
+    // Filtra por tipo de variable
     if (this.activeTypeFilter) {
       filtered = filtered.filter(control =>
         control.get('type')?.value === this.activeTypeFilter
@@ -209,9 +257,13 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     }
 
     this.filteredVariables = filtered;
-    this.updateCompletedCount();
+    this.updateCompletedCount(); // Actualiza el contador de completadas
   }
 
+  /**
+   * Verifica si todos los campos requeridos están completados
+   * @returns true si todos los campos requeridos están llenos
+   */
   allRequiredFieldsFilled(): boolean {
     return this.variablesClinicas.controls.every(control => {
       if (control.get('required')?.value) {
@@ -222,20 +274,35 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Filtra las variables por tipo
+   * @param type Tipo de variable a filtrar
+   */
   filterByType(type: string): void {
     this.activeTypeFilter = type;
     this.applyFilters();
   }
 
+  /**
+   * Limpia el filtro por tipo
+   */
   clearTypeFilter(): void {
     this.activeTypeFilter = '';
     this.applyFilters();
   }
 
+  /**
+   * Actualiza el contador de variables completadas
+   */
   private updateCompletedCount(): void {
     this.completedVariables = this.filteredVariables.filter(control => control.valid).length;
   }
 
+  /**
+   * Obtiene el placeholder adecuado para un tipo de variable
+   * @param variableGroup Grupo de la variable
+   * @returns Texto del placeholder
+   */
   getPlaceholder(variableGroup: FormGroup): string {
     const type = variableGroup.get('type')?.value;
     const name = variableGroup.get('variableName')?.value;
@@ -252,6 +319,11 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     return placeholders[type] || `Ingrese ${name}`;
   }
 
+  /**
+   * Obtiene la etiqueta legible para un tipo de variable
+   * @param type Tipo de variable
+   * @returns Etiqueta legible
+   */
   getTypeLabel(type: string): string {
     const labels: Record<string, string> = {
       'Entero': 'Número',
@@ -264,32 +336,44 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     return labels[type] || type;
   }
 
+  /**
+   * Maneja el envío del formulario
+   */
   onSubmit(): void {
     if (this.form.valid && this.allRequiredFieldsFilled()) {
       this.saveToLocalStorage();
+      // Prepara los datos para enviar al componente padre
       const currentValues = this.variablesClinicas.controls.map(control => ({
         id: control.get('id')?.value,
         value: control.get('valor')?.value,
         type: this.mapToBackendType(control.get('type')?.value),
         researchLayerId: this.researchLayerId
       }));
-      this.next.emit(currentValues);
+      this.next.emit(currentValues); // Emite los valores
     } else {
-      this.form.markAllAsTouched();
+      this.form.markAllAsTouched(); // Marca todos los controles como tocados
       this.errorMessage = 'Por favor complete todos los campos requeridos';
     }
   }
 
+  /**
+   * Maneja cambios en los inputs
+   * @param variableGroup Grupo de la variable modificada
+   */
   onInputChange(variableGroup: FormGroup) {
-    // Forzar la actualización de la validación
+    // Forza la actualización de la validación
     variableGroup.get('valor')?.updateValueAndValidity();
     this.updateCompletedCount();
 
-    // Opcional: Guardar automáticamente en localStorage
+    // Guarda automáticamente en localStorage
     this.saveToLocalStorage();
   }
 
-  // Añade este método para mapear tipos
+  /**
+   * Mapea tipos de frontend a tipos de backend
+   * @param frontendType Tipo en frontend
+   * @returns Tipo equivalente en backend
+   */
   private mapToBackendType(frontendType: string): string {
     const typeMap: Record<string, string> = {
       'Entero': 'number',
@@ -302,12 +386,20 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     return typeMap[frontendType] || 'string';
   }
 
-
+  /**
+   * Maneja el evento de retroceder
+   */
   onPrevious(): void {
     this.saveToLocalStorage();
     this.prev.emit();
   }
 
+  /**
+   * Función trackBy para optimizar el rendimiento de ngFor
+   * @param index Índice del elemento
+   * @param item Grupo de la variable
+   * @returns ID único de la variable
+   */
   trackByVariableId(index: number, item: FormGroup): string {
     return item.get('id')?.value;
   }
