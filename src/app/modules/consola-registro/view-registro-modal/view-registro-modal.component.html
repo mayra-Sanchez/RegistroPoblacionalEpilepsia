@@ -1,0 +1,111 @@
+<div class="modal-overlay">
+    <div class="modal-container">
+      <!-- Encabezado -->
+      <div class="modal-header">
+        <h3 class="modal-title">Detalles Completo del Registro</h3>
+        <button class="close-btn" (click)="closeModal()">
+          &times;
+        </button>
+      </div>
+      
+      <!-- Cuerpo -->
+      <div class="modal-body">
+        <div *ngIf="registro">
+          <!-- Sección Paciente -->
+          <div class="info-section">
+            <h4 class="section-title">Información del Paciente</h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Nombre Completo:</span>
+                <div class="info-value">
+                  {{ registro.patientBasicInfo.name }}
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">Documento:</span>
+                <div class="info-value">
+                  {{ registro.patientIdentificationNumber }}
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">Fecha de Nacimiento:</span>
+                <div class="info-value">
+                  {{ registro.patientBasicInfo.birthDate | date }}
+                </div>
+              </div>
+              
+              <!-- <div class="info-item">
+                <span class="info-label">Género:</span>
+                <div class="info-value">
+                  {{ registro.patientBasicInfo.gender }}
+                </div>
+              </div> -->
+            </div>
+          </div>
+          
+          <!-- Sección Médica -->
+          <div class="info-section">
+            <h4 class="section-title">Datos Médicos</h4>
+            <div class="info-grid">
+              <!-- <div class="info-item">
+                <span class="info-label">Diagnóstico Principal:</span>
+                <div class="info-value">
+                  {{ registro.medicalInfo.diagnosis }}
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">Tratamiento:</span>
+                <div class="info-value">
+                  {{ registro.medicalInfo.treatment }}
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">Médico Responsable:</span>
+                <div class="info-value">
+                  {{ registro.medicalInfo.doctor }}
+                </div>
+              </div> -->
+            </div>
+          </div>
+          
+          <!-- Sección Adicional -->
+          <div class="info-section">
+            <h4 class="section-title">Información Adicional</h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Fecha de Registro:</span>
+                <div class="info-value">
+                  {{ registro.registerDate | date:'medium' }}
+                </div>
+              </div>
+              
+              <!-- <div class="info-item">
+                <span class="info-label">Estado:</span>
+                <div class="info-value">
+                  {{ registro.status }}
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">Notas:</span>
+                <div class="info-value">
+                  {{ registro.notes || 'Sin notas adicionales' }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> -->
+      
+      <!-- Pie -->
+      <div class="modal-footer">
+        <button class="btn-close" (click)="closeModal()">
+          Cerrar Detalles
+        </button>
+      </div>
+    </div>
+  </div>

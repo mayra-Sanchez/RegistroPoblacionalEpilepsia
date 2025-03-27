@@ -1,45 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from 'src/app/login/services/auth.service';
 import { ConsolaRegistroService } from './services/consola-registro.service';
-
-interface ResearchLayer {
-  id: string;
-  layerName: string;
-  description: string;
-  layerBoss: {
-    id: number;
-    name: string;
-    identificationNumber: string;
-  };
-}
-
-interface UserResponse {
-  id?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  attributes?: {
-    role?: string[];
-    researchLayerId?: string[];
-    identificationNumber?: string[];
-    identificationType?: string[];
-    birthDate?: string[];
-  };
-}
-
-interface Variable {
-  id: string;
-  researchLayerId: string;
-  variableName: string;
-  description: string;
-  type: string;
-  hasOptions: boolean;
-  isEnabled: boolean;
-  options: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
+import { Variable, UserResponse, ResearchLayer, Register } from './interfaces';
+import { ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-consola-registro',
   templateUrl: './consola-registro.component.html',
@@ -58,6 +21,13 @@ export class ConsolaRegistroComponent implements OnInit {
   userData: UserResponse | null = null;
   currentResearchLayer: ResearchLayer | null = null;
 
+  currentPage: number = 0;
+  pageSize: number = 10;
+  totalElements: number = 0;
+  totalPages: number = 0;
+  registros: Register[] = [];
+  loadingRegistros: boolean = false;
+
   // Propiedades para la vista con valores por defecto
   jefeInvestigacion: string = 'Cargando...';
   contactoInvestigacion: string = 'Cargando...';
@@ -68,6 +38,10 @@ export class ConsolaRegistroComponent implements OnInit {
   pacientesHoy: number = 0;
   registrosPendientes: number = 0;
 
+  showViewModal: boolean = false;
+  showEditModal: boolean = false;
+  selectedRegistro: Register | null = null;
+
   // Datos para registros recientes
   registrosRecientes: any[] = [];
 
@@ -75,7 +49,6 @@ export class ConsolaRegistroComponent implements OnInit {
   usuariosData: any[] = [];
   usuariosColumns = [
     { field: 'nombre', header: 'Nombre' },
-    { field: 'apellido', header: 'Apellido' },
     { field: 'documento', header: 'Número de documento' },
     { field: 'fechaRegistro', header: 'Fecha de último registro' },
     { field: 'registradoPor', header: 'Registrado por' }
@@ -83,7 +56,8 @@ export class ConsolaRegistroComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private consolaService: ConsolaRegistroService
+    private consolaService: ConsolaRegistroService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -132,17 +106,20 @@ export class ConsolaRegistroComponent implements OnInit {
 
   loadCapaInvestigacion() {
     const nombreCapa = this.userData?.attributes?.researchLayerId?.[0];
+    console.log('Nombre de capa a buscar:', nombreCapa); // Debug 1
+
     if (!nombreCapa) {
+      console.warn('No se encontró nombre de capa en userData'); // Debug 2
       this.isLoading = false;
       return;
     }
 
     this.consolaService.buscarCapaPorNombre(nombreCapa).subscribe({
       next: (capa) => {
+        console.log('Respuesta del servicio:', capa); // Debug 3
         this.currentResearchLayer = capa;
         this.updateDatosCapa(capa);
 
-        // Cargar variables después de obtener la capa
         if (capa.id) {
           this.loadVariablesDeCapa(capa.id);
         }
@@ -150,6 +127,7 @@ export class ConsolaRegistroComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
+        console.error('Error al cargar capa:', err); // Debug 4
         this.handleError(err.message);
         this.setDefaultCapaValues();
       }
@@ -173,23 +151,21 @@ export class ConsolaRegistroComponent implements OnInit {
     });
   }
 
+  // Modifica el método loadDoctorData para usar loadRegistros
   loadDoctorData() {
-    // Valores de ejemplo - reemplazar con llamadas reales al backend
+    this.loadRegistros();
+
+    // Mantén los valores de ejemplo para estadísticas o actualízalos con datos reales
     this.totalPacientes = 124;
     this.pacientesHoy = 5;
     this.registrosPendientes = 3;
+  }
 
-    this.registrosRecientes = [
-      { nombre: 'Paciente 1', fecha: new Date(), completado: true },
-      { nombre: 'Paciente 2', fecha: new Date(), completado: false },
-      { nombre: 'Paciente 3', fecha: new Date(), completado: true }
-    ];
-
-    this.usuariosData = [
-      { nombre: 'Juan', apellido: 'González', documento: '987654321', fechaRegistro: '01/10/2023', registradoPor: this.username },
-      { nombre: 'María', apellido: 'López', documento: '123456789', fechaRegistro: '15/11/2023', registradoPor: this.username },
-      { nombre: 'Pedro', apellido: 'Sánchez', documento: '112233445', fechaRegistro: '03/08/2023', registradoPor: this.username }
-    ];
+  // Agrega métodos para manejar la paginación
+  onPageChange(event: any) {
+    this.currentPage = event.page;
+    this.pageSize = event.rows;
+    this.loadRegistros(event.page, event.rows);
   }
 
   navigateTo(destination: string): void {
@@ -215,20 +191,71 @@ export class ConsolaRegistroComponent implements OnInit {
     this.selectedTab = tab;
   }
 
+  // Métodos para manejar los modales
   handleView(row: any) {
-    console.log('Ver', row);
+    this.selectedRegistro = this.registros.find(r =>
+      r.patientIdentificationNumber === row.documento) || null;
+    this.showViewModal = true;
   }
 
   handleEdit(row: any) {
-    console.log('Editar', row);
+    const registroEncontrado = this.registros.find(r => 
+      r.patientIdentificationNumber === row.documento);
+    
+    if (!registroEncontrado) {
+      console.error('Registro no encontrado');
+      return;
+    }
+  
+    // Copia profunda del registro
+    this.selectedRegistro = JSON.parse(JSON.stringify(registroEncontrado)) as Register;
+    this.showEditModal = true;
+  }
+
+  closeViewModal() {
+    this.showViewModal = false;
+    this.selectedRegistro = null;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.selectedRegistro = null;
+  }
+
+  onSaveChanges(updatedRegistro: Register) {
+    if (!updatedRegistro.registerId) {
+      console.error('No se puede actualizar: registerId es requerido');
+      return;
+    }
+  
+    this.consolaService.actualizarRegistro(
+      updatedRegistro.registerId,
+      updatedRegistro
+    ).subscribe({
+      next: () => {
+        this.loadRegistros();
+        this.closeEditModal();
+      },
+      error: (err) => console.error('Error al actualizar:', err)
+    });
   }
 
   private updateDatosCapa(capa: ResearchLayer) {
-    this.DescripcionInvestigacion = capa.description || 'Descripción no disponible';
-    this.jefeInvestigacion = capa.layerBoss?.name || 'Jefe no asignado';
-    this.contactoInvestigacion = capa.layerBoss?.identificationNumber
-      ? `${capa.layerBoss.identificationNumber}@investigacion.com`
+    // Asignación con valores por defecto
+    this.DescripcionInvestigacion = capa?.description || 'Descripción no disponible';
+    this.jefeInvestigacion = capa?.layerBoss?.name || 'Jefe no asignado';
+
+    const contactoBase = capa?.layerBoss?.identificationNumber;
+    this.contactoInvestigacion = contactoBase
+      ? `${contactoBase}@investigacion.com`
       : 'contacto@investigacion.com';
+
+    // Detección de cambios segura
+    try {
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.warn('Error en detección de cambios:', e);
+    }
   }
 
   private setDefaultCapaValues() {
@@ -248,5 +275,35 @@ export class ConsolaRegistroComponent implements OnInit {
     // Puedes implementar notificación toast o similar
     console.error(mensaje);
     this.errorMessage = mensaje;
+  }
+
+  loadRegistros(page: number = 0, size: number = 10, query: string = '') {
+    this.loadingRegistros = true;
+
+    this.consolaService.obtenerRegistros(page, size).subscribe({
+      next: (response) => {
+        this.registros = response.registers || [];
+        this.usuariosData = this.mapearDatosUsuarios(this.registros);
+        this.totalElements = response.totalElements || 0;
+        this.loadingRegistros = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al cargar registros:', err);
+        this.usuariosData = [];
+        this.totalElements = 0;
+        this.loadingRegistros = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private mapearDatosUsuarios(registros: Register[]): any[] {
+    return registros.map(registro => ({
+      nombre: registro.patientBasicInfo?.name || 'No disponible',
+      documento: registro.patientIdentificationNumber,
+      fechaRegistro: new Date(registro.registerDate).toLocaleDateString(),
+      registradoPor: registro.healthProfessional?.name || 'Desconocido'
+    }));
   }
 }

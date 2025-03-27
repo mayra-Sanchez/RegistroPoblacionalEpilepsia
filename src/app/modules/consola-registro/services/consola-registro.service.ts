@@ -3,30 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError, Subject } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
 import { AuthService } from 'src/app/login/services/auth.service';
-
-interface ResearchLayer {
-  id: string;
-  layerName: string;
-  description: string;
-  layerBoss: {
-    id: number;
-    name: string;
-    identificationNumber: string;
-  };
-}
-
-interface Variable {
-  id: string;
-  researchLayerId: string;
-  variableName: string;
-  description: string;
-  type: string;
-  hasOptions: boolean;
-  isEnabled: boolean;
-  options: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { ResearchLayer, Variable, Register } from '../interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -124,24 +101,27 @@ export class ConsolaRegistroService {
   }
 
   // 📌 Obtener todos los registros paginados (solo doctores)
-  obtenerRegistros(page: number, size: number, sort: string, sortDirection: string): Observable<any> {
-    return this.handleRequest(
-      this.http.get<any>(
-        `${this.API_URL}/all?page=${page}&size=${size}&sort=${sort}&sortDirection=${sortDirection}`,
-        { headers: this.getAuthHeaders() }
-      ),
-      '📊 Registros obtenidos'
-    );
+  obtenerRegistros(page: number = 0, size: number = 10, sort: string = 'registerDate', sortDirection: string = 'DESC') {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sort', sort)
+      .set('sortDirection', sortDirection);
+
+    return this.http.get<any>('http://localhost:8080/api/v1/registers/all', { params })
+      .pipe(
+        catchError(error => {
+          console.error('Error en obtenerRegistros:', error);
+          return throwError(() => new Error('Error al cargar registros'));
+        })
+      );
   }
 
+
   // 📌 Actualizar un registro (solo doctores)
-  actualizarRegistro(registerId: string, registerData: any): Observable<any> {
-    return this.handleRequest(
-      this.http.put(`${this.API_URL}?registerId=${registerId}`, registerData, {
-        headers: this.getAuthHeaders()
-      }),
-      `✏️ Registro actualizado (ID: ${registerId})`
-    ).pipe(tap(() => this.notifyDataUpdated()));
+  // consola-registro.service.ts
+  actualizarRegistro(registerId: string, registerData: Partial<Register>) {
+    return this.http.put<Register>(`/api/v1/registers?registerId=${registerId}`, registerData);
   }
 
   // 📌 Eliminar un registro (solo doctores) - Ejemplo adicional

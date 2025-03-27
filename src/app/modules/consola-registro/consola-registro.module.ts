@@ -16,6 +16,8 @@ import { ProfesionalFormComponent } from 'src/app/form-registro-paciente/compone
 import { CuidadorFormComponent } from 'src/app/form-registro-paciente/components/cuidador-form/cuidador-form.component';
 import { SignaturePadComponent } from 'src/app/form-registro-paciente/components/signature-form/signature-form.component';
 import { PacienteFormComponent } from 'src/app/form-registro-paciente/components/paciente-form/paciente-form.component';
+import { ViewRegistroModalComponent } from './view-registro-modal/view-registro-modal.component';
+import { EditRegistroModalComponent } from './edit-registro-modal/edit-registro-modal.component';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -27,6 +29,8 @@ import { PacienteFormComponent } from 'src/app/form-registro-paciente/components
     SignaturePadComponent,
     CuidadorFormComponent,
     PacienteFormComponent,
+    ViewRegistroModalComponent,
+    EditRegistroModalComponent,
   ],
   imports: [
     CommonModule,

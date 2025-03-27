@@ -1,0 +1,87 @@
+<div class="modal-overlay">
+    <div class="modal-container">
+      <!-- Encabezado del modal -->
+      <div class="modal-header">
+        <h3 class="modal-title">Editar Registro</h3>
+        <button class="close-btn" (click)="closeModal()">
+          &times;
+        </button>
+      </div>
+      
+      <!-- Cuerpo del formulario -->
+      <div class="modal-body">
+        <form *ngIf="registro" (ngSubmit)="onSubmit()" class="form-edit">
+          <!-- Grupo de campos -->
+          <div class="form-section">
+            <h4 class="section-title">Información Básica</h4>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Nombre Completo</label>
+                <input type="text" class="form-input" 
+                       [(ngModel)]="registro.patientBasicInfo.name" 
+                       name="name" required>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Documento</label>
+                <input type="text" class="form-input" 
+                       [(ngModel)]="registro.patientIdentificationNumber" 
+                       name="document" required>
+              </div>
+              
+              <!-- Más campos aquí -->
+              <div class="form-group">
+                <label class="form-label">Fecha de Nacimiento</label>
+                <input type="date" class="form-input" 
+                       [(ngModel)]="registro.patientBasicInfo.birthDate" 
+                       name="birthDate">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Género</label>
+                <!-- <select class="form-input" 
+                        [(ngModel)]="registro.patientBasicInfo.gender" 
+                        name="gender">
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select> -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- Sección médica -->
+          <div class="form-section">
+            <h4 class="section-title">Datos Médicos</h4>
+            
+            <div class="form-grid">
+              <!-- <div class="form-group">
+                <label class="form-label">Diagnóstico</label>
+                <textarea class="form-input" rows="3"
+                          [(ngModel)]="registro.medicalInfo.diagnosis" 
+                          name="diagnosis"></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Tratamiento</label>
+                <textarea class="form-input" rows="3"
+                          [(ngModel)]="registro.medicalInfo.treatment" 
+                          name="treatment"></textarea>
+              </div> -->
+            </div>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" (click)="closeModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-submit">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

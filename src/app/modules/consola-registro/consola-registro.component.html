@@ -18,17 +18,17 @@
           </div>
           <div class="card-content">
             <p>
-              {{ DescripcionInvestigacion }}
+              {{ currentResearchLayer?.description }}
             </p>
             <div class="research-info">
               <div class="info-item">
                 <i class="fas fa-user-tie"></i>
-                <span><strong>Jefe de investigación:</strong> {{ jefeInvestigacion }}</span>
+                <span><strong>Jefe de investigación:</strong> {{ currentResearchLayer?.layerBoss?.name }}</span>
               </div>
-              <div class="info-item">
+              <!-- <div class="info-item">
                 <i class="fas fa-envelope"></i>
                 <span><strong>Contacto:</strong> {{ contactoInvestigacion }}</span>
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
@@ -131,11 +131,36 @@
 
     </div>
     <div *ngIf="selectedTab === 'listadoPacientes'">
-      <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-        (onView)="handleView($event)" (onEdit)="handleEdit($event)"></app-table-ver-usuarios>
+      <app-table-ver-usuarios 
+        [data]="usuariosData" 
+        [columns]="usuariosColumns"
+        [itemsPerPageOptions]="[5, 10, 20]"
+        [totalRecords]="totalElements"
+        [loading]="loadingRegistros"
+        (onPageChange)="loadRegistros($event.page, $event.size, $event.query)"
+        (onView)="handleView($event)"
+        (onEdit)="handleEdit($event)">
+      </app-table-ver-usuarios>
     </div>
     <div *ngIf="selectedTab === 'consultaDatosDigitador'">
       <h1>Consultas de datos digitador</h1>
     </div>
   </div>
 </div>
+
+
+<!-- Al final de tu archivo, fuera de cualquier contenedor -->
+<ng-container *ngIf="showViewModal">
+    <app-view-registro-modal 
+        [registro]="selectedRegistro"
+        [closeModal]="closeViewModal.bind(this)">
+    </app-view-registro-modal>
+</ng-container>
+
+<ng-container *ngIf="showEditModal">
+    <app-edit-registro-modal 
+        [registro]="selectedRegistro"
+        [closeModal]="closeEditModal.bind(this)"
+        (saveChanges)="onSaveChanges($event)">
+    </app-edit-registro-modal>
+</ng-container>

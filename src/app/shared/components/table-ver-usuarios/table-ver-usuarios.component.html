@@ -2,18 +2,8 @@
     <!-- Elementos por página -->
     <div class="items-per-page">
         <label>Elementos por página:</label>
-        <select [(ngModel)]="itemsPerPage" (change)="updatePagination()">
+        <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
             <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
-        </select>
-    </div>
-
-    <!-- Orden alfabético -->
-    <div class="sort-options">
-        <label>Ordenar por:</label>
-        <select [(ngModel)]="sortField" (change)="sortData()">
-            <option *ngFor="let column of columns" [value]="column.field">
-                {{ column.header }}
-            </option>
         </select>
     </div>
 
@@ -21,23 +11,23 @@
         <input
           type="text"
           [(ngModel)]="searchQuery"
-          (input)="filterData()"
           placeholder="Buscar"
+          (keyup.enter)="onPageChange.emit({page: 0, size: itemsPerPage, query: searchQuery})"
         />
         <i class="fa fa-search"></i>
-      </div>
-      
+    </div>
 </div>
-<div class="table-container">
+
+<div class="table-container" *ngIf="!loading; else loadingTemplate">
     <table>
         <thead>
             <tr>
                 <th *ngFor="let col of columns">{{ col.header }}</th>
-                <th> </th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor="let row of paginatedData">
+            <tr *ngFor="let row of data">
                 <td *ngFor="let col of columns">{{ row[col.field] }}</td>
                 <td>
                     <div class="actions">
@@ -52,11 +42,14 @@
             </tr>
         </tbody>
     </table>
-
 </div>
 
+<ng-template #loadingTemplate>
+    <div class="loading-message">Cargando datos...</div>
+</ng-template>
+
 <div class="pagination-controls">
-    <button (click)="prevPage()" [disabled]="currentPage === 1">Anterior</button>
-    <span>{{ currentPage }} de {{ totalPages }} Páginas</span>
-    <button (click)="nextPage()" [disabled]="currentPage === totalPages">Siguiente</button>
+    <button (click)="prevPage()" [disabled]="currentPage === 1 || loading">Anterior</button>
+    <span>Página {{ currentPage }} (Total: {{ totalRecords }} registros)</span>
+    <button (click)="nextPage()" [disabled]="loading">Siguiente</button>
 </div>

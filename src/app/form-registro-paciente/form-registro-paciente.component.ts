@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ConsolaRegistroService } from '../modules/consola-registro/services/consola-registro.service';
 import { AuthService } from 'src/app/login/services/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-form-registro-paciente',
@@ -39,7 +40,10 @@ export class FormRegistroPacienteComponent implements OnInit {
           this.loadResearchLayerId(nombreCapa);
         }
       },
-      error: (err) => console.error('Error al cargar usuario:', err)
+      error: (err) => {
+        console.error('Error al cargar usuario:', err);
+        this.showErrorAlert('Error al cargar información del usuario');
+      }
     });
   }
 
@@ -50,7 +54,10 @@ export class FormRegistroPacienteComponent implements OnInit {
           this.currentResearchLayerId = capa.id;
         }
       },
-      error: (err) => console.error('Error al cargar capa:', err)
+      error: (err) => {
+        console.error('Error al cargar capa:', err);
+        this.showErrorAlert('Error al cargar información de la capa de investigación');
+      }
     });
   }
 
@@ -68,14 +75,13 @@ export class FormRegistroPacienteComponent implements OnInit {
 
   handleCuidadorData(data: any): void {
     console.log('Datos recibidos del cuidador:', data);
-    // Transformamos los datos para mantener consistencia
     this.cuidadorData = {
-      name: data.caregiverName,
-      identificationType: data.caregiverIdentificationType,
-      identificationNumber: data.caregiverIdentificationNumber,
-      age: data.caregiverAge,
-      educationLevel: data.caregiverEducationLevel,
-      occupation: data.caregiverOccupation
+      name: data.name,
+      identificationType: data.identificationType,
+      identificationNumber: data.identificationNumber,
+      age: data.age,
+      educationLevel: data.educationLevel,
+      occupation: data.occupation
     };
     this.siguientePaso();
   }
@@ -97,12 +103,37 @@ export class FormRegistroPacienteComponent implements OnInit {
   // Preparar y enviar datos
   private prepareAndSendData(): void {
     if (!this.validateBeforeSend()) {
-      console.error('Validación fallida. Datos incompletos');
+      this.showErrorAlert('Por favor complete todos los campos requeridos');
       return;
     }
 
+    Swal.fire({
+      title: '¿Confirmar registro?',
+      text: '¿Está seguro que desea registrar estos datos?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, registrar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.sendDataToServer();
+      }
+    });
+  }
+
+  private sendDataToServer(): void {
     const requestBody = this.buildRequestBody();
-    console.log('Datos a enviar:', JSON.stringify(requestBody, null, 2));
+    
+    Swal.fire({
+      title: 'Registrando datos...',
+      html: 'Por favor espere mientras procesamos su solicitud',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     this.isSending = true;
     this.consolaService.registrarRegistro(requestBody).subscribe({
@@ -114,8 +145,8 @@ export class FormRegistroPacienteComponent implements OnInit {
   private buildRequestBody(): any {
     return {
       variables: this.clinicalData.map(item => ({
-        id: item.id || 'generated-id', // Asegurar que siempre tenga id
-        value: this.convertValue(item.value, item.type), // Convertir según el tipo
+        id: item.id || 'generated-id',
+        value: this.convertValue(item.value, item.type),
         type: item.type,
         researchLayerId: this.currentResearchLayerId
       })),
@@ -153,7 +184,56 @@ export class FormRegistroPacienteComponent implements OnInit {
     };
   }
 
-  // Métodos auxiliares mejorados
+  private handleSuccess(response: any): void {
+    this.isSending = false;
+    Swal.fire({
+      title: '¡Registro exitoso!',
+      text: 'Los datos del paciente se han registrado correctamente',
+      icon: 'success',
+      confirmButtonText: 'Aceptar',
+      timer: 3000,
+      timerProgressBar: true,
+      willClose: () => {
+        this.resetForm();
+      }
+    });
+    console.log('Registro exitoso', response);
+  }
+
+  private handleError(error: any): void {
+    this.isSending = false;
+    Swal.close();
+    
+    let errorMessage = 'Ocurrió un error al registrar los datos';
+    if (error.status === 400) {
+      errorMessage = 'Datos inválidos. Verifique la información ingresada';
+    } else if (error.status === 500) {
+      errorMessage = 'Error del servidor. Intente nuevamente más tarde';
+    }
+
+    this.showErrorAlert(errorMessage);
+    console.error('Error en el registro', error);
+  }
+
+  private showErrorAlert(message: string): void {
+    Swal.fire({
+      title: 'Error',
+      text: message,
+      icon: 'error',
+      confirmButtonText: 'Entendido'
+    });
+  }
+
+  private resetForm(): void {
+    this.pasoActual = 1;
+    this.pacienteData = {};
+    this.clinicalData = [];
+    this.cuidadorData = {};
+    this.profesionalData = {};
+    this.tieneCuidador = false;
+  }
+
+  // Métodos auxiliares
   private convertValue(value: any, type: string): any {
     switch(type) {
       case 'number': return Number(value);
@@ -172,22 +252,16 @@ export class FormRegistroPacienteComponent implements OnInit {
     ];
 
     if (requiredFields.some(field => !field)) {
-      console.error('Datos incompletos:', {
-        paciente: !!this.pacienteData,
-        profesional: !!this.profesionalData,
-        clinicalData: this.clinicalData?.length
-      });
+      console.error('Datos incompletos');
       return false;
     }
 
     if (this.tieneCuidador) {
-      const requiredCaregiverFields = [
-        this.cuidadorData?.name,             // Ahora validamos los nombres correctos
-        this.cuidadorData?.identificationNumber
-      ];
+      const hasRequiredFields = this.cuidadorData?.name && 
+                              this.cuidadorData?.identificationNumber;
       
-      if (requiredCaregiverFields.some(field => !field)) {
-        console.error('Faltan datos del cuidador:', this.cuidadorData);
+      if (!hasRequiredFields) {
+        console.error('Faltan datos del cuidador');
         return false;
       }
     }
@@ -200,7 +274,6 @@ export class FormRegistroPacienteComponent implements OnInit {
     
     try {
       const d = new Date(date);
-      // Formato YYYY-MM-DD que espera el backend
       return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
     } catch (e) {
       console.error('Error formateando fecha:', date, e);
@@ -221,17 +294,5 @@ export class FormRegistroPacienteComponent implements OnInit {
     }
     
     return age;
-  }
-
-  private handleSuccess(response: any): void {
-    this.isSending = false;
-    console.log('Registro exitoso', response);
-    // Aquí puedes redirigir o mostrar mensaje de éxito
-  }
-
-  private handleError(error: any): void {
-    this.isSending = false;
-    console.error('Error en el registro', error);
-    // Aquí puedes mostrar mensaje de error al usuario
   }
 }
