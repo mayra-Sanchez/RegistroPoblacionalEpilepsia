@@ -6,7 +6,7 @@ import { takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-
+import { AuthService } from 'src/app/login/services/auth.service';
 interface Registro {
   tipo: string;
   data: any;
@@ -37,6 +37,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   variablesData: any[] = [];
   usuariosData: any[] = [];
   capas: any[] = [];
+  username: string = '';
 
   /* Elementos de edición, creación y visualización */
   isLoading: boolean = false;
@@ -101,7 +102,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   constructor(
     protected consolaService: ConsolaAdministradorService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
   ) { }
 
   /* Ciclo de Vida
@@ -113,6 +115,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.updateDashboard();
     this.cargarUsuarios();
     this.cargarUltimosRegistros();
+    this.username = this.authService.getUsername();
 
     this.consolaService.getDataUpdatedListener().pipe(
       takeUntil(this.destroy$)
@@ -137,22 +140,36 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   */
   loadInitialData(): void {
     this.isLoading = true;
-    this.consolaService.getAllLayers().subscribe({
+  
+    this.consolaService.getAllLayers().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
-        this.capas = data;
+        this.capasData = data.map(capa => ({
+          id: capa.id,
+          nombreCapa: capa.layerName,
+          descripcion: capa.description,
+          jefeCapa: capa.layerBoss || {},
+          jefeCapaNombre: capa.layerBoss?.name || 'Sin asignar',
+          jefeIdentificacion: capa.layerBoss?.identificationNumber || 'Sin asignar'
+        }));
+  
+        this.capas = this.capasData;
         this.totalCapas = this.capasData.length;
+        this.cdr.detectChanges();
+  
+        // Ahora que ya tenemos las capas, cargamos usuarios y variables
         this.loadUsuariosData();
-        this.loadCapasData();
         this.loadVariablesData();
       },
       error: (err) => {
         console.error('Error al obtener capas:', err);
-        this.loadUsuariosData();
-        this.loadCapasData();
-        this.loadVariablesData();
+        this.mostrarMensajeError('No se pudo cargar la información de las capas');
+      },
+      complete: () => {
+        this.isLoading = false;
       }
     });
   }
+  
 
   /* Carga de Datos
   * Carga los datos de las capas desde el servicio.
@@ -192,7 +209,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       next: (data: any[]) => {
         this.variablesData = data.map(variable => ({
           ...variable,
-          capaNombre: this.getCapaNombreById(variable.researchLayerId) // Agregamos este campo
+          capaNombre: this.getCapaNombreByIdVariables(variable.researchLayerId) // Agregamos este campo
         }));
         this.cdr.detectChanges();
       },
@@ -405,6 +422,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     );
     
     return capa ? (capa.layerName || capa.nombreCapa || 'Capa sin nombre') : 'Capa no encontrada';
+  }
+
+  getCapaNombreByIdVariables(id: number): string {
+    const capa = this.capas?.find(c => c.id === id);
+    return capa ? capa.nombreCapa : 'Capa no encontrada';
   }
 
   /* Funciones de Utilidad

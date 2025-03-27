@@ -73,7 +73,7 @@
 
           <!-- Columna derecha: Últimos Registros -->
           <div class="right-column">
-            <h2>Últimos Registros de Administrador</h2>
+            <h2>Últimos registros de {{username}}</h2>
             <table *ngIf="dataSource && dataSource.data.length > 0" mat-table [dataSource]="dataSource" class="table">
               <!-- Tipo -->
               <ng-container matColumnDef="tipo">
@@ -98,12 +98,12 @@
                     registro.data.jefeCapa?.numeroIdentificacion || 'N/A' }}
                   </ng-container>
 
-                  <ng-container *ngIf="viewType === 'variable'">
-                    <b>Nombre Variable:</b> {{ viewedItem.variableName }} <br>
-                    <b>Descripción:</b> {{ viewedItem.description }} <br>
-                    <b>Tipo:</b> {{ viewedItem.type }} <br>
-                    <b>Opciones:</b> {{ viewedItem.options?.join(', ') || 'Ninguna' }}
-                  </ng-container>
+                  <ng-container *ngIf="registro.tipo === 'variable'">
+                    <b>Nombre Variable:</b> {{ registro.data.variableName || 'Sin nombre' }} <br>
+                    <b>Descripción:</b> {{ registro.data.description || 'Sin descripción' }} <br>
+                    <b>Tipo:</b> {{ registro.data.type || 'Sin tipo' }} <br>
+                    <b>Opciones:</b> {{ registro.data.options?.join(', ') || 'Ninguna' }}
+                  </ng-container>                                  
                 </td>
               </ng-container>
 
@@ -112,7 +112,7 @@
             </table>
 
             <!-- Paginación -->
-            <mat-paginator [pageSize]="3" [pageSizeOptions]="[3, 5, 10]" showFirstLastButtons></mat-paginator>
+            <mat-paginator [pageSize]="5" [pageSizeOptions]="[3, 5, 10]" showFirstLastButtons></mat-paginator>
           </div>
         </div>
       </div>
@@ -195,7 +195,7 @@
       <div class="modal-body">
         <p><strong>Nombre:</strong> {{ viewedItem.variableName || viewedItem.nombre }}</p>
         <p><strong>Descripción:</strong> {{ viewedItem.description || viewedItem.descripcion }}</p>
-        <p><strong>Capa:</strong> {{ getCapaNombreById(viewedItem.researchLayerId || viewedItem.idCapaInvestigacion) }}
+        <p><strong>Capa:</strong> {{ getCapaNombreByIdVariables(viewedItem.researchLayerId || viewedItem.idCapaInvestigacion) }}
         </p>
         <p><strong>Tipo:</strong> {{ viewedItem.type || viewedItem.tipo }}</p>
 
