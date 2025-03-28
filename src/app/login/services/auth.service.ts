@@ -140,32 +140,47 @@ export class AuthService {
   refreshToken(): Observable<any> {
     const refreshToken = localStorage.getItem('refresh_token');
 
-    if (!refreshToken) {
-      console.error('⚠️ No hay refresh token en localStorage. Haciendo logout.');
-      this.logout();
-      return throwError(() => new Error('No hay refresh token.'));
+    // Verificación más robusta del refresh token
+    if (!refreshToken || refreshToken === 'undefined' || refreshToken === 'null') {
+        console.error('⚠️ No hay refresh token válido en localStorage. Haciendo logout.');
+        this.logout();
+        return throwError(() => new Error('No hay refresh token disponible.'));
     }
 
-    return this.http.post<any>('http://localhost:8080/auth/refresh', { refreshToken }, {
-      headers: new HttpHeaders().set('Content-Type', 'application/json'),
-    }).pipe(
-      tap((response: any) => {
-        console.log('🔄 Token refrescado:', response);
-        if (response.access_token) {
-          localStorage.setItem('kc_token', response.access_token);
-          localStorage.setItem('refresh_token', response.refresh_token);
-        } else {
-          console.warn('⚠️ No se recibió nuevo access_token.');
-          this.logout();
-        }
-      }),
-      catchError(error => {
-        console.error('❌ Error al refrescar token:', error);
-        this.logout();
-        return throwError(() => new Error('No se pudo refrescar el token.'));
-      })
+    // Configuración completa de la solicitud
+    const headers = new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${refreshToken}` // Si tu backend lo requiere
+    });
+
+    return this.http.post<any>('http://localhost:8080/auth/refresh', { refreshToken }, { headers }).pipe(
+        tap((response: any) => {
+            if (!response?.access_token) {
+                console.warn('⚠️ Respuesta inesperada del servidor:', response);
+                throw new Error('Respuesta inválida del servidor');
+            }
+
+            console.log('🔄 Token refrescado con éxito');
+            localStorage.setItem('kc_token', response.access_token);
+            
+            // Solo actualiza el refresh_token si viene en la respuesta
+            if (response.refresh_token) {
+                localStorage.setItem('refresh_token', response.refresh_token);
+            }
+        }),
+        catchError(error => {
+            console.error('❌ Error al refrescar token:', error);
+            
+            // Manejo específico de errores HTTP
+            if (error.status === 401 || error.status === 403) {
+                console.warn('⚠️ Refresh token inválido o expirado');
+                this.logout();
+            }
+            
+            return throwError(() => new Error('No se pudo refrescar el token.'));
+        })
     );
-  }
+}
 
 
   // In your AuthService

@@ -1,0 +1,92 @@
+<div class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Detalles de {{viewType}}</h5>
+        </div>
+        <div class="modal-body">
+            <ng-container [ngSwitch]="viewType">
+                <!-- Vista para Usuarios -->
+                <div *ngSwitchCase="'usuario'" class="user-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Nombre:</span>
+                        <span>{{viewedItem.nombre}} {{viewedItem.apellido}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Usuario:</span>
+                        <span>{{viewedItem.username}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Email:</span>
+                        <span>{{viewedItem.email}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Documento:</span>
+                        <span>{{getTipoDocumento(viewedItem.tipoDocumento)}} {{viewedItem.documento}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Fecha de Nacimiento:</span>
+                        <span>{{viewedItem.fechaNacimiento || 'No especificada'}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Capa de Investigación:</span>
+                        <span>{{viewedItem.capa}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Rol:</span>
+                        <span>{{viewedItem.rol}}</span>
+                    </div>
+                </div>
+
+                <!-- Vista para Variables -->
+                <div *ngSwitchCase="'variable'" class="variable-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Nombre:</span>
+                        <span>{{viewedItem.variableName}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Descripción:</span>
+                        <span>{{viewedItem.description}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Tipo:</span>
+                        <span>{{viewedItem.type}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Capa:</span>
+                        <span>{{viewedItem.capaNombre}}</span>
+                    </div>
+                    <div *ngIf="viewedItem.options && viewedItem.options.length > 0" class="detail-row">
+                        <span class="detail-label">Opciones:</span>
+                        <ul>
+                            <li *ngFor="let option of viewedItem.options">{{option}}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Vista para Capas -->
+                <div *ngSwitchCase="'capa'" class="capa-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Nombre:</span>
+                        <span>{{viewedItem.nombreCapa || viewedItem.layerName}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Descripción:</span>
+                        <span>{{viewedItem.descripcion || viewedItem.description}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Jefe de Capa:</span>
+                        <span>{{viewedItem.jefeCapaNombre || (viewedItem.layerBoss?.name || 'Sin asignar')}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Documento Jefe:</span>
+                        <span>{{viewedItem.jefeIdentificacion || (viewedItem.layerBoss?.identificationNumber || 'Sin
+                            asignar')}}</span>
+                    </div>
+                </div>
+            </ng-container>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cerrar</button>
+        </div>
+    </div>
+</div>

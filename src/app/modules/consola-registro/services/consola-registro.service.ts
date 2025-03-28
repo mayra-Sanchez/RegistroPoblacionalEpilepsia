@@ -21,8 +21,14 @@ export class ConsolaRegistroService {
     return this.dataUpdated.asObservable();
   }
 
-  private notifyDataUpdated(): void {
-    this.dataUpdated.next();
+  private dataChanged = new Subject<void>();
+
+  // Observable que otros componentes pueden suscribirse
+  dataChanged$ = this.dataChanged.asObservable();
+  
+  // Método para notificar cambios
+  notifyDataChanged() {
+    this.dataChanged.next();
   }
 
   private getAuthHeaders(): HttpHeaders {
@@ -81,7 +87,6 @@ export class ConsolaRegistroService {
       headers: headers,
       params: params
     }).pipe(
-      tap(data => console.log('✅ Usuario autenticado:', data)),
       catchError(error => {
         console.error('❌ Error al obtener usuario:', error);
         return throwError(() => new Error(error.error?.message || 'Ocurrió un error al obtener el usuario.'));
@@ -119,8 +124,6 @@ export class ConsolaRegistroService {
 
 
   // 📌 Actualizar un registro (solo doctores)
-  // In consola-registro.service.ts
-
   actualizarRegistro(registerId: string, data: any): Observable<any> {
     // First verify doctor role
     if (!this.isDoctor()) {
@@ -190,7 +193,6 @@ export class ConsolaRegistroService {
   obtenerTodasLasCapas(): Observable<ResearchLayer[]> {
     const headers = this.getAuthHeaders();
     return this.http.get<ResearchLayer[]>(`${this.API_RESEARCH_LAYER_URL}/GetAll`, { headers }).pipe(
-      tap(response => console.log('Todas las capas obtenidas:', response)),
       catchError(error => {
         console.error('Error al obtener todas las capas:', error);
         return throwError(() => new Error('Error al obtener la lista de capas'));
@@ -262,7 +264,6 @@ export class ConsolaRegistroService {
       headers,
       params
     }).pipe(
-      tap(response => console.log('Variables obtenidas:', response)),
       catchError(error => {
         console.error('Error al obtener variables:', error);
         return throwError(() => new Error('Error al obtener variables de la capa'));

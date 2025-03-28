@@ -98,12 +98,6 @@ export class ConsolaRegistroComponent implements OnInit {
   jefeInvestigacion: string = 'Cargando...';
 
   /**
-   * Contacto de investigación
-   * @default 'Cargando...'
-   */
-  contactoInvestigacion: string = 'Cargando...';
-
-  /**
    * Descripción de la investigación
    * @default 'Cargando descripción...'
    */
@@ -118,11 +112,6 @@ export class ConsolaRegistroComponent implements OnInit {
    * Pacientes registrados hoy
    */
   pacientesHoy: number = 0;
-
-  /**
-   * Registros pendientes de revisión
-   */
-  registrosPendientes: number = 0;
 
   /**
    * Controla la visibilidad del modal de visualización
@@ -170,13 +159,18 @@ export class ConsolaRegistroComponent implements OnInit {
     private authService: AuthService,
     private consolaService: ConsolaRegistroService,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) { 
+    this.consolaService.dataChanged$.subscribe(() => {
+      this.refreshData();
+    });
+  }
 
   /**
    * Método del ciclo de vida que se ejecuta al inicializar el componente
    */
   ngOnInit() {
     this.loadUserData();
+    this.refreshData();
   }
 
   /**
@@ -343,12 +337,12 @@ export class ConsolaRegistroComponent implements OnInit {
   handleView(registro: any) {
     if (registro.registerId) {
       this.selectedRegistro = registro;
-    } 
+    }
     else {
-      this.selectedRegistro = this.registros.find(r => 
+      this.selectedRegistro = this.registros.find(r =>
         r.patientIdentificationNumber === registro.documento) || null;
     }
-    
+
     if (this.selectedRegistro) {
       this.showViewModal = true;
     } else {
@@ -362,14 +356,14 @@ export class ConsolaRegistroComponent implements OnInit {
    * @param row Fila con los datos del registro a editar
    */
   handleEdit(row: any) {
-    const registroEncontrado = this.registros.find(r => 
+    const registroEncontrado = this.registros.find(r =>
       r.patientIdentificationNumber === row.documento);
-    
+
     if (!registroEncontrado) {
       console.error('Registro no encontrado');
       return;
     }
-  
+
     this.selectedRegistro = JSON.parse(JSON.stringify(registroEncontrado)) as Register;
     this.showEditModal = true;
   }
@@ -400,7 +394,7 @@ export class ConsolaRegistroComponent implements OnInit {
       console.error('No se puede actualizar: registerId es requerido');
       return;
     }
-  
+
     this.consolaService.actualizarRegistro(
       updatedRegistro.registerId,
       updatedRegistro
@@ -408,6 +402,7 @@ export class ConsolaRegistroComponent implements OnInit {
       next: () => {
         this.loadRegistros();
         this.closeEditModal();
+        this.refreshData();
       },
       error: (err) => console.error('Error al actualizar:', err)
     });
@@ -422,20 +417,19 @@ export class ConsolaRegistroComponent implements OnInit {
    */
   loadRegistros(page: number = 0, size: number = 10, query: string = '') {
     this.loadingRegistros = true;
-  
+
     this.consolaService.obtenerRegistros(page, size).subscribe({
       next: (response) => {
         this.registros = response.registers || [];
         this.usuariosData = this.mapearDatosUsuarios(this.registros);
         this.totalElements = response.totalElements || 0;
-        
+
         this.totalPacientes = this.totalElements;
-        
+
         this.actualizarRegistrosRecientes(this.registros);
-        
+
         this.loadingRegistros = false;
         this.cdr.detectChanges();
-        console.log("estos son lso registros, ", this.registros);
       },
       error: (err) => {
         console.error('Error al cargar registros:', err);
@@ -472,7 +466,6 @@ export class ConsolaRegistroComponent implements OnInit {
   private setDefaultCapaValues() {
     this.DescripcionInvestigacion = 'Información no disponible';
     this.jefeInvestigacion = 'No asignado';
-    this.contactoInvestigacion = 'contacto@investigacion.com';
   }
 
   /**
@@ -518,6 +511,7 @@ export class ConsolaRegistroComponent implements OnInit {
    * @param registros Listado completo de registros
    */
   private actualizarRegistrosRecientes(registros: Register[]): void {
+    this.refreshData();
     this.registrosRecientes = registros
       .sort((a, b) => new Date(b.registerDate).getTime() - new Date(a.registerDate).getTime())
       .slice(0, 5)
@@ -527,5 +521,23 @@ export class ConsolaRegistroComponent implements OnInit {
         fecha: registro.registerDate,
         documento: registro.patientIdentificationNumber
       }));
+  }
+
+  /**
+ * Refresca los datos de la tabla según la pestaña actual
+ */
+  refreshData(): void {
+    switch (this.selectedTab) {
+      case 'listadoPacientes':
+      case 'consultaDatosDigitador':
+        this.loadRegistros(this.currentPage, this.pageSize);
+        break;
+      case 'inicioDigitador':
+        // Refrescar datos del dashboard si es necesario
+        this.loadRegistros(0, 5); // Cargar solo los primeros 5 para el dashboard
+        break;
+      default:
+        break;
+    }
   }
 }

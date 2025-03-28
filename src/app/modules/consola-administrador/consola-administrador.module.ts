@@ -15,6 +15,8 @@ import { FormRegistroCapasComponent } from '../../shared/components/forms-admin/
 import { HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { HandleViewComponent } from './components/handle-view/handle-view.component';
+import { HandleEditComponent } from './components/handle-edit/handle-edit.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +26,8 @@ import { MatIconModule } from '@angular/material/icon';
     FormRegistroUsuarioComponent,
     FormRegistroVariablesComponent,
     FormRegistroCapasComponent,
+    HandleViewComponent,
+    HandleEditComponent,
   ],
   imports: [
     CommonModule,

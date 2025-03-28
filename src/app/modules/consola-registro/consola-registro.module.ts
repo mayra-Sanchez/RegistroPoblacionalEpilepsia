@@ -18,6 +18,7 @@ import { SignaturePadComponent } from 'src/app/form-registro-paciente/components
 import { PacienteFormComponent } from 'src/app/form-registro-paciente/components/paciente-form/paciente-form.component';
 import { ViewRegistroModalComponent } from './view-registro-modal/view-registro-modal.component';
 import { EditRegistroModalComponent } from './edit-registro-modal/edit-registro-modal.component';
+
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,

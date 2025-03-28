@@ -3,22 +3,36 @@ import { ConsolaRegistroService } from '../services/consola-registro.service';
 import { Register, Variable } from '../interfaces';
 import { finalize } from 'rxjs/operators';
 
+/**
+ * Componente modal para editar registros de pacientes.
+ * Permite la edición de información básica del paciente, variables de investigación,
+ * información del cuidador y profesional de la salud.
+ */
 @Component({
   selector: 'app-edit-registro-modal',
   templateUrl: './edit-registro-modal.component.html',
   styleUrls: ['./edit-registro-modal.component.css']
 })
 export class EditRegistroModalComponent {
+  /** Registro a editar, recibido como input desde el componente padre */
   @Input() registro: Register | null = null;
+  
+  /** Función para cerrar el modal, proporcionada por el componente padre */
   @Input() closeModal!: () => void;
+  
+  /** EventEmitter para notificar cuando se ha actualizado un registro */
   @Output() registroActualizado = new EventEmitter<Register>();
+  
+  /** EventEmitter para notificar cuando se guardan los cambios */
   @Output() saveChanges = new EventEmitter<Register>();
 
-  isLoading = false;
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
-  activeTab: string = 'paciente';
+  // Estados del componente
+  isLoading = false;              // Indica si se está realizando una operación asíncrona
+  errorMessage: string | null = null;    // Mensaje de error a mostrar
+  successMessage: string | null = null;  // Mensaje de éxito a mostrar
+  activeTab: string = 'paciente'; // Pestaña activa en la interfaz
 
+  // Opciones para los selectores del formulario
   tiposIdentificacion = [
     { value: 'cc', label: 'Cédula de Ciudadanía' },
     { value: 'ti', label: 'Tarjeta de Identidad' },
@@ -60,10 +74,18 @@ export class EditRegistroModalComponent {
 
   constructor(private registroService: ConsolaRegistroService) {}
 
+  /**
+   * Cambia la pestaña activa en la interfaz
+   * @param tab - Nombre de la pestaña a activar ('paciente', 'variables', etc.)
+   */
   changeTab(tab: string) {
     this.activeTab = tab;
   }
 
+  /**
+   * Maneja el envío del formulario de edición
+   * Valida los datos, prepara el payload y realiza la llamada al servicio
+   */
   onSubmit() {
     if (!this.registro || !this.registro.registerId) {
       this.errorMessage = 'Datos del registro no válidos';
@@ -74,13 +96,16 @@ export class EditRegistroModalComponent {
     this.errorMessage = null;
     this.successMessage = null;
 
+    // Calcula la edad si hay fecha de nacimiento
     if (this.registro.patientBasicInfo?.birthDate) {
       this.registro.patientBasicInfo.age = this.calculateAge(this.registro.patientBasicInfo.birthDate);
     }
 
+    // Prepara y limpia los datos para el envío
     const updateData = this.removeEmptyFields(this.prepareUpdateData());
     console.log('Enviando payload:', JSON.stringify(updateData, null, 2));
 
+    // Llama al servicio para actualizar el registro
     this.registroService.actualizarRegistro(this.registro.registerId, updateData)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
@@ -97,6 +122,11 @@ export class EditRegistroModalComponent {
       });
   }
 
+  /**
+   * Genera un mensaje de error legible a partir del objeto de error
+   * @param err - Objeto de error recibido
+   * @returns Mensaje de error formateado
+   */
   private getErrorMessage(err: any): string {
     if (err.error?.errors) {
       return Object.values(err.error.errors).join(', ');
@@ -110,6 +140,10 @@ export class EditRegistroModalComponent {
     return 'Error desconocido al actualizar el registro';
   }
 
+  /**
+   * Prepara los datos para la actualización, estructurándolos según lo esperado por el API
+   * @returns Objeto con los datos preparados para el envío
+   */
   private prepareUpdateData(): any {
     if (!this.registro) return null;
   
@@ -134,7 +168,7 @@ export class EditRegistroModalComponent {
       }
     };
   
-    // Manejo especial para caregiver - SOLO si existe y tiene datos
+    // Incluye datos del cuidador solo si existen
     if (this.registro.caregiver && this.hasCaregiverData(this.registro.caregiver)) {
       payload.caregiver = {
         name: this.registro.caregiver.name || null,
@@ -146,7 +180,7 @@ export class EditRegistroModalComponent {
       };
     }
   
-    // HealthProfessional es opcional
+    // Incluye datos del profesional de la salud si existen
     if (this.registro.healthProfessional) {
       payload.healthProfessional = {
         id: this.registro.healthProfessional.id || null,
@@ -158,6 +192,11 @@ export class EditRegistroModalComponent {
     return this.cleanPayload(payload);
   }
 
+  /**
+   * Verifica si hay datos válidos del cuidador
+   * @param caregiver - Objeto con los datos del cuidador
+   * @returns true si hay al menos un campo con datos válidos
+   */
   private hasCaregiverData(caregiver: any): boolean {
     if (!caregiver) return false;
     
@@ -166,6 +205,11 @@ export class EditRegistroModalComponent {
     );
   }
   
+  /**
+   * Limpia el payload eliminando campos vacíos, nulos o undefined
+   * @param obj - Objeto a limpiar
+   * @returns Objeto limpio sin campos vacíos
+   */
   private cleanPayload(obj: any): any {
     if (obj === null || typeof obj !== 'object') {
       return obj;
@@ -190,6 +234,10 @@ export class EditRegistroModalComponent {
     return cleaned;
   }
 
+  /**
+   * Prepara el array de variables para el envío al API
+   * @returns Array de variables formateadas
+   */
   private prepareVariablesArray(): any[] {
     if (!this.registro?.variablesRegister) return [];
 
@@ -201,6 +249,12 @@ export class EditRegistroModalComponent {
     }));
   }
 
+  /**
+   * Parsea el valor de una variable según su tipo
+   * @param value - Valor a parsear
+   * @param type - Tipo de la variable (number, boolean, string)
+   * @returns Valor parseado al tipo correspondiente
+   */
   private parseVariableValue(value: any, type: string): any {
     if (value === null || value === undefined) return '';
     if (type === 'number') return Number(value) || 0;
@@ -208,6 +262,11 @@ export class EditRegistroModalComponent {
     return String(value);
   }
 
+  /**
+   * Elimina campos vacíos, nulos o undefined de un objeto
+   * @param obj - Objeto a limpiar
+   * @returns Objeto sin campos vacíos
+   */
   private removeEmptyFields(obj: any): any {
     if (obj === null || typeof obj !== 'object') {
       return obj;
@@ -224,22 +283,24 @@ export class EditRegistroModalComponent {
     );
   }
 
+  /**
+   * Formatea una fecha para el API (formato DD-MM-YYYY)
+   * @param dateValue - Fecha a formatear (puede ser string o Date)
+   * @returns Fecha formateada o null si no es válida
+   */
   private formatDateForAPI(dateValue: any): string | null {
     if (!dateValue) return null;
   
-    // Si ya está en formato DD-MM-YYYY
     if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
       return dateValue;
     }
   
-    // Para objetos Date o strings en otros formatos
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) {
       console.error('Fecha inválida:', dateValue);
       return null;
     }
   
-    // Formatea a DD-MM-YYYY
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
@@ -247,6 +308,11 @@ export class EditRegistroModalComponent {
     return `${day}-${month}-${year}`;
   }
 
+  /**
+   * Calcula la edad a partir de una fecha de nacimiento
+   * @param birthDate - Fecha de nacimiento
+   * @returns Edad calculada
+   */
   public calculateAge(birthDate: string | null): number {
     if (!birthDate) return 0;
     const birth = new Date(birthDate);
@@ -259,6 +325,11 @@ export class EditRegistroModalComponent {
     return age;
   }
 
+  /**
+   * Actualiza el valor de una variable en el registro
+   * @param variable - Variable a actualizar
+   * @param event - Evento del input con el nuevo valor
+   */
   updateVariableValue(variable: Variable, event: any) {
     if (!this.registro) return;
     const index = this.registro.variablesRegister.findIndex(v => v.id === variable.id);

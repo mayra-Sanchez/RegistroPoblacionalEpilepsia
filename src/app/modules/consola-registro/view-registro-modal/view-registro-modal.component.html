@@ -1,111 +1,252 @@
 <div class="modal-overlay">
-    <div class="modal-container">
-      <!-- Encabezado -->
-      <div class="modal-header">
-        <h3 class="modal-title">Detalles Completo del Registro</h3>
-        <button class="close-btn" (click)="closeModal()">
-          &times;
-        </button>
-      </div>
-      
-      <!-- Cuerpo -->
-      <div class="modal-body">
-        <div *ngIf="registro">
-          <!-- Sección Paciente -->
-          <div class="info-section">
-            <h4 class="section-title">Información del Paciente</h4>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Nombre Completo:</span>
-                <div class="info-value">
-                  {{ registro.patientBasicInfo.name }}
-                </div>
+  <div class="modal-container">
+    <!-- Encabezado -->
+    <div class="modal-header">
+      <h3 class="modal-title">Detalles Completo del Registro</h3>
+      <button class="close-btn" (click)="closeModal()">
+        &times;
+      </button>
+    </div>
+    
+    <!-- Cuerpo -->
+    <div class="modal-body">
+      <div *ngIf="registro">
+        <!-- Sección Identificación -->
+        <div class="info-section">
+          <h4 class="section-title">Identificación</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Tipo de Documento:</span>
+              <div class="info-value">
+                {{ getLabel(tiposIdentificacion, registro.patientIdentificationType) }}
               </div>
-              
-              <div class="info-item">
-                <span class="info-label">Documento:</span>
-                <div class="info-value">
-                  {{ registro.patientIdentificationNumber }}
-                </div>
-              </div>
-              
-              <div class="info-item">
-                <span class="info-label">Fecha de Nacimiento:</span>
-                <div class="info-value">
-                  {{ registro.patientBasicInfo.birthDate | date }}
-                </div>
-              </div>
-              
-              <!-- <div class="info-item">
-                <span class="info-label">Género:</span>
-                <div class="info-value">
-                  {{ registro.patientBasicInfo.gender }}
-                </div>
-              </div> -->
             </div>
-          </div>
-          
-          <!-- Sección Médica -->
-          <div class="info-section">
-            <h4 class="section-title">Datos Médicos</h4>
-            <div class="info-grid">
-              <!-- <div class="info-item">
-                <span class="info-label">Diagnóstico Principal:</span>
-                <div class="info-value">
-                  {{ registro.medicalInfo.diagnosis }}
-                </div>
-              </div>
-              
-              <div class="info-item">
-                <span class="info-label">Tratamiento:</span>
-                <div class="info-value">
-                  {{ registro.medicalInfo.treatment }}
-                </div>
-              </div>
-              
-              <div class="info-item">
-                <span class="info-label">Médico Responsable:</span>
-                <div class="info-value">
-                  {{ registro.medicalInfo.doctor }}
-                </div>
-              </div> -->
-            </div>
-          </div>
-          
-          <!-- Sección Adicional -->
-          <div class="info-section">
-            <h4 class="section-title">Información Adicional</h4>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Fecha de Registro:</span>
-                <div class="info-value">
-                  {{ registro.registerDate | date:'medium' }}
-                </div>
-              </div>
-              
-              <!-- <div class="info-item">
-                <span class="info-label">Estado:</span>
-                <div class="info-value">
-                  {{ registro.status }}
-                </div>
-              </div>
-              
-              <div class="info-item">
-                <span class="info-label">Notas:</span>
-                <div class="info-value">
-                  {{ registro.notes || 'Sin notas adicionales' }}
-                </div>
+            
+            <div class="info-item">
+              <span class="info-label">Número de Documento:</span>
+              <div class="info-value">
+                {{ registro.patientIdentificationNumber }}
               </div>
             </div>
           </div>
         </div>
-      </div> -->
-      
-      <!-- Pie -->
-      <div class="modal-footer">
-        <button class="btn-close" (click)="closeModal()">
-          Cerrar Detalles
-        </button>
+        
+        <!-- Sección Datos Básicos -->
+        <div class="info-section">
+          <h4 class="section-title">Datos Básicos del Paciente</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Nombre Completo:</span>
+              <div class="info-value">
+                {{ registro.patientBasicInfo.name || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Género:</span>
+              <div class="info-value">
+                {{ getLabel(generos, registro.patientBasicInfo.sex) || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Edad:</span>
+              <div class="info-value">
+                {{ registro.patientBasicInfo.age || 'No especificada' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección Contacto -->
+        <div class="info-section">
+          <h4 class="section-title">Información de Contacto</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Email:</span>
+              <div class="info-value">
+                {{ registro.patientBasicInfo.email || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Teléfono:</span>
+              <div class="info-value">
+                {{ registro.patientBasicInfo.phoneNumber || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Ciudad Actual:</span>
+              <div class="info-value">
+                {{ registro.patientBasicInfo.currentCity || 'No especificada' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Ciudad de Origen:</span>
+              <div class="info-value">
+                {{ registro.patientBasicInfo.hometown || 'No especificada' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección Socioeconómica -->
+        <div class="info-section">
+          <h4 class="section-title">Datos Socioeconómicos</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Nivel Educativo:</span>
+              <div class="info-value">
+                {{ getLabel(nivelesEducacion, registro.patientBasicInfo.educationLevel) || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Estado Civil:</span>
+              <div class="info-value">
+                {{ getLabel(estadosCiviles, registro.patientBasicInfo.maritalStatus) || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Nivel Económico:</span>
+              <div class="info-value">
+                {{ getLabel(estadosEconomicos, registro.patientBasicInfo.economicStatus) || 'No especificado' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección Estado Clínico -->
+        <div class="info-section">
+          <h4 class="section-title">Estado Clínico</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Fecha Primera Crisis:</span>
+              <div class="info-value">
+                {{ registro.patientBasicInfo.firstCrisisDate  }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Estado de Crisis:</span>
+              <div class="info-value">
+                {{ registro.patientBasicInfo.crisisStatus || 'No especificado' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección Cuidador -->
+        <div class="info-section" *ngIf="registro.caregiver && hasCaregiverData(registro.caregiver)">
+          <h4 class="section-title">Información del Cuidador</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Nombre del Cuidador:</span>
+              <div class="info-value">
+                {{ registro.caregiver.name || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Tipo de Documento:</span>
+              <div class="info-value">
+                {{ getLabel(tiposIdentificacion, registro.caregiver.identificationType) || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Número de Documento:</span>
+              <div class="info-value">
+                {{ registro.caregiver.identificationNumber || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Edad:</span>
+              <div class="info-value">
+                {{ registro.caregiver.age || 'No especificada' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Nivel Educativo:</span>
+              <div class="info-value">
+                {{ getLabel(nivelesEducacion, registro.caregiver.educationLevel) || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Ocupación:</span>
+              <div class="info-value">
+                {{ registro.caregiver.occupation || 'No especificada' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección Profesional de Salud -->
+        <div class="info-section" *ngIf="registro.healthProfessional">
+          <h4 class="section-title">Profesional de Salud</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Nombre:</span>
+              <div class="info-value">
+                {{ registro.healthProfessional.name || 'No especificado' }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Número de Documento:</span>
+              <div class="info-value">
+                {{ registro.healthProfessional.identificationNumber || 'No especificado' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección Variables de Investigación -->
+        <div class="info-section" *ngIf="registro.variablesRegister && registro.variablesRegister.length > 0">
+          <h4 class="section-title">Variables de Investigación</h4>
+          <div class="variables-grid">
+            <div class="variable-item" *ngFor="let variable of registro.variablesRegister">
+              <span class="variable-label">{{ variable.variableName }}:</span>
+              <div class="variable-value">
+                {{ variable.value || 'No especificado' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección Metadatos -->
+        <div class="info-section">
+          <h4 class="section-title">Metadatos del Registro</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Fecha de Creación:</span>
+              <div class="info-value">
+                {{ registro.registerDate }}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">ID del Registro:</span>
+              <div class="info-value">
+                {{ registro.registerId }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+    
+    <!-- Pie -->
+    <div class="modal-footer">
+      <button class="btn-close" (click)="closeModal()">
+        Cerrar Detalles
+      </button>
+    </div>
   </div>
+</div>

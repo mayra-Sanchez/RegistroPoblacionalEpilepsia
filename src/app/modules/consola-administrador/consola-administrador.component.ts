@@ -10,7 +10,7 @@ import { AuthService } from 'src/app/login/services/auth.service';
 interface Registro {
   tipo: string;
   data: any;
-  orderIndex: number; // ✅ Definir la propiedad orderIndex
+  fechaCreacion: number; 
 }
 
 /**
@@ -60,7 +60,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   ultimosRegistros: Registro[] = [];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   dataSource: MatTableDataSource<any> = new MatTableDataSource();
-  displayedColumns: string[] = ['tipo', 'nombre', 'fecha'];
+  displayedColumns: string[] = ['tipo', 'detalles', 'fecha'];
   tiposVariables: string[] = ['Entero', 'Real', 'Cadena', 'Fecha', 'Lógico'];  // Agrega los tipos que necesites
 
   // Nuevas variables para métricas y actividad
@@ -81,8 +81,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     { field: 'apellido', header: 'Apellido' },
     { field: 'email', header: 'Correo Electrónico' },
     { field: 'usuario', header: 'Usuario' },
-    { field: 'capa', header: 'Capa de Investigación', 
-      formatter: (value: string, row: any) => this.getCapaNombreById(row.capaId) },
+    {
+      field: 'capa', header: 'Capa de Investigación',
+      formatter: (value: string, row: any) => this.getCapaNombreById(row.capaId)
+    },
     { field: 'rol', header: 'Rol' }
   ];
 
@@ -140,7 +142,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   */
   loadInitialData(): void {
     this.isLoading = true;
-  
+
     this.consolaService.getAllLayers().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
         this.capasData = data.map(capa => ({
@@ -151,11 +153,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           jefeCapaNombre: capa.layerBoss?.name || 'Sin asignar',
           jefeIdentificacion: capa.layerBoss?.identificationNumber || 'Sin asignar'
         }));
-  
+
         this.capas = this.capasData;
         this.totalCapas = this.capasData.length;
         this.cdr.detectChanges();
-  
+
         // Ahora que ya tenemos las capas, cargamos usuarios y variables
         this.loadUsuariosData();
         this.loadVariablesData();
@@ -169,7 +171,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
+
 
   /* Carga de Datos
   * Carga los datos de las capas desde el servicio.
@@ -231,8 +233,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       next: (data: any[]) => {
         this.usuariosData = data.map(user => {
           const attrs = user.attributes || {};
-          const capaValue = attrs.researchLayerId?.[0]; // Obtener el valor de researchLayerId
-          
+          const capaValue = attrs.researchLayerId?.[0];
+
           return {
             id: user.id,
             nombre: user.firstName || 'Sin nombre',
@@ -242,8 +244,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             tipoDocumento: attrs.identificationType ? attrs.identificationType[0] : 'No especificado',
             documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
             fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
-            capa: this.getCapaNombreById(capaValue), // Usar el valor directamente
-            capaRawValue: capaValue, // Guardar el valor original
+            capa: this.getCapaNombreByIdVariables(capaValue),
+            capaRawValue: capaValue, 
             rol: attrs.role ? attrs.role.map(this.transformarRol).join(', ') : 'No especificado',
             passwordActual: user.password
           };
@@ -279,10 +281,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-
-  // Cargar datos del dashboard
   updateDashboard(): void {
-    // Obtener métricas
     this.totalUsuarios = this.usuariosData.length;
     this.totalCapas = this.capasData.length;
     this.totalVariables = this.variablesData.length;
@@ -292,17 +291,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
   cargarUsuarios() {
     this.consolaService.getAllUsuarios().subscribe(data => {
-      // Guardar TODOS los usuarios para la exportación
       this.todosLosUsuarios = data.map(user => ({
         nombre: `${user.firstName || 'Desconocido'} ${user.lastName || ''}`.trim(),
         rol: user.attributes?.role ? user.attributes.role[0] : 'No especificado',
         email: user.email || 'No disponible'
       }));
 
-      // Ordenar usuarios por fecha de creación (más recientes primero)
       const usuariosOrdenados = data.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
 
-      // Tomar los últimos 2 usuarios creados para "Accesos Rápidos"
       this.ultimosUsuarios = usuariosOrdenados.slice(0, 5).map(user => ({
         nombre: `${user.firstName || 'Desconocido'} ${user.lastName || ''}`.trim(),
         rol: user.attributes?.role ? user.attributes.role[0] : 'No especificado',
@@ -319,9 +315,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           rol: user.attributes?.role ? user.attributes.role.join(', ') : 'No especificado'
         }
       }));
-
-      console.log('📌 Últimos 2 usuarios cargados:', this.ultimosUsuarios);
-      console.log('📌 Todos los usuarios para exportar:', this.todosLosUsuarios);
     });
   }
 
@@ -354,50 +347,46 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     console.log('✅ Archivo CSV generado con éxito.');
   }
 
+
   /**
-   * Ultimos registros de capa, variables y usuarios
+   * Carga y ordena los últimos registros de usuarios, capas y variables por fecha de creación
    */
   cargarUltimosRegistros() {
     this.consolaService.getAllUsuarios().subscribe(usuarios => {
-      console.log('Usuarios obtenidos:', usuarios);
-
-      const ultimosUsuarios: Registro[] = usuarios.map((usuario, index) => ({
+      const ultimosUsuarios: Registro[] = usuarios.map(usuario => ({
         tipo: 'usuario',
         data: usuario,
-        orderIndex: index
+        // Usamos createdTimestamp para usuarios
+        fechaCreacion: usuario.createdTimestamp
       }));
 
       this.consolaService.getAllLayers().subscribe(capas => {
-        console.log('Capas obtenidas:', capas);
-
-        const ultimasCapas: Registro[] = capas.map((capa, index) => ({
+        const ultimasCapas: Registro[] = capas.map(capa => ({
           tipo: 'capa',
           data: capa,
-          orderIndex: index
+          // Convertimos createdAt a timestamp para capas
+          fechaCreacion: new Date(capa.createdAt).getTime()
         }));
 
         this.consolaService.getAllVariables().subscribe(variables => {
-          console.log('Variables obtenidas:', variables);
-
-          const ultimasVariables: Registro[] = variables.map((variable, index) => ({
+          const ultimasVariables: Registro[] = variables.map(variable => ({
             tipo: 'variable',
             data: variable,
-            orderIndex: index
+            // Convertimos createdAt a timestamp para variables
+            fechaCreacion: new Date(variable.createdAt).getTime()
           }));
 
-          // 🔹 Combinar todos los registros
+          // Combinar todos los registros
           this.ultimosRegistros = [...ultimosUsuarios, ...ultimasCapas, ...ultimasVariables];
 
-          // 🔹 Ordenar de más reciente a más antiguo
-          this.ultimosRegistros.sort((a, b) => b.orderIndex - a.orderIndex);
-
-          console.log('📌 Últimos registros ordenados:', this.ultimosRegistros);
+          // Ordenar de más reciente a más antiguo por fechaCreacion
+          this.ultimosRegistros.sort((a, b) => b.fechaCreacion - a.fechaCreacion);
 
           // Inicializar el dataSource con los registros ordenados
           this.dataSource = new MatTableDataSource(this.ultimosRegistros);
           this.dataSource.paginator = this.paginator;
 
-          this.cdr.detectChanges(); // ✅ Forzar actualización de la vista
+          this.cdr.detectChanges();
         });
       });
     });
@@ -408,12 +397,12 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   */
   getCapaNombreById(idOrName: string): string {
     if (!idOrName || idOrName === 'undefined' || idOrName === 'null') return 'Sin asignar';
-    
+  
     // Si el valor ya es un nombre de capa (como en tus datos actuales)
     if (typeof idOrName === 'string' && !idOrName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
       return idOrName; // Ya es un nombre, lo devolvemos directamente
     }
-    
+  
     // Buscar por ID en diferentes formatos
     const capa = this.capas.find(c => 
       c.id === idOrName || 
@@ -506,7 +495,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   handleEdit(row: any, tipo: string): void {
     if (tipo === 'usuario') {
       this.isEditingUserModal = true;
-      this.userToEdit = { 
+      this.userToEdit = {
         ...row,
         firstName: row.nombre,
         lastName: row.apellido,
@@ -767,29 +756,4 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.isCreatingCapa = true;
   }
 
-  /* Gestión de Opciones (Variables)
-  * Actualiza las opciones de una variable.
-  */
-  onTieneOpcionesChange() {
-    if (!this.varToEdit.tieneOpciones) {
-      this.varToEdit.options = [];
-    } else if (!this.varToEdit.options || this.varToEdit.options.length === 0) {
-      this.varToEdit.options = [''];
-    }
-  }
-
-  agregarOpcion() {
-    this.varToEdit.options.push('');
-  }
-
-  eliminarOpcion(index: number) {
-    this.varToEdit.options.splice(index, 1);
-  }
-
-  /* Gestión de Opciones (Variables)
-  *  Utilizado para mejorar el rendimiento en listas renderizadas.
-  */
-  trackByIndex(index: number, item: any) {
-    return index;
-  }
 }

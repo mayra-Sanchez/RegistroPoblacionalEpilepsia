@@ -176,213 +176,41 @@
   </div>
 </div>
 
-<!-- Modal para ver detalles -->
-<div *ngIf="isViewing" class="modal-overlay">
-  <div class="modal-content">
-    <h2>Detalles de {{ viewType }}</h2>
+<!-- Modal para visualización -->
+<app-handle-view 
+  *ngIf="isViewing"
+  [viewedItem]="viewedItem"
+  [viewType]="viewType"
+  (closeModal)="cerrarModal()">
+</app-handle-view>
 
-    <div *ngIf="viewType === 'usuario'" class="modal-content">
-      <div class="modal-body">
-        <p><strong>Nombre:</strong> {{ viewedItem.nombre }}</p>
-        <p><strong>Apellido:</strong> {{ viewedItem.apellido }}</p>
-        <p><strong>Documento:</strong> {{ viewedItem.documento }}</p>
-        <p><strong>Capa:</strong> {{ viewedItem.capa }}</p>
-        <p><strong>Rol:</strong> {{ viewedItem.rol }}</p>
-      </div>
-    </div>
+<!-- Modal para edición de usuario -->
+<app-handle-edit 
+  *ngIf="isEditingUserModal"
+  [itemToEdit]="userToEdit"
+  [editType]="'usuario'"
+  [capas]="capas"
+  (saveChanges)="guardarEdicionUsuario($event)"
+  (closeModal)="cerrarModal()">
+</app-handle-edit>
 
-    <div *ngIf="viewType === 'variable'" class="modal-content">
-      <div class="modal-body">
-        <p><strong>Nombre:</strong> {{ viewedItem.variableName || viewedItem.nombre }}</p>
-        <p><strong>Descripción:</strong> {{ viewedItem.description || viewedItem.descripcion }}</p>
-        <p><strong>Capa:</strong> {{ getCapaNombreByIdVariables(viewedItem.researchLayerId || viewedItem.idCapaInvestigacion) }}
-        </p>
-        <p><strong>Tipo:</strong> {{ viewedItem.type || viewedItem.tipo }}</p>
+<!-- Modal para edición de variable -->
+<app-handle-edit 
+  *ngIf="isEditingVar"
+  [itemToEdit]="varToEdit"
+  [editType]="'variable'"
+  [capas]="capas"
+  [tiposVariables]="tiposVariables"
+  (saveChanges)="guardarEdicionVariable($event)"
+  (closeModal)="cerrarModal()">
+</app-handle-edit>
 
-        <div *ngIf="(viewedItem.options || viewedItem.opciones)?.length > 0">
-          <p><strong>Opciones:</strong></p>
-          <ul>
-            <li *ngFor="let opcion of (viewedItem.options || viewedItem.opciones)">{{ opcion }}</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-
-    <div *ngIf="viewType === 'capa'" class="modal-content">
-      <div class="modal-body">
-        <p><strong>Nombre:</strong> {{ viewedItem.layerName || viewedItem.nombreCapa }}</p>
-        <p><strong>Descripción:</strong> {{ viewedItem.description || viewedItem.descripcion }}</p>
-        <p><strong>Jefe:</strong> {{ viewedItem.layerBoss?.name || viewedItem.jefeCapaNombre }}</p>
-        <p><strong>Identificación Jefe:</strong> {{ viewedItem.layerBoss?.identificationNumber ||
-          viewedItem.jefeIdentificacion }}</p>
-      </div>
-    </div>
-    <div class="form-buttons">
-      <button (click)="cerrarModal()" class="btn btn-secondary">Cerrar</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- Modal para editar Capa -->
-<div *ngIf="isEditingCapa" class="modal-overlay">
-  <div class="user-form-container">
-    <h2>Editar Capa</h2>
-    <form (submit)="guardarEdicionCapa()">
-      <div class="form-row">
-        <label>Nombre:</label>
-        <input type="text" [(ngModel)]="capaToEdit.nombreCapa" name="nombreCapa" required />
-      </div>
-      <div class="form-row">
-        <label>Descripción:</label>
-        <input type="text" [(ngModel)]="capaToEdit.descripcion" name="descripcion" required />
-      </div>
-      <div class="form-row">
-        <label>Nombre del Jefe de Capa:</label>
-        <input type="text" [(ngModel)]="capaToEdit.jefeCapaNombre" name="jefeCapaNombre" required />
-      </div>
-      <div class="form-row">
-        <label>Número de Identificación del Jefe de Capa:</label>
-        <input type="text" [(ngModel)]="capaToEdit.jefeIdentificacion" name="jefeIdentificacion" required />
-      </div>
-      <div class="form-buttons">
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <button type="button" class="btn btn-secondary" (click)="isEditingCapa = false">Cancelar</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal para editar Variable -->
-<div *ngIf="isEditingVar" class="modal-overlay">
-  <div class="user-form-container">
-    <h2>Editar Variable</h2>
-    <form (ngSubmit)="guardarEdicionVariable(varToEdit)">
-      <div class="form-row">
-        <label>Nombre:</label>
-        <input type="text" [(ngModel)]="varToEdit.variableName" name="variableName" required />
-      </div>
-      <div class="form-row">
-        <label>Descripción:</label>
-        <input type="text" [(ngModel)]="varToEdit.description" name="description" required />
-      </div>
-      <div class="form-row">
-        <label>Capa de Investigación:</label>
-        <select [(ngModel)]="varToEdit.researchLayerId" name="researchLayerId" required>
-          <option *ngFor="let capa of capasData" [value]="capa.id" [selected]="capa.id === varToEdit.researchLayerId">
-            {{ capa.layerName || capa.nombreCapa }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label>Tipo de Variable:</label>
-        <select [(ngModel)]="varToEdit.type" name="type" required>
-          <option *ngFor="let tipo of tiposVariables" [value]="tipo" [selected]="tipo === varToEdit.type">
-            {{ tipo }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-row checkbox-row">
-        <label>
-          <span>¿Tiene opciones?</span>
-          <input type="checkbox" [(ngModel)]="varToEdit.tieneOpciones" name="tieneOpciones"
-            (change)="onTieneOpcionesChange()" />
-        </label>
-      </div>
-
-      <div class="form-row" *ngIf="varToEdit.tieneOpciones">
-        <label class="options">Opciones:</label>
-        <div *ngFor="let opcion of varToEdit.options; let i = index; trackBy: trackByIndex" class="option-item">
-          <input type="text" [(ngModel)]="varToEdit.options[i]" [name]="'option' + i" required />
-          <button type="button" (click)="eliminarOpcion(i)" class="btn btn-danger">✖</button>
-        </div>
-        <button type="button" class="btn btn-success" (click)="agregarOpcion()">➕ Agregar Opción</button>
-      </div>
-
-      <div class="form-buttons">
-        <button type="submit" class="btn btn-primary">Guardar datos</button>
-        <button type="button" class="btn btn-secondary" (click)="isEditingVar = false">Cancelar edición</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal para editar Variable -->
-<div *ngIf="isEditingUserModal" class="modal-overlay">
-  <div class="modal-content">
-    <h2>Editar Usuario</h2>
-    <form (submit)="guardarEdicionUsuario(userToEdit)">
-      <div class="form-grid">
-        <div class="form-row">
-          <label>Nombre:</label>
-          <input type="text" [(ngModel)]="userToEdit.nombre" name="nombre" required />
-        </div>
-
-        <div class="form-row">
-          <label>Apellido:</label>
-          <input type="text" [(ngModel)]="userToEdit.apellido" name="apellido" required />
-        </div>
-
-        <div class="form-row">
-          <label>Email:</label>
-          <input type="email" [(ngModel)]="userToEdit.email" name="email" required />
-        </div>
-
-        <div class="form-row">
-          <label>Contraseña (Solo si desea actualizar):</label>
-          <input type="password" [(ngModel)]="userToEdit.password" name="password" placeholder="Nueva contraseña" />
-        </div>
-
-        <div class="form-row">
-          <label>Usuario:</label>
-          <input type="text" [(ngModel)]="userToEdit.usuario" name="usuario" required disabled />
-        </div>
-
-        <div class="form-row">
-          <label>Tipo de Identificación:</label>
-          <input type="text" [(ngModel)]="userToEdit.tipoDocumento" name="tipoDocumento" required disabled />
-        </div>
-
-        <div class="form-row">
-          <label>Número de Identificación:</label>
-          <input type="number" [(ngModel)]="userToEdit.documento" name="documento" required disabled />
-        </div>
-
-        <div class="form-row">
-          <label>Fecha de Nacimiento:</label>
-          <input type="date" [(ngModel)]="userToEdit.fechaNacimiento" name="fechaNacimiento" required disabled />
-        </div>
-
-        <div class="form-row">
-          <label>Capa de Investigación:</label>
-          <select [(ngModel)]="userToEdit.researchLayerId" name="researchLayerId" required>
-            <option value="" disabled>Selecciona una capa</option>
-            <option *ngFor="let capa of capas" 
-                    [value]="capa.layerName || capa.nombreCapa"
-                    [selected]="(capa.layerName || capa.nombreCapa) === userToEdit.capaRawValue">
-              {{ capa.layerName || capa.nombreCapa }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <label>Rol:</label>
-          <select [(ngModel)]="userToEdit.rol" name="rol" required>
-            <option value="" disabled selected>Selecciona un rol</option>
-            <option value="Admin">Administrador</option>
-            <option value="Researcher">Investigador</option>
-            <option value="Doctor">Personal de salud</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <button type="button" class="btn btn-secondary" (click)="isEditingUserModal = false">Cancelar</button>
-      </div>
-    </form>
-  </div>
-</div>
+<!-- Modal para edición de capa -->
+<app-handle-edit 
+  *ngIf="isEditingCapa"
+  [itemToEdit]="capaToEdit"
+  [editType]="'capa'"
+  [capas]="capas"
+  (saveChanges)="guardarEdicionCapa()"
+  (closeModal)="cerrarModal()">
+</app-handle-edit>
