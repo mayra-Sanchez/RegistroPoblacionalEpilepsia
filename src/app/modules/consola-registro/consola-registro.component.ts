@@ -159,7 +159,7 @@ export class ConsolaRegistroComponent implements OnInit {
     private authService: AuthService,
     private consolaService: ConsolaRegistroService,
     private cdr: ChangeDetectorRef
-  ) { 
+  ) {
     this.consolaService.dataChanged$.subscribe(() => {
       this.refreshData();
     });
@@ -228,16 +228,20 @@ export class ConsolaRegistroComponent implements OnInit {
   /**
    * Carga la capa de investigación asignada al usuario
    */
+  /**
+ * Carga la capa de investigación asignada al usuario
+ */
   loadCapaInvestigacion() {
-    const nombreCapa = this.userData?.attributes?.researchLayerId?.[0];
+    const researchLayerId = this.userData?.attributes?.researchLayerId?.[0]; // Cambiado de nombreCapa a researchLayerId
 
-    if (!nombreCapa) {
-      console.warn('No se encontró nombre de capa en userData');
+    if (!researchLayerId) {
+      console.warn('No se encontró ID de capa en userData');
       this.isLoading = false;
+      this.setDefaultCapaValues();
       return;
     }
 
-    this.consolaService.buscarCapaPorNombre(nombreCapa).subscribe({
+    this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({ // Usar el nuevo método por ID
       next: (capa) => {
         this.currentResearchLayer = capa;
         this.updateDatosCapa(capa);

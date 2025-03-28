@@ -25,7 +25,7 @@ export class ConsolaRegistroService {
 
   // Observable que otros componentes pueden suscribirse
   dataChanged$ = this.dataChanged.asObservable();
-  
+
   // Método para notificar cambios
   notifyDataChanged() {
     this.dataChanged.next();
@@ -193,6 +193,7 @@ export class ConsolaRegistroService {
   obtenerTodasLasCapas(): Observable<ResearchLayer[]> {
     const headers = this.getAuthHeaders();
     return this.http.get<ResearchLayer[]>(`${this.API_RESEARCH_LAYER_URL}/GetAll`, { headers }).pipe(
+      tap(response => console.log('Todas las capas obtenidas:', response)), // <-- Añade esto
       catchError(error => {
         console.error('Error al obtener todas las capas:', error);
         return throwError(() => new Error('Error al obtener la lista de capas'));
@@ -237,21 +238,41 @@ export class ConsolaRegistroService {
       })
     );
   }
-
   /**
-   * Obtiene detalles adicionales de una capa por ID
+   * Obtiene una capa completa por su ID
    */
-  private obtenerDetallesCapa(id: string): Observable<Partial<ResearchLayer>> {
+  obtenerCapaPorId(id: string): Observable<ResearchLayer> {
     const headers = this.getAuthHeaders();
     const params = new HttpParams().set('id', id);
 
-    return this.http.get<Partial<ResearchLayer>>(this.API_RESEARCH_LAYER_URL, {
+    return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, {
       headers,
       params
     }).pipe(
       catchError(error => {
+        console.error('Error al obtener capa por ID:', error);
+        return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));
+      })
+    );
+  }
+  /**
+ * Obtiene detalles adicionales de una capa por ID
+ */
+  private obtenerDetallesCapa(id: string): Observable<ResearchLayer> {  // Cambiado a ResearchLayer en lugar de Partial
+    const headers = this.getAuthHeaders();
+    const params = new HttpParams().set('id', id);
+
+    return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, {
+      headers,
+      params
+    }).pipe(
+      tap(response => console.log('Detalles de capa obtenidos:', response)),
+      catchError(error => {
         console.error('Error al obtener detalles:', error);
-        return throwError(() => new Error('Error al obtener detalles de la capa'));
+        if (error.status === 404) {
+          return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));
+        }
+        return throwError(() => new Error(`Error del servidor al obtener la capa: ${error.message}`));
       })
     );
   }

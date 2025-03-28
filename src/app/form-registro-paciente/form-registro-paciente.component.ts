@@ -22,32 +22,32 @@ import Swal from 'sweetalert2';
 export class FormRegistroPacienteComponent implements OnInit {
   /** Paso actual del formulario (1-4) */
   pasoActual = 1;
-  
+
   /** Indica si el paciente tiene cuidador asociado */
   tieneCuidador = false;
-  
+
   /** ID de la capa de investigación asociada al usuario */
   currentResearchLayerId: string = '';
-  
+
   /** Bandera que indica si se está enviando el formulario */
   isSending = false;
 
   // Objetos para almacenar los datos del formulario
   /** Almacena los datos personales del paciente */
   pacienteData: any = {};
-  
+
   /** Almacena los datos clínicos del paciente */
   clinicalData: any[] = [];
-  
+
   /** Almacena los datos del cuidador (si aplica) */
   cuidadorData: any = {};
-  
+
   /** Almacena los datos del profesional de salud */
   profesionalData: any = {};
 
   /** Controla la visibilidad del modal de previsualización */
   showPreviewModal = false;
-  
+
   /** Datos formateados para mostrar en la previsualización */
   previewData: any = {};
 
@@ -75,18 +75,40 @@ export class FormRegistroPacienteComponent implements OnInit {
    */
   private loadUserResearchLayer(): void {
     const email = this.authService.getUserEmail();
-    if (!email) return;
+    if (!email) {
+      this.showErrorAlert('No se pudo obtener el email del usuario');
+      return;
+    }
 
     this.consolaService.obtenerUsuarioAutenticado(email).subscribe({
       next: (response) => {
         if (response?.[0]?.attributes?.researchLayerId?.[0]) {
-          const nombreCapa = response[0].attributes.researchLayerId[0];
-          this.loadResearchLayerId(nombreCapa);
+          const researchLayerId = response[0].attributes.researchLayerId[0];
+          this.verifyResearchLayerExists(researchLayerId);
+        } else {
+          this.showErrorAlert('Usuario no tiene asignada una capa de investigación');
         }
       },
       error: (err) => {
         console.error('Error al cargar usuario:', err);
         this.showErrorAlert('Error al cargar información del usuario');
+      }
+    });
+  }
+
+  private verifyResearchLayerExists(researchLayerId: string): void {
+    this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({
+      next: (capa) => {
+        if (capa && capa.id) {
+          this.currentResearchLayerId = capa.id;
+          console.log('Capa cargada correctamente:', capa);
+        } else {
+          this.showErrorAlert('La capa de investigación no existe');
+        }
+      },
+      error: (err) => {
+        console.error('Error al verificar capa:', err);
+        this.showErrorAlert('Error al verificar la capa de investigación');
       }
     });
   }
@@ -175,7 +197,7 @@ export class FormRegistroPacienteComponent implements OnInit {
    */
   confirmRegistration(): void {
     this.showPreviewModal = false;
-    
+
     Swal.fire({
       title: '¿Confirmar registro?',
       text: '¿Está seguro que desea registrar estos datos?',
@@ -191,7 +213,7 @@ export class FormRegistroPacienteComponent implements OnInit {
       }
     });
   }
-  
+
   /**
    * Cancela el registro y cierra el modal de previsualización
    */
@@ -216,7 +238,7 @@ export class FormRegistroPacienteComponent implements OnInit {
       this.showErrorAlert('Por favor complete todos los campos requeridos');
       return;
     }
-  
+
     this.showPreviewModal = true;
 
     Swal.fire({
