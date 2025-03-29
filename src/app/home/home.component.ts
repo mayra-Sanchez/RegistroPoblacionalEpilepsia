@@ -174,7 +174,7 @@ export class HomeComponent {
     {
       id: 'mayra',
       nombre: 'Mayra Alejandra Sánchez Salinas',
-      rol: 'Estudiante',
+      rol: 'Estudiante / Desarrolladora frontend',
       imagen: '../../assets/directores_estudiantes/may.jpg',
       etiquetas: ['Estudiante', 'Investigadora'],
       biografia: 'Estudiante de Ingeniería de Sistemas en la Universidad del Valle, con interés en el desarrollo de software, bases de datos y análisis de datos. Ha participado en proyectos de investigación en el área de salud y tecnología.',
@@ -195,7 +195,7 @@ export class HomeComponent {
     {
       id: 'laura',
       nombre: 'Laura Daniela Jaimes Cárdenas',
-      rol: 'Estudiante',
+      rol: 'Estudiante / Desarrolladora backend',
       imagen: '../../assets/directores_estudiantes/laura.jpg',
       etiquetas: ['Estudiante', 'Investigadora'],
       biografia: 'Estudiante de Ingeniería de Sistemas en la Universidad del Valle, con interés en inteligencia artificial, visión por computadora y desarrollo de software. Ha participado en proyectos relacionados con el análisis de imágenes médicas y salud digital.',

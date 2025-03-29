@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { ConsolaRegistroService } from '../services/consola-registro.service';
 import { Register, Variable } from '../interfaces';
 import { finalize } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 /**
  * Componente modal para editar registros de pacientes.
@@ -88,7 +89,7 @@ export class EditRegistroModalComponent {
    */
   onSubmit() {
     if (!this.registro || !this.registro.registerId) {
-      this.errorMessage = 'Datos del registro no válidos';
+      this.showErrorAlert('Datos del registro no válidos');
       return;
     }
 
@@ -110,16 +111,45 @@ export class EditRegistroModalComponent {
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (response) => {
-          this.successMessage = 'Registro actualizado correctamente';
+          this.showSuccessAlert('Registro actualizado correctamente');
           this.registroActualizado.emit(response);
           setTimeout(() => this.closeModal(), 1500);
         },
         error: (err) => {
           console.error('Error completo:', err);
           console.error('Detalles del error:', err.error);
-          this.errorMessage = this.getErrorMessage(err);
+          const errorMsg = this.getErrorMessage(err);
+          this.showErrorAlert(errorMsg);
         }
       });
+  }
+
+  /**
+   * Muestra una alerta de éxito con SweetAlert
+   * @param message - Mensaje a mostrar
+   */
+  private showSuccessAlert(message: string): void {
+    Swal.fire({
+      title: 'Éxito!',
+      text: message,
+      icon: 'success',
+      confirmButtonText: 'Aceptar',
+      timer: 2000,
+      timerProgressBar: true
+    });
+  }
+
+  /**
+   * Muestra una alerta de error con SweetAlert
+   * @param message - Mensaje a mostrar
+   */
+  private showErrorAlert(message: string): void {
+    Swal.fire({
+      title: 'Error!',
+      text: message,
+      icon: 'error',
+      confirmButtonText: 'Aceptar'
+    });
   }
 
   /**

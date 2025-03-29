@@ -537,8 +537,7 @@ export class ConsolaRegistroComponent implements OnInit {
         this.loadRegistros(this.currentPage, this.pageSize);
         break;
       case 'inicioDigitador':
-        // Refrescar datos del dashboard si es necesario
-        this.loadRegistros(0, 5); // Cargar solo los primeros 5 para el dashboard
+        this.loadRegistros(0, 5);
         break;
       default:
         break;

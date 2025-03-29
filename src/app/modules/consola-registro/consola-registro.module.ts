@@ -18,6 +18,7 @@ import { SignaturePadComponent } from 'src/app/form-registro-paciente/components
 import { PacienteFormComponent } from 'src/app/form-registro-paciente/components/paciente-form/paciente-form.component';
 import { ViewRegistroModalComponent } from './view-registro-modal/view-registro-modal.component';
 import { EditRegistroModalComponent } from './edit-registro-modal/edit-registro-modal.component';
+import { ConsultaDinamicaComponent } from './consulta-dinamica/consulta-dinamica.component';
 
 @NgModule({
   declarations: [
@@ -32,6 +33,7 @@ import { EditRegistroModalComponent } from './edit-registro-modal/edit-registro-
     PacienteFormComponent,
     ViewRegistroModalComponent,
     EditRegistroModalComponent,
+    ConsultaDinamicaComponent,
   ],
   imports: [
     CommonModule,
