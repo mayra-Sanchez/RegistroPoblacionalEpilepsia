@@ -10,7 +10,6 @@ export class HandleEditComponent {
   @Input() itemToEdit: any;
   @Input() editType: string = '';
   @Input() capas: any[] = [];
-  @Input() tiposVariables: string[] = [];
   @Output() saveChanges = new EventEmitter<any>();
   @Output() closeModal = new EventEmitter<void>();
 
@@ -20,6 +19,19 @@ export class HandleEditComponent {
   ngOnInit() {
     if (this.editType === 'variable') {
       this.tieneOpciones = this.itemToEdit.options && this.itemToEdit.options.length > 0;
+    }
+
+    if (!this.itemToEdit.capaRawValue && this.capas.length > 0) {
+      this.itemToEdit.capaRawValue = this.capas[0].id;
+    }
+  }
+
+  getEditTypeIcon(): string {
+    switch (this.editType) {
+      case 'usuario': return 'fa-user-edit';
+      case 'variable': return 'fa-pencil-alt';
+      case 'capa': return 'fa-layer-group';
+      default: return 'fa-edit';
     }
   }
 

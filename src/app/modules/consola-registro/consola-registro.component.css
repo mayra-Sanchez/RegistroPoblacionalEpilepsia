@@ -18,7 +18,6 @@
   z-index: 1000;
 }
 
-
 .recent-item.clickable {
   cursor: pointer;
   transition: background-color 0.2s ease;

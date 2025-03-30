@@ -14,12 +14,13 @@
     </div>
 
     <div class="type-filters">
-      <button *ngFor="let type of availableTypes" [class.active]="activeTypeFilter === type"
-        (click)="filterByType(type)">
-        {{getTypeLabel(type)}}
-      </button>
       <button [class.active]="!activeTypeFilter" (click)="clearTypeFilter()">
         Todas
+      </button>
+      <button *ngFor="let type of availableTypes" 
+              [class.active]="activeTypeFilter === type"
+              (click)="filterByType(type)">
+        {{getTypeLabel(type)}}
       </button>
     </div>
   </div>
@@ -54,41 +55,47 @@
 
       <div class="variable-control">
         <ng-container [ngSwitch]="variableGroup.get('type')?.value">
-          <!-- Input numérico (Entero) -->
-          <input *ngSwitchCase="'Entero'" type="number" formControlName="valor"
-            [placeholder]="getPlaceholder(variableGroup)" [required]="variableGroup.get('required')?.value"
-            (input)="onInputChange(variableGroup)">
-
-          <!-- Input decimal -->
-          <input *ngSwitchCase="'Decimal'" type="number" step="0.01" formControlName="valor"
-            [placeholder]="getPlaceholder(variableGroup)" [required]="variableGroup.get('required')?.value"
-            (input)="onInputChange(variableGroup)">
-
-          <!-- Input texto -->
-          <input *ngSwitchCase="'Texto'" type="text" formControlName="valor"
-            [placeholder]="getPlaceholder(variableGroup)" [required]="variableGroup.get('required')?.value"
-            (input)="onInputChange(variableGroup)">
-
-          <!-- Selector booleano -->
-          <select *ngSwitchCase="'Booleano'" formControlName="valor" [required]="variableGroup.get('required')?.value"
-            (change)="onInputChange(variableGroup)">
+          <!-- Options selector (for any type with options) -->
+          <select *ngSwitchCase="'Opciones'" formControlName="valor"
+                  [required]="variableGroup.get('required')?.value"
+                  (change)="onInputChange(variableGroup)">
+            <option [ngValue]="null" disabled>Seleccione...</option>
+            <option *ngFor="let option of variableGroup.get('options')?.value" [ngValue]="option">
+              {{option}}
+            </option>
+          </select>
+        
+          <!-- Boolean selector (only for Lógico without options) -->
+          <select *ngSwitchCase="'Booleano'" formControlName="valor"
+                  [required]="variableGroup.get('required')?.value"
+                  (change)="onInputChange(variableGroup)">
             <option [ngValue]="null" disabled>Seleccione...</option>
             <option [ngValue]="true">Sí</option>
             <option [ngValue]="false">No</option>
           </select>
-
-          <!-- Selector de opciones -->
-          <select *ngSwitchCase="'Opciones'" formControlName="valor" [required]="variableGroup.get('required')?.value"
-            (change)="onInputChange(variableGroup)">
-            <option [ngValue]="null" disabled>Seleccione...</option>
-            <option *ngFor="let opcion of variableGroup.get('options')?.value" [ngValue]="opcion">
-              {{opcion}}
-            </option>
-          </select>
-
-          <!-- Selector de fecha -->
+        
+          <!-- Integer input -->
+          <input *ngSwitchCase="'Entero'" type="number" formControlName="valor"
+                 [placeholder]="getPlaceholder(variableGroup)"
+                 [required]="variableGroup.get('required')?.value"
+                 (input)="onInputChange(variableGroup)">
+        
+          <!-- Decimal input -->
+          <input *ngSwitchCase="'Decimal'" type="number" step="0.01" formControlName="valor"
+                 [placeholder]="getPlaceholder(variableGroup)"
+                 [required]="variableGroup.get('required')?.value"
+                 (input)="onInputChange(variableGroup)">
+        
+          <!-- Text input -->
+          <input *ngSwitchCase="'Texto'" type="text" formControlName="valor"
+                 [placeholder]="getPlaceholder(variableGroup)"
+                 [required]="variableGroup.get('required')?.value"
+                 (input)="onInputChange(variableGroup)">
+        
+          <!-- Date input -->
           <input *ngSwitchCase="'Fecha'" type="date" formControlName="valor"
-            [required]="variableGroup.get('required')?.value" (change)="onInputChange(variableGroup)">
+                 [required]="variableGroup.get('required')?.value"
+                 (change)="onInputChange(variableGroup)">
         </ng-container>
 
         <div class="variable-footer">

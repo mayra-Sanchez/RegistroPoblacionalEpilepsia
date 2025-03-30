@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from 'src/app/login/services/auth.service';
 import { ConsolaRegistroService } from './services/consola-registro.service';
 import { Variable, UserResponse, ResearchLayer, Register } from './interfaces';
-import { ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, NgZone } from '@angular/core';
 
 /**
  * Componente principal de la consola de registro
@@ -158,7 +158,8 @@ export class ConsolaRegistroComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private consolaService: ConsolaRegistroService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {
     this.consolaService.dataChanged$.subscribe(() => {
       this.refreshData();
@@ -171,6 +172,7 @@ export class ConsolaRegistroComponent implements OnInit {
   ngOnInit() {
     this.loadUserData();
     this.refreshData();
+    this.loadRegistros();
   }
 
   /**
@@ -228,11 +230,8 @@ export class ConsolaRegistroComponent implements OnInit {
   /**
    * Carga la capa de investigación asignada al usuario
    */
-  /**
- * Carga la capa de investigación asignada al usuario
- */
   loadCapaInvestigacion() {
-    const researchLayerId = this.userData?.attributes?.researchLayerId?.[0]; // Cambiado de nombreCapa a researchLayerId
+    const researchLayerId = this.userData?.attributes?.researchLayerId?.[0];
 
     if (!researchLayerId) {
       console.warn('No se encontró ID de capa en userData');
@@ -241,7 +240,7 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
-    this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({ // Usar el nuevo método por ID
+    this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({
       next: (capa) => {
         this.currentResearchLayer = capa;
         this.updateDatosCapa(capa);
@@ -336,22 +335,27 @@ export class ConsolaRegistroComponent implements OnInit {
   /**
    * Maneja la visualización de un registro
    * 
-   * @param registro Registro a visualizar
+   * @param registro Puede ser un objeto completo Register o un item de la tabla/lista
    */
-  handleView(registro: any) {
-    if (registro.registerId) {
+  handleView(registro: any): void {
+    // Verifica si es un registro completo o necesita transformación
+    if (registro?._fullData) {
+      // Caso cuando viene desde la tabla (contiene _fullData)
+      this.selectedRegistro = registro._fullData;
+    } else if (registro?.registerId) {
+      // Caso cuando ya es un objeto Register completo
       this.selectedRegistro = registro;
-    }
-    else {
-      this.selectedRegistro = this.registros.find(r =>
-        r.patientIdentificationNumber === registro.documento) || null;
+    } else {
+      // Caso cuando viene de registrosRecientes (buscar en el array original)
+      const registroCompleto = this.registros.find(r =>
+        r.patientIdentificationNumber === registro.documento ||
+        r.registerId === registro.id
+      );
+      this.selectedRegistro = registroCompleto || registro;
     }
 
-    if (this.selectedRegistro) {
-      this.showViewModal = true;
-    } else {
-      console.error('Registro no encontrado');
-    }
+    this.showViewModal = true;
+    this.cdr.detectChanges();
   }
 
   /**
@@ -359,33 +363,28 @@ export class ConsolaRegistroComponent implements OnInit {
    * 
    * @param row Fila con los datos del registro a editar
    */
-  handleEdit(row: any) {
-    const registroEncontrado = this.registros.find(r =>
-      r.patientIdentificationNumber === row.documento);
-
-    if (!registroEncontrado) {
-      console.error('Registro no encontrado');
-      return;
-    }
-
-    this.selectedRegistro = JSON.parse(JSON.stringify(registroEncontrado)) as Register;
+  handleEdit(row: any): void {
+    this.selectedRegistro = { ...row._fullData }; // Copia para edición
     this.showEditModal = true;
+    this.cdr.detectChanges();
   }
 
   /**
    * Cierra el modal de visualización
    */
-  closeViewModal() {
+  closeViewModal(): void {
     this.showViewModal = false;
     this.selectedRegistro = null;
+    this.cdr.detectChanges();
   }
 
   /**
    * Cierra el modal de edición
    */
-  closeEditModal() {
+  closeEditModal(): void {
     this.showEditModal = false;
     this.selectedRegistro = null;
+    this.cdr.detectChanges();
   }
 
   /**
@@ -423,29 +422,72 @@ export class ConsolaRegistroComponent implements OnInit {
     this.loadingRegistros = true;
 
     this.consolaService.obtenerRegistros(page, size).subscribe({
-      next: (response) => {
-        this.registros = response.registers || [];
-        this.usuariosData = this.mapearDatosUsuarios(this.registros);
-        this.totalElements = response.totalElements || 0;
+      next: (response: { registers?: Register[]; totalElements?: number }) => {
+        // Verificar que tenemos una capa de investigación asignada
+        if (!this.currentResearchLayer?.id) {
+          console.warn('No hay capa de investigación asignada');
+          this.resetRegistros();
+          return;
+        }
 
+        const currentLayerId = this.currentResearchLayer.id;
+
+        // 1. Filtrar registros por la capa actual del usuario
+        const registrosFiltrados = (response.registers || []).filter(registro => {
+          // Verificar si el registro tiene variables de la capa actual
+          return registro.variablesRegister?.some(
+            (variable: any) => variable.researchLayerId === currentLayerId
+          );
+        });
+
+        // 2. Usar los registros filtrados
+        this.registros = registrosFiltrados;
+
+        // 3. Mapear datos para tabla
+        this.usuariosData = this.registros.map(registro => ({
+          nombre: registro.patientBasicInfo?.name || 'No disponible',
+          documento: registro.patientIdentificationNumber.toString(),
+          fechaRegistro: registro.registerDate
+            ? new Date(registro.registerDate).toLocaleDateString()
+            : 'Fecha no disponible',
+          registradoPor: registro.healthProfessional?.name || 'Desconocido',
+          _fullData: registro
+        }));
+
+        // 4. Actualizar estadísticas
+        this.totalElements = registrosFiltrados.length;
         this.totalPacientes = this.totalElements;
 
-        this.actualizarRegistrosRecientes(this.registros);
-
+        // 5. Actualizar registros recientes
+        // En loadRegistros(), actualiza la parte de registrosRecientes:
+        this.registrosRecientes = this.registros
+          .sort((a, b) => new Date(b.registerDate).getTime() - new Date(a.registerDate).getTime())
+          .slice(0, 5)
+          .map(registro => ({
+            // Mantén los datos básicos para mostrar
+            nombre: registro.patientBasicInfo?.name || 'No disponible',
+            documento: registro.patientIdentificationNumber.toString(),
+            fecha: registro.registerDate,
+            // Guarda referencia al objeto completo
+            _fullData: registro
+          }));
         this.loadingRegistros = false;
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error al cargar registros:', err);
-        this.usuariosData = [];
-        this.registrosRecientes = [];
-        this.totalElements = 0;
-        this.totalPacientes = 0;
-        this.pacientesHoy = 0;
-        this.loadingRegistros = false;
-        this.cdr.detectChanges();
+        this.resetRegistros();
       }
     });
+  }
+
+  private resetRegistros() {
+    this.registros = [];
+    this.usuariosData = [];
+    this.registrosRecientes = [];
+    this.totalElements = 0;
+    this.loadingRegistros = false;
+    this.cdr.detectChanges();
   }
 
   /**

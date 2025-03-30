@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { Register } from '../interfaces';
 import { DatePipe } from '@angular/common';
+import { Output, EventEmitter } from '@angular/core';
 @Component({
   selector: 'app-view-registro-modal',
   templateUrl: './view-registro-modal.component.html',
@@ -9,7 +10,7 @@ import { DatePipe } from '@angular/common';
 })
 export class ViewRegistroModalComponent {
   @Input() registro: Register | null = null;
-  @Input() closeModal!: () => void;
+  @Output() close = new EventEmitter<void>();
 
   // Opciones para los selectores
   tiposIdentificacion = [
@@ -73,5 +74,9 @@ export class ViewRegistroModalComponent {
     return Object.values(caregiver).some(
       (val: any) => val !== null && val !== undefined && val !== ''
     );
+  }
+
+  closeModal() {
+    this.close.emit();
   }
 }

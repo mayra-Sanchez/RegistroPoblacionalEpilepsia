@@ -58,10 +58,13 @@
               </div>
               <ul>
                 <h2> Últimos usuarios creados</h2>
-                <li *ngFor="let usuario of ultimosUsuarios" (click)="handleView(usuario, 'usuario')">
-                  👤 {{ usuario.nombre }} - {{ usuario.rol }}
+                <li *ngFor="let usuario of ultimosUsuarios" (click)="handleView(usuario, 'usuario')" class="user-item">
+                    👤 {{ usuario.nombre }} - {{ transformarRol(usuario.rol) }}
+                    <span class="capa-info" *ngIf="usuario.detalles.capaRawValue">
+                        ({{ getCapaNombreByIdVariables(usuario.detalles.capaRawValue) }})
+                    </span>
                 </li>
-              </ul>
+            </ul>
               <div class="descarga">
                 <button mat-raised-button color="primary" (click)="exportarCSV()">
                   <mat-icon>download</mat-icon> Exportar datos de todos los usuarios
@@ -88,7 +91,7 @@
                   <ng-container *ngIf="registro.tipo === 'usuario'">
                     <b>Usuario:</b> {{ registro.data.username }} <br>
                     <b>Email:</b> {{ registro.data.email }} <br>
-                    <b>Rol:</b> {{ registro.data.attributes?.role?.join(', ') || 'Sin rol' }}
+                    <b>Rol:</b> {{ transformarRol(registro.data.attributes?.role?.join(', ')) }}
                   </ng-container>
 
                   <ng-container *ngIf="registro.tipo === 'capa'">
@@ -191,7 +194,7 @@
   [editType]="'usuario'"
   [capas]="capas"
   (saveChanges)="guardarEdicionUsuario($event)"
-  (closeModal)="cerrarModal()">
+  (closeModal)="cerrarModal($event)">
 </app-handle-edit>
 
 <!-- Modal para edición de variable -->
@@ -200,9 +203,8 @@
   [itemToEdit]="varToEdit"
   [editType]="'variable'"
   [capas]="capas"
-  [tiposVariables]="tiposVariables"
   (saveChanges)="guardarEdicionVariable($event)"
-  (closeModal)="cerrarModal()">
+  (closeModal)="cerrarModal($event)">
 </app-handle-edit>
 
 <!-- Modal para edición de capa -->
@@ -211,6 +213,6 @@
   [itemToEdit]="capaToEdit"
   [editType]="'capa'"
   [capas]="capas"
-  (saveChanges)="guardarEdicionCapa()"
-  (closeModal)="cerrarModal()">
+  (saveChanges)="guardarEdicionCapa($event)"
+  (closeModal)="cerrarModal($event)">
 </app-handle-edit>

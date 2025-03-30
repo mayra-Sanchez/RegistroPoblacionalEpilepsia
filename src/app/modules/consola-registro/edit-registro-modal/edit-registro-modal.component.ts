@@ -3,7 +3,6 @@ import { ConsolaRegistroService } from '../services/consola-registro.service';
 import { Register, Variable } from '../interfaces';
 import { finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
-
 /**
  * Componente modal para editar registros de pacientes.
  * Permite la edición de información básica del paciente, variables de investigación,
@@ -17,13 +16,13 @@ import Swal from 'sweetalert2';
 export class EditRegistroModalComponent {
   /** Registro a editar, recibido como input desde el componente padre */
   @Input() registro: Register | null = null;
-  
+
   /** Función para cerrar el modal, proporcionada por el componente padre */
-  @Input() closeModal!: () => void;
-  
+  @Output() close = new EventEmitter<void>();
+
   /** EventEmitter para notificar cuando se ha actualizado un registro */
   @Output() registroActualizado = new EventEmitter<Register>();
-  
+
   /** EventEmitter para notificar cuando se guardan los cambios */
   @Output() saveChanges = new EventEmitter<Register>();
 
@@ -32,6 +31,16 @@ export class EditRegistroModalComponent {
   errorMessage: string | null = null;    // Mensaje de error a mostrar
   successMessage: string | null = null;  // Mensaje de éxito a mostrar
   activeTab: string = 'paciente'; // Pestaña activa en la interfaz
+
+  closeModal() {
+    this.close.emit();
+  }
+
+  onSave() {
+    if (this.registro) {
+      this.saveChanges.emit(this.registro);
+    }
+  }
 
   // Opciones para los selectores del formulario
   tiposIdentificacion = [
@@ -73,7 +82,7 @@ export class EditRegistroModalComponent {
 
   estadosCrisis = ['Activa', 'Remisión', 'Estable', 'Crítica', 'Recuperado'];
 
-  constructor(private registroService: ConsolaRegistroService) {}
+  constructor(private registroService: ConsolaRegistroService) { }
 
   /**
    * Cambia la pestaña activa en la interfaz
@@ -113,7 +122,7 @@ export class EditRegistroModalComponent {
         next: (response) => {
           this.showSuccessAlert('Registro actualizado correctamente');
           this.registroActualizado.emit(response);
-          setTimeout(() => this.closeModal(), 1500);
+          setTimeout(() => close(), 1500);
         },
         error: (err) => {
           console.error('Error completo:', err);
@@ -176,7 +185,7 @@ export class EditRegistroModalComponent {
    */
   private prepareUpdateData(): any {
     if (!this.registro) return null;
-  
+
     const payload: any = {
       variables: this.prepareVariablesArray(),
       patientIdentificationNumber: this.registro.patientIdentificationNumber,
@@ -197,7 +206,7 @@ export class EditRegistroModalComponent {
         crisisStatus: this.registro.patientBasicInfo?.crisisStatus || ''
       }
     };
-  
+
     // Incluye datos del cuidador solo si existen
     if (this.registro.caregiver && this.hasCaregiverData(this.registro.caregiver)) {
       payload.caregiver = {
@@ -209,7 +218,7 @@ export class EditRegistroModalComponent {
         occupation: this.registro.caregiver.occupation || null
       };
     }
-  
+
     // Incluye datos del profesional de la salud si existen
     if (this.registro.healthProfessional) {
       payload.healthProfessional = {
@@ -218,7 +227,7 @@ export class EditRegistroModalComponent {
         identificationNumber: this.registro.healthProfessional.identificationNumber || null
       };
     }
-  
+
     return this.cleanPayload(payload);
   }
 
@@ -229,12 +238,12 @@ export class EditRegistroModalComponent {
    */
   private hasCaregiverData(caregiver: any): boolean {
     if (!caregiver) return false;
-    
+
     return Object.values(caregiver).some(
       (val: any) => val !== null && val !== undefined && val !== ''
     );
   }
-  
+
   /**
    * Limpia el payload eliminando campos vacíos, nulos o undefined
    * @param obj - Objeto a limpiar
@@ -244,19 +253,19 @@ export class EditRegistroModalComponent {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
-  
+
     if (Array.isArray(obj)) {
       return obj.map(item => this.cleanPayload(item));
     }
-  
+
     const cleaned: { [key: string]: any } = {}; // Firma de índice explícita
     for (const [key, value] of Object.entries(obj)) {
       if (value !== null && value !== undefined && value !== '') {
         const cleanedValue = typeof value === 'object' ? this.cleanPayload(value) : value;
-        
-        if (typeof cleanedValue !== 'object' || 
-            (Array.isArray(cleanedValue) && cleanedValue.length > 0) || 
-            (Object.keys(cleanedValue).length > 0)) {
+
+        if (typeof cleanedValue !== 'object' ||
+          (Array.isArray(cleanedValue) && cleanedValue.length > 0) ||
+          (Object.keys(cleanedValue).length > 0)) {
           cleaned[key] = cleanedValue;
         }
       }
@@ -320,21 +329,21 @@ export class EditRegistroModalComponent {
    */
   private formatDateForAPI(dateValue: any): string | null {
     if (!dateValue) return null;
-  
+
     if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
       return dateValue;
     }
-  
+
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) {
       console.error('Fecha inválida:', dateValue);
       return null;
     }
-  
+
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
-  
+
     return `${day}-${month}-${year}`;
   }
 
@@ -366,5 +375,42 @@ export class EditRegistroModalComponent {
     if (index !== -1) {
       this.registro.variablesRegister[index].value = event.target.value;
     }
+  }
+
+  /**
+   * Prepara la fecha para el input type = "date"(YYYY - MM - DD)
+    */
+  prepareDateForInput(dateString: string | null | undefined): string {
+    if (!dateString) return '';
+
+    // Si ya está en formato YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+
+    // Convierte desde DD-MM-YYYY
+    const [day, month, year] = dateString.split('-');
+    if (day && month && year) {
+      return `${year}-${month}-${day}`;
+    }
+
+    // Intenta parsear como objeto Date
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+
+    return '';
+  }
+
+  /**
+   * Convierte al formato de almacenamiento (DD-MM-YYYY)
+   */
+  convertToStorageFormat(dateString: string): string {
+    if (!dateString) return '';
+
+    const [year, month, day] = dateString.split('-');
+    if (year && month && day) {
+      return `${day}-${month}-${year}`;
+    }
+    return dateString;
   }
 }

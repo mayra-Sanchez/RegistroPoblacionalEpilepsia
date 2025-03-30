@@ -1,67 +1,85 @@
-<div class="user-form-container">
-  <h2>Crear variable</h2>
-  <form [formGroup]="form" (ngSubmit)="crearVariable()">
-    
-    <div class="form-row">
-      <label>Nombre de la variable:</label>
-      <input type="text" placeholder="Nombre" formControlName="variableName" required />
-      <div *ngIf="campoEsValido('variableName')">
-        <small class="error-message" *ngIf="form.get('variableName')?.hasError('required')">El nombre es obligatorio.</small>
-        <small class="error-message" *ngIf="form.get('variableName')?.hasError('minlength')">El nombre debe tener al menos 3 caracteres.</small>
+<div class="form-container">
+  <div class="form-header">
+    <h2><i class="fas fa-plus-circle"></i> Crear Variable</h2>
+    <p>Complete los campos para crear una nueva variable</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="crearVariable()" class="uniform-form">
+    <!-- Nombre de la variable -->
+    <div class="form-group uniform">
+      <label for="variableName"><i class="fas fa-tag"></i> Nombre de la variable</label>
+      <input type="text" id="variableName" formControlName="variableName" placeholder="Ej: Temperatura" />
+      <div *ngIf="campoEsValido('variableName')" class="error-messages">
+        <small *ngIf="form.get('variableName')?.hasError('required')">El nombre es obligatorio</small>
+        <small *ngIf="form.get('variableName')?.hasError('minlength')">Mínimo 3 caracteres</small>
       </div>
     </div>
 
-    <div class="form-row">
-      <label>Descripción de la variable:</label>
-      <textarea placeholder="Descripción" formControlName="description" required></textarea>
-      <div *ngIf="campoEsValido('description')">
-        <small class="error-message" *ngIf="form.get('description')?.hasError('required')">La descripción es obligatoria.</small>
-        <small class="error-message" *ngIf="form.get('description')?.hasError('minlength')">La descripción debe tener al menos 5 caracteres.</small>
+    <!-- Descripción -->
+    <div class="form-group uniform">
+      <label for="description"><i class="fas fa-align-left"></i> Descripción</label>
+      <textarea id="description" formControlName="description" placeholder="Descripción detallada de la variable"></textarea>
+      <div *ngIf="campoEsValido('description')" class="error-messages">
+        <small *ngIf="form.get('description')?.hasError('required')">La descripción es obligatoria</small>
+        <small *ngIf="form.get('description')?.hasError('minlength')">Mínimo 5 caracteres</small>
       </div>
     </div>
 
-    <div class="form-row">
-      <label>Tipo de variable:</label>
-      <select formControlName="type" required>
-        <option value="" disabled selected>Tipo de variable</option>
+    <!-- Tipo de variable -->
+    <div class="form-group uniform">
+      <label for="type"><i class="fas fa-list-alt"></i> Tipo de variable</label>
+      <select id="type" formControlName="type">
+        <option value="" disabled selected>Seleccione tipo...</option>
         <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
       </select>
-      <div *ngIf="campoEsValido('type')">
-        <small class="error-message" *ngIf="form.get('type')?.hasError('required')">El tipo es obligatorio.</small>
+      <div *ngIf="campoEsValido('type')" class="error-messages">
+        <small *ngIf="form.get('type')?.hasError('required')">El tipo es obligatorio</small>
       </div>
     </div>
 
-    <div class="form-row">
-      <label>Capa de investigación:</label>
-      <select formControlName="researchLayerId" required>
-        <option value="" disabled selected>Selecciona una capa</option>
+    <!-- Capa de investigación -->
+    <div class="form-group uniform">
+      <label for="researchLayerId"><i class="fas fa-layer-group"></i> Capa de investigación</label>
+      <select id="researchLayerId" formControlName="researchLayerId">
+        <option value="" disabled selected>Seleccione capa...</option>
         <option *ngFor="let capa of capasInvestigacion" [value]="capa.id">{{ capa.layerName }}</option>
       </select>
-      <div *ngIf="campoEsValido('researchLayerId')">
-        <small class="error-message" *ngIf="form.get('researchLayerId')?.hasError('required')">La capa de investigación es obligatoria.</small>
+      <div *ngIf="campoEsValido('researchLayerId')" class="error-messages">
+        <small *ngIf="form.get('researchLayerId')?.hasError('required')">La capa es obligatoria</small>
       </div>
     </div>
 
-    <div class="form-row checkbox-row">
+    <!-- Checkbox de opciones -->
+    <div class="form-group uniform checkbox-group">
       <label>
-        <span>¿Tiene opciones?</span>
-        <input type="checkbox" formControlName="hasOptions" (change)="onHasOptionsChange()" />
+        <input type="checkbox" id="hasOptions" formControlName="hasOptions" (change)="onHasOptionsChange()" />
+        <span><i class="fas fa-check-circle"></i> ¿Tiene opciones?</span>
       </label>
-    </div>    
-
-    <div *ngIf="form.value.hasOptions" formArrayName="options" class="form-row">
-      <label class="options">Opciones:</label>
-      <div *ngFor="let opcion of options.controls; let i = index" class="option-item">
-        <input type="text" class="input-options" [formControlName]="i" required />
-        <button type="button" class="btn btn-delete" (click)="eliminarOpcion(i)">
-          <i class="fas fa-trash"></i> 
-        </button>
-      </div>
-      <button type="button" class="btn btn-agregate" (click)="agregarOpcion()">Agregar opción</button>
     </div>
-    
-    <div class="form-button">
-      <button type="submit" class="btn btn-primary">Crear</button>
+
+    <!-- Opciones dinámicas -->
+    <div *ngIf="form.value.hasOptions" formArrayName="options" class="options-container">
+      <label class="options-label"><i class="fas fa-list-ul"></i> Opciones:</label>
+      
+      <div *ngFor="let opcion of options.controls; let i = index" class="option-item">
+        <div class="input-with-button">
+          <input type="text" [formControlName]="i" placeholder="Nombre de opción" required />
+          <button type="button" class="btn-icon" (click)="eliminarOpcion(i)" title="Eliminar opción">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-add" (click)="agregarOpcion()">
+        <i class="fas fa-plus"></i> Agregar opción
+      </button>
+    </div>
+
+    <!-- Botón de envío -->
+    <div class="form-footer">
+      <button type="submit" class="submit-button" [disabled]="form.invalid">
+        <i class="fas fa-save"></i> Crear Variable
+      </button>
     </div>
   </form>
 </div>

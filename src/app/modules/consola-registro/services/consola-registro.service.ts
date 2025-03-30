@@ -113,7 +113,7 @@ export class ConsolaRegistroService {
       .set('sort', sort)
       .set('sortDirection', sortDirection);
 
-    return this.http.get<any>('http://localhost:8080/api/v1/registers/all', { params })
+    return this.http.get<any>(`${this.API_URL}/all`, { params })
       .pipe(
         catchError(error => {
           console.error('Error en obtenerRegistros:', error);

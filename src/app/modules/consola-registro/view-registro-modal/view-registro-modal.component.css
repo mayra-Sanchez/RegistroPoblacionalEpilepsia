@@ -26,17 +26,20 @@
     flex-direction: column;
     transform: translateY(10px);
     animation: slideUp 0.35s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 2px solid rgb(255, 255, 255);
   }
   
   .modal-header {
-    padding: 1.25rem 1.5rem;
-    background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
-    color: white;
+    padding: 20px 30px;
+    border-bottom: 1px solid #f0f2f5;
+    background: linear-gradient(135deg, #0f5ead, #11A6DA);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    color: white;
+    top: 0;
+    z-index: 10;
   }
   
   .modal-title {
@@ -48,23 +51,25 @@
   }
   
   .close-btn {
-    background: rgba(255, 255, 255, 0.15);
+    background: none;
     border: none;
-    color: white;
-    width: 32px;
-    height: 32px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 5px;
+    color: #000000;
+    transition: all 0.3s;
+    line-height: 1;
     border-radius: 50%;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1.2rem;
-    line-height: 1;
   }
   
   .close-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background-color: #f5f7fa;
+    color: #e74c3c;
     transform: rotate(90deg);
   }
   

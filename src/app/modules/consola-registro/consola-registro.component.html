@@ -2,8 +2,8 @@
   <app-navbar-registro (tabSelected)="onTabSelected($event)"></app-navbar-registro>
 
   <div class="contentDigitador">
+    <!-- Contenido de las pestañas (igual que antes) -->
     <div *ngIf="selectedTab === 'inicioDigitador'" class="digitador-dashboard">
-      <!-- Encabezado con título y bienvenida -->
       <div class="dashboard-header">
         <p class="welcome-message">Bienvenido/a, {{ username }}</p>
       </div>
@@ -25,15 +25,10 @@
                 <i class="fas fa-user-tie"></i>
                 <span><strong>Jefe de investigación:</strong> {{ currentResearchLayer?.layerBoss?.name }}</span>
               </div>
-              <!-- <div class="info-item">
-                <i class="fas fa-envelope"></i>
-                <span><strong>Contacto:</strong> {{ contactoInvestigacion }}</span>
-              </div> -->
             </div>
           </div>
         </div>
 
-        <!-- Sección de estadísticas rápidas -->
         <div class="dashboard-card stats-card">
           <div class="card-header">
             <i class="fas fa-chart-line card-icon"></i>
@@ -61,7 +56,6 @@
           </div>
         </div>
 
-        <!-- Sección de acciones rápidas -->
         <div class="dashboard-card actions-card">
           <div class="card-header">
             <i class="fas fa-bolt card-icon"></i>
@@ -87,17 +81,14 @@
           </div>
         </div>
 
-        <!-- Sección de últimos registros -->
         <div class="dashboard-card recent-card">
           <div class="card-header">
             <i class="fas fa-history card-icon"></i>
             <h3>Registros Recientes</h3>
           </div>
           <div class="recent-list">
-            <div class="recent-item" 
-                 *ngFor="let registro of registrosRecientes"
-                 (click)="handleView(registro)"
-                 [class.clickable]="true">
+            <div class="recent-item" *ngFor="let registro of registrosRecientes" (click)="handleView(registro)"
+              [class.clickable]="true">
               <div class="recent-info">
                 <span class="recent-name">{{ registro.nombre }}</span>
                 <span class="recent-date">{{ registro.fecha | date:'medium' }}</span>
@@ -108,19 +99,12 @@
       </div>
     </div>
     <div *ngIf="selectedTab === 'registroPaciente'">
-
       <app-form-registro-paciente></app-form-registro-paciente>
-
     </div>
     <div *ngIf="selectedTab === 'listadoPacientes'">
-      <app-table-ver-usuarios 
-        [data]="usuariosData" 
-        [columns]="usuariosColumns"
-        [itemsPerPageOptions]="[5, 10, 20]"
-        [totalRecords]="totalElements"
-        [loading]="loadingRegistros"
-        (onPageChange)="loadRegistros($event.page, $event.size, $event.query)"
-        (onView)="handleView($event)"
+      <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
+        [totalRecords]="totalElements" [loading]="loadingRegistros"
+        (onPageChange)="loadRegistros($event.page, $event.size, $event.query)" (onView)="handleView($event)"
         (onEdit)="handleEdit($event)">
       </app-table-ver-usuarios>
     </div>
@@ -128,21 +112,12 @@
       <h1>Consultas de datos digitador</h1>
     </div>
   </div>
+
+  <!-- MODALES FUERA DEL CONTENEDOR DE PESTAÑAS -->
+  <app-view-registro-modal *ngIf="showViewModal" [registro]="selectedRegistro" (close)="closeViewModal()">
+  </app-view-registro-modal>
+
+  <app-edit-registro-modal *ngIf="showEditModal" [registro]="selectedRegistro" (saveChanges)="onSaveChanges($event)"
+    (close)="closeEditModal()">
+  </app-edit-registro-modal>
 </div>
-
-
-<!-- Al final de tu archivo, fuera de cualquier contenedor -->
-<ng-container *ngIf="showViewModal">
-    <app-view-registro-modal 
-        [registro]="selectedRegistro"
-        [closeModal]="closeViewModal.bind(this)">
-    </app-view-registro-modal>
-</ng-container>
-
-<ng-container *ngIf="showEditModal">
-    <app-edit-registro-modal 
-        [registro]="selectedRegistro"
-        [closeModal]="closeEditModal.bind(this)"
-        (saveChanges)="onSaveChanges($event)">
-    </app-edit-registro-modal>
-</ng-container>

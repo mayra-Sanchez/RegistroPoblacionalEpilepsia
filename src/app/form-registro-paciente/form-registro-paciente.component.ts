@@ -45,8 +45,6 @@ export class FormRegistroPacienteComponent implements OnInit {
   /** Almacena los datos del profesional de salud */
   profesionalData: any = {};
 
-  /** Controla la visibilidad del modal de previsualización */
-  showPreviewModal = false;
 
   /** Datos formateados para mostrar en la previsualización */
   previewData: any = {};
@@ -109,25 +107,6 @@ export class FormRegistroPacienteComponent implements OnInit {
       error: (err) => {
         console.error('Error al verificar capa:', err);
         this.showErrorAlert('Error al verificar la capa de investigación');
-      }
-    });
-  }
-
-  /**
-   * Busca y carga el ID de la capa de investigación por su nombre
-   * @param nombreCapa Nombre de la capa de investigación a buscar
-   * @private
-   */
-  private loadResearchLayerId(nombreCapa: string): void {
-    this.consolaService.buscarCapaPorNombre(nombreCapa).subscribe({
-      next: (capa) => {
-        if (capa.id) {
-          this.currentResearchLayerId = capa.id;
-        }
-      },
-      error: (err) => {
-        console.error('Error al cargar capa:', err);
-        this.showErrorAlert('Error al cargar información de la capa de investigación');
       }
     });
   }
@@ -196,7 +175,6 @@ export class FormRegistroPacienteComponent implements OnInit {
    * Muestra diálogo de confirmación para registrar los datos
    */
   confirmRegistration(): void {
-    this.showPreviewModal = false;
 
     Swal.fire({
       title: '¿Confirmar registro?',
@@ -218,7 +196,6 @@ export class FormRegistroPacienteComponent implements OnInit {
    * Cancela el registro y cierra el modal de previsualización
    */
   cancelRegistration(): void {
-    this.showPreviewModal = false;
     Swal.fire({
       title: 'Registro cancelado',
       text: 'Puede seguir editando los datos antes de enviar',
@@ -239,7 +216,6 @@ export class FormRegistroPacienteComponent implements OnInit {
       return;
     }
 
-    this.showPreviewModal = true;
 
     Swal.fire({
       title: '¿Confirmar registro?',

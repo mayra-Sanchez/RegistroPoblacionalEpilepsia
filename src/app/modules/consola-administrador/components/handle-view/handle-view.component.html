@@ -1,7 +1,15 @@
 <div class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title">Detalles de {{viewType}}</h5>
+            <h5 class="modal-title">
+                <ng-container [ngSwitch]="viewType">
+                    <i *ngSwitchCase="'usuario'" class="fas fa-user-circle"></i>
+                    <i *ngSwitchCase="'variable'" class="fas fa-list-alt"></i>
+                    <i *ngSwitchCase="'capa'" class="fas fa-layer-group"></i>
+                    <i *ngSwitchDefault class="fas fa-eye"></i>
+                </ng-container>
+                Detalles de {{viewType}}
+            </h5>
         </div>
         <div class="modal-body">
             <ng-container [ngSwitch]="viewType">
@@ -13,7 +21,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Usuario:</span>
-                        <span>{{viewedItem.username}}</span>
+                        <span>{{viewedItem.usuario || viewedItem.username}}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Email:</span>
@@ -29,11 +37,11 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Capa de Investigación:</span>
-                        <span>{{viewedItem.capa}}</span>
+                        <span>{{getNombreCapa(viewedItem.researchLayerId || viewedItem.capaRawValue)}}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Rol:</span>
-                        <span>{{viewedItem.rol}}</span>
+                        <span>{{getRolFormateado(viewedItem.rol || viewedItem.role)}}</span>
                     </div>
                 </div>
 

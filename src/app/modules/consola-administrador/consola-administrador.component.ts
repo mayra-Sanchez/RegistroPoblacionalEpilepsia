@@ -10,7 +10,7 @@ import { AuthService } from 'src/app/login/services/auth.service';
 interface Registro {
   tipo: string;
   data: any;
-  fechaCreacion: number; 
+  fechaCreacion: number;
 }
 
 /**
@@ -85,7 +85,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       field: 'capa', header: 'Capa de Investigación',
       formatter: (value: string, row: any) => this.getCapaNombreById(row.capaId)
     },
-    { field: 'rol', header: 'Rol' }
+    { field: 'rolDisplay', header: 'Rol' }
   ];
 
   variablesColumns = [
@@ -107,7 +107,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private authService: AuthService
   ) { }
-
   /* Ciclo de Vida
   *Se ejecuta al inicializar el componente. Carga los datos iniciales y se suscribe a cambios en los datos.
   */
@@ -128,7 +127,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.cargarUsuarios();
     });
   }
-
   /* Ciclo de Vida
   *Se ejecuta al destruir el componente. Limpia las suscripciones para evitar fugas de memoria.
   */
@@ -136,7 +134,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
-
   /* Carga de Datos
   * Carga los datos iniciales de capas, usuarios y variables.
   */
@@ -171,8 +168,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-
   /* Carga de Datos
   * Carga los datos de las capas desde el servicio.
   */
@@ -190,7 +185,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         }));
         this.capas = this.capasData;
         this.totalCapas = this.capasData.length;
-        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error al obtener capas:', err);
@@ -198,10 +192,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       },
       complete: () => {
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
-
   /* Carga de Datos
   * Carga los datos de las variables desde el servicio.
   */
@@ -209,12 +203,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.consolaService.getAllVariables().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
+        console.log("📊 Datos obtenidos después de actualizar:", data); // Verifica si type está correcto
         this.variablesData = data.map(variable => ({
           ...variable,
-          capaNombre: this.getCapaNombreByIdVariables(variable.researchLayerId) // Agregamos este campo
+          capaNombre: this.getCapaNombreByIdVariables(variable.researchLayerId)
         }));
         this.cdr.detectChanges();
       },
+
       error: () => {
         this.mostrarMensajeError('No se pudo cargar la información de las variables');
       },
@@ -223,7 +219,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   /* Carga de Datos
   * Carga los datos de los usuarios desde el servicio.
   */
@@ -234,6 +229,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         this.usuariosData = data.map(user => {
           const attrs = user.attributes || {};
           const capaValue = attrs.researchLayerId?.[0];
+          console.log("capavalue", capaValue);
+          const roles = attrs.role || [];
+          const mainRole = roles[0] || 'No especificado';
 
           return {
             id: user.id,
@@ -245,8 +243,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
             fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
             capa: this.getCapaNombreByIdVariables(capaValue),
-            capaRawValue: capaValue, 
-            rol: attrs.role ? attrs.role.map(this.transformarRol).join(', ') : 'No especificado',
+            capaRawValue: capaValue,
+            rol: mainRole,
+            rolDisplay: this.transformarRol(mainRole),
             passwordActual: user.password
           };
         });
@@ -262,7 +261,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   /* Carga de Datos
   * Recarga los datos según la pestaña seleccionada.
   */
@@ -280,7 +278,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     }
     this.cdr.detectChanges();
   }
-
   updateDashboard(): void {
     this.totalUsuarios = this.usuariosData.length;
     this.totalCapas = this.capasData.length;
@@ -288,7 +285,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
     this.cdr.detectChanges();
   }
-
   cargarUsuarios() {
     this.consolaService.getAllUsuarios().subscribe(data => {
       this.todosLosUsuarios = data.map(user => ({
@@ -299,25 +295,29 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
       const usuariosOrdenados = data.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
 
-      this.ultimosUsuarios = usuariosOrdenados.slice(0, 5).map(user => ({
-        nombre: `${user.firstName || 'Desconocido'} ${user.lastName || ''}`.trim(),
-        rol: user.attributes?.role ? user.attributes.role[0] : 'No especificado',
-        email: user.email || 'No disponible',
-        detalles: {
-          nombre: user.firstName || 'Desconocido',
-          apellido: user.lastName || '',
-          username: user.username || 'No disponible',
+      this.ultimosUsuarios = usuariosOrdenados.slice(0, 5).map(user => {
+        const attrs = user.attributes || {};
+        const capaValue = attrs.researchLayerId?.[0];
+
+        return {
+          nombre: `${user.firstName || 'Desconocido'} ${user.lastName || ''}`.trim(),
+          rol: attrs.role ? attrs.role[0] : 'No especificado',
           email: user.email || 'No disponible',
-          documento: user.attributes?.identificationNumber ? user.attributes.identificationNumber[0] : 'No disponible',
-          tipoDocumento: user.attributes?.identificationType ? user.attributes.identificationType[0] : 'No especificado',
-          fechaNacimiento: user.attributes?.birthDate ? user.attributes.birthDate[0] : 'No especificada',
-          capa: user.attributes?.researchLayerId ? this.getCapaNombreById(user.attributes.researchLayerId[0]) : 'No asignada',
-          rol: user.attributes?.role ? user.attributes.role.join(', ') : 'No especificado'
-        }
-      }));
+          detalles: {
+            nombre: user.firstName || 'Desconocido',
+            apellido: user.lastName || '',
+            username: user.username || 'No disponible',
+            email: user.email || 'No disponible',
+            documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
+            tipoDocumento: attrs.identificationType ? attrs.identificationType[0] : 'No especificado',
+            fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
+            capaRawValue: capaValue, // Asegurar que tenemos el ID de la capa
+            rol: attrs.role ? attrs.role[0] : 'No especificado'
+          }
+        };
+      });
     });
   }
-
   /**
    * Función que exporta los usuarios registrados
    * @returns Download csv
@@ -346,8 +346,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
     console.log('✅ Archivo CSV generado con éxito.');
   }
-
-
   /**
    * Carga y ordena los últimos registros de usuarios, capas y variables por fecha de creación
    */
@@ -397,33 +395,34 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   */
   getCapaNombreById(idOrName: string): string {
     if (!idOrName || idOrName === 'undefined' || idOrName === 'null') return 'Sin asignar';
-  
+
     // Si el valor ya es un nombre de capa (como en tus datos actuales)
     if (typeof idOrName === 'string' && !idOrName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
       return idOrName; // Ya es un nombre, lo devolvemos directamente
     }
-  
+
     // Buscar por ID en diferentes formatos
-    const capa = this.capas.find(c => 
-      c.id === idOrName || 
-      c._id === idOrName || 
+    const capa = this.capas.find(c =>
+      c.id === idOrName ||
+      c._id === idOrName ||
       c.layerId === idOrName
     );
-    
+
     return capa ? (capa.layerName || capa.nombreCapa || 'Capa sin nombre') : 'Capa no encontrada';
   }
-
+  /* Funciones de Utilidad
+  * Devuelve el nombre de una capa basado en su ID - MISMA FUNCION PERO DIFERENTE 
+  */
   getCapaNombreByIdVariables(id: number): string {
     const capa = this.capas?.find(c => c.id === id);
     return capa ? capa.nombreCapa : 'Capa no encontrada';
   }
-
   /* Funciones de Utilidad
   * Transforma un rol en un formato legible.
   */
   transformarRol(rol: string): string {
     const rolesMap: { [key: string]: string } = {
-      'Admi': 'Administrador',
+      'Admin': 'Administrador',
       'Doctor': 'Doctor',
       'Researcher': 'Investigador'
     };
@@ -465,56 +464,68 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   * Abre el modal de visualización para un elemento.
   */
   handleView(event: any, tipo: string): void {
-    console.log('📌 handleView recibido:', event);
-
-    if (!event) {
-      console.error('🚨 Error: event es undefined o null');
-      return;
-    }
+    console.log('Datos del usuario al hacer clic:', event); // Para depuración
 
     if (tipo === 'usuario') {
-      if (!event.detalles) {
-        console.error('🚨 Error: event.detalles es undefined');
-        return;
-      }
-      this.viewedItem = event.detalles;
+      this.viewedItem = {
+        ...event.detalles,
+        researchLayerId: event.detalles.capaRawValue || event.detalles.researchLayerId,
+        role: event.detalles.rol || event.detalles.role,
+        // Asegurar que todos los campos necesarios estén presentes
+        nombre: event.detalles.nombre || event.nombre,
+        apellido: event.detalles.apellido || '',
+        email: event.detalles.email || event.email,
+        usuario: event.detalles.username || '',
+        tipoDocumento: event.detalles.tipoDocumento || '',
+        documento: event.detalles.documento || '',
+        fechaNacimiento: event.detalles.fechaNacimiento || ''
+      };
     } else {
       this.viewedItem = event;
     }
 
-    console.log('📌 Datos en viewedItem:', this.viewedItem);
-
+    console.log('Datos preparados para la vista:', this.viewedItem); // Para depuración
     this.viewType = tipo;
     this.isViewing = true;
   }
-
-
   /* Gestión de Modales
   * Abre el modal de edición para un elemento.
   */
   handleEdit(row: any, tipo: string): void {
     if (tipo === 'usuario') {
       this.isEditingUserModal = true;
+
+      // Manejo consistente del rol
+      let rawRole = row.rol;
+      if (Array.isArray(row.attributes?.role)) {
+        rawRole = row.attributes.role[0];
+      } else if (typeof row.rol === 'string' && row.rol.includes(',')) {
+        rawRole = row.rol.split(', ')[0];
+      }
+
       this.userToEdit = {
-        ...row,
-        firstName: row.nombre,
-        lastName: row.apellido,
+        id: row.id,
+        nombre: row.nombre || row.firstName,
+        apellido: row.apellido || row.lastName,
         email: row.email,
-        username: row.usuario,
-        identificationType: row.tipoDocumento,
-        identificationNumber: row.documento,
-        birthDate: row.fechaNacimiento,
-        researchLayerId: row.capaRawValue, // Usar el valor original
-        role: row.rol.split(', ')[0],
-        password: row.passwordActual
+        usuario: row.usuario || row.username,
+        tipoDocumento: row.tipoDocumento || row.identificationType,
+        documento: row.documento || row.identificationNumber,
+        fechaNacimiento: row.fechaNacimiento || row.birthDate,
+        researchLayerId: row.capaRawValue || row.capa,
+        role: rawRole,
+        password: row.passwordActual || ''
       };
-    } else if (tipo === 'capa') {
+    }   else if (tipo === 'capa') {
       this.capaToEdit = {
-        ...row,
-        nombreCapa: row.layerName || row.nombreCapa,
-        descripcion: row.description || row.descripcion,
-        jefeCapaNombre: row.layerBoss?.name || row.jefeCapaNombre,
-        jefeIdentificacion: row.layerBoss?.identificationNumber || row.jefeIdentificacion
+        id: row.id,
+        layerName: row.layerName || row.nombreCapa,
+        description: row.description || row.descripcion,
+        layerBoss: {
+          id: row.layerBoss?.id || 1, 
+          name: row.layerBoss?.name || row.jefeCapaNombre || '',
+          identificationNumber: row.layerBoss?.identificationNumber || row.jefeIdentificacion || ''
+        }
       };
       this.isEditingCapa = true;
     } else if (tipo === 'variable') {
@@ -530,137 +541,102 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.isEditingVar = true;
     }
   }
-
   /* Gestión de Modales
   * Cierra el modal de visualización y edición.
   */
-  cerrarModal(): void {
+  cerrarModal(event?: any): void {
     this.isEditingVar = false;
     this.isEditingCapa = false;
     this.isEditingUserModal = false;
     this.isViewing = false;
     this.viewedItem = null;
     this.viewType = '';
+    
+    if (event?.success) {
+      this.loadCapasData();
+      this.loadUsuariosData();
+      this.loadVariablesData();
+    }
   }
-
   /* Guardar Cambios
   * Guarda los cambios realizados en una variable.
   */
   guardarEdicionVariable(variableEditada: any): void {
-    if (!variableEditada || !variableEditada.id) {
-      Swal.fire('Error', 'Falta el ID de la variable.', 'error');
-      return;
-    }
+    console.log('Variable editada recibida:', variableEditada);
 
     const variablePayload = {
       id: variableEditada.id,
       variableName: variableEditada.variableName,
       description: variableEditada.description,
       researchLayerId: variableEditada.researchLayerId,
-      type: variableEditada.type,
+      type: variableEditada.type, // Verificar si se mantiene
       options: variableEditada.tieneOpciones ? variableEditada.options.filter((opt: string) => opt.trim() !== '') : []
     };
-
-    Swal.fire({
-      title: '¿Guardar cambios?',
-      text: 'Se actualizará la información de la variable',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, actualizar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.consolaService.actualizarVariable(variablePayload).subscribe({
-          next: () => {
-            Swal.fire('Éxito', 'Variable actualizada con éxito.', 'success');
-            this.isEditingVar = false;
-            this.loadVariablesData();
-          },
-          error: (error) => {
-            console.error('Error al actualizar la variable:', error);
-            Swal.fire('Error', 'Hubo un problema al actualizar la variable.', 'error');
-          }
-        });
+    this.consolaService.actualizarVariable(variablePayload).subscribe({
+      next: () => {
+        console.log('Variable actualizada correctamente.');
+        this.isEditingVar = false;
+        this.loadVariablesData();
+      },
+      error: (error) => {
+        console.error('Error al actualizar la variable:', error);
       }
     });
   }
-
   /* Guardar Cambios
   * Guarda los cambios realizados en una capa.
   */
-  guardarEdicionCapa(): void {
-    if (!this.capaToEdit || !this.capaToEdit.id) {
-      Swal.fire('Error', 'ID de la capa no proporcionado.', 'error');
+  guardarEdicionCapa(updatedCapa: any) {
+    if (!updatedCapa || !updatedCapa.id) {
+      console.error('Datos de capa inválidos:', updatedCapa);
       return;
     }
-
-    const requestBody = {
-      layerName: this.capaToEdit.nombreCapa,
-      description: this.capaToEdit.descripcion,
+  
+    const capaData = {
+      id: updatedCapa.id,
+      layerName: updatedCapa.layerName,
+      description: updatedCapa.description,
       layerBoss: {
-        id: this.capaToEdit.jefeCapa?.id || 0,
-        name: this.capaToEdit.jefeCapaNombre,
-        identificationNumber: this.capaToEdit.jefeIdentificacion
+        id: updatedCapa.layerBoss?.id || 1,
+        name: updatedCapa.layerBoss?.name || '',
+        identificationNumber: updatedCapa.layerBoss?.identificationNumber || ''
       }
     };
-
-    Swal.fire({
-      title: '¿Guardar cambios?',
-      text: 'Se actualizará la información de la capa',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, actualizar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.consolaService.actualizarCapa(this.capaToEdit.id, requestBody).subscribe({
-          next: () => {
-            Swal.fire('Éxito', 'Capa actualizada con éxito.', 'success');
-            this.isEditingCapa = false;
-            this.loadCapasData(); // Refresh the data
-          },
-          error: (error) => {
-            console.error('Error al actualizar la capa:', error);
-            Swal.fire('Error', 'Hubo un problema al actualizar la capa.', 'error');
-          }
-        });
+  
+    this.consolaService.actualizarCapa(capaData.id, capaData).subscribe({
+      next: () => {
+        Swal.fire('Éxito', 'Capa actualizada correctamente', 'success');
+        this.cerrarModal(true);
+      },
+      error: (error) => {
+        console.error('Error al actualizar capa:', error);
+        Swal.fire('Error', 'No se pudo actualizar la capa', 'error');
       }
     });
   }
-
   /* Guardar Cambios
   * Guarda los cambios realizados en un usuario.
   */
   guardarEdicionUsuario(usuarioEditado: any): void {
-    if (!usuarioEditado.id) {
+    if (!usuarioEditado?.id) {
       Swal.fire('Error', 'Falta el ID del usuario.', 'error');
       return;
     }
-
-    const usuarioPayload: any = {
+  
+    // Preparar el payload según lo que espera el servicio
+    const usuarioPayload = {
       firstName: usuarioEditado.nombre,
       lastName: usuarioEditado.apellido,
       email: usuarioEditado.email,
+      username: usuarioEditado.usuario,
       identificationType: usuarioEditado.tipoDocumento,
       identificationNumber: usuarioEditado.documento,
       birthDate: usuarioEditado.fechaNacimiento,
-      researchLayer: usuarioEditado.capa,
-      role: usuarioEditado.rol.split(', ')[0],
-      password: usuarioEditado.password ? usuarioEditado.password : "" // 👀 Siempre enviar el campo password
+      researchLayer: usuarioEditado.capaRawValue || usuarioEditado.researchLayerId,
+      role: usuarioEditado.role,
+      password: usuarioEditado.password || '' // Solo se envía si hay cambio
     };
-
-
-    // Solo agregar contraseña si el usuario la ingresó
-    if (usuarioEditado.password && usuarioEditado.password.trim() !== '') {
-      usuarioPayload.password = usuarioEditado.password;
-    }
-
-    console.log("Datos enviados para actualizar usuario:", usuarioPayload); // 👀 Agregado
-
+  
     Swal.fire({
       title: '¿Guardar cambios?',
       text: 'Se actualizará la información del usuario',
@@ -673,19 +649,42 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     }).then((result) => {
       if (result.isConfirmed) {
         this.consolaService.updateUsuario(usuarioEditado.id, usuarioPayload).subscribe({
-          next: () => {
+          next: (updatedUser) => {
             Swal.fire('Éxito', 'Usuario actualizado con éxito.', 'success');
             this.isEditingUserModal = false;
+            
+            // Actualizar el usuario en la lista local
+            const index = this.usuariosData.findIndex(u => u.id === usuarioEditado.id);
+            if (index !== -1) {
+              this.usuariosData[index] = {
+                ...this.usuariosData[index],
+                nombre: updatedUser.firstName || usuarioEditado.nombre,
+                apellido: updatedUser.lastName || usuarioEditado.apellido,
+                email: updatedUser.email || usuarioEditado.email,
+                usuario: updatedUser.username || usuarioEditado.usuario,
+                tipoDocumento: updatedUser.identificationType || usuarioEditado.tipoDocumento,
+                documento: updatedUser.identificationNumber || usuarioEditado.documento,
+                fechaNacimiento: updatedUser.birthDate || usuarioEditado.fechaNacimiento,
+                capaRawValue: updatedUser.researchLayer || usuarioEditado.capaRawValue,
+                rol: updatedUser.role || usuarioEditado.role,
+                rolDisplay: this.transformarRol(updatedUser.role || usuarioEditado.role)
+              };
+              
+              // Forzar la actualización de la vista
+              this.usuariosData = [...this.usuariosData];
+            }
+            
+            // Recargar datos del servidor para asegurar consistencia
+            this.loadUsuariosData();
           },
           error: (error) => {
             console.error('Error al actualizar el usuario:', error);
-            Swal.fire('Error', 'Hubo un problema al actualizar el usuario.', 'error');
+            Swal.fire('Error', error.error?.message || 'Hubo un problema al actualizar el usuario.', 'error');
           }
         });
       }
     });
   }
-
   /* Eliminar Elementos
   *  Elimina un elemento (usuario, variable o capa) después de confirmar.
   */
@@ -718,7 +717,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             console.error('Pestaña desconocida');
             return;
         }
-
         eliminarObservable.subscribe({
           next: () => {
             Swal.fire('¡Eliminado!', 'El elemento ha sido eliminado con éxito.', 'success');
@@ -731,7 +729,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   /* Crear Nuevos Elementos
   * Abre el modal para crear una nueva variable.
   */
@@ -739,7 +736,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.selectedTab = 'gestionVariables'; // Cambia a la pestaña de gestión de variables
     this.isCreatingVar = true;
   }
-
   /* Crear Nuevos Elementos
   *  Abre el modal para crear un nuevo usuario.
   */
@@ -747,7 +743,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.selectedTab = 'gestionUsuarios'; // Cambia a la pestaña de gestión de usuarios
     this.isCreatingUser = true;
   }
-
   /* Crear Nuevos Elementos
   * Abre el modal para crear una nueva capa.
   */
@@ -755,5 +750,4 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.selectedTab = 'gestionCapas'; // Cambia a la pestaña de gestión de capas
     this.isCreatingCapa = true;
   }
-
 }

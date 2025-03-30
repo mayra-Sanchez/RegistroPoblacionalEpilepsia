@@ -1,185 +1,177 @@
-/* Estilos generales - consistentes con el anterior */
-.user-form-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #f8f9fa;
+:host {
+  display: block;
+}
+
+.form-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
-h2 {
-  color: #2c3e50;
-  text-align: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.8rem;
+.form-header {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #0f5ead, #11A6DA);
+  color: white;
 }
 
-/* Estilos del formulario */
-form {
+.form-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 500;
   display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-header p {
+  margin: 0.3rem 0 0;
+  opacity: 0.9;
+  font-size: 0.8rem;
+}
+
+.uniform-form {
+  padding: 1rem 1.5rem;
 }
 
 .form-row {
   display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.form-group.uniform {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
-  gap: 0.5rem;
 }
 
-label {
-  font-weight: 600;
-  color: #34495e;
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
+.form-group.uniform label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
-input, select, textarea {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
+.form-group.uniform label i {
+  font-size: 0.7rem;
+  color: #7f8c8d;
+}
+
+.form-group.uniform input,
+.form-group.uniform select {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #e0e6ed;
   border-radius: 4px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background-color: white;
+  font-size: 0.8rem;
+  background-color: #f8fafc;
+  box-sizing: border-box;
 }
 
-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1rem;
-}
-
-input:focus, select:focus, textarea:focus {
+.form-group.uniform input:focus,
+.form-group.uniform select:focus {
   outline: none;
   border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
 }
 
-input[type="date"] {
+.password-container {
   position: relative;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: auto;
-  height: auto;
-  color: transparent;
-  background: transparent;
-}
-
-input[type="date"]::-webkit-inner-spin-button,
-input[type="date"]::-webkit-clear-button {
-  display: none;
-}
-
-input[disabled] {
-  background-color: #f0f0f0;
-  color: #777;
-  cursor: not-allowed;
-}
-
-/* Estilos para los botones */
-.form-button {
+  flex: 1;
   display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
+.password-container input {
+  flex: 1;
+  padding-right: 25px;
+}
+
+.password-container .toggle-password {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7f8c8d;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-size: 0.8rem;
 }
 
-.btn-primary {
-  background-color: #3498db;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #2980b9;
-}
-
-.btn-primary:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
-}
-
-/* Mensajes de error */
 .error-message {
   color: #e74c3c;
+  font-size: 0.65rem;
+  margin-top: 3px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.form-footer {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.submit-button {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 4px;
   font-size: 0.85rem;
-  margin-top: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
-/* Estilos responsive */
-@media (max-width: 768px) {
-  .user-form-container {
-    margin: 1rem;
-    padding: 1.5rem;
-  }
-  
-  h2 {
-    font-size: 1.5rem;
-  }
-  
-  /* Para pantallas medianas, podemos ajustar el layout de nombre y apellido */
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+  background: linear-gradient(135deg, #4f8eb8, #4f8eb8);
+}
+
+.submit-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Estilos para select personalizado */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237f8c8d'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px;
+  padding-right: 25px !important;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
   .form-row {
-    flex-direction: column;
+    flex-wrap: wrap;
+  }
+  
+  .form-group.uniform {
+    min-width: calc(50% - 8px);
   }
 }
 
-@media (max-width: 480px) {
-  .user-form-container {
-    padding: 1rem;
-    margin: 0.5rem;
+@media (max-width: 576px) {
+  .form-group.uniform {
+    min-width: 100%;
   }
   
-  .form-button {
-    justify-content: center;
-  }
-  
-  .btn {
-    width: 100%;
-    padding: 0.85rem;
-  }
-  
-  input, select {
-    padding: 0.65rem;
-  }
-}
-
-/* Estilo especial para campos en línea (nombre y apellido) */
-@media (min-width: 600px) {
-  .form-row:has(> input + label) {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-  
-  .form-row:has(> input + label) label:nth-of-type(2) {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  
-  .form-row:has(> input + label) input:nth-of-type(2) {
-    grid-column: 2;
-    grid-row: 2;
-  }
-  
-  .form-row:has(> input + label) div:nth-of-type(2) {
-    grid-column: 2;
+  .form-header h2 {
+    font-size: 1.1rem;
   }
 }

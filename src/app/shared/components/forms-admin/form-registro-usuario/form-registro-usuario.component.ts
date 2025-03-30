@@ -21,9 +21,9 @@ export class FormRegistroUsuarioComponent implements OnInit {
 
   //Almacena la lista de capas de investigación obtenidas del backend.
   capas: any[] = [];
+  showPassword: boolean = false; 
 
   constructor(private consolaAdministradorService: ConsolaAdministradorService) {
-    // Formularia reactivo
     this.usuarioForm = new FormGroup({
       nombre: new FormControl('', [Validators.required]),
       apellido: new FormControl('', [Validators.required]),
@@ -36,6 +36,11 @@ export class FormRegistroUsuarioComponent implements OnInit {
       email: new FormControl('', [Validators.required, Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(6)])
     });
+
+    // Escuchar cambios en los campos relevantes para generar el username
+    this.usuarioForm.get('nombre')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
+    this.usuarioForm.get('apellido')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
+    this.usuarioForm.get('fechaNacimiento')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
   }
  
   // Se ejecuta al inicializar el componente. Carga las capas de investigación desde el backend.
@@ -43,6 +48,21 @@ export class FormRegistroUsuarioComponent implements OnInit {
     this.obtenerCapas();
   }
 
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  private generateUsernameIfPossible(): void {
+    const nombre = this.usuarioForm.get('nombre')?.value;
+    const apellido = this.usuarioForm.get('apellido')?.value;
+    const fechaNacimiento = this.usuarioForm.get('fechaNacimiento')?.value;
+
+    if (nombre && apellido && fechaNacimiento) {
+      const username = this.generarUsername(nombre, apellido, fechaNacimiento);
+      this.usuarioForm.get('username')?.setValue(username);
+    }
+  }
+  
   /** Métodos del Formulario
    * Obtiene las capas de investigación desde el backend.
    */

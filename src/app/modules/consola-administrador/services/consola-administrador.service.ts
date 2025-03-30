@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError, Subject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from 'src/app/login/services/auth.service';
-
+import { BehaviorSubject } from 'rxjs';
 /**
  * El servicio ConsolaAdministradorService es un servicio Angular que proporciona métodos para interactuar con una API backend relacionada con la gestión 
  * de usuarios, variables y capas de investigación. Este servicio se encarga de realizar operaciones CRUD (Crear, Leer, Actualizar, Eliminar) y notificar 
@@ -24,6 +24,12 @@ export class ConsolaAdministradorService {
 
   // BehaviorSubject para notificar cambios en los datos
   private dataUpdated = new Subject<void>();
+  private capaUpdated = new BehaviorSubject<void>(undefined);
+  private varUpdated = new BehaviorSubject<void>(undefined);
+  private userUpdated = new BehaviorSubject<void>(undefined);
+  capaUpdated$ = this.capaUpdated.asObservable();
+  varUpdated$ = this.varUpdated.asObservable();
+  userUpdated$ = this.userUpdated.asObservable();
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
@@ -33,8 +39,11 @@ export class ConsolaAdministradorService {
   }
 
   // Notifica a los suscriptores que los datos han sido actualizados.
-  private notifyDataUpdated(): void {
+  public notifyDataUpdated(): void {
     this.dataUpdated.next();
+    this.capaUpdated.next();
+    this.varUpdated.next();
+    this.userUpdated.next();
   }
 
   //  Genera las cabeceras HTTP con el token de autenticación.
@@ -90,30 +99,21 @@ export class ConsolaAdministradorService {
     );
   }
   // Actualiza una capa de investigación existente
-  actualizarCapa(id: string, capaData: any): Observable<any> {
-    const url = `http://localhost:8080/api/v1/ResearchLayer?researchLayerId=${id}`;
-    const token = localStorage.getItem('kc_token');
-
-    if (!token) {
-      console.error('❌ No se encontró el token en localStorage');
-      alert('No autenticado. Por favor, inicia sesión.');
-      return throwError(() => new Error('No autenticado'));
-    }
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
-
-    return this.http.put(url, capaData, { headers }).pipe(
-      tap(() => this.notifyDataUpdated()), // Notificar después de actualizar
-      catchError(error => {
-        console.error('❌ Error en la solicitud:', error);
-        return throwError(() => new Error('Error en la actualización'));
-      })
-    );
+actualizarCapa(id: string, capaData: any): Observable<any> {
+  if (!this.isAdmin()) {
+    console.error('⛔ Acceso denegado: solo administradores pueden actualizar capas');
+    return throwError(() => new Error('Acceso denegado'));
   }
+
+  const url = `${this.API_LAYERS}?researchLayerId=${id}`;
+  return this.http.put(url, capaData, { headers: this.getAuthHeaders() }).pipe(
+    tap(() => this.notifyDataUpdated()),
+    catchError(error => {
+      console.error('Error al actualizar capa:', error);
+      return throwError(() => error);
+    })
+  );
+}
 
   //  Elimina una capa de investigación.
   eliminarCapa(capaId: string): Observable<any> {
@@ -169,12 +169,32 @@ export class ConsolaAdministradorService {
       console.error('⛔ Acceso denegado: solo los administradores pueden actualizar usuarios.');
       return throwError(() => new Error('⛔ Acceso denegado.'));
     }
+  
     const url = `${this.API_USERS}/update?userId=${userId}`;
-    return this.handleRequest(
-      this.http.put<any>(url, usuario, { headers: this.getAuthHeaders() }),
-      `✏️ Usuario actualizado (ID: ${userId})`
-    ).pipe(
-      tap(() => this.notifyDataUpdated()) // Notificar después de actualizar
+    
+    // Preparar el payload según lo que espera el API
+    const payload = {
+      firstName: usuario.firstName || usuario.nombre,
+      lastName: usuario.lastName || usuario.apellido,
+      email: usuario.email,
+      username: usuario.username || usuario.usuario,
+      password: usuario.password || '',
+      identificationType: usuario.identificationType || usuario.tipoDocumento,
+      identificationNumber: usuario.identificationNumber || usuario.documento,
+      birthDate: usuario.birthDate || usuario.fechaNacimiento,
+      researchLayer: usuario.researchLayer || usuario.capaRawValue || usuario.capaId,
+      role: usuario.role
+    };
+  
+    return this.http.put<any>(url, payload, { headers: this.getAuthHeaders() }).pipe(
+      tap(updatedUser => {
+        console.log('Usuario actualizado:', updatedUser);
+        this.notifyDataUpdated();
+      }),
+      catchError(error => {
+        console.error('Error al actualizar usuario:', error);
+        return throwError(() => error);
+      })
     );
   }
 

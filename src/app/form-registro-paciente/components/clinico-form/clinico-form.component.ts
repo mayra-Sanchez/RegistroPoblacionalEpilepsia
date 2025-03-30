@@ -35,7 +35,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   @Output() prev = new EventEmitter<void>(); // Evento al retroceder
 
   form: FormGroup; // Formulario reactivo principal
-  availableTypes: string[] = ['Entero', 'Decimal', 'Texto', 'Booleano', 'Opciones', 'Fecha']; // Tipos de variables disponibles
+  availableTypes: string[] = ['Entero', 'Real', 'Cadena', 'Lógico', 'Fecha']; // Tipos de variables disponibles
   filteredVariables: FormGroup[] = []; // Variables filtradas para mostrar
   searchTerm: string = ''; // Término de búsqueda
   activeTypeFilter: string = ''; // Filtro activo por tipo
@@ -60,9 +60,11 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * Método del ciclo de vida: Se ejecuta al inicializar el componente
    */
   ngOnInit(): void {
-    this.loadFromLocalStorage(); // Carga datos guardados en localStorage
+    this.loadFromLocalStorage();
     if (this.researchLayerId) {
-      this.loadVariables(); // Carga variables si hay un researchLayerId
+      this.loadVariables();
+    } else {
+      this.availableTypes = [];
     }
   }
 
@@ -112,33 +114,35 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * @param variables Array de variables clínicas
    */
   initializeForm(variables: Variable[]): void {
-    // Guarda los valores actuales antes de limpiar
     this.saveCurrentValues();
-
-    const variablesArray = this.variablesClinicas;
-    variablesArray.clear(); // Limpia el array de variables
-
-    // Filtra variables habilitadas y crea controles para cada una
+    this.variablesClinicas.clear();
+  
+    // Calculate unique display types from actual variables
+    const uniqueDisplayTypes = new Set<string>();
+  
     variables
       .filter(v => v.isEnabled)
       .forEach(variable => {
         const variableGroup = this.createVariableGroup(variable);
-
-        // Restaura el valor si existe en currentValues
-        if (this.currentValues[variable.id] !== undefined) {
-          variableGroup.patchValue({ valor: this.currentValues[variable.id] });
-        } else {
-          // Si no, carga de localStorage o initialData
-          const savedValue = this.getSavedValue(variable.id);
-          if (savedValue !== undefined && savedValue !== null) {
-            variableGroup.patchValue({ valor: savedValue });
-          }
+        
+        // Add to form array
+        this.variablesClinicas.push(variableGroup);
+        
+        // Get display type and add to unique types
+        const displayType = variableGroup.get('type')?.value;
+        if (displayType) {
+          uniqueDisplayTypes.add(displayType);
         }
-
-        variablesArray.push(variableGroup);
       });
-
-    this.applyFilters(); // Aplica los filtros actuales
+  
+    // Update available types based on actual variables
+    this.availableTypes = Array.from(uniqueDisplayTypes).sort((a, b) => {
+      // Custom sorting to keep consistent order
+      const order = ['Entero', 'Decimal', 'Texto', 'Opciones', 'Booleano', 'Fecha'];
+      return order.indexOf(a) - order.indexOf(b);
+    });
+  
+    this.applyFilters();
   }
 
   /**
@@ -157,24 +161,31 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * @returns Valor guardado o null si no existe
    */
   private getSavedValue(variableId: string): any {
-    // Primero verifica initialData (datos pasados desde el componente padre)
+    console.log('Buscando valor para:', variableId, 'InitialData:', this.initialData); // <-- Añade esto
+    
     if (this.initialData && this.initialData.length > 0) {
       const initialVar = this.initialData.find((v: any) => v.id === variableId);
-      if (initialVar) return initialVar.valor;
+      if (initialVar) {
+        console.log('Valor encontrado en initialData:', initialVar.valor); // <-- Añade esto
+        return initialVar.valor;
+      }
     }
-
-    // Luego verifica localStorage
+  
     const savedData = localStorage.getItem('clinicalFormData');
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
         const savedVar = parsedData.find((v: any) => v.id === variableId);
-        if (savedVar) return savedVar.valor;
+        if (savedVar) {
+          console.log('Valor encontrado en localStorage:', savedVar.valor); // <-- Añade esto
+          return savedVar.valor;
+        }
       } catch (e) {
         console.error('Error parsing saved form data:', e);
       }
     }
-
+  
+    console.log('No se encontró valor para:', variableId); // <-- Añade esto
     return null;
   }
 
@@ -185,14 +196,33 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    */
   createVariableGroup(variable: Variable): FormGroup {
     const validators = variable.required ? [Validators.required] : [];
-
+    const options = Array.isArray(variable.options) ? variable.options : [];
+    
+    // Determinar el tipo de control a mostrar
+    let displayType = variable.type;
+    
+    // Si tiene opciones, forzar el tipo a 'Opciones'
+    if (options.length > 0) {
+      displayType = 'Opciones';
+    }
+    // Si es Lógico sin opciones, mostrar como Booleano
+    else if (variable.type === 'Lógico') {
+      displayType = 'Booleano';
+    }
+    // Mapear otros tipos
+    else if (variable.type === 'Cadena') {
+      displayType = 'Texto';
+    } else if (variable.type === 'Real') {
+      displayType = 'Decimal';
+    }
+    
     return this.fb.group({
       id: [variable.id],
       variableName: [variable.variableName],
       description: [variable.description],
-      type: [variable.type],
-      hasOptions: [variable.hasOptions],
-      options: [variable.options || []],
+      type: [displayType], // Usar el tipo de visualización
+      hasOptions: [options.length > 0],
+      options: [options],
       required: [variable.required || false],
       valor: [null, validators]
     });
@@ -237,6 +267,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * Aplica los filtros de búsqueda y tipo a las variables
    */
   applyFilters(): void {
+    console.log('Aplicando filtros. Término:', this.searchTerm, 'Tipo:', this.activeTypeFilter); 
     let filtered = this.variablesClinicas.controls as FormGroup[];
 
     // Filtra por término de búsqueda
@@ -306,16 +337,15 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   getPlaceholder(variableGroup: FormGroup): string {
     const type = variableGroup.get('type')?.value;
     const name = variableGroup.get('variableName')?.value;
-
+  
     const placeholders: Record<string, string> = {
       'Entero': `Ingrese ${name} (número entero)`,
       'Decimal': `Ingrese ${name} (número decimal)`,
       'Texto': `Ingrese ${name}`,
       'Booleano': `Seleccione ${name}`,
-      'Opciones': `Seleccione ${name}`,
       'Fecha': `Seleccione fecha para ${name}`
     };
-
+  
     return placeholders[type] || `Ingrese ${name}`;
   }
 
@@ -326,8 +356,8 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    */
   getTypeLabel(type: string): string {
     const labels: Record<string, string> = {
-      'Entero': 'Número',
-      'Decimal': 'Decimal',
+      'Entero': 'Número entero',
+      'Decimal': 'Número decimal',
       'Texto': 'Texto',
       'Booleano': 'Sí/No',
       'Opciones': 'Opciones',
@@ -380,7 +410,6 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       'Decimal': 'number',
       'Texto': 'string',
       'Booleano': 'boolean',
-      'Opciones': 'string',
       'Fecha': 'date'
     };
     return typeMap[frontendType] || 'string';

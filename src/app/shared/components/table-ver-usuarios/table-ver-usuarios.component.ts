@@ -1,5 +1,4 @@
-import { Component, Output, Input, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
-
+import { Component, Output, Input, EventEmitter, OnChanges, SimpleChanges, NgZone } from '@angular/core';
 // Define una interfaz para el objeto de paginación
 interface PageEvent {
   page: number;
@@ -27,6 +26,8 @@ export class TableVerUsuariosComponent implements OnChanges {
   currentPage = 1;
   searchQuery = '';
 
+  constructor(private ngZone: NgZone) {}
+  
   ngOnChanges(changes: SimpleChanges) {
     if (changes['itemsPerPageOptions'] && this.itemsPerPageOptions?.length) {
       this.itemsPerPage = this.itemsPerPageOptions[0];
@@ -63,11 +64,15 @@ export class TableVerUsuariosComponent implements OnChanges {
     this.emitPageChange();
   }
 
-  view(row: any) {
-    this.onView.emit(row);
+  view(row: any): void {
+    this.ngZone.run(() => {
+      this.onView.emit(row);
+    });
   }
-
-  edit(row: any) {
-    this.onEdit.emit(row);
+  
+  edit(row: any): void {
+    this.ngZone.run(() => {
+      this.onEdit.emit(row);
+    });
   }
 }
