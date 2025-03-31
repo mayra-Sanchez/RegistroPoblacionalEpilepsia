@@ -59,7 +59,7 @@
               <ul>
                 <h2> Últimos usuarios creados</h2>
                 <li *ngFor="let usuario of ultimosUsuarios" (click)="handleView(usuario, 'usuario')" class="user-item">
-                    👤 {{ usuario.nombre }} - {{ transformarRol(usuario.rol) }}
+                    👤 {{ usuario.nombre }} - {{ transformarString(usuario.rol) }}
                     <span class="capa-info" *ngIf="usuario.detalles.capaRawValue">
                         ({{ getCapaNombreByIdVariables(usuario.detalles.capaRawValue) }})
                     </span>
@@ -91,7 +91,7 @@
                   <ng-container *ngIf="registro.tipo === 'usuario'">
                     <b>Usuario:</b> {{ registro.data.username }} <br>
                     <b>Email:</b> {{ registro.data.email }} <br>
-                    <b>Rol:</b> {{ transformarRol(registro.data.attributes?.role?.join(', ')) }}
+                    <b>Rol:</b> {{ transformarString(registro.data.attributes?.role?.join(', ')) }}
                   </ng-container>
 
                   <ng-container *ngIf="registro.tipo === 'capa'">
@@ -129,10 +129,16 @@
             Crear nuevo usuario
           </button>
         </div>
-        <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleViewUser($event, 'usuario')" (onEdit)="handleEdit($event, 'usuario')"
-          (onDelete)="handleDelete($event)">
-        </app-table>
+        <app-table 
+        [data]="usuariosData" 
+        [columns]="usuariosColumns" 
+        [itemsPerPageOptions]="[5, 10, 20]"
+        [showStatusAction]="true"
+        (onView)="handleViewUser($event, 'usuario')" 
+        (onEdit)="handleEdit($event, 'usuario')"
+        (onDelete)="handleDelete($event)"
+        (onToggleStatus)="toggleUserStatus($event)">
+      </app-table>
       </div>
 
       <!-- Formulario de Creación de Usuario -->
@@ -149,10 +155,15 @@
             Crear nueva variable
           </button>
         </div>
-        <app-table [data]="variablesData" [columns]="variablesColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleView($event, 'variable')" (onEdit)="handleEdit($event, 'variable')"
-          (onDelete)="handleDelete($event)">
-        </app-table>
+        <app-table 
+        [data]="variablesData" 
+        [columns]="variablesColumns" 
+        [itemsPerPageOptions]="[5, 10, 20]"
+        [showStatusAction]="false"
+        (onView)="handleView($event, 'variable')" 
+        (onEdit)="handleEdit($event, 'variable')"
+        (onDelete)="handleDelete($event)">
+      </app-table>
       </div>
       <div *ngIf="isCreatingVar" class="contentAdmin2">
         <app-form-registro-variables (closeForm)="isCreatingVar = false"></app-form-registro-variables>
@@ -167,9 +178,15 @@
             Crear nueva capa
           </button>
         </div>
-        <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]"
-          (onView)="handleView($event, 'capa')" (onEdit)="handleEdit($event, 'capa')" (onDelete)="handleDelete($event)">
-        </app-table>
+        <app-table 
+        [data]="capasData" 
+        [columns]="capasColumns" 
+        [itemsPerPageOptions]="[5, 10, 20]"
+        [showStatusAction]="false"
+        (onView)="handleView($event, 'capa')" 
+        (onEdit)="handleEdit($event, 'capa')"
+        (onDelete)="handleDelete($event)">
+      </app-table>
       </div>
       <div *ngIf="isCreatingCapa" class="contentAdmin2">
         <app-form-registro-capas (closeForm)="isCreatingCapa = false"></app-form-registro-capas>

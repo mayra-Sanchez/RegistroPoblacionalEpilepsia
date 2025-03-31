@@ -82,10 +82,20 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     { field: 'email', header: 'Correo Electrónico' },
     { field: 'usuario', header: 'Usuario' },
     {
-      field: 'capa', header: 'Capa de Investigación',
-      formatter: (value: string, row: any) => this.getCapaNombreById(row.capaId)
+      field: 'capa', 
+      header: 'Capa de Investigación',
+      formatter: (value: string, row: any) => this.getCapaNombreById(row.capaRawValue)
     },
-    { field: 'rolDisplay', header: 'Rol' }
+    { 
+      field: 'rolDisplay', 
+      header: 'Rol' 
+    },
+    { 
+      field: 'enabled', 
+      header: 'Estado',
+      formatter: (value: boolean) => value ? 'Habilitado' : 'Deshabilitado',
+      type: 'boolean' // Añadimos esto para manejo especial
+    }
   ];
 
   variablesColumns = [
@@ -222,45 +232,40 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   /* Carga de Datos
   * Carga los datos de los usuarios desde el servicio.
   */
-  loadUsuariosData(): void {
-    this.isLoading = true;
-    this.consolaService.getAllUsuarios().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (data: any[]) => {
-        this.usuariosData = data.map(user => {
-          const attrs = user.attributes || {};
-          const capaValue = attrs.researchLayerId?.[0];
-          console.log("capavalue", capaValue);
-          const roles = attrs.role || [];
-          const mainRole = roles[0] || 'No especificado';
+// En loadUsuariosData() del ConsolaAdministradorComponent
+loadUsuariosData(): void {
+  this.isLoading = true;
+  this.consolaService.getAllUsuarios().pipe(takeUntil(this.destroy$)).subscribe({
+    next: (data: any[]) => {
+      this.usuariosData = data.map(user => {
+        const attrs = user.attributes || {};
+        const capaValue = attrs.researchLayerId?.[0];
+        const roles = attrs.role || [];
+        const mainRole = roles[0] || 'No especificado';
 
-          return {
-            id: user.id,
-            nombre: user.firstName || 'Sin nombre',
-            apellido: user.lastName || 'Sin apellido',
-            email: user.email || 'No disponible',
-            usuario: user.username || 'No disponible',
-            tipoDocumento: attrs.identificationType ? attrs.identificationType[0] : 'No especificado',
-            documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
-            fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
-            capa: this.getCapaNombreByIdVariables(capaValue),
-            capaRawValue: capaValue,
-            rol: mainRole,
-            rolDisplay: this.transformarRol(mainRole),
-            passwordActual: user.password
-          };
-        });
-        this.cdr.detectChanges();
-        this.totalUsuarios = this.usuariosData.length;
-        this.updateDashboard();
-      },
-      error: () => {
-        this.mostrarMensajeError('No se pudo cargar la información de los usuarios');
-      },
-      complete: () => {
-        this.isLoading = false;
-      }
-    });
-  }
+        return {
+          id: user.id,
+          nombre: user.firstName || 'Sin nombre',
+          apellido: user.lastName || 'Sin apellido',
+          email: user.email || 'No disponible',
+          usuario: user.username || 'No disponible',
+          tipoDocumento: attrs.identificationType ? attrs.identificationType[0] : 'No especificado',
+          documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
+          fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
+          capa: this.getCapaNombreByIdVariables(capaValue),
+          capaRawValue: capaValue,
+          rol: mainRole,
+          rolDisplay: this.transformarString(mainRole),
+          passwordActual: user.password,
+          enabled: this.transformarString(user.enabled) // Asegura que sea booleano
+        };
+      });
+      this.cdr.detectChanges();
+    },
+    error: () => this.mostrarMensajeError('No se pudo cargar la información de los usuarios'),
+    complete: () => this.isLoading = false
+  });
+}
   /* Carga de Datos
   * Recarga los datos según la pestaña seleccionada.
   */
@@ -389,7 +394,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       });
     });
   }
-
   /* Funciones de Utilidad
   * Devuelve el nombre de una capa basado en su ID.
   */
@@ -420,13 +424,15 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   /* Funciones de Utilidad
   * Transforma un rol en un formato legible.
   */
-  transformarRol(rol: string): string {
-    const rolesMap: { [key: string]: string } = {
+  transformarString(string: string): string {
+    const stingMap: { [key: string]: string } = {
       'Admin': 'Administrador',
       'Doctor': 'Doctor',
-      'Researcher': 'Investigador'
+      'Researcher': 'Investigador',
+      'true': 'Activo',
+      'false': 'Inactivo'
     };
-    return rolesMap[rol] || rol;
+    return stingMap[string] || string;
   }
 
   /* Funciones de Utilidad
@@ -516,13 +522,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         role: rawRole,
         password: row.passwordActual || ''
       };
-    }   else if (tipo === 'capa') {
+    } else if (tipo === 'capa') {
       this.capaToEdit = {
         id: row.id,
         layerName: row.layerName || row.nombreCapa,
         description: row.description || row.descripcion,
         layerBoss: {
-          id: row.layerBoss?.id || 1, 
+          id: row.layerBoss?.id || 1,
           name: row.layerBoss?.name || row.jefeCapaNombre || '',
           identificationNumber: row.layerBoss?.identificationNumber || row.jefeIdentificacion || ''
         }
@@ -541,6 +547,50 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.isEditingVar = true;
     }
   }
+
+  toggleUserStatus(user: any): void {
+    const userId = user.id;
+    const isEnabled = user.enabled;
+    const action = isEnabled ? 'deshabilitar' : 'habilitar';
+
+    Swal.fire({
+      title: `¿Estás seguro de ${action} este usuario?`,
+      text: `El usuario ${user.nombre} ${user.apellido} será ${action}do.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: `Sí, ${action}`,
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const operation$ = isEnabled
+          ? this.consolaService.disableUser(userId)
+          : this.consolaService.enableUser(userId);
+
+        operation$.subscribe({
+          next: () => {
+            Swal.fire(
+              '¡Éxito!',
+              `El usuario ha sido ${action}do correctamente.`,
+              'success'
+            );
+            // Actualizar el estado local del usuario
+            user.enabled = !isEnabled;
+            this.loadUsuariosData(); // Recargar datos para asegurar consistencia
+          },
+          error: (error) => {
+            console.error(`Error al ${action} usuario:`, error);
+            Swal.fire(
+              'Error',
+              `No se pudo ${action} el usuario.`,
+              'error'
+            );
+          }
+        });
+      }
+    });
+  }
   /* Gestión de Modales
   * Cierra el modal de visualización y edición.
   */
@@ -551,7 +601,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.isViewing = false;
     this.viewedItem = null;
     this.viewType = '';
-    
+
     if (event?.success) {
       this.loadCapasData();
       this.loadUsuariosData();
@@ -591,7 +641,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       console.error('Datos de capa inválidos:', updatedCapa);
       return;
     }
-  
+
     const capaData = {
       id: updatedCapa.id,
       layerName: updatedCapa.layerName,
@@ -602,7 +652,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         identificationNumber: updatedCapa.layerBoss?.identificationNumber || ''
       }
     };
-  
+
     this.consolaService.actualizarCapa(capaData.id, capaData).subscribe({
       next: () => {
         Swal.fire('Éxito', 'Capa actualizada correctamente', 'success');
@@ -622,7 +672,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       Swal.fire('Error', 'Falta el ID del usuario.', 'error');
       return;
     }
-  
+
     // Preparar el payload según lo que espera el servicio
     const usuarioPayload = {
       firstName: usuarioEditado.nombre,
@@ -636,7 +686,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       role: usuarioEditado.role,
       password: usuarioEditado.password || '' // Solo se envía si hay cambio
     };
-  
+
     Swal.fire({
       title: '¿Guardar cambios?',
       text: 'Se actualizará la información del usuario',
@@ -652,7 +702,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           next: (updatedUser) => {
             Swal.fire('Éxito', 'Usuario actualizado con éxito.', 'success');
             this.isEditingUserModal = false;
-            
+
             // Actualizar el usuario en la lista local
             const index = this.usuariosData.findIndex(u => u.id === usuarioEditado.id);
             if (index !== -1) {
@@ -667,13 +717,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
                 fechaNacimiento: updatedUser.birthDate || usuarioEditado.fechaNacimiento,
                 capaRawValue: updatedUser.researchLayer || usuarioEditado.capaRawValue,
                 rol: updatedUser.role || usuarioEditado.role,
-                rolDisplay: this.transformarRol(updatedUser.role || usuarioEditado.role)
+                rolDisplay: this.transformarString(updatedUser.role || usuarioEditado.role)
               };
-              
+
               // Forzar la actualización de la vista
               this.usuariosData = [...this.usuariosData];
             }
-            
+
             // Recargar datos del servidor para asegurar consistencia
             this.loadUsuariosData();
           },

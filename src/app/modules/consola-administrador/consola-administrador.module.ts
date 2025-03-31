@@ -39,6 +39,9 @@ import { HandleEditComponent } from './components/handle-edit/handle-edit.compon
     HttpClientModule,
     ReactiveFormsModule,
     MatIconModule,
+  ],
+  exports: [
+    TableComponent,
   ]
 })
 export class AdminModule { }

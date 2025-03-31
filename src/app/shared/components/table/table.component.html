@@ -18,15 +18,10 @@
     </div>
 
     <div class="search-bar">
-        <input
-          type="text"
-          [(ngModel)]="searchQuery"
-          (input)="filterData()"
-          placeholder="Buscar"
-        />
+        <input type="text" [(ngModel)]="searchQuery" (input)="filterData()" placeholder="Buscar" />
         <i class="fa fa-search"></i>
-      </div>
-      
+    </div>
+
 </div>
 <div class="table-container">
     <table>
@@ -49,6 +44,11 @@
                         </button>
                         <button class="action-btn delete" (click)="delete(row)">
                             <i class="fa fa-trash"></i>
+                        </button>
+                        <button *ngIf="showStatusAction" class="action-btn status" [class.btn-enabled]="row.enabled"
+                            [class.btn-disabled]="!row.enabled" (click)="onToggleStatus.emit(row)">
+                            <i class="fas" [class.fa-toggle-on]="row.enabled" [class.fa-toggle-off]="!row.enabled"></i>
+                            {{ row.enabled ? 'ACTIVO' : 'INACTIVO' }}
                         </button>
                     </div>
                 </td>

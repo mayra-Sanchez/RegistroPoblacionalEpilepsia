@@ -265,4 +265,52 @@ actualizarCapa(id: string, capaData: any): Observable<any> {
       })
     );
   }
+
+/**
+ * Habilita un usuario
+ * @param userId ID del usuario a habilitar
+ */
+enableUser(userId: string): Observable<any> {
+  if (!this.isAdmin()) {
+    return throwError(() => new Error('Acceso denegado: solo administradores pueden habilitar usuarios'));
+  }
+
+  return this.http.post(`${this.API_USERS}/enabledUser`, null, {
+    headers: this.getAuthHeaders(),
+    params: new HttpParams().set('userId', userId)
+  }).pipe(
+    tap(() => {
+      console.log(`Usuario ${userId} habilitado`);
+      this.notifyDataUpdated();
+    }),
+    catchError(error => {
+      console.error('Error al habilitar usuario:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+/**
+ * Deshabilita un usuario
+ * @param userId ID del usuario a deshabilitar
+ */
+disableUser(userId: string): Observable<any> {
+  if (!this.isAdmin()) {
+    return throwError(() => new Error('Acceso denegado: solo administradores pueden deshabilitar usuarios'));
+  }
+
+  return this.http.post(`${this.API_USERS}/disableUser`, null, {
+    headers: this.getAuthHeaders(),
+    params: new HttpParams().set('userId', userId)
+  }).pipe(
+    tap(() => {
+      console.log(`Usuario ${userId} deshabilitado`);
+      this.notifyDataUpdated();
+    }),
+    catchError(error => {
+      console.error('Error al deshabilitar usuario:', error);
+      return throwError(() => error);
+    })
+  );
+}
 }

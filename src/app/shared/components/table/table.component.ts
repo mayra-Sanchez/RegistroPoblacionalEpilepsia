@@ -9,10 +9,12 @@ export class TableComponent {
   @Input() data: any[] = [];
   @Input() columns: { field: string; header: string }[] = [];
   @Input() itemsPerPageOptions: number[] = [5, 10, 20];
-
+  @Input() showStatusAction: boolean = false;
   @Output() onView = new EventEmitter<any>();
   @Output() onEdit = new EventEmitter<any>();
   @Output() onDelete = new EventEmitter<any>();
+  @Output() onToggleStatus = new EventEmitter<any>();
+
 
   itemsPerPage = this.itemsPerPageOptions[0];
   currentPage = 1;
@@ -39,6 +41,13 @@ export class TableComponent {
     );
     this.currentPage = 1;
     this.updatePagination();
+  }
+
+  getCellValue(row: any, col: any): string {
+    if (col.formatter) {
+      return col.formatter(row[col.field], row);
+    }
+    return row[col.field] !== undefined ? row[col.field].toString() : '';
   }
 
   sortData() {
