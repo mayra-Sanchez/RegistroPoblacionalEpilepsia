@@ -389,16 +389,23 @@ hr {
 .recent-info {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .recent-name {
-  font-weight: 500;
-  color: #2c3e50;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.recent-responsible {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 4px;
 }
 
 .recent-date {
   font-size: 0.8rem;
-  color: #7f8c8d;
+  color: #888;
 }
 
 .recent-status {

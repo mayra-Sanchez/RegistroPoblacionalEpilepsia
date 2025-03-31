@@ -182,62 +182,61 @@
     <div class="modal-content">
       <span class="close" (click)="closeModal('institucionesModal')">&times;</span>
       <h2>Instituciones Colaboradoras</h2>
-      <p>
-        Trabajamos en conjunto con las siguientes instituciones y laboratorios para mejorar la calidad de vida de los
-        pacientes con epilepsia:
-      </p>
+      <p>Trabajamos en conjunto con las siguientes instituciones y laboratorios:</p>
 
-      <!-- Contenedor de instituciones -->
       <div class="instituciones-container">
-        <div class="institucion">
-          <img src="../../assets/img/hupdv.jpg" alt="Institución 4" class="institucion-img" />
-          <h3 class="institucion-nombre">Hospital Universitario Psiquiátrico del Valle</h3>
-          <p class="institucion-descripcion">
-            El Hospital Universitario Psiquiátrico del Valle se especializa en el tratamiento de trastornos mentales y
-            neurológicos, brindando atención integral a pacientes con epilepsia y otras condiciones relacionadas
-          </p>
+        <div class="institucion" *ngFor="let institucion of instituciones" (click)="openInstitucionModal(institucion)">
+          <img [src]="institucion.imagen" [alt]="institucion.nombre" class="institucion-img">
+          <h3 class="institucion-nombre">{{institucion.nombre}}</h3>
+          <p class="institucion-descripcion">{{institucion.descripcionCorta}}</p>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Institución 2 -->
-        <div class="institucion">
-          <img src="../../assets/img/huv.png" alt="Institución 2" class="institucion-img" />
-          <h3 class="institucion-nombre">Hospital Universitario del Valle</h3>
-          <p class="institucion-descripcion">
-            El Hospital Universitario del Valle es un referente en atención médica e investigación clínica en el
-            suroccidente colombiano, especializado en el tratamiento de enfermedades complejas como la epilepsia
-          </p>
-        </div>
+  <!-- Modal para detalles de institución -->
+  <div id="institucionDetailModal" class="modal" *ngIf="institucionSeleccionada">
+    <div class="modal-content-institucion">
+      <span class="close" (click)="closeModal('institucionDetailModal')">&times;</span>
 
-        <!-- Institución 3 -->
-        <div class="institucion">
-          <img src="../../assets/img/clinica-imbanaco-logo.jpg" alt="Institución 3" class="institucion-img" />
-          <h3 class="institucion-nombre">Clínica Imbanaco</h3>
-          <p class="institucion-descripcion">
-            Clínica Imbanaco es una institución de salud de alta complejidad, reconocida por su enfoque en la innovación
-            médica y el tratamiento de enfermedades neurológicas, incluyendo la epilepsia
-          </p>
+      <div class="institucion-header">
+        <img [src]="institucionSeleccionada.imagen" [alt]="institucionSeleccionada.nombre"
+          class="institucion-logo-modal">
+        <div class="institucion-titulo">
+          <h2>{{institucionSeleccionada.nombre}}</h2>
+          <p class="institucion-tipo">{{institucionSeleccionada.tipo}}</p>
         </div>
       </div>
 
-      <div class="instituciones-container-center">
-        <div class="institucion">
-          <img src="../../assets/logo_uv.png" alt="Institución 1" class="institucion-img" />
-          <h3 class="institucion-nombre">Universidad del Valle</h3>
-          <p class="institucion-descripcion">
-            La Universidad del Valle es una de las instituciones educativas más prestigiosas de Colombia, reconocida por
-            su excelencia académica y su contribución a la investigación en salud y tecnología
-          </p>
+      <div class="institucion-content">
+        <div class="institucion-info">
+          <div class="institucion-descripcion">
+            <h3>Descripción</h3>
+            <p>{{institucionSeleccionada.descripcionCompleta}}</p>
+          </div>
+
+          <div class="institucion-detalles">
+            <h3>Información Adicional</h3>
+            <div class="detalle-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{institucionSeleccionada.direccion}}</span>
+            </div>
+            <div class="detalle-item">
+              <i class="fas fa-phone"></i>
+              <span>{{institucionSeleccionada.telefono}}</span>
+            </div>
+            <div class="detalle-item">
+              <i class="fas fa-globe"></i>
+              <a [href]="institucionSeleccionada.sitioWeb" target="_blank">{{institucionSeleccionada.sitioWeb}}</a>
+            </div>
+          </div>
         </div>
 
-        <!-- Laboratorio de Investigación -->
-        <div class="institucion">
-          <img src="../../assets/img/Multimedia-y-visión.png" alt="Laboratorio de Investigación"
-            class="institucion-img" />
-          <h3 class="institucion-nombre">Laboratorio Multimedia y Visión por computador</h3>
-          <p class="institucion-descripcion">
-            El Laboratorio Multimedia y Visión por Computador de la Universidad del Valle es un centro de investigación
-            líder en el desarrollo de tecnologías innovadoras aplicadas a la salud
-          </p>
+        <div class="institucion-mapa">
+          <h3>Ubicación</h3>
+          <div id="mapContainer" class="map-container"></div>
+          <small>Coordenadas: {{institucionSeleccionada.coordenadas.lat | number:'1.4-4'}},
+            {{institucionSeleccionada.coordenadas.lng | number:'1.4-4'}}</small>
         </div>
       </div>
     </div>
@@ -272,7 +271,7 @@
         </div>
 
         <!-- Persona 3: Director -->
-        <div class="persona" (click)="openPersonaModal('jhon')" >
+        <div class="persona" (click)="openPersonaModal('jhon')">
           <img src="../../assets/directores_estudiantes/jhonma.jpg" alt="Director 3" class="persona-img" />
           <h3 class="persona-nombre">Jhon Mauro Gómez Benitez</h3>
           <p class="persona-rol">Director</p>
@@ -335,7 +334,8 @@
         <div class="persona-detalle-header">
           <span class="close-persona-detalle" (click)="closeModal('personaDetailModal')">&times;</span>
           <div class="persona-icono">
-            <img [src]="personaSeleccionada.imagen" alt="Foto de {{personaSeleccionada.nombre}}" class="persona-imagen-detalle" *ngIf="personaSeleccionada.imagen">
+            <img [src]="personaSeleccionada.imagen" alt="Foto de {{personaSeleccionada.nombre}}"
+              class="persona-imagen-detalle" *ngIf="personaSeleccionada.imagen">
           </div>
           <div class="persona-detalle-info-basica">
             <h2 class="persona-nombre-detalle">{{personaSeleccionada.nombre}}</h2>

@@ -1,4 +1,21 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
+import * as L from 'leaflet';
+
+interface Institucion {
+  id: number;
+  nombre: string;
+  tipo: string;
+  imagen: string;
+  descripcionCorta: string;
+  descripcionCompleta: string;
+  direccion: string;
+  telefono: string;
+  sitioWeb: string;
+  coordenadas: {
+    lat: number;
+    lng: number;
+  };
+}
 
 interface Persona {
   id: string;
@@ -28,10 +45,75 @@ interface Persona {
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent {
+export class HomeComponent implements AfterViewInit {
   constructor(private cdRef: ChangeDetectorRef) { }
   selectedTab: string = 'inicio';
   personaSeleccionada: Persona | null = null;
+  instituciones: Institucion[] = [
+    {
+      id: 1,
+      nombre: 'Hospital Universitario Psiquiátrico del Valle',
+      tipo: 'Hospital Público',
+      imagen: '../../assets/img/hupdv.jpg',
+      descripcionCorta: 'Especializado en trastornos mentales y neurológicos...',
+      descripcionCompleta: 'El Hospital Universitario Psiquiátrico del Valle se especializa en el tratamiento de trastornos mentales y neurológicos...',
+      direccion: 'Calle 10 # 10-28, Cali, Valle del Cauca',
+      telefono: '+57 602 524 0000',
+      sitioWeb: 'https://www.hupv.gov.co',
+      coordenadas: { lat: 3.4516, lng: -76.5319 }
+    },
+    {
+      id: 2,
+      nombre: 'Hospital Universitario del Valle (HUV)',
+      tipo: 'Hospital Público',
+      imagen: '../../assets/img/huv.png',
+      descripcionCorta: 'Referente en atención médica e investigación clínica en el suroccidente colombiano...',
+      descripcionCompleta: 'El Hospital Universitario del Valle es un referente en atención médica e investigación clínica en el suroccidente colombiano, especializado en el tratamiento de enfermedades complejas como la epilepsia. Vinculado a la Universidad del Valle, es centro de formación de especialistas médicos.',
+      direccion: 'Cra. 36 # 5B-08, Cali, Valle del Cauca',
+      telefono: '+57 602 518 5600',
+      sitioWeb: 'https://www.hospitaluniversitario.gov.co',
+      coordenadas: { lat: 3.4345, lng: -76.5408 }
+    },
+    {
+      id: 3,
+      nombre: 'Clínica Imbanaco',
+      tipo: 'Clínica Privada',
+      imagen: '../../assets/img/clinica-imbanaco-logo.jpg',
+      descripcionCorta: 'Institución de alta complejidad reconocida por innovación médica...',
+      descripcionCompleta: 'Clínica Imbanaco es una institución de salud de alta complejidad, reconocida por su enfoque en la innovación médica y el tratamiento de enfermedades neurológicas, incluyendo la epilepsia. Cuenta con tecnología de punta y especialistas de alto nivel.',
+      direccion: 'Cra. 38A # 5A-100, Cali, Valle del Cauca',
+      telefono: '+57 602 682 1000',
+      sitioWeb: 'https://www.imbanaco.com',
+      coordenadas: { lat: 3.4205, lng: -76.5472 }
+    },
+    {
+      id: 4,
+      nombre: 'Universidad del Valle',
+      tipo: 'Universidad Pública',
+      imagen: '../../assets/logo_uv.png',
+      descripcionCorta: 'Institución educativa prestigiosa con contribución a investigación en salud...',
+      descripcionCompleta: 'La Universidad del Valle es una de las instituciones educativas más prestigiosas de Colombia, reconocida por su excelencia académica y su contribución a la investigación en salud y tecnología. Facultad de Medicina es referente nacional en formación médica.',
+      direccion: 'Ciudad Universitaria Meléndez, Calle 13 # 100-00, Cali',
+      telefono: '+57 602 321 2100',
+      sitioWeb: 'https://www.univalle.edu.co',
+      coordenadas: { lat: 3.3759, lng: -76.5305 }
+    },
+    {
+      id: 5,
+      nombre: 'Laboratorio Multimedia y Visión por Computador (MVC)',
+      tipo: 'Laboratorio de Investigación',
+      imagen: '../../assets/img/Multimedia-y-visión.png',
+      descripcionCorta: 'Centro líder en desarrollo de tecnologías innovadoras aplicadas a salud...',
+      descripcionCompleta: 'El Laboratorio Multimedia y Visión por Computador de la Universidad del Valle es un centro de investigación líder en el desarrollo de tecnologías innovadoras aplicadas a la salud, con proyectos en procesamiento de señales médicas y sistemas de apoyo al diagnóstico.',
+      direccion: 'Edificio B13, Ciudad Universitaria Meléndez, Cali',
+      telefono: '+57 602 321 2100',
+      sitioWeb: 'https://mvc.univalle.edu.co',
+      coordenadas: { lat: 3.3762, lng: -76.5318 }
+    }
+  ];
+
+  institucionSeleccionada: Institucion | null = null;
+  private map: any;
 
   // Datos de todas las personas
   personas: Persona[] = [
@@ -216,6 +298,10 @@ export class HomeComponent {
     ,
   ];
 
+  ngAfterViewInit() {
+    this.loadLeafletStyles();
+  }
+
   onTabSelected(tab: string): void {
     this.selectedTab = tab;
   }
@@ -229,11 +315,66 @@ export class HomeComponent {
       this.openModal('personaDetailModal');
     }, 10);
   }
+  loadLeafletStyles() {
+    const leafletStyle = document.createElement('link');
+    leafletStyle.rel = 'stylesheet';
+    leafletStyle.href = 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css';
+    document.head.appendChild(leafletStyle);
+  }
+
+  openInstitucionModal(institucion: Institucion): void {
+    console.log('Abriendo modal para:', institucion.nombre);
+    
+    // Cerrar mapa existente si hay uno
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+    
+    this.institucionSeleccionada = institucion;
+    this.cdRef.detectChanges();
+  
+    setTimeout(() => {
+      this.openModal('institucionDetailModal');
+      this.initMap();
+    }, 100);
+  }
+
+  initMap(): void {
+    if (!this.institucionSeleccionada) return;
+  
+    // Esperar a que el DOM esté completamente renderizado
+    setTimeout(() => {
+      const mapContainer = document.getElementById('mapContainer');
+      if (!mapContainer) return;
+      
+      // Limpiar contenedor del mapa
+      mapContainer.innerHTML = '';
+      
+      const coord = this.institucionSeleccionada!.coordenadas;
+      this.map = L.map('mapContainer').setView([coord.lat, coord.lng], 15);
+  
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(this.map);
+  
+      L.marker([coord.lat, coord.lng])
+        .addTo(this.map)
+        .bindPopup(`<b>${this.institucionSeleccionada!.nombre}</b><br>${this.institucionSeleccionada!.direccion}`)
+        .openPopup();
+        
+      // Forzar redimensionamiento del mapa
+      setTimeout(() => {
+        this.map!.invalidateSize();
+      }, 0);
+    }, 0);
+  }
+
   openModal(modalId: string): void {
     const modal = document.getElementById(modalId);
     if (modal) {
       modal.style.display = 'block';
-      document.body.style.overflow = 'hidden'; // Deshabilita el scroll
+      document.body.style.overflow = 'hidden';
     }
   }
 
@@ -241,7 +382,12 @@ export class HomeComponent {
     const modal = document.getElementById(modalId);
     if (modal) {
       modal.style.display = 'none';
-      document.body.style.overflow = 'auto'; // Habilita el scroll
+      document.body.style.overflow = 'auto';
+  
+      if (modalId === 'institucionDetailModal' && this.map) {
+        this.map.remove();
+        this.map = null;
+      }
     }
   }
 }

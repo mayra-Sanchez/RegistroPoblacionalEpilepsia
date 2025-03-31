@@ -468,7 +468,7 @@ export class ConsolaRegistroComponent implements OnInit {
             nombre: registro.patientBasicInfo?.name || 'No disponible',
             documento: registro.patientIdentificationNumber.toString(),
             fecha: registro.registerDate,
-            // Guarda referencia al objeto completo
+            registradoPor: registro.healthProfessional?.name || 'Desconocido',
             _fullData: registro
           }));
         this.loadingRegistros = false;
@@ -564,6 +564,7 @@ export class ConsolaRegistroComponent implements OnInit {
       .map(registro => ({
         ...registro,
         nombre: registro.patientBasicInfo?.name || 'Nombre no disponible',
+        responsable: registro.healthProfessional?.name || 'Responsable no disponible',
         fecha: registro.registerDate,
         documento: registro.patientIdentificationNumber
       }));
