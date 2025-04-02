@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from 'src/app/login/services/auth.service';
 import { Router } from '@angular/router';
+import { jwtDecode } from 'jwt-decode';
 
 @Component({
   selector: 'app-login',
@@ -34,37 +35,59 @@ export class LoginComponent implements OnInit {
     this.loading = true;
     const { email, password } = this.loginForm.value;
 
-    this.authService.login(email, password).subscribe(
-      (response) => {
-        const roles = this.authService.getStoredRoles();
+    this.authService.login(email, password).subscribe({
+      next: (response) => {
+        const roles = this.getCombinedRoles(); // Obtenemos todos los roles combinados
         this.redirectUser(roles);
         this.loginSuccess.emit();
       },
-      (error) => {
+      error: (error) => {
         this.errorMessage = '❌ Credenciales incorrectas. Inténtalo de nuevo.';
         this.loading = false;
       },
-      () => {
+      complete: () => {
         this.loading = false;
       }
-    );
+    });
+  }
+
+  private getCombinedRoles(): string[] {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return [];
+
+    try {
+      const decoded: any = jwtDecode(token);
+      // Roles de cliente específico
+      const clientRoles = decoded.resource_access?.['registers-users-api-rest']?.roles || [];
+      // Roles de realm (globales)
+      const realmRoles = decoded.realm_access?.roles || [];
+      
+      return [...clientRoles, ...realmRoles];
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return [];
+    }
+  }
+
+  private redirectUser(allRoles: string[]) {
+    // Primero verificamos SuperAdmin (tanto rol de cliente como de realm)
+    const isSuperAdmin = allRoles.includes('SuperAdmin_client_role') || 
+                        allRoles.includes('SuperAdmin');
+
+    if (isSuperAdmin || allRoles.includes('Admin_client_role')) {
+      this.router.navigate(['/administrador']);
+    } else if (allRoles.includes('Doctor_client_role')) {
+      this.router.navigate(['/registro']);
+    } else if (allRoles.includes('Researcher_client_role')) {
+      this.router.navigate(['/investigador']);
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
     const passwordInput = document.getElementById('password') as HTMLInputElement;
     passwordInput.type = this.showPassword ? 'text' : 'password';
-  }
-
-  private redirectUser(roles: string[]) {
-    if (roles.includes('Admin_client_role')) {
-      this.router.navigate(['/administrador']);
-    } else if (roles.includes('Doctor_client_role')) {
-      this.router.navigate(['/registro']);
-    } else if (roles.includes('Researcher_client_role')) {
-      this.router.navigate(['/investigador']);
-    } else {
-      this.router.navigate(['/']);
-    }
   }
 }

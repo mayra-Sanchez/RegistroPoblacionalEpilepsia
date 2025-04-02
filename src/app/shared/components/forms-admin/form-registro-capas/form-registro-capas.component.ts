@@ -5,21 +5,51 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
+/**
+ * Componente para el formulario de registro de capas de investigación
+ * 
+ * Este componente maneja la creación de nuevas capas de investigación con validación de datos,
+ * confirmación de usuario y retroalimentación visual. Implementa OnInit para inicialización
+ * y OnDestroy para limpieza de suscripciones.
+ * 
+ * @example
+ * <app-form-registro-capas></app-form-registro-capas>
+ */
 @Component({
   selector: 'app-form-registro-capas',
   templateUrl: './form-registro-capas.component.html',
   styleUrls: ['./form-registro-capas.component.css']
 })
 export class FormRegistroCapasComponent implements OnInit, OnDestroy {
+  /**
+   * Formulario reactivo para el registro de capas
+   * @type {FormGroup}
+   */
   form!: FormGroup;
+
+  /**
+   * Suscripción al servicio de registro de capas
+   * @private
+   * @type {Subscription}
+   */
   private capasSubscription: Subscription = Subscription.EMPTY;
 
+  /**
+   * Constructor del componente
+   * @param {FormBuilder} fb Servicio para construir formularios reactivos
+   * @param {ConsolaAdministradorService} consolaAdministradorService Servicio para operaciones de administración
+   * @param {MatDialog} dialog Servicio para manejo de diálogos modales
+   */
   constructor(
     private fb: FormBuilder,
     private consolaAdministradorService: ConsolaAdministradorService,
     private dialog: MatDialog
   ) { }
 
+  /**
+   * Método del ciclo de vida Angular para inicialización
+   * Configura el formulario con validaciones
+   */
   ngOnInit(): void {
     this.form = this.fb.group({
       layerName: ['', [Validators.required, Validators.minLength(3)]],
@@ -32,12 +62,20 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Método del ciclo de vida Angular para destrucción
+   * Cancela la suscripción activa para prevenir memory leaks
+   */
   ngOnDestroy(): void {
     if (this.capasSubscription) {
       this.capasSubscription.unsubscribe();
     }
   }
  
+  /**
+   * Maneja el registro de una nueva capa de investigación
+   * Valida el formulario, muestra confirmación y procesa la solicitud
+   */
   registrarCapa(): void {
     if (this.form.invalid) {
       Swal.fire({
@@ -92,7 +130,6 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
           error: (error) => {
             let errorMessage = 'Ocurrió un problema al registrar la capa.';
 
-            // Manejo específico de errores
             if (error.error && typeof error.error === 'string') {
               if (error.error.includes('ya existe')) {
                 errorMessage = 'El nombre de la capa ya existe.';

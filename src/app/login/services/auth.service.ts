@@ -231,6 +231,11 @@ export class AuthService {
     }
   }
 
+  hasAnyRole(requiredRoles: string[]): boolean {
+    const userRoles = this.getStoredRoles();
+    return requiredRoles.some(role => userRoles.includes(role));
+  }
+
   getUserIdentificationNumber(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';

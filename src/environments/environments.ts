@@ -1,8 +1,7 @@
 export const environment = {
   production: false,
-  keycloak: {
-    url: 'http://localhost:8181',  
-    realm: 'registeUsersApiDev',  
-    clientId: 'angular-frontend',
-  },
+  supersetBaseUrl: 'http://localhost:8088',
+  supersetDashboardId: '1', // Reemplaza con tu ID de dashboard
+  supersetUsername: 'admin',
+  supersetPassword: 'admin' // Cambia en producción
 };

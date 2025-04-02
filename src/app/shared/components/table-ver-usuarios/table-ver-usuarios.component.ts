@@ -50,7 +50,7 @@ export class TableVerUsuariosComponent implements OnChanges {
     this.onPageChange.emit({
       page: this.currentPage - 1,
       size: this.itemsPerPage,
-      query: this.searchQuery // Incluimos el query en el emit
+      query: this.searchQuery
     });
   }
 

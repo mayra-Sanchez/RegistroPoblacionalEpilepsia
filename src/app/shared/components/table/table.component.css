@@ -344,3 +344,103 @@ tbody tr:hover {
     font-size: 0.6875rem;
   }
 }
+
+.loading-indicator {
+  padding: 10px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.8);
+  margin: 10px 0;
+}
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.table-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.items-per-page, .sort-options, .search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-bar {
+  margin-left: auto;
+  position: relative;
+}
+
+.search-bar i {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+}
+
+.search-bar input {
+  padding-left: 30px;
+}
+
+select, input {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.action-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  opacity: 0.8;
+}
+
+.action-btn.view { color: #17a2b8; }
+.action-btn.edit { color: #ffc107; }
+.action-btn.delete { color: #dc3545; }
+.action-btn.status { 
+  padding: 5px 8px;
+  font-size: 0.8em;
+}
+
+.btn-enabled { background-color: #28a745; color: white; }
+.btn-disabled { background-color: #6c757d; color: white; }
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.pagination-controls button {
+  padding: 5px 15px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+}
+
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

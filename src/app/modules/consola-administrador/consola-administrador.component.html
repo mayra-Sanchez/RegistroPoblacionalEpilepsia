@@ -59,12 +59,12 @@
               <ul>
                 <h2> Últimos usuarios creados</h2>
                 <li *ngFor="let usuario of ultimosUsuarios" (click)="handleView(usuario, 'usuario')" class="user-item">
-                    👤 {{ usuario.nombre }} - {{ transformarString(usuario.rol) }}
-                    <span class="capa-info" *ngIf="usuario.detalles.capaRawValue">
-                        ({{ getCapaNombreByIdVariables(usuario.detalles.capaRawValue) }})
-                    </span>
+                  👤 {{ usuario.nombre }} - {{ transformarString(usuario.rol) }}
+                  <span class="capa-info" *ngIf="usuario.detalles.capaRawValue">
+                    ({{ getCapaNombreByIdVariables(usuario.detalles.capaRawValue) }})
+                  </span>
                 </li>
-            </ul>
+              </ul>
               <div class="descarga">
                 <button mat-raised-button color="primary" (click)="exportarCSV()">
                   <mat-icon>download</mat-icon> Exportar datos de todos los usuarios
@@ -106,7 +106,7 @@
                     <b>Descripción:</b> {{ registro.data.description || 'Sin descripción' }} <br>
                     <b>Tipo:</b> {{ registro.data.type || 'Sin tipo' }} <br>
                     <b>Opciones:</b> {{ registro.data.options?.join(', ') || 'Ninguna' }}
-                  </ng-container>                                  
+                  </ng-container>
                 </td>
               </ng-container>
 
@@ -129,16 +129,11 @@
             Crear nuevo usuario
           </button>
         </div>
-        <app-table 
-        [data]="usuariosData" 
-        [columns]="usuariosColumns" 
-        [itemsPerPageOptions]="[5, 10, 20]"
-        [showStatusAction]="true"
-        (onView)="handleViewUser($event, 'usuario')" 
-        (onEdit)="handleEdit($event, 'usuario')"
-        (onDelete)="handleDelete($event)"
-        (onToggleStatus)="toggleUserStatus($event)">
-      </app-table>
+        <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
+          [showStatusAction]="true" (onView)="handleViewUser($event, 'usuario')"
+          (onEdit)="handleEdit($event, 'usuario')" (onDelete)="handleDelete($event)"
+          (onToggleStatus)="toggleUserStatus($event)">
+        </app-table>
       </div>
 
       <!-- Formulario de Creación de Usuario -->
@@ -155,15 +150,10 @@
             Crear nueva variable
           </button>
         </div>
-        <app-table 
-        [data]="variablesData" 
-        [columns]="variablesColumns" 
-        [itemsPerPageOptions]="[5, 10, 20]"
-        [showStatusAction]="false"
-        (onView)="handleView($event, 'variable')" 
-        (onEdit)="handleEdit($event, 'variable')"
-        (onDelete)="handleDelete($event)">
-      </app-table>
+        <app-table [data]="variablesData" [columns]="variablesColumns" [itemsPerPageOptions]="[5, 10, 20]"
+          [showStatusAction]="false" (onView)="handleView($event, 'variable')" (onEdit)="handleEdit($event, 'variable')"
+          (onDelete)="handleDelete($event)">
+        </app-table>
       </div>
       <div *ngIf="isCreatingVar" class="contentAdmin2">
         <app-form-registro-variables (closeForm)="isCreatingVar = false"></app-form-registro-variables>
@@ -178,58 +168,50 @@
             Crear nueva capa
           </button>
         </div>
-        <app-table 
-        [data]="capasData" 
-        [columns]="capasColumns" 
-        [itemsPerPageOptions]="[5, 10, 20]"
-        [showStatusAction]="false"
-        (onView)="handleView($event, 'capa')" 
-        (onEdit)="handleEdit($event, 'capa')"
-        (onDelete)="handleDelete($event)">
-      </app-table>
+        <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]"
+          [showStatusAction]="false" (onView)="handleView($event, 'capa')" (onEdit)="handleEdit($event, 'capa')"
+          (onDelete)="handleDelete($event)">
+        </app-table>
       </div>
       <div *ngIf="isCreatingCapa" class="contentAdmin2">
         <app-form-registro-capas (closeForm)="isCreatingCapa = false"></app-form-registro-capas>
       </div>
 
     </div>
+
+    <!-- Gestión de Registros de Capas (solo para SuperAdmin) -->
+    <div *ngIf="selectedTab === 'gestionRegistrosCapas'">
+      <div class="action-bar">
+      </div>
+    
+      <app-data-table
+        [data]="registrosCapasData" 
+        [columns]="registrosCapasColumns" 
+        [itemsPerPageOptions]="[5, 10, 20]"
+        [totalRecords]="totalRegistrosCapas" 
+        [loading]="loadingRegistrosCapas" 
+        (onView)="handleViewRegistro($event)"
+        (onDelete)="handleDeleteRegistro($event)">
+      </app-data-table>
+    </div>
   </div>
 </div>
 
 <!-- Modal para visualización -->
-<app-handle-view 
-  *ngIf="isViewing"
-  [viewedItem]="viewedItem"
-  [viewType]="viewType"
-  (closeModal)="cerrarModal()">
+<app-handle-view *ngIf="isViewing" [viewedItem]="viewedItem" [viewType]="viewType" (closeModal)="cerrarModal()">
 </app-handle-view>
 
 <!-- Modal para edición de usuario -->
-<app-handle-edit 
-  *ngIf="isEditingUserModal"
-  [itemToEdit]="userToEdit"
-  [editType]="'usuario'"
-  [capas]="capas"
-  (saveChanges)="guardarEdicionUsuario($event)"
-  (closeModal)="cerrarModal($event)">
+<app-handle-edit *ngIf="isEditingUserModal" [itemToEdit]="userToEdit" [editType]="'usuario'" [capas]="capas"
+  (saveChanges)="guardarEdicionUsuario($event)" (closeModal)="cerrarModal($event)">
 </app-handle-edit>
 
 <!-- Modal para edición de variable -->
-<app-handle-edit 
-  *ngIf="isEditingVar"
-  [itemToEdit]="varToEdit"
-  [editType]="'variable'"
-  [capas]="capas"
-  (saveChanges)="guardarEdicionVariable($event)"
-  (closeModal)="cerrarModal($event)">
+<app-handle-edit *ngIf="isEditingVar" [itemToEdit]="varToEdit" [editType]="'variable'" [capas]="capas"
+  (saveChanges)="guardarEdicionVariable($event)" (closeModal)="cerrarModal($event)">
 </app-handle-edit>
 
 <!-- Modal para edición de capa -->
-<app-handle-edit 
-  *ngIf="isEditingCapa"
-  [itemToEdit]="capaToEdit"
-  [editType]="'capa'"
-  [capas]="capas"
-  (saveChanges)="guardarEdicionCapa($event)"
-  (closeModal)="cerrarModal($event)">
+<app-handle-edit *ngIf="isEditingCapa" [itemToEdit]="capaToEdit" [editType]="'capa'" [capas]="capas"
+  (saveChanges)="guardarEdicionCapa($event)" (closeModal)="cerrarModal($event)">
 </app-handle-edit>

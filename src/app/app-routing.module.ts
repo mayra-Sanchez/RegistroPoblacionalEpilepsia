@@ -14,10 +14,9 @@ const routes: Routes = [
   },
   {
     path: 'administrador',
-    loadChildren: () =>
-      import('./modules/consola-administrador/consola-administrador.module').then((m) => m.AdminModule),
+    loadChildren: () => import('./modules/consola-administrador/consola-administrador.module').then(m => m.AdminModule),
     canActivate: [AuthGuard],
-    data: { roles: ['Admin_client_role'] },
+    data: { roles: ['Admin_client_role' ,'SuperAdmin_client_role'] }
   },
   {
     path: 'investigador',

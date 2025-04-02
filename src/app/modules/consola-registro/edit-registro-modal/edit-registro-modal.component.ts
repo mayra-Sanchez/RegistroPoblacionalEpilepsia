@@ -122,7 +122,7 @@ export class EditRegistroModalComponent {
         next: (response) => {
           this.showSuccessAlert('Registro actualizado correctamente');
           this.registroActualizado.emit(response);
-          setTimeout(() => close(), 1500);
+          setTimeout(() => this.closeModal(), 1500);
         },
         error: (err) => {
           console.error('Error completo:', err);
@@ -132,7 +132,6 @@ export class EditRegistroModalComponent {
         }
       });
   }
-
   /**
    * Muestra una alerta de éxito con SweetAlert
    * @param message - Mensaje a mostrar
@@ -193,10 +192,11 @@ export class EditRegistroModalComponent {
       patient: {
         name: this.registro.patientBasicInfo?.name || '',
         sex: this.registro.patientBasicInfo?.sex || '',
-        birthdate: this.formatDateForAPI(this.registro.patientBasicInfo?.birthDate),
+        birthDate: this.formatDateForAPI(this.registro.patientBasicInfo?.birthDate),
         age: this.registro.patientBasicInfo?.age || 0,
         email: this.registro.patientBasicInfo?.email || '',
         phoneNumber: this.registro.patientBasicInfo?.phoneNumber || '',
+        deathDate: this.formatDateForAPI(this.registro.patientBasicInfo?.deathDate),
         economicStatus: this.registro.patientBasicInfo?.economicStatus || '',
         educationLevel: this.registro.patientBasicInfo?.educationLevel || '',
         maritalStatus: this.registro.patientBasicInfo?.maritalStatus || '',
@@ -210,21 +210,21 @@ export class EditRegistroModalComponent {
     // Incluye datos del cuidador solo si existen
     if (this.registro.caregiver && this.hasCaregiverData(this.registro.caregiver)) {
       payload.caregiver = {
-        name: this.registro.caregiver.name || null,
-        identificationType: this.registro.caregiver.identificationType || null,
-        identificationNumber: this.registro.caregiver.identificationNumber || null,
-        age: this.registro.caregiver.age || null,
-        educationLevel: this.registro.caregiver.educationLevel || null,
-        occupation: this.registro.caregiver.occupation || null
+        name: this.registro.caregiver.name || '',
+        identificationType: this.registro.caregiver.identificationType || '',
+        identificationNumber: this.registro.caregiver.identificationNumber || 0,
+        age: this.registro.caregiver.age || 0,
+        educationLevel: this.registro.caregiver.educationLevel || '',
+        occupation: this.registro.caregiver.occupation || ''
       };
     }
 
     // Incluye datos del profesional de la salud si existen
     if (this.registro.healthProfessional) {
       payload.healthProfessional = {
-        id: this.registro.healthProfessional.id || null,
-        name: this.registro.healthProfessional.name || null,
-        identificationNumber: this.registro.healthProfessional.identificationNumber || null
+        id: this.registro.healthProfessional.id || '',
+        name: this.registro.healthProfessional.name || '',
+        identificationNumber: this.registro.healthProfessional.identificationNumber || 0
       };
     }
 
@@ -329,22 +329,28 @@ export class EditRegistroModalComponent {
    */
   private formatDateForAPI(dateValue: any): string | null {
     if (!dateValue) return null;
-
-    if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
+    
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
       return dateValue;
     }
+  
+    if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
+      const [day, month, year] = dateValue.split('-');
+      return `${year}-${month}-${day}`;
+    }
 
+    // Handle Date objects
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) {
       console.error('Fecha inválida:', dateValue);
       return null;
     }
 
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
 
-    return `${day}-${month}-${year}`;
+    return `${year}-${month}-${day}`;
   }
 
   /**

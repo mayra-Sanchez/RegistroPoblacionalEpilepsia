@@ -19,7 +19,6 @@ export class FormRegistroUsuarioComponent implements OnInit {
   @Output() usuarioCreada = new EventEmitter<void>();
   usuarioForm: FormGroup;
 
-  //Almacena la lista de capas de investigación obtenidas del backend.
   capas: any[] = [];
   showPassword: boolean = false; 
 
@@ -37,13 +36,11 @@ export class FormRegistroUsuarioComponent implements OnInit {
       password: new FormControl('', [Validators.required, Validators.minLength(6)])
     });
 
-    // Escuchar cambios en los campos relevantes para generar el username
     this.usuarioForm.get('nombre')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
     this.usuarioForm.get('apellido')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
     this.usuarioForm.get('fechaNacimiento')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
   }
  
-  // Se ejecuta al inicializar el componente. Carga las capas de investigación desde el backend.
   ngOnInit(): void {
     this.obtenerCapas();
   }
@@ -69,10 +66,10 @@ export class FormRegistroUsuarioComponent implements OnInit {
   obtenerCapas() {
     this.consolaAdministradorService.getAllLayers().subscribe(
       (capas) => {
-        console.log('Capas recibidas:', capas); // Verifica en consola
+        console.log('Capas recibidas:', capas);
         this.capas = capas.map(capa => ({
           id: capa.id,
-          nombreCapa: capa.layerName || capa.nombreCapa // Usa el campo correcto
+          nombreCapa: capa.layerName || capa.nombreCapa 
         }));
       },
       (error) => {
@@ -91,17 +88,11 @@ export class FormRegistroUsuarioComponent implements OnInit {
    * Genera un nombre de usuario único basado en el nombre, apellido y fecha de nacimiento.
    */
   generarUsername(nombre: string, apellido: string, fechaNacimiento: string): string {
-    // Remover espacios y convertir a minúsculas
     const nombreLimpiado = nombre.trim().toLowerCase();
     const apellidoLimpiado = apellido.trim().toLowerCase();
-    
-    // Extraer los dos últimos dígitos del año de nacimiento
     const yearDigits = fechaNacimiento ? fechaNacimiento.slice(2, 4) : '';
-  
-    // Generar un número aleatorio de 100 a 999 para mayor unicidad
     const randomNum = Math.floor(100 + Math.random() * 900);
   
-    // Concatenar solo letras y números permitidos
     return `${nombreLimpiado.charAt(0)}${apellidoLimpiado}${yearDigits}${randomNum}`.replace(/[^a-z0-9]/g, '');
   }
   
@@ -119,7 +110,6 @@ export class FormRegistroUsuarioComponent implements OnInit {
       return;
     }
 
-    // Generar username único
     const username = this.generarUsername(
       this.usuarioForm.value.nombre,
       this.usuarioForm.value.apellido,

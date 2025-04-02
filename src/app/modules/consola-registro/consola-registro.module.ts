@@ -19,6 +19,15 @@ import { PacienteFormComponent } from 'src/app/form-registro-paciente/components
 import { ViewRegistroModalComponent } from './view-registro-modal/view-registro-modal.component';
 import { EditRegistroModalComponent } from './edit-registro-modal/edit-registro-modal.component';
 import { ConsultaDinamicaComponent } from './consulta-dinamica/consulta-dinamica.component';
+import { SafePipe } from './consulta-dinamica/safe.pipe';
+import { HttpClientModule } from '@angular/common/http';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BuscarProfesionalModalComponent } from './components/buscar-profesional-modal/buscar-profesional-modal.component';
+import { BuscarPacienteModalComponent } from './components/buscar-paciente-modal/buscar-paciente-modal.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +43,9 @@ import { ConsultaDinamicaComponent } from './consulta-dinamica/consulta-dinamica
     ViewRegistroModalComponent,
     EditRegistroModalComponent,
     ConsultaDinamicaComponent,
+    SafePipe,
+    BuscarProfesionalModalComponent,
+    BuscarPacienteModalComponent
   ],
   imports: [
     CommonModule,
@@ -42,7 +54,13 @@ import { ConsultaDinamicaComponent } from './consulta-dinamica/consulta-dinamica
     MatTableModule, 
     MatPaginatorModule, 
     MatSortModule, 
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    HttpClientModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSlideToggleModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
   ]
 })
 export class ConsolaRegistroModule { }

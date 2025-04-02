@@ -1,0 +1,22 @@
+<div class="modal-container">
+    <div class="modal-content">
+      <h2>Buscar por paciente</h2>
+      
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="identificacion">Número de identificación del paciente:</label>
+          <input type="text" id="identificacion" formControlName="identificacion" 
+                 class="form-control" placeholder="Ingrese el número de identificación">
+          <div *ngIf="form.get('identificacion')?.invalid && form.get('identificacion')?.touched" 
+               class="error-message">
+            Por favor ingrese un número de identificación válido
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button type="button" class="btn btn-secondary" (click)="onCerrar()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Buscar</button>
+        </div>
+      </form>
+    </div>
+  </div>

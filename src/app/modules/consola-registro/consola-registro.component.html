@@ -102,15 +102,46 @@
     <div *ngIf="selectedTab === 'registroPaciente'">
       <app-form-registro-paciente></app-form-registro-paciente>
     </div>
+    <!-- Añade esto encima de la tabla -->
+    <div class="search-options" *ngIf="selectedTab === 'listadoPacientes'">
+      <div class="button-group">
+        <button class="btn btn-primary" (click)="abrirBusquedaPorProfesional()">
+          Buscar por profesional
+        </button>
+        <button class="btn btn-primary" (click)="abrirBusquedaPorPaciente()">
+          Buscar por paciente
+        </button>
+        <button class="btn btn-secondary" (click)="resetearBusqueda()" *ngIf="modoBusqueda !== 'default'">
+          Ver todos los registros
+        </button>
+      </div>
+
+      <div *ngIf="modoBusqueda === 'profesional'" class="search-info">
+        Mostrando registros del profesional: {{ profesionalBuscado }}
+      </div>
+      <div *ngIf="modoBusqueda === 'paciente'" class="search-info">
+        Mostrando registros del paciente: {{ pacienteBuscado }}
+      </div>
+    </div>
+
+    <!-- Modales -->
+    <app-buscar-profesional-modal *ngIf="showBuscarProfesionalModal" (buscar)="buscarPorProfesional($event)"
+      (cerrar)="cerrarBusquedaPorProfesional()">
+    </app-buscar-profesional-modal>
+
+    <app-buscar-paciente-modal *ngIf="showBuscarPacienteModal" (buscar)="buscarPorPaciente($event)"
+      (cerrar)="cerrarBusquedaPorPaciente()">
+    </app-buscar-paciente-modal>
+
+    <!-- La tabla que ya tenías -->
     <div *ngIf="selectedTab === 'listadoPacientes'">
       <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
-        [totalRecords]="totalElements" [loading]="loadingRegistros"
-        (onPageChange)="loadRegistros($event.page, $event.size, $event.query)" (onView)="handleView($event)"
-        (onEdit)="handleEdit($event)">
+        [totalRecords]="totalElements" [loading]="loadingRegistros" (onPageChange)="onPageChange($event)"
+        (onView)="handleView($event)" (onEdit)="handleEdit($event)">
       </app-table-ver-usuarios>
     </div>
     <div *ngIf="selectedTab === 'consultaDatosDigitador'">
-      <h1>Consultas de datos digitador</h1>
+      <app-consulta-dinamica></app-consulta-dinamica>
     </div>
   </div>
 

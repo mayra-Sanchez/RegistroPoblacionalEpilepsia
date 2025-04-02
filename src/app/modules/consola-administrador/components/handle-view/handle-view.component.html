@@ -91,6 +91,166 @@
                             asignar')}}</span>
                     </div>
                 </div>
+
+                <div *ngSwitchCase="'registro'" class="reg-container">
+                    <!-- Sección Identificación -->
+                    <div class="reg-card">
+                        <h6 class="reg-header">Identificación</h6>
+                        <div class="reg-fields">
+                            <div class="reg-field">
+                                <span class="reg-key">Tipo de Documento:</span>
+                                <span class="reg-val">{{getLabel(tiposIdentificacion,
+                                    viewedItem.patientIdentificationType) || 'No especificado'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Número de Documento:</span>
+                                <span class="reg-val">{{viewedItem.patientIdentificationNumber || 'No
+                                    especificado'}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Datos Básicos -->
+                    <div class="reg-card">
+                        <h6 class="reg-header">Datos Básicos</h6>
+                        <div class="reg-fields">
+                            <div class="reg-field">
+                                <span class="reg-key">Nombre:</span>
+                                <span class="reg-val">{{viewedItem.patientBasicInfo?.name || 'No
+                                    especificado'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Género:</span>
+                                <span class="reg-val">{{getLabel(generos, viewedItem.patientBasicInfo?.sex) || 'No
+                                    especificado'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Edad:</span>
+                                <span class="reg-val">{{viewedItem.patientBasicInfo?.age || 'No
+                                    especificada'}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Contacto -->
+                    <div class="reg-card">
+                        <h6 class="reg-header">Contacto</h6>
+                        <div class="reg-fields">
+                            <div class="reg-field">
+                                <span class="reg-key">Email:</span>
+                                <span class="reg-val">{{viewedItem.patientBasicInfo?.email || 'No
+                                    especificado'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Teléfono:</span>
+                                <span class="reg-val">{{viewedItem.patientBasicInfo?.phoneNumber || 'No
+                                    especificado'}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Ubicación -->
+                    <div class="reg-card">
+                        <h6 class="reg-header">Ubicación</h6>
+                        <div class="reg-fields">
+                            <div class="reg-field">
+                                <span class="reg-key">Ciudad Actual:</span>
+                                <span class="reg-val">{{viewedItem.patientBasicInfo?.currentCity || 'No
+                                    especificada'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Ciudad de Origen:</span>
+                                <span class="reg-val">{{viewedItem.patientBasicInfo?.hometown || 'No
+                                    especificada'}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Socioeconómica -->
+                    <div class="reg-card">
+                        <h6 class="reg-header">Información Socioeconómica</h6>
+                        <div class="reg-fields">
+                            <div class="reg-field">
+                                <span class="reg-key">Nivel Educativo:</span>
+                                <span class="reg-val">{{getLabel(nivelesEducacion,
+                                    viewedItem.patientBasicInfo?.educationLevel) || 'No especificado'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Estado Civil:</span>
+                                <span class="reg-val">{{getLabel(estadosCiviles,
+                                    viewedItem.patientBasicInfo?.maritalStatus) || 'No especificado'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Nivel Económico:</span>
+                                <span class="reg-val">{{getLabel(estadosEconomicos,
+                                    viewedItem.patientBasicInfo?.economicStatus) || 'No especificado'}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Clínica -->
+                    <div class="reg-card">
+                        <h6 class="reg-header">Información Clínica</h6>
+                        <div class="reg-fields">
+                            <div class="reg-field">
+                                <span class="reg-key">Fecha Primera Crisis:</span>
+                                <span class="reg-val">{{formatDate(viewedItem.patientBasicInfo?.firstCrisisDate) ||
+                                    'No especificada'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Estado de Crisis:</span>
+                                <span class="reg-val">{{viewedItem.patientBasicInfo?.crisisStatus || 'No
+                                    especificado'}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Cuidador -->
+                    <div class="reg-card" *ngIf="hasCaregiverData(viewedItem.caregiver)">
+                        <h6 class="reg-header">Cuidador</h6>
+                        <div class="reg-fields">
+                            <div class="reg-field">
+                                <span class="reg-key">Nombre:</span>
+                                <span class="reg-val">{{viewedItem.caregiver?.name || 'No especificado'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Documento:</span>
+                                <span class="reg-val">{{getLabel(tiposIdentificacion,
+                                    viewedItem.caregiver?.identificationType)}}
+                                    {{viewedItem.caregiver?.identificationNumber || ''}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Profesional de Salud -->
+                    <div class="reg-card">
+                        <h6 class="reg-header">Profesional de Salud</h6>
+                        <div class="reg-fields">
+                            <div class="reg-field">
+                                <span class="reg-key">Nombre:</span>
+                                <span class="reg-val">{{viewedItem.healthProfessional?.name || 'No
+                                    especificado'}}</span>
+                            </div>
+                            <div class="reg-field">
+                                <span class="reg-key">Documento:</span>
+                                <span class="reg-val">{{viewedItem.healthProfessional?.identificationNumber || 'No
+                                    especificado'}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Variables -->
+                    <div class="reg-card" *ngIf="viewedItem.variablesRegister?.length > 0">
+                        <h6 class="reg-header">Variables Registradas ({{viewedItem.variablesRegister.length}})</h6>
+                        <div class="reg-vars">
+                            <div *ngFor="let variable of viewedItem.variablesRegister" class="reg-var">
+                                <span class="reg-var-name">{{variable.variableName}}:</span>
+                                <span class="reg-var-val">{{variable.value}}</span>
+                                <span class="reg-var-type">{{variable.type}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </ng-container>
         </div>
         <div class="modal-footer">

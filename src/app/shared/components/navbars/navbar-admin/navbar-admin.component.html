@@ -1,5 +1,6 @@
 <nav class="navbar">
   <ul class="navbar-links">
+    <!-- Common tabs for all admins -->
     <li (click)="selectTab('inicioAdmin')" [class.selected]="selectedTab === 'inicioAdmin'">
       <a class="text">Inicio</a>
     </li>
@@ -12,6 +13,12 @@
     <li (click)="selectTab('gestionCapas')" [class.selected]="selectedTab === 'gestionCapas'">
       <a class="text">Gestión de capas de investigación</a>
     </li>
+    
+    <!-- Tab only for SuperAdmin -->
+    <li *ngIf="isSuperAdmin" 
+        (click)="selectTab('gestionRegistrosCapas')" 
+        [class.selected]="selectedTab === 'gestionRegistrosCapas'">
+      <a class="text">Gestión de registros de capas</a>
+    </li>
   </ul>
 </nav>
-

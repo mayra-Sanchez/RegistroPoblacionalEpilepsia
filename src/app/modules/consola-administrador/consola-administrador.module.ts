@@ -17,6 +17,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { HandleViewComponent } from './components/handle-view/handle-view.component';
 import { HandleEditComponent } from './components/handle-edit/handle-edit.component';
+import { DataTableComponent } from './components/data-table/data-table.component';
 
 @NgModule({
   declarations: [
@@ -28,6 +29,7 @@ import { HandleEditComponent } from './components/handle-edit/handle-edit.compon
     FormRegistroCapasComponent,
     HandleViewComponent,
     HandleEditComponent,
+    DataTableComponent,
   ],
   imports: [
     CommonModule,

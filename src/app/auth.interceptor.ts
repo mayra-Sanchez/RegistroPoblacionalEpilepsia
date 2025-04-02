@@ -12,15 +12,19 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = this.authService.getToken();
+    // Excluir endpoints de autenticación
+    if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh')) {
+      return next.handle(req);
+    }
 
+    const token = this.authService.getToken();
     if (token) {
       req = this.addToken(req, token);
     }
 
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
+        if (error.status === 401 && !req.url.includes('/auth/refresh')) {
           return this.handle401Error(req, next);
         }
         return throwError(() => error);
