@@ -197,9 +197,9 @@
   <!-- Modal para detalles de institución -->
   <div id="institucionDetailModal" class="modal" *ngIf="institucionSeleccionada">
     <div class="modal-content-institucion">
-      <span class="close" (click)="closeModal('institucionDetailModal')">&times;</span>
 
       <div class="institucion-header">
+        <span class="close-institucion-detalle" (click)="closeModal('institucionDetailModal')">&times;</span>
         <img [src]="institucionSeleccionada.imagen" [alt]="institucionSeleccionada.nombre"
           class="institucion-logo-modal">
         <div class="institucion-titulo">

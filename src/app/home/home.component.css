@@ -1,7 +1,14 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
 .home {
   width: 100%;
   margin: 0 auto;
+}
+
+/* Aplicar Montserrat sin afectar iconos */
+body, p, h1, h2, h3, h4, h5, h6, span, div, button, input, textarea, select {
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Asegurar que los iconos de Leaflet se muestren correctamente */
@@ -154,6 +161,7 @@ h1 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 15px;
   text-align: center;
+  cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -693,6 +701,7 @@ h1 {
   margin: 5% auto;
   padding: 0;
   width: 80%;
+  cursor: default;
   max-width: 700px;
   border-radius: 10px;
   box-shadow: 0 5px 30px rgba(0,0,0,0.3);
@@ -968,15 +977,6 @@ h1 {
   margin-bottom: 0px;
 }
 
-.modal-content-institucion {
-  background-color: #fefefe;
-  margin: 2% auto;
-  padding: 20px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 900px;
-}
-
 .close {
   color: #aaa;
   float: right;
@@ -985,74 +985,235 @@ h1 {
   cursor: pointer;
 }
 
-/* Estilos para el contenido de instituciones */
-.instituciones-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+/* modal detalle instituciones */
+
+.modal-content-institucion {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 0;
+  width: 80%;
+  max-width: 900px;
+  border-radius: 10px;
+  box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+  animation: modalopen 0.4s;
 }
 
-.institucion {
-  cursor: pointer;
-  padding: 15px;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+.modal-content-institucion h2, h3, p {
+  cursor: default;
 }
 
-.institucion:hover {
-  transform: translateY(-5px);
-}
-
-/* Estilos para el modal detallado */
+/* Header del modal de instituciones*/
 .institucion-header {
+  position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 30px;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(135deg, #1976D2, #11A6DA);
+  color: white;
+  z-index: 0;
+  text-align: left; /* Alineación izquierda */
+  justify-content: flex-start; /* Alinea contenido al inicio */
+}
+
+.close-institucion-detalle {
+  color: #000;
+  position: absolute;  /* Posicionamiento absoluto */
+  top: 20px;          /* Distancia desde arriba */
+  right: 20px;        /* Distancia desde la derecha */
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1001;     
+  background: rgba(255, 255, 255, 0.8);  
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.close-institucion-detalle:hover {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+  transform: rotate(90deg);
 }
 
 .institucion-logo-modal {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   object-fit: contain;
-  margin-right: 20px;
-  border-radius: 8px;
+  margin-right: 25px;
+  border-radius: 5px;
+  background: white;
+  padding: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
+.institucion-titulo h2 {
+  text-align: left; /* Asegura alineación izquierda */
+  margin-right: auto; /* Empuja el botón de cerrar a la derecha */
+  margin: 0;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.institucion-tipo {
+  margin: 8px 0 0;
+  font-size: 1.1rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* Contenido principal */
 .institucion-content {
   display: flex;
-  gap: 20px;
+  padding: 25px;
 }
 
 .institucion-info {
   flex: 1;
+  padding-right: 25px;
 }
 
 .institucion-mapa {
   flex: 1;
+  min-width: 0;
 }
 
+/* Sección de descripción */
+.institucion-descripcion h3 {
+  color: #2c3e50;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 2px solid #6e8efb;
+  padding-bottom: 8px;
+  display: inline-block;
+}
+
+.institucion-descripcion p {
+  color: #555;
+  line-height: 1.7;
+  margin: 5px 0 25px;
+}
+
+/* Sección de detalles */
+.institucion-detalles h3 {
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  border-bottom: 2px solid #6e8efb;
+  padding-bottom: 8px;
+  display: inline-block;
+}
+
+.detalle-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #555;
+  transition: transform 0.2s ease;
+}
+
+.detalle-item:hover {
+  transform: translateX(5px);
+}
+
+.detalle-item i {
+  margin-right: 12px;
+  color: #6e8efb;
+  width: 20px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.detalle-item a {
+  color: #1976D2;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.detalle-item a:hover {
+  color: #0d47a1;
+  text-decoration: underline;
+}
+
+/* Mapa */
 .map-container {
   height: 300px;
   width: 100%;
   border-radius: 8px;
   margin-top: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  overflow: hidden;
+  border: 1px solid #eee;
 }
 
-/* Estilos responsivos */
+.institucion-mapa small {
+  display: block;
+  text-align: right;
+  color: #95a5a6;
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .modal-content, .modal-content-institucion {
+  .modal-content-institucion {
     width: 95%;
-    margin: 10px auto;
+    margin: 2% auto;
   }
   
   .institucion-content {
     flex-direction: column;
+    padding: 20px;
+  }
+  
+  .institucion-info {
+    padding-right: 0;
+    margin-bottom: 25px;
+  }
+  
+  .institucion-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 25px 20px;
+  }
+  
+  .institucion-logo-modal {
+    margin-right: 0;
+    margin-bottom: 15px;
   }
   
   .map-container {
     height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .institucion-titulo h2 {
+    font-size: 1.5rem;
+  }
+  
+  .institucion-tipo {
+    font-size: 1rem;
+  }
+  
+  .institucion-logo-modal {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .close-institucion-detalle {
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+    font-size: 24px;
   }
 }
