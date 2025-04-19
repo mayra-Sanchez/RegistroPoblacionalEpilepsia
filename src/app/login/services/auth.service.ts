@@ -39,6 +39,18 @@ export class AuthService {
     }
   }
 
+  getCurrentUserResearchLayerId(): string | null {
+    const token = localStorage.getItem('kc_token');
+    if (!token) return null;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded.attributes?.researchLayerId?.[0] || null;
+    } catch (error) {
+      console.error('Error decoding user data:', error);
+      return null;
+    }
+  }
 
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this.backendUrl}/auth/login`, { email, password }).pipe(
@@ -142,48 +154,46 @@ export class AuthService {
 
     // Verificación más robusta del refresh token
     if (!refreshToken || refreshToken === 'undefined' || refreshToken === 'null') {
-        console.error('⚠️ No hay refresh token válido en localStorage. Haciendo logout.');
-        this.logout();
-        return throwError(() => new Error('No hay refresh token disponible.'));
+      console.error('⚠️ No hay refresh token válido en localStorage. Haciendo logout.');
+      this.logout();
+      return throwError(() => new Error('No hay refresh token disponible.'));
     }
 
     // Configuración completa de la solicitud
     const headers = new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${refreshToken}` // Si tu backend lo requiere
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${refreshToken}` // Si tu backend lo requiere
     });
 
     return this.http.post<any>('http://localhost:8080/auth/refresh', { refreshToken }, { headers }).pipe(
-        tap((response: any) => {
-            if (!response?.access_token) {
-                console.warn('⚠️ Respuesta inesperada del servidor:', response);
-                throw new Error('Respuesta inválida del servidor');
-            }
+      tap((response: any) => {
+        if (!response?.access_token) {
+          console.warn('⚠️ Respuesta inesperada del servidor:', response);
+          throw new Error('Respuesta inválida del servidor');
+        }
 
-            console.log('🔄 Token refrescado con éxito');
-            localStorage.setItem('kc_token', response.access_token);
-            
-            // Solo actualiza el refresh_token si viene en la respuesta
-            if (response.refresh_token) {
-                localStorage.setItem('refresh_token', response.refresh_token);
-            }
-        }),
-        catchError(error => {
-            console.error('❌ Error al refrescar token:', error);
-            
-            // Manejo específico de errores HTTP
-            if (error.status === 401 || error.status === 403) {
-                console.warn('⚠️ Refresh token inválido o expirado');
-                this.logout();
-            }
-            
-            return throwError(() => new Error('No se pudo refrescar el token.'));
-        })
+        console.log('🔄 Token refrescado con éxito');
+        localStorage.setItem('kc_token', response.access_token);
+
+        // Solo actualiza el refresh_token si viene en la respuesta
+        if (response.refresh_token) {
+          localStorage.setItem('refresh_token', response.refresh_token);
+        }
+      }),
+      catchError(error => {
+        console.error('❌ Error al refrescar token:', error);
+
+        // Manejo específico de errores HTTP
+        if (error.status === 401 || error.status === 403) {
+          console.warn('⚠️ Refresh token inválido o expirado');
+          this.logout();
+        }
+
+        return throwError(() => new Error('No se pudo refrescar el token.'));
+      })
     );
-}
+  }
 
-
-  // In your AuthService
   getUserData(): any {
     const token = localStorage.getItem('kc_token');
     if (!token) return null;

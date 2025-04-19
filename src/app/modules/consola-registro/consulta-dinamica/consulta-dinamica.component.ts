@@ -3,6 +3,7 @@ import { ConsolaRegistroService } from '../services/consola-registro.service';
 import { ChartConfiguration, ChartType, ChartDataset } from 'chart.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Register, ResearchLayer } from '../interfaces';
+import { AuthService } from 'src/app/login/services/auth.service';
 
 @Component({
   selector: 'app-consulta-dinamica',
@@ -13,7 +14,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   // Data
   allRegisters: Register[] = [];
   filteredRegisters: Register[] = [];
-  
+
   // Filters
   filters = {
     patientName: '',
@@ -22,21 +23,20 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     maxAge: null as number | null,
     sex: '',
     crisisStatus: '',
-    dateRange: { start: null as Date | null, end: null as Date | null },
-    researchLayer: ''
+    dateRange: { start: null as Date | null, end: null as Date | null }
   };
-  
+
   // Visualization
   viewType: 'chart' | 'table' = 'chart';
   chartType: ChartType = 'bar';
   chartOptions: ChartConfiguration['options'] = {
     responsive: true,
     plugins: {
-      legend: { 
+      legend: {
         display: true,
         position: 'top'
       },
-      tooltip: { 
+      tooltip: {
         enabled: true,
         callbacks: {
           label: (context) => {
@@ -53,9 +53,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       }
     }
   };
-  chartData: { labels: string[], datasets: ChartDataset[] } = { 
-    labels: [], 
-    datasets: [] 
+  chartData: { labels: string[], datasets: ChartDataset[] } = {
+    labels: [],
+    datasets: []
   };
 
   // Pagination
@@ -64,24 +64,20 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   totalElements = 0;
   totalPages = 0;
 
-  // Research layers
-  researchLayers: ResearchLayer[] = [];
+  // Current research layer
+  currentResearchLayer: ResearchLayer | null = null;
   loading = false;
   errorMessage = '';
 
   private destroy$ = new Subject<void>();
 
-  constructor(private registerService: ConsolaRegistroService) {}
+  constructor(
+    private registerService: ConsolaRegistroService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
-    this.loadResearchLayers();
-    this.loadInitialData();
-    
-    this.registerService.dataChanged$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.loadInitialData();
-      });
+    this.loadCurrentResearchLayer();
   }
 
   ngOnDestroy(): void {
@@ -89,42 +85,71 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadResearchLayers(): void {
+  loadCurrentResearchLayer(): void {
     this.loading = true;
-    this.registerService.obtenerTodasLasCapas().subscribe({
-      next: (layers) => {
-        this.researchLayers = layers;
+    const userResearchLayerId = this.authService.getCurrentUserResearchLayerId();
+
+    if (!userResearchLayerId) {
+      this.errorMessage = 'No se pudo determinar la capa de investigación del usuario';
+      this.loading = false;
+      return;
+    }
+
+    this.registerService.obtenerCapaPorId(userResearchLayerId).subscribe({
+      next: (layer) => {
+        this.currentResearchLayer = layer;
+        this.loadInitialData();
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading research layers:', err);
-        this.errorMessage = 'Failed to load research layers';
+        console.error('Error al cargar la capa de investigación:', err);
+        this.errorMessage = 'Error al cargar la capa de investigación del usuario';
         this.loading = false;
       }
     });
   }
 
   loadInitialData(): void {
+    if (!this.currentResearchLayer?.id) {
+      this.errorMessage = 'No se ha configurado la capa de investigación';
+      return;
+    }
+
     this.loading = true;
-    this.registerService.obtenerRegistros(
+    
+    this.registerService.obtenerRegistrosPorCapa(
+      this.currentResearchLayer.id,
       this.currentPage,
       this.pageSize,
       'registerDate',
       'DESC'
     ).subscribe({
       next: (response) => {
+        // Usar response.registers en lugar de response.content
         this.allRegisters = response.registers;
-        this.applyFilters(); // Apply any existing filters
+        this.applyFilters();
         this.totalElements = response.totalElements;
-        this.totalPages = Math.ceil(response.totalElements / this.pageSize);
+        this.totalPages = response.totalPages;
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading registers:', err);
-        this.errorMessage = 'Failed to load medical records';
-        this.loading = false;
+        this.handleDataError(err);
       }
     });
+}
+
+  private handleDataResponse(response: any): void {
+    this.allRegisters = response.registers || response.content || [];
+    this.applyFilters();
+    this.totalElements = response.totalElements || 0;
+    this.totalPages = Math.ceil(this.totalElements / this.pageSize);
+    this.loading = false;
+  }
+
+  private handleDataError(err: any): void {
+    console.error('Error loading registers:', err);
+    this.errorMessage = 'Failed to load medical records';
+    this.loading = false;
   }
 
   applyFilters(): void {
@@ -132,15 +157,15 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
 
     this.filteredRegisters = this.allRegisters.filter(register => {
       // Patient name filter (case insensitive)
-      if (this.filters.patientName && 
-          !register.patientBasicInfo?.name?.toLowerCase().includes(this.filters.patientName.toLowerCase())) {
+      if (this.filters.patientName &&
+        !register.patientBasicInfo?.name?.toLowerCase().includes(this.filters.patientName.toLowerCase())) {
         return false;
       }
 
       // Variable name filter
-      if (this.filters.variableName && 
-          !register.variablesRegister.some(v => 
-            v.variableName?.toLowerCase().includes(this.filters.variableName.toLowerCase()))) {
+      if (this.filters.variableName &&
+        !register.variablesRegister.some(v =>
+          v.variableName?.toLowerCase().includes(this.filters.variableName.toLowerCase()))) {
         return false;
       }
 
@@ -166,19 +191,13 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       // Date range filter
       if (this.filters.dateRange.start || this.filters.dateRange.end) {
         const registerDate = new Date(register.registerDate);
-        
+
         if (this.filters.dateRange.start && registerDate < this.filters.dateRange.start) {
           return false;
         }
         if (this.filters.dateRange.end && registerDate > this.filters.dateRange.end) {
           return false;
         }
-      }
-
-      // Research layer filter
-      if (this.filters.researchLayer && 
-          !register.variablesRegister.some(v => v.researchLayerId === this.filters.researchLayer)) {
-        return false;
       }
 
       return true;
@@ -197,7 +216,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   }
 
   prepareChartData(): void {
-    if (this.filters.researchLayer) {
+    if (this.currentResearchLayer) {
       this.prepareResearchLayerChart();
     } else {
       this.prepareDefaultChart();
@@ -256,13 +275,12 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   }
 
   prepareResearchLayerChart(): void {
-    const selectedLayer = this.researchLayers.find(l => l.id === this.filters.researchLayer);
-    const layerName = selectedLayer?.layerName || 'Selected Layer';
+    const layerName = this.currentResearchLayer?.layerName || 'Current Layer';
 
-    // Count variables in the selected research layer
+    // Count variables in the current research layer
     const variableCounts = this.filteredRegisters.reduce((acc, register) => {
       register.variablesRegister
-        .filter(v => v.researchLayerId === this.filters.researchLayer)
+        .filter(v => v.researchLayerId === this.currentResearchLayer?.id)
         .forEach(v => {
           const varName = v.variableName || 'Unnamed Variable';
           acc[varName] = (acc[varName] || 0) + 1;
@@ -275,7 +293,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       datasets: [{
         data: Object.values(variableCounts),
         label: `Variables in ${layerName}`,
-        backgroundColor: Object.keys(variableCounts).map((_, i) => 
+        backgroundColor: Object.keys(variableCounts).map((_, i) =>
           `hsl(${(i * 360 / Object.keys(variableCounts).length)}, 70%, 50%)`),
         borderWidth: 1
       }]
@@ -283,7 +301,6 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   }
 
   private getColorForCategory(category: string): string {
-    // Simple hash function to generate consistent colors for categories
     let hash = 0;
     for (let i = 0; i < category.length; i++) {
       hash = category.charCodeAt(i) + ((hash << 5) - hash);
@@ -305,15 +322,13 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       maxAge: null,
       sex: '',
       crisisStatus: '',
-      dateRange: { start: null, end: null },
-      researchLayer: ''
+      dateRange: { start: null, end: null }
     };
     this.loadInitialData();
   }
 
   onDateRangeChange(): void {
     if (this.filters.dateRange.start && this.filters.dateRange.end) {
-      // Ensure end date is at end of day
       const endDate = new Date(this.filters.dateRange.end);
       endDate.setHours(23, 59, 59, 999);
       this.filters.dateRange.end = endDate;
@@ -322,7 +337,6 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   }
 
   exportToCSV(): void {
-    // Implement CSV export functionality
     const headers = ['Patient', 'Sex', 'Age', 'Crisis Status', 'Register Date', 'Variables'];
     const csvContent = [
       headers.join(','),
@@ -343,7 +357,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `medical_records_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute('download', `medical_records_${new Date().toISOString().slice(0, 10)}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -352,21 +366,17 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
 
   getStatusClass(status: string | undefined): string {
     if (!status) return '';
-    
     return status.toLowerCase()
       .replace(/ /g, '-')
       .replace(/[^a-z-]/g, '');
   }
-  
+
   getVariableColor(variableName: string | undefined): string {
     if (!variableName) return '#cccccc';
-    
-    // Simple hash function to generate consistent colors
     let hash = 0;
     for (let i = 0; i < variableName.length; i++) {
       hash = variableName.charCodeAt(i) + ((hash << 5) - hash);
     }
-    
     const h = Math.abs(hash % 360);
     return `hsl(${h}, 70%, 80%)`;
   }

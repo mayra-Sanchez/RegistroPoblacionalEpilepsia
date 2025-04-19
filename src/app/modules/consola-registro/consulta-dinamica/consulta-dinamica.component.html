@@ -55,16 +55,6 @@
     </div>
     
     <div class="filter-row">
-      <!-- Filtro por capa de investigación -->
-      <mat-form-field appearance="fill" *ngIf="researchLayers.length > 0">
-        <mat-label>Capa de investigación</mat-label>
-        <mat-select [(ngModel)]="filters.researchLayer" (selectionChange)="applyFilters()">
-          <mat-option value="">Todas</mat-option>
-          <mat-option *ngFor="let layer of researchLayers" [value]="layer.id">
-            {{layer.layerName}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
       
       <!-- Filtro por rango de fechas -->
       <mat-form-field appearance="fill">
