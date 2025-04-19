@@ -240,9 +240,9 @@ export class ConsolaRegistroService {
     const headers = this.getAuthHeaders();
 
     const params = new HttpParams()
-      .set('healthProfesionalIdentificationNumber', healthProfessionalId.toString())
-      .set('page', page.toString())
-      .set('size', size.toString())
+      .set('healthProfesionalIdentificationNumber', healthProfessionalId)
+      .set('page', page)
+      .set('size', size)
       .set('sort', sort)
       .set('sortDirection', sortDirection);
 
@@ -273,9 +273,9 @@ export class ConsolaRegistroService {
     const headers = this.getAuthHeaders();
     
     const params = new HttpParams()
-      .set('patientIdentificationNumber', patientIdentificationNumber.toString())
-      .set('page', page.toString())
-      .set('size', size.toString())
+      .set('patientIdentificationNumber', patientIdentificationNumber)
+      .set('page', page)
+      .set('size', size)
       .set('sort', sort)
       .set('sortDirection', sortDirection);
 
@@ -313,7 +313,7 @@ export class ConsolaRegistroService {
       .set('sort', sort)
       .set('sortDirection', sortDirection);
 
-    return this.http.get<any>(`${this.API_URL}/allByResearchLayer`, { headers, params }).pipe(
+    return this.http.get<any>(`${this.API_URL}/all`, { headers, params }).pipe(
       catchError(error => {
         console.error('Error al obtener registros por capa:', error);
         return throwError(() => new Error('Error al cargar registros'));

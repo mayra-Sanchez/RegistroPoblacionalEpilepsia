@@ -19,7 +19,7 @@ import { PacienteFormComponent } from 'src/app/form-registro-paciente/components
 import { ViewRegistroModalComponent } from './view-registro-modal/view-registro-modal.component';
 import { EditRegistroModalComponent } from './edit-registro-modal/edit-registro-modal.component';
 import { ConsultaDinamicaComponent } from './consulta-dinamica/consulta-dinamica.component';
-import { SafePipe } from './consulta-dinamica/safe.pipe';
+import { TruncatePipe } from './consulta-dinamica/truncate.pipe';
 import { HttpClientModule } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,7 +28,16 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BuscarProfesionalModalComponent } from './components/buscar-profesional-modal/buscar-profesional-modal.component';
 import { BuscarPacienteModalComponent } from './components/buscar-paciente-modal/buscar-paciente-modal.component';
-
+import { NgChartsModule } from 'ng2-charts';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatOptionModule } from '@angular/material/core';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -43,7 +52,7 @@ import { BuscarPacienteModalComponent } from './components/buscar-paciente-modal
     ViewRegistroModalComponent,
     EditRegistroModalComponent,
     ConsultaDinamicaComponent,
-    SafePipe,
+    TruncatePipe,
     BuscarProfesionalModalComponent,
     BuscarPacienteModalComponent
   ],
@@ -61,6 +70,18 @@ import { BuscarPacienteModalComponent } from './components/buscar-paciente-modal
     MatSlideToggleModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    NgChartsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatButtonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatOptionModule,
+    MatButtonToggleModule,
+    MatAutocompleteModule
   ]
 })
 export class ConsolaRegistroModule { }

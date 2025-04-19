@@ -1,64 +1,221 @@
-.superset-container {
-    padding: 20px;
-    height: 100%;
+/* Estilos generales */
+:root {
+  --primary-color: #3f51b5;
+  --secondary-color: #5c6bc0;
+  --accent-color: #ff4081;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --danger-color: #f44336;
+  --light-gray: #f5f5f5;
+  --medium-gray: #e0e0e0;
+  --dark-gray: #757575;
+  --text-color: #212121;
+  --white: #ffffff;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  color: var(--text-color);
+}
+
+/* Contenedor principal */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  color: var(--primary-color);
+  font-weight: 500;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 8px;
+}
+
+/* Sección de filtros */
+.filters-section {
+  background-color: var(--light-gray);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filters-section h2 {
+  color: var(--primary-color);
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-row mat-form-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Selector de vista */
+.view-options {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.view-options button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+}
+
+/* Visualización de datos */
+.visualization-container {
+  background-color: var(--white);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Opciones de gráfico */
+.chart-options {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* Gráfico */
+.chart-wrapper {
+  height: 400px;
+  position: relative;
+  margin: 20px 0;
+}
+
+/* Tabla */
+.table-responsive {
+  overflow-x: auto;
+}
+
+table.mat-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mat-header-cell {
+  font-weight: 500;
+  color: var(--primary-color);
+  background-color: var(--light-gray);
+}
+
+.mat-cell, .mat-header-cell {
+  padding: 12px 16px;
+}
+
+/* Chips de variables */
+mat-chip {
+  margin: 2px 4px;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Estado de crisis */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.libre-de-crisis {
+  background-color: #e8f5e9;
+  color: var(--success-color);
+}
+
+.status-badge.epilepsia {
+  background-color: #fff3e0;
+  color: var(--warning-color);
+}
+
+.status-badge.epilepsia-activa {
+  background-color: #ffebee;
+  color: var(--danger-color);
+}
+
+.status-badge.remota {
+  background-color: #e3f2fd;
+  color: var(--primary-color);
+}
+
+/* Mensaje sin datos */
+.no-data-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--dark-gray);
+  font-size: 16px;
+}
+
+/* Paginador */
+mat-paginator {
+  margin-top: 16px;
+  background: transparent;
+  border-top: 1px solid var(--medium-gray);
+}
+
+/* Botones */
+button[color="warn"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
   }
   
-  .loading-state {
-    display: flex;
+  .filter-row {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    gap: 12px;
+  }
+  
+  .filter-row mat-form-field {
+    width: 100%;
+  }
+  
+  .view-options {
+    flex-direction: column;
+  }
+  
+  .chart-wrapper {
     height: 300px;
-    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
   }
   
-  .error-state {
-    padding: 20px;
-    background: #fff8f8;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    text-align: center;
-    max-width: 500px;
-    margin: 40px auto;
+  h1 {
+    font-size: 1.5rem;
   }
   
-  .error-state mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
+  .mat-cell, .mat-header-cell {
+    padding: 8px 12px;
+    font-size: 14px;
   }
   
-  .dashboard-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    height: calc(100% - 50px);
+  mat-chip {
+    font-size: 11px;
+    max-width: 100px;
   }
-  
-  .dashboard-controls {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 10px;
-    background: #f5f5f5;
-    border-radius: 4px;
-  }
-  
-  .last-refresh {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: #666;
-  }
-  
-  iframe {
-    flex-grow: 1;
-    min-height: 600px;
-    background: white;
-    border-radius: 4px;
-  }
+}
