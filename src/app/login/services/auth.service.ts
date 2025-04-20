@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { tap, catchError, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Observable,of , throwError } from 'rxjs';
+import { tap, catchError, map } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
@@ -10,8 +10,9 @@ import { jwtDecode } from 'jwt-decode';
 })
 export class AuthService {
   private backendUrl = 'http://localhost:8080/api/v1';
+  private API_USERS_URL = `${this.backendUrl}/users`;
   private authStatus = new BehaviorSubject<boolean>(this.isLoggedIn());
-
+  private userProfile = new BehaviorSubject<any>(null);
   authStatus$ = this.authStatus.asObservable();
 
   private tokenRefreshInterval: any; // Para manejar el intervalo de refresco
@@ -39,17 +40,60 @@ export class AuthService {
     }
   }
 
-  getCurrentUserResearchLayerId(): string | null {
-    const token = localStorage.getItem('kc_token');
-    if (!token) return null;
-
-    try {
-      const decoded: any = jwtDecode(token);
-      return decoded.attributes?.researchLayerId?.[0] || null;
-    } catch (error) {
-      console.error('Error decoding user data:', error);
-      return null;
+  // Método para obtener la capa de investigación del usuario actual
+  getCurrentUserResearchLayer(): Observable<string | null> {
+    const email = this.getUserEmail();
+    if (!email) {
+      console.error('No se pudo obtener el email del usuario');
+      return of(null);
     }
+
+    return this.obtenerUsuarioAutenticado(email).pipe(
+      map((response: any) => {
+        if (!response || !response[0]) {
+          throw new Error('Respuesta inválida del servidor');
+        }
+
+        const userData = response[0];
+        const researchLayerId = userData?.attributes?.researchLayerId?.[0] || null;
+
+        if (!researchLayerId) {
+          console.warn('Usuario sin capa asignada', userData);
+        }
+
+        return researchLayerId;
+      }),
+      catchError(error => {
+        console.error('Error en getCurrentUserResearchLayer:', error);
+        return throwError(() => new Error('Error al obtener la capa de investigación'));
+      })
+    );
+  }
+
+  obtenerUsuarioAutenticado(email: string): Observable<any> {
+    const token = this.getToken();
+
+    if (!token) {
+      console.error('⚠️ No hay token disponible, abortando solicitud.');
+      return throwError(() => new Error('No hay token disponible.'));
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    const params = new HttpParams().set('email', email);
+
+    return this.http.get<any>(this.API_USERS_URL, {
+      headers: headers,
+      params: params
+    }).pipe(
+      catchError(error => {
+        console.error('❌ Error al obtener usuario:', error);
+        return throwError(() => new Error(error.error?.message || 'Ocurrió un error al obtener el usuario.'));
+      })
+    );
   }
 
   login(email: string, password: string): Observable<any> {

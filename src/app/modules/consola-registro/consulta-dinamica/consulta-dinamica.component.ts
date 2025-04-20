@@ -1,9 +1,22 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChartConfiguration, ChartType } from 'chart.js';
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ConsolaRegistroService } from '../services/consola-registro.service';
-import { ChartConfiguration, ChartType, ChartDataset } from 'chart.js';
-import { Subject, takeUntil } from 'rxjs';
-import { Register, ResearchLayer } from '../interfaces';
 import { AuthService } from 'src/app/login/services/auth.service';
+import { Register, ResearchLayer } from '../interfaces';
+
+interface PatientStat {
+  sex: string;
+  age: number;
+  crisisStatus: 'Activa' | 'Remisión' | 'Estable' | 'Crítica' | 'Recuperado';
+  registerDate: Date;
+  variables: string[];
+}
 
 @Component({
   selector: 'app-consulta-dinamica',
@@ -11,60 +24,35 @@ import { AuthService } from 'src/app/login/services/auth.service';
   styleUrls: ['./consulta-dinamica.component.css']
 })
 export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
-  // Data
   allRegisters: Register[] = [];
   filteredRegisters: Register[] = [];
+  filteredData: PatientStat[] = [];
 
-  // Filters
   filters = {
     patientName: '',
     variableName: '',
     minAge: null as number | null,
     maxAge: null as number | null,
     sex: '',
-    crisisStatus: '',
-    dateRange: { start: null as Date | null, end: null as Date | null }
+    crisisStatus: '' as '' | 'Activa' | 'Remisión' | 'Estable' | 'Crítica' | 'Recuperado',
+    dateRange: { start: null as Date | null, end: null as Date | null },
+    ageRange: [0, 100] as [number, number]
   };
 
-  // Visualization
+  currentPage = 0;
+  pageSize = 5;
+
   viewType: 'chart' | 'table' = 'chart';
   chartType: ChartType = 'bar';
+  chartData: ChartConfiguration['data'] = { labels: [], datasets: [] };
   chartOptions: ChartConfiguration['options'] = {
     responsive: true,
     plugins: {
-      legend: {
-        display: true,
-        position: 'top'
-      },
-      tooltip: {
-        enabled: true,
-        callbacks: {
-          label: (context) => {
-            const label = context.dataset.label || '';
-            const value = context.raw as number;
-            return `${label}: ${value}`;
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true
-      }
+      legend: { position: 'top' },
+      tooltip: { enabled: true }
     }
   };
-  chartData: { labels: string[], datasets: ChartDataset[] } = {
-    labels: [],
-    datasets: []
-  };
 
-  // Pagination
-  currentPage = 0;
-  pageSize = 10;
-  totalElements = 0;
-  totalPages = 0;
-
-  // Current research layer
   currentResearchLayer: ResearchLayer | null = null;
   loading = false;
   errorMessage = '';
@@ -87,25 +75,32 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
 
   loadCurrentResearchLayer(): void {
     this.loading = true;
-    const userResearchLayerId = this.authService.getCurrentUserResearchLayerId();
 
-    if (!userResearchLayerId) {
-      this.errorMessage = 'No se pudo determinar la capa de investigación del usuario';
-      this.loading = false;
-      return;
-    }
-
-    this.registerService.obtenerCapaPorId(userResearchLayerId).subscribe({
-      next: (layer) => {
-        this.currentResearchLayer = layer;
-        this.loadInitialData();
+    this.authService.getCurrentUserResearchLayer().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((researchLayerId: string | null) => {
+      if (!researchLayerId) {
+        this.errorMessage = 'El usuario no tiene asignada una capa de investigación';
         this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error al cargar la capa de investigación:', err);
-        this.errorMessage = 'Error al cargar la capa de investigación del usuario';
-        this.loading = false;
+        return;
       }
+
+      this.registerService.obtenerCapaPorId(researchLayerId).subscribe({
+        next: (layer: ResearchLayer) => {
+          this.currentResearchLayer = layer;
+          this.loadInitialData();
+          this.loading = false;
+        },
+        error: (err: any) => {
+          console.error('Error al cargar la capa:', err);
+          this.errorMessage = 'Error al cargar los datos de la capa de investigación';
+          this.loading = false;
+        }
+      });
+    }, (err: any) => {
+      console.error('Error al obtener la capa:', err);
+      this.errorMessage = 'Error al obtener la información del usuario';
+      this.loading = false;
     });
   }
 
@@ -116,7 +111,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
-    
+
     this.registerService.obtenerRegistrosPorCapa(
       this.currentResearchLayer.id,
       this.currentPage,
@@ -124,194 +119,156 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       'registerDate',
       'DESC'
     ).subscribe({
-      next: (response) => {
-        // Usar response.registers en lugar de response.content
-        this.allRegisters = response.registers;
+      next: (response: any) => {
+        this.allRegisters = response.registers || response.content || [];
         this.applyFilters();
-        this.totalElements = response.totalElements;
-        this.totalPages = response.totalPages;
         this.loading = false;
       },
-      error: (err) => {
-        this.handleDataError(err);
+      error: (err: any) => {
+        console.error('Error loading registers:', err);
+        this.errorMessage = 'Failed to load medical records';
+        this.loading = false;
       }
     });
-}
-
-  private handleDataResponse(response: any): void {
-    this.allRegisters = response.registers || response.content || [];
-    this.applyFilters();
-    this.totalElements = response.totalElements || 0;
-    this.totalPages = Math.ceil(this.totalElements / this.pageSize);
-    this.loading = false;
-  }
-
-  private handleDataError(err: any): void {
-    console.error('Error loading registers:', err);
-    this.errorMessage = 'Failed to load medical records';
-    this.loading = false;
   }
 
   applyFilters(): void {
-    if (!this.allRegisters.length) return;
-
     this.filteredRegisters = this.allRegisters.filter(register => {
-      // Patient name filter (case insensitive)
-      if (this.filters.patientName &&
-        !register.patientBasicInfo?.name?.toLowerCase().includes(this.filters.patientName.toLowerCase())) {
-        return false;
-      }
+      if (this.filters.sex && register.patientBasicInfo?.sex !== this.filters.sex) return false;
 
-      // Variable name filter
-      if (this.filters.variableName &&
-        !register.variablesRegister.some(v =>
-          v.variableName?.toLowerCase().includes(this.filters.variableName.toLowerCase()))) {
-        return false;
-      }
-
-      // Age filters
       const age = register.patientBasicInfo?.age;
-      if (this.filters.minAge !== null && (age === undefined || age < this.filters.minAge)) {
-        return false;
-      }
-      if (this.filters.maxAge !== null && (age === undefined || age > this.filters.maxAge)) {
-        return false;
-      }
+      if (this.filters.minAge !== null && (age === undefined || age < this.filters.minAge)) return false;
+      if (this.filters.maxAge !== null && (age === undefined || age > this.filters.maxAge)) return false;
 
-      // Sex filter
-      if (this.filters.sex && register.patientBasicInfo?.sex !== this.filters.sex) {
+      if (this.filters.crisisStatus && 
+          register.patientBasicInfo?.crisisStatus !== this.filters.crisisStatus) {
         return false;
       }
 
-      // Crisis status filter
-      if (this.filters.crisisStatus && register.patientBasicInfo?.crisisStatus !== this.filters.crisisStatus) {
-        return false;
-      }
-
-      // Date range filter
-      if (this.filters.dateRange.start || this.filters.dateRange.end) {
-        const registerDate = new Date(register.registerDate);
-
-        if (this.filters.dateRange.start && registerDate < this.filters.dateRange.start) {
-          return false;
-        }
-        if (this.filters.dateRange.end && registerDate > this.filters.dateRange.end) {
-          return false;
-        }
-      }
+      const registerDate = new Date(register.registerDate);
+      if (this.filters.dateRange.start && registerDate < this.filters.dateRange.start) return false;
+      if (this.filters.dateRange.end && registerDate > this.filters.dateRange.end) return false;
 
       return true;
     });
 
-    this.prepareVisualizationData();
-    this.totalElements = this.filteredRegisters.length;
-    this.totalPages = Math.ceil(this.totalElements / this.pageSize);
-    this.currentPage = 0; // Reset to first page when filters change
-  }
+    this.filteredData = this.filteredRegisters.map(register => ({
+      sex: register.patientBasicInfo?.sex || '',
+      age: register.patientBasicInfo?.age || 0,
+      crisisStatus: register.patientBasicInfo?.crisisStatus as any || 'Estable',
+      registerDate: new Date(register.registerDate),
+      variables: register.variablesRegister.map(v => v.variableName || '')
+    }));
 
-  prepareVisualizationData(): void {
-    if (this.viewType === 'chart') {
-      this.prepareChartData();
-    }
+    this.prepareChartData();
   }
 
   prepareChartData(): void {
-    if (this.currentResearchLayer) {
-      this.prepareResearchLayerChart();
-    } else {
-      this.prepareDefaultChart();
-    }
-  }
+    if (this.viewType !== 'chart') return;
 
-  prepareDefaultChart(): void {
-    // Group by sex
-    const sexCounts = this.filteredRegisters.reduce((acc, register) => {
-      const sex = register.patientBasicInfo?.sex || 'Unknown';
-      acc[sex] = (acc[sex] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const crisisData = this.groupByCrisisStatus();
+    const sexData = this.groupBySex();
 
-    // Group by crisis status
-    const crisisCounts = this.filteredRegisters.reduce((acc, register) => {
-      const status = register.patientBasicInfo?.crisisStatus || 'Unknown';
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Prepare datasets based on chart type
     if (this.chartType === 'pie' || this.chartType === 'doughnut') {
       this.chartData = {
-        labels: Object.keys(sexCounts),
+        labels: Object.keys(crisisData),
         datasets: [{
-          data: Object.values(sexCounts),
-          label: 'Patients by Sex',
-          backgroundColor: [
-            'rgba(255, 99, 132, 0.7)',
-            'rgba(54, 162, 235, 0.7)',
-            'rgba(255, 206, 86, 0.7)',
-            'rgba(75, 192, 192, 0.7)'
-          ],
-          borderWidth: 1
+          data: Object.values(crisisData),
+          backgroundColor: ['#4CAF50', '#FFC107', '#F44336', '#2196F3'],
+          label: 'Pacientes por estado de crisis'
         }]
       };
     } else {
-      // For bar/line charts, show both sex and crisis status
       this.chartData = {
-        labels: ['Distribution'],
+        labels: ['Distribución'],
         datasets: [
-          ...Object.entries(sexCounts).map(([sex, count]) => ({
-            label: `Sex: ${sex}`,
-            data: [count],
-            backgroundColor: this.getColorForCategory(sex)
-          })),
-          ...Object.entries(crisisCounts).map(([status, count]) => ({
-            label: `Status: ${status}`,
-            data: [count],
-            backgroundColor: this.getColorForCategory(status)
-          }))
+          {
+            label: 'Femenino',
+            data: [sexData['femenino'] || 0],
+            backgroundColor: '#E91E63'
+          },
+          {
+            label: 'Masculino',
+            data: [sexData['masculino'] || 0],
+            backgroundColor: '#3F51B5'
+          }
         ]
       };
     }
   }
 
-  prepareResearchLayerChart(): void {
-    const layerName = this.currentResearchLayer?.layerName || 'Current Layer';
-
-    // Count variables in the current research layer
-    const variableCounts = this.filteredRegisters.reduce((acc, register) => {
-      register.variablesRegister
-        .filter(v => v.researchLayerId === this.currentResearchLayer?.id)
-        .forEach(v => {
-          const varName = v.variableName || 'Unnamed Variable';
-          acc[varName] = (acc[varName] || 0) + 1;
-        });
+  private groupByCrisisStatus(): Record<string, number> {
+    return this.filteredData.reduce((acc: Record<string, number>, patient: PatientStat) => {
+      acc[patient.crisisStatus] = (acc[patient.crisisStatus] || 0) + 1;
       return acc;
-    }, {} as Record<string, number>);
-
-    this.chartData = {
-      labels: Object.keys(variableCounts),
-      datasets: [{
-        data: Object.values(variableCounts),
-        label: `Variables in ${layerName}`,
-        backgroundColor: Object.keys(variableCounts).map((_, i) =>
-          `hsl(${(i * 360 / Object.keys(variableCounts).length)}, 70%, 50%)`),
-        borderWidth: 1
-      }]
-    };
+    }, {});
   }
 
-  private getColorForCategory(category: string): string {
-    let hash = 0;
-    for (let i = 0; i < category.length; i++) {
-      hash = category.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const h = hash % 360;
-    return `hsla(${h}, 70%, 50%, 0.7)`;
+  private groupBySex(): Record<string, number> {
+    return this.filteredData.reduce((acc: Record<string, number>, patient: PatientStat) => {
+      acc[patient.sex] = (acc[patient.sex] || 0) + 1;
+      return acc;
+    }, {});
   }
 
-  changePage(page: number): void {
-    this.currentPage = page;
-    this.loadInitialData();
+  exportToCSV(): void {
+    const headers = ['Sexo', 'Edad', 'Estado de crisis', 'Fecha registro', 'Variables'];
+    const csvContent = [
+      headers.join(','),
+      ...this.filteredData.map(p => [
+        p.sex,
+        p.age,
+        p.crisisStatus,
+        p.registerDate.toISOString().split('T')[0],
+        `"${p.variables.join(', ')}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `estadisticas_epilepsia_${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
+  exportToExcel(): void {
+    const data = this.filteredData.map(p => ({
+      'Sexo': p.sex,
+      'Edad': p.age,
+      'Estado de crisis': p.crisisStatus,
+      'Fecha registro': p.registerDate.toISOString().split('T')[0],
+      'Variables': p.variables.join(', ')
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Estadísticas Epilepsia');
+    XLSX.writeFile(workbook, `estadisticas_epilepsia_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
+  exportToPDF(): void {
+    const doc = new jsPDF();
+    const title = 'Reporte de Epilepsia - Estadísticas';
+
+    doc.setFontSize(18);
+    doc.text(title, 14, 15);
+
+    doc.setFontSize(10);
+    doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 22);
+
+    const tableData = this.filteredData.map(p => [
+      p.sex,
+      p.age.toString(),
+      p.crisisStatus,
+      p.registerDate.toISOString().split('T')[0],
+      p.variables.join(', ')
+    ]);
+
+    autoTable(doc, {
+      head: [['Sexo', 'Edad', 'Estado', 'Fecha', 'Variables']],
+      body: tableData,
+      startY: 30,
+      styles: { fontSize: 8 }
+    });
+
+    doc.save(`reporte_epilepsia_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   resetFilters(): void {
@@ -322,62 +279,21 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       maxAge: null,
       sex: '',
       crisisStatus: '',
-      dateRange: { start: null, end: null }
+      dateRange: { start: null, end: null },
+      ageRange: [0, 100]
     };
-    this.loadInitialData();
-  }
-
-  onDateRangeChange(): void {
-    if (this.filters.dateRange.start && this.filters.dateRange.end) {
-      const endDate = new Date(this.filters.dateRange.end);
-      endDate.setHours(23, 59, 59, 999);
-      this.filters.dateRange.end = endDate;
-    }
     this.applyFilters();
   }
 
-  exportToCSV(): void {
-    const headers = ['Patient', 'Sex', 'Age', 'Crisis Status', 'Register Date', 'Variables'];
-    const csvContent = [
-      headers.join(','),
-      ...this.filteredRegisters.map(reg => {
-        const variables = reg.variablesRegister.map(v => v.variableName).join('; ');
-        return [
-          `"${reg.patientBasicInfo?.name || ''}"`,
-          reg.patientBasicInfo?.sex || '',
-          reg.patientBasicInfo?.age || '',
-          reg.patientBasicInfo?.crisisStatus || '',
-          reg.registerDate,
-          `"${variables}"`
-        ].join(',');
-      })
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `medical_records_${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  getStatusClass(status: string | undefined): string {
-    if (!status) return '';
-    return status.toLowerCase()
-      .replace(/ /g, '-')
-      .replace(/[^a-z-]/g, '');
-  }
-
-  getVariableColor(variableName: string | undefined): string {
-    if (!variableName) return '#cccccc';
-    let hash = 0;
-    for (let i = 0; i < variableName.length; i++) {
-      hash = variableName.charCodeAt(i) + ((hash << 5) - hash);
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'Activa': return '#4CAF50';
+      case 'Remisión': return '#FFC107';
+      case 'Estable': return '#F44336';
+      case 'Crítica': return '#2196F3';
+      case 'Recuperado': return '#2196G7';
+      default: return '#9E9E9E';
     }
-    const h = Math.abs(hash % 360);
-    return `hsl(${h}, 70%, 80%)`;
   }
 }
+

@@ -1,6 +1,5 @@
-import { NgModule } from '@angular/core';
+import { NgModule,CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { ConsolaRegistroRoutingModule } from './consola-registro-routing.module';
 import { ConsolaRegistroComponent } from './consola-registro.component';
 import { NavbarRegistroComponent } from '../../shared/components/navbars/navbar-registro/navbar-registro.component';
@@ -38,6 +37,8 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatOptionModule } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatSliderModule } from '@angular/material/slider';
+
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -81,7 +82,9 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
     MatChipsModule,
     MatOptionModule,
     MatButtonToggleModule,
-    MatAutocompleteModule
-  ]
+    MatAutocompleteModule,
+    MatSliderModule
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class ConsolaRegistroModule { }
