@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { ChartConfiguration, ChartType } from 'chart.js';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
@@ -9,13 +9,52 @@ import { takeUntil } from 'rxjs/operators';
 import { ConsolaRegistroService } from '../services/consola-registro.service';
 import { AuthService } from 'src/app/login/services/auth.service';
 import { Register, ResearchLayer } from '../interfaces';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatIconModule } from '@angular/material/icon';
+
+type CrisisStatus = 'Activa' | 'Remisión' | 'Estable' | 'Crítica' | 'Recuperado' | string;
+type ChartDimension = 'sex' | 'education' | 'economic' | 'marital' | 'crisis' | 'currentCity' | 'hometown' | 'caregiver';
+
+interface PatientBasicInfo {
+  name: string;
+  sex: string;
+  birthDate: string | null;
+  age: number;
+  email: string;
+  phoneNumber: string;
+  deathDate: string | null;
+  economicStatus: string;
+  educationLevel: string;
+  maritalStatus: string;
+  hometown: string;
+  currentCity: string;
+  firstCrisisDate: string;
+  crisisStatus: string;
+  caregiver?: {
+    name: string;
+    identificationType: string;
+    identificationNumber: number;
+    age: number;
+    educationLevel: string;
+    occupation: string;
+  };
+}
 
 interface PatientStat {
   sex: string;
   age: number;
-  crisisStatus: 'Activa' | 'Remisión' | 'Estable' | 'Crítica' | 'Recuperado';
+  crisisStatus: CrisisStatus;
   registerDate: Date;
   variables: string[];
+  educationLevel: string;
+  economicStatus: string;
+  maritalStatus: string;
+  hometown: string;
+  currentCity: string;
+  hasCaregiver: boolean;
+  firstCrisisDate?: string;
 }
 
 @Component({
@@ -24,9 +63,12 @@ interface PatientStat {
   styleUrls: ['./consulta-dinamica.component.css']
 })
 export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
   allRegisters: Register[] = [];
   filteredRegisters: Register[] = [];
-  filteredData: PatientStat[] = [];
+  filteredData = new MatTableDataSource<PatientStat>([]);
 
   filters = {
     patientName: '',
@@ -34,24 +76,86 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     minAge: null as number | null,
     maxAge: null as number | null,
     sex: '',
-    crisisStatus: '' as '' | 'Activa' | 'Remisión' | 'Estable' | 'Crítica' | 'Recuperado',
+    crisisStatus: '' as string,
     dateRange: { start: null as Date | null, end: null as Date | null },
-    ageRange: [0, 100] as [number, number]
+    ageRange: [0, 100] as [number, number],
+    educationLevel: '',
+    economicStatus: '',
+    maritalStatus: '',
+    hometown: '',
+    currentCity: '',
+    hasCaregiver: null as boolean | null
   };
 
   currentPage = 0;
-  pageSize = 5;
+  pageSize = 10;
+  totalElements = 0;
+  totalPages = 0;
 
-  viewType: 'chart' | 'table' = 'chart';
+  viewType: 'chart' | 'table' = 'table';
   chartType: ChartType = 'bar';
   chartData: ChartConfiguration['data'] = { labels: [], datasets: [] };
   chartOptions: ChartConfiguration['options'] = {
     responsive: true,
     plugins: {
-      legend: { position: 'top' },
-      tooltip: { enabled: true }
+      legend: { 
+        position: 'top',
+        labels: {
+          font: {
+            size: 14
+          }
+        }
+      },
+      tooltip: { 
+        enabled: true,
+        callbacks: {
+          label: (context) => {
+            const label = context.dataset.label || '';
+            const value = context.raw as number;
+            const data = context.dataset.data as number[];
+            const total = data.reduce((a: number, b: number) => a + b, 0);
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
     }
   };
+
+  availableDimensions: ChartDimension[] = [
+    'sex', 'education', 'economic', 'marital', 'crisis', 'currentCity', 'hometown', 'caregiver'
+  ];
+  
+  dimensionLabels = {
+    sex: 'Sexo',
+    education: 'Nivel Educativo',
+    economic: 'Nivel Socioeconómico',
+    marital: 'Estado Civil',
+    crisis: 'Estado de Crisis',
+    currentCity: 'Ciudad Actual',
+    hometown: 'Ciudad de Origen',
+    caregiver: 'Tiene Cuidador'
+  };
+
+  displayedColumns: string[] = [
+    'sex', 'age', 'status', 'date', 'educationLevel', 
+    'economicStatus', 'maritalStatus', 'city', 'hasCaregiver', 'variables'
+  ];
+
+  selectedDimension1: ChartDimension = 'sex';
+  selectedDimension2: ChartDimension | null = null;
+  showComparison: boolean = false;
+  
+  availableChartTypes: ChartType[] = ['bar', 'pie', 'doughnut', 'line', 'radar'];
+  chartColors = ['#4CAF50', '#2196F3', '#FFC107', '#F44336', '#9C27B0', '#607D8B', '#795548'];
 
   currentResearchLayer: ResearchLayer | null = null;
   loading = false;
@@ -66,6 +170,11 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCurrentResearchLayer();
+  }
+
+  ngAfterViewInit() {
+    this.filteredData.paginator = this.paginator;
+    this.filteredData.sort = this.sort;
   }
 
   ngOnDestroy(): void {
@@ -120,7 +229,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       'DESC'
     ).subscribe({
       next: (response: any) => {
-        this.allRegisters = response.registers || response.content || [];
+        this.allRegisters = response.registers || [];
+        this.totalElements = response.totalElements || 0;
+        this.totalPages = response.totalPages || 0;
         this.applyFilters();
         this.loading = false;
       },
@@ -132,33 +243,124 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     });
   }
 
+  onPageChange(event: any): void {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadInitialData();
+  }
+
+  getEducationLabel(value: string): string {
+    const labels: Record<string, string> = {
+      'primaria': 'Primaria',
+      'secundaria': 'Secundaria',
+      'tecnico': 'Técnico',
+      'universitario': 'Universitario',
+      'postgrado': 'Postgrado',
+      'ninguno': 'Ninguno'
+    };
+    return value in labels ? labels[value] : value;
+  }
+
+  getEconomicStatusLabel(value: string): string {
+    const labels: Record<string, string> = {
+      'bajo': 'Bajo',
+      'medio_bajo': 'Medio bajo',
+      'medio': 'Medio',
+      'medio_alto': 'Medio alto',
+      'alto': 'Alto'
+    };
+    return value in labels ? labels[value] : value;
+  }
+
+  getMaritalStatusLabel(value: string): string {
+    const labels: Record<string, string> = {
+      'soltero': 'Soltero/a',
+      'casado': 'Casado/a',
+      'divorciado': 'Divorciado/a',
+      'viudo': 'Viudo/a',
+      'union_libre': 'Unión libre'
+    };
+    return value in labels ? labels[value] : value;
+  }
+
   applyFilters(): void {
     this.filteredRegisters = this.allRegisters.filter(register => {
-      if (this.filters.sex && register.patientBasicInfo?.sex !== this.filters.sex) return false;
+      const patientInfo = register.patientBasicInfo as PatientBasicInfo;
+      
+      if (this.filters.sex && patientInfo?.sex !== this.filters.sex) return false;
 
-      const age = register.patientBasicInfo?.age;
+      const age = patientInfo?.age;
       if (this.filters.minAge !== null && (age === undefined || age < this.filters.minAge)) return false;
       if (this.filters.maxAge !== null && (age === undefined || age > this.filters.maxAge)) return false;
 
-      if (this.filters.crisisStatus && 
-          register.patientBasicInfo?.crisisStatus !== this.filters.crisisStatus) {
+      if (this.filters.crisisStatus && patientInfo?.crisisStatus !== this.filters.crisisStatus) {
         return false;
       }
 
-      const registerDate = new Date(register.registerDate);
-      if (this.filters.dateRange.start && registerDate < this.filters.dateRange.start) return false;
-      if (this.filters.dateRange.end && registerDate > this.filters.dateRange.end) return false;
+      if (this.filters.educationLevel && patientInfo?.educationLevel !== this.filters.educationLevel) {
+        return false;
+      }
+      
+      if (this.filters.economicStatus && patientInfo?.economicStatus !== this.filters.economicStatus) {
+        return false;
+      }
+      
+      if (this.filters.maritalStatus && patientInfo?.maritalStatus !== this.filters.maritalStatus) {
+        return false;
+      }
+      
+      if (this.filters.hometown && 
+          !patientInfo?.hometown?.toLowerCase().includes(this.filters.hometown.toLowerCase())) {
+        return false;
+      }
+      
+      if (this.filters.currentCity && 
+          !patientInfo?.currentCity?.toLowerCase().includes(this.filters.currentCity.toLowerCase())) {
+        return false;
+      }
+      
+      if (this.filters.hasCaregiver !== null) {
+        const hasCaregiver = !!register.caregiver;
+        if (hasCaregiver !== this.filters.hasCaregiver) return false;
+      }
+
+      if (this.filters.dateRange.start || this.filters.dateRange.end) {
+        const registerDate = new Date(register.registerDate);
+        if (this.filters.dateRange.start && registerDate < this.filters.dateRange.start) return false;
+        if (this.filters.dateRange.end) {
+          const endDate = new Date(this.filters.dateRange.end);
+          endDate.setHours(23, 59, 59, 999);
+          if (registerDate > endDate) return false;
+        }
+      }
 
       return true;
     });
 
-    this.filteredData = this.filteredRegisters.map(register => ({
-      sex: register.patientBasicInfo?.sex || '',
-      age: register.patientBasicInfo?.age || 0,
-      crisisStatus: register.patientBasicInfo?.crisisStatus as any || 'Estable',
-      registerDate: new Date(register.registerDate),
-      variables: register.variablesRegister.map(v => v.variableName || '')
-    }));
+    const data = this.filteredRegisters.map(register => {
+      const patientInfo = register.patientBasicInfo as PatientBasicInfo;
+      
+      return {
+        sex: patientInfo?.sex || 'No especificado',
+        age: patientInfo?.age || 0,
+        crisisStatus: patientInfo?.crisisStatus || 'No especificado',
+        registerDate: new Date(register.registerDate),
+        variables: register.variablesRegister.map(v => v.variableName || ''),
+        educationLevel: patientInfo?.educationLevel || 'No especificado',
+        economicStatus: patientInfo?.economicStatus || 'No especificado',
+        maritalStatus: patientInfo?.maritalStatus || 'No especificado',
+        hometown: patientInfo?.hometown || 'No especificado',
+        currentCity: patientInfo?.currentCity || 'No especificado',
+        hasCaregiver: !!register.caregiver,
+        firstCrisisDate: patientInfo?.firstCrisisDate
+      };
+    });
+
+    this.filteredData.data = data;
+    this.totalElements = data.length;
+    
+    this.filteredData.paginator = this.paginator;
+    this.filteredData.sort = this.sort;
 
     this.prepareChartData();
   }
@@ -166,60 +368,109 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   prepareChartData(): void {
     if (this.viewType !== 'chart') return;
 
-    const crisisData = this.groupByCrisisStatus();
-    const sexData = this.groupBySex();
-
-    if (this.chartType === 'pie' || this.chartType === 'doughnut') {
-      this.chartData = {
-        labels: Object.keys(crisisData),
-        datasets: [{
-          data: Object.values(crisisData),
-          backgroundColor: ['#4CAF50', '#FFC107', '#F44336', '#2196F3'],
-          label: 'Pacientes por estado de crisis'
-        }]
-      };
+    const dimension1Data = this.groupByDimension(this.selectedDimension1);
+    
+    if (this.showComparison && this.selectedDimension2) {
+      const dimension2Data = this.groupByDimension(this.selectedDimension2);
+      this.chartData = this.createComparisonChart(dimension1Data, dimension2Data);
     } else {
-      this.chartData = {
-        labels: ['Distribución'],
-        datasets: [
-          {
-            label: 'Femenino',
-            data: [sexData['femenino'] || 0],
-            backgroundColor: '#E91E63'
-          },
-          {
-            label: 'Masculino',
-            data: [sexData['masculino'] || 0],
-            backgroundColor: '#3F51B5'
-          }
-        ]
-      };
+      this.chartData = this.createSingleDimensionChart(dimension1Data, this.selectedDimension1);
     }
   }
 
-  private groupByCrisisStatus(): Record<string, number> {
-    return this.filteredData.reduce((acc: Record<string, number>, patient: PatientStat) => {
-      acc[patient.crisisStatus] = (acc[patient.crisisStatus] || 0) + 1;
+  private groupByDimension(dimension: ChartDimension): Record<string, number> {
+    return this.filteredData.data.reduce((acc: Record<string, number>, patient: PatientStat) => {
+      let key: string;
+      
+      switch(dimension) {
+        case 'sex':
+          key = patient.sex;
+          break;
+        case 'education':
+          key = this.getEducationLabel(patient.educationLevel);
+          break;
+        case 'economic':
+          key = this.getEconomicStatusLabel(patient.economicStatus);
+          break;
+        case 'marital':
+          key = this.getMaritalStatusLabel(patient.maritalStatus);
+          break;
+        case 'crisis':
+          key = patient.crisisStatus;
+          break;
+        case 'currentCity':
+          key = patient.currentCity;
+          break;
+        case 'hometown':
+          key = patient.hometown;
+          break;
+        case 'caregiver':
+          key = patient.hasCaregiver ? 'Con cuidador' : 'Sin cuidador';
+          break;
+        default:
+          key = 'No especificado';
+      }
+
+      acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
   }
 
-  private groupBySex(): Record<string, number> {
-    return this.filteredData.reduce((acc: Record<string, number>, patient: PatientStat) => {
-      acc[patient.sex] = (acc[patient.sex] || 0) + 1;
-      return acc;
-    }, {});
+  private createSingleDimensionChart(data: Record<string, number>, dimension: ChartDimension): ChartConfiguration['data'] {
+    const labels = Object.keys(data);
+    return {
+      labels: labels,
+      datasets: [{
+        data: Object.values(data),
+        backgroundColor: this.chartColors.slice(0, labels.length),
+        label: this.dimensionLabels[dimension]
+      }]
+    };
+  }
+
+  private createComparisonChart(
+    data1: Record<string, number>, 
+    data2: Record<string, number>
+  ): ChartConfiguration['data'] {
+    const allLabels = new Set([...Object.keys(data1), ...Object.keys(data2)]);
+    const labels = Array.from(allLabels);
+    
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: this.dimensionLabels[this.selectedDimension1],
+          data: labels.map(label => data1[label] || 0),
+          backgroundColor: this.chartColors[0]
+        },
+        {
+          label: this.dimensionLabels[this.selectedDimension2!],
+          data: labels.map(label => data2[label] || 0),
+          backgroundColor: this.chartColors[1]
+        }
+      ]
+    };
   }
 
   exportToCSV(): void {
-    const headers = ['Sexo', 'Edad', 'Estado de crisis', 'Fecha registro', 'Variables'];
+    const headers = [
+      'Sexo', 'Edad', 'Estado de crisis', 'Fecha registro',
+      'Nivel educativo', 'Nivel socioeconómico', 'Estado civil',
+      'Ciudad', 'Tiene cuidador', 'Variables'
+    ];
+
     const csvContent = [
       headers.join(','),
-      ...this.filteredData.map(p => [
+      ...this.filteredData.data.map(p => [
         p.sex,
         p.age,
         p.crisisStatus,
         p.registerDate.toISOString().split('T')[0],
+        this.getEducationLabel(p.educationLevel),
+        this.getEconomicStatusLabel(p.economicStatus),
+        this.getMaritalStatusLabel(p.maritalStatus),
+        p.currentCity,
+        p.hasCaregiver ? 'Sí' : 'No',
         `"${p.variables.join(', ')}"`
       ].join(','))
     ].join('\n');
@@ -229,11 +480,16 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   }
 
   exportToExcel(): void {
-    const data = this.filteredData.map(p => ({
+    const data = this.filteredData.data.map(p => ({
       'Sexo': p.sex,
       'Edad': p.age,
       'Estado de crisis': p.crisisStatus,
       'Fecha registro': p.registerDate.toISOString().split('T')[0],
+      'Nivel educativo': this.getEducationLabel(p.educationLevel),
+      'Nivel socioeconómico': this.getEconomicStatusLabel(p.economicStatus),
+      'Estado civil': this.getMaritalStatusLabel(p.maritalStatus),
+      'Ciudad': p.currentCity,
+      'Tiene cuidador': p.hasCaregiver ? 'Sí' : 'No',
       'Variables': p.variables.join(', ')
     }));
 
@@ -253,16 +509,21 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     doc.setFontSize(10);
     doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 22);
 
-    const tableData = this.filteredData.map(p => [
+    const tableData = this.filteredData.data.map(p => [
       p.sex,
       p.age.toString(),
       p.crisisStatus,
       p.registerDate.toISOString().split('T')[0],
+      this.getEducationLabel(p.educationLevel),
+      this.getEconomicStatusLabel(p.economicStatus),
+      this.getMaritalStatusLabel(p.maritalStatus),
+      p.currentCity,
+      p.hasCaregiver ? 'Sí' : 'No',
       p.variables.join(', ')
     ]);
 
     autoTable(doc, {
-      head: [['Sexo', 'Edad', 'Estado', 'Fecha', 'Variables']],
+      head: [['Sexo', 'Edad', 'Estado', 'Fecha', 'Educación', 'Nivel Socioeconómico', 'Estado Civil', 'Ciudad', 'Cuidador', 'Variables']],
       body: tableData,
       startY: 30,
       styles: { fontSize: 8 }
@@ -280,20 +541,36 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       sex: '',
       crisisStatus: '',
       dateRange: { start: null, end: null },
-      ageRange: [0, 100]
+      ageRange: [0, 100],
+      educationLevel: '',
+      economicStatus: '',
+      maritalStatus: '',
+      hometown: '',
+      currentCity: '',
+      hasCaregiver: null
     };
     this.applyFilters();
   }
 
   getStatusColor(status: string): string {
-    switch (status) {
-      case 'Activa': return '#4CAF50';
-      case 'Remisión': return '#FFC107';
-      case 'Estable': return '#F44336';
-      case 'Crítica': return '#2196F3';
-      case 'Recuperado': return '#2196G7';
+    switch (status.toLowerCase()) {
+      case 'activa': return '#4CAF50';
+      case 'remisión': return '#FFC107';
+      case 'estable': return '#2196F3';
+      case 'crítica': return '#F44336';
+      case 'recuperado': return '#9C27B0';
       default: return '#9E9E9E';
     }
   }
-}
 
+  exportChartAsImage(): void {
+    const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+    if (canvas) {
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = 'grafico_epilepsia.png';
+      link.href = image;
+      link.click();
+    }
+  }
+}

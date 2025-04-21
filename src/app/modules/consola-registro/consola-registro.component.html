@@ -74,10 +74,6 @@
               <i class="fas fa-file-alt"></i>
               <span>Generar Reporte</span>
             </button>
-            <button class="action-btn" (click)="navigateTo('configuracion')">
-              <i class="fas fa-cog"></i>
-              <span>Configuración</span>
-            </button>
           </div>
         </div>
 
@@ -105,25 +101,27 @@
     <!-- Añade esto encima de la tabla -->
     <div class="search-options" *ngIf="selectedTab === 'listadoPacientes'">
       <div class="button-group">
-        <button class="btn btn-primary" (click)="abrirBusquedaPorProfesional()">
-          Buscar por profesional
+        <button class="search-btn professional-btn" (click)="abrirBusquedaPorProfesional()">
+          <i class="fas fa-user-md"></i>
+          <span>Buscar por profesional</span>
         </button>
-        <button class="btn btn-primary" (click)="abrirBusquedaPorPaciente()">
-          Buscar por paciente
+        <button class="search-btn patient-btn" (click)="abrirBusquedaPorPaciente()">
+          <i class="fas fa-user-injured"></i>
+          <span>Buscar por paciente</span>
         </button>
-        <button class="btn btn-secondary" (click)="resetearBusqueda()" *ngIf="modoBusqueda !== 'default'">
-          Ver todos los registros
+        <button class="reset-btn" (click)="resetearBusqueda()" *ngIf="modoBusqueda !== 'default'">
+          <i class="fas fa-redo"></i>
+          <span>Ver todos</span>
         </button>
       </div>
-
+    
       <div *ngIf="modoBusqueda === 'profesional'" class="search-info">
-        Mostrando registros del profesional: {{ profesionalBuscado }}
+        <i class="fas fa-info-circle"></i> Mostrando registros del profesional: <strong>{{ profesionalBuscado }}</strong>
       </div>
-      <div *ngIf="modoBusqueda === 'paciente'" class="search-info">
-        Mostrando registros del paciente: {{ pacienteBuscado }}
+      <div *if="modoBusqueda === 'paciente'" class="search-info">
+        <i class="fas fa-info-circle"></i> Mostrando registros del paciente: <strong>{{ pacienteBuscado }}</strong>
       </div>
     </div>
-
     <!-- Modales -->
     <app-buscar-profesional-modal *ngIf="showBuscarProfesionalModal" (buscar)="buscarPorProfesional($event)"
       (cerrar)="cerrarBusquedaPorProfesional()">

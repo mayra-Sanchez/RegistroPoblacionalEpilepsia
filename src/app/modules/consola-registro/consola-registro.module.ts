@@ -38,7 +38,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatOptionModule } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSliderModule } from '@angular/material/slider';
-
+import { MatCheckboxModule } from '@angular/material/checkbox';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -83,7 +83,8 @@ import { MatSliderModule } from '@angular/material/slider';
     MatOptionModule,
     MatButtonToggleModule,
     MatAutocompleteModule,
-    MatSliderModule
+    MatSliderModule,
+    MatCheckboxModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

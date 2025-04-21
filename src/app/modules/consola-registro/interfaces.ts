@@ -60,6 +60,7 @@ export interface Register {
     currentCity: string;
     firstCrisisDate: string;
     crisisStatus: string;
+    hasCaregiver?: boolean; 
   };
   caregiver: {
     name: string;
