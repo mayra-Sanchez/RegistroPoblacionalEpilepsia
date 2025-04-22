@@ -5,14 +5,11 @@
     <div *ngIf="selectedTab === 'inicioInvestigador'" class="info-container">
       <h1>Bienvenido investigador</h1>
       <div class="inicio-content">
-        <p>
-          Aqui van las graficas
-        </p>
-        <img src="../../assets/img/sistemaInformacion.png" alt="Doctor escribiendo en una libreta" />
+        <app-graficas-inicio></app-graficas-inicio>
       </div>
     </div>
     <div *ngIf="selectedTab === 'consultaDatos'">
-      <h1>Consultar datos</h1>
+      <app-consulta-datos></app-consulta-datos>
     </div>
     <div *ngIf="selectedTab === 'consultasGuardadas'" class="contentInvestigador2">
       <app-table-ver-consultas [data]="consultasData" [columns]="consultasColumns" [itemsPerPageOptions]="[5, 10, 20]"

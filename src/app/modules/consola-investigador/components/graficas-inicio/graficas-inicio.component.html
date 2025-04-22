@@ -1,0 +1,35 @@
+<div class="container">
+    <div *ngIf="loading" class="loading-spinner">
+      <mat-spinner></mat-spinner>
+      <p>Cargando datos...</p>
+    </div>
+  
+    <div *ngIf="errorMessage" class="error-message">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ errorMessage }}</p>
+    </div>
+  
+    <div *ngIf="!loading && !errorMessage" class="charts-container">
+      <h2>Resumen de Datos Epidemiológicos</h2>
+      
+      <div class="chart-row">
+        <div class="chart-container">
+          <h3>Distribución por Sexo y Estado de Crisis</h3>
+          <canvas baseChart 
+            [data]="chartData1" 
+            [type]="chartType1" 
+            [options]="chartOptions">
+          </canvas>
+        </div>
+        
+        <div class="chart-container">
+          <h3>Distribución por Nivel Educativo</h3>
+          <canvas baseChart 
+            [data]="chartData2" 
+            [type]="chartType2" 
+            [options]="chartOptions">
+          </canvas>
+        </div>
+      </div>
+    </div>
+  </div>

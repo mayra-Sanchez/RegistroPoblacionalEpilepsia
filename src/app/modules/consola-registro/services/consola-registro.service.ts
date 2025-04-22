@@ -306,6 +306,14 @@ export class ConsolaRegistroService {
   ): Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }> {
     const headers = this.getAuthHeaders();
 
+    console.log('Realizando petición para obtener registros por capa:', {
+      researchLayerId,
+      page,
+      size,
+      sort,
+      sortDirection
+    });
+
     const params = new HttpParams()
       .set('researchLayerId', researchLayerId)
       .set('page', page.toString())
@@ -314,8 +322,13 @@ export class ConsolaRegistroService {
       .set('sortDirection', sortDirection);
 
     return this.http.get<any>(`${this.API_URL}/allByResearchLayer`, { headers, params }).pipe(
+      tap(response => console.log('Respuesta del servidor:', response)),
       catchError(error => {
-        console.error('Error al obtener registros por capa:', error);
+        console.error('Error al obtener registros por capa:', {
+          status: error.status,
+          message: error.message,
+          error: error.error
+        });
         return throwError(() => new Error('Error al cargar registros'));
       })
     );
