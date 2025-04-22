@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable,of , throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
 
@@ -327,4 +327,171 @@ export class AuthService {
     this.router.navigate(['/']);
   }
 
+  /**
+ * Obtiene el ID del usuario desde el token JWT
+ * @returns string | null - El ID del usuario o null si no está disponible
+ */
+  getUserId(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      // Usamos 'sub' que es el estándar en Keycloak para el ID de usuario
+      return decoded.sub || null;
+    } catch (error) {
+      console.error('Error decodificando token para obtener ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Actualiza los datos del usuario en el almacenamiento local
+   * @param data - Objeto con los datos a actualizar
+   */
+  updateUserData(data: { username?: string, role?: string, firstName?: string, lastName?: string }): void {
+    const token = this.getToken();
+    if (!token) return;
+
+    try {
+      const decoded: any = jwtDecode(token);
+
+      // Actualizar campos específicos si se proporcionan
+      if (data.username) {
+        // Actualiza el username en el token (esto es solo en memoria)
+        decoded.preferred_username = data.username;
+        // También puedes almacenarlo por separado si lo necesitas
+        localStorage.setItem('current_username', data.username);
+      }
+
+      if (data.role) {
+        // Actualizar roles si es necesario
+        const roles = this.getStoredRoles();
+        if (!roles.includes(data.role)) {
+          localStorage.setItem('userRoles', JSON.stringify([...roles, data.role]));
+        }
+      }
+
+      // Emitir evento de actualización
+      this.authStatus.next(true);
+      this.userProfile.next(this.getUserData());
+
+    } catch (error) {
+      console.error('Error actualizando datos de usuario:', error);
+    }
+  }
+
+  /**
+   * Obtiene los datos completos del usuario desde el token
+   * @returns any - Objeto con los datos del usuario
+   */
+  getUserProfile(): Observable<any> {
+    const userData = this.getUserData();
+    if (userData) {
+      return of(userData);
+    }
+
+    const email = this.getUserEmail();
+    if (!email) {
+      return throwError(() => new Error('No se pudo obtener el email del usuario'));
+    }
+
+    return this.obtenerUsuarioAutenticado(email).pipe(
+      map((response: any) => {
+        if (!response || !response[0]) {
+          throw new Error('Respuesta inválida del servidor');
+        }
+        return response[0];
+      }),
+      catchError(error => {
+        console.error('Error obteniendo perfil de usuario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Método para actualizar el token con nueva información
+   * @param newToken - Nuevo token JWT
+   */
+  updateToken(newToken: string): void {
+    localStorage.setItem('kc_token', newToken);
+    this.storeUserRoles(newToken);
+    this.authStatus.next(true);
+    this.userProfile.next(this.getUserData());
+  }
+
+  updateUser(userId: string, userData: any): Observable<any> {
+    const token = this.getToken();
+    if (!token) {
+      return throwError(() => new Error('No hay token disponible'));
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    // Asegúrate de que la URL coincida con tu backend
+    const url = `${this.API_USERS_URL}/update?userId=${encodeURIComponent(userId)}`;
+
+    return this.http.put(url, userData, { headers }).pipe(
+      catchError(error => {
+        console.error('Error completo en updateUser:', error);
+        let errorMessage = 'Error al actualizar el usuario';
+        
+        if (error.error) {
+          errorMessage = error.error.message || 
+                        error.error.error || 
+                        JSON.stringify(error.error);
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+}
+
+  /**
+   * Gets user by ID
+   * @param userId The user ID to fetch
+   */
+  getUserById(userId: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.getToken()}`
+    });
+
+    return this.http.get(`${this.API_USERS_URL}/${userId}`, { headers }).pipe(
+      catchError(error => {
+        console.error('Error fetching user:', error);
+        return throwError(() => new Error(error.error?.message || 'Error fetching user'));
+      })
+    );
+  }
+
+  obtenerUsuarioPorEmail(email: string): Observable<any> {
+    const token = this.getToken();
+
+    if (!token) {
+      console.error('⚠️ No hay token disponible, abortando solicitud.');
+      return throwError(() => new Error('No hay token disponible.'));
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    // Make sure this matches your backend endpoint
+    const url = `${this.API_USERS_URL}`;
+    const params = new HttpParams().set('email', email);
+
+    return this.http.get<any>(url, { headers, params }).pipe(
+      catchError(error => {
+        console.error('❌ Error al obtener usuario:', error);
+        return throwError(() => new Error(error.error?.message || 'Ocurrió un error al obtener el usuario.'));
+      })
+    );
+}
 }

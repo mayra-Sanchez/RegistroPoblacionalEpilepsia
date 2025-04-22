@@ -26,6 +26,7 @@
       <div class="menu-dropdown" *ngIf="isSettingsMenuVisible">
         <button (click)="logout()">Cerrar sesión</button>
         <button (click)="openModal('manual')">Manual</button>
+        <button (click)="openEditUserModal()">Editar perfil</button> <!-- Nueva opción -->
       </div>
     </div>
   </div>
@@ -40,6 +41,18 @@
     </ng-container>
     <ng-container *ngIf="modalType === 'manual'">
       <app-manual (closeManual)="closeModal()"></app-manual>
+    </ng-container>
+    <ng-container *ngIf="modalType === 'edit-user'">
+      <div *ngIf="!currentUserData.attributes; else userForm">
+        <p>Cargando datos del usuario...</p>
+      </div>
+      <ng-template #userForm>
+        <app-editar-usuario
+          [userData]="currentUserData"
+          (close)="closeModal()"
+          (updateSuccess)="handleUserUpdate($event)">
+        </app-editar-usuario>
+      </ng-template>
     </ng-container>
   </div>
 </div>

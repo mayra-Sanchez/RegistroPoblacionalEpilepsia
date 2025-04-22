@@ -17,6 +17,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AuthInterceptor } from './auth.interceptor';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { EditarUsuarioComponent } from './shared/components/header/componenets/editar-usuario/editar-usuario.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -26,7 +27,8 @@ import { MatChipsModule } from '@angular/material/chips';
     HomeComponent,
     ModalConfirmacionComponent,
     ManualComponent,
-    LoginComponent
+    LoginComponent,
+    EditarUsuarioComponent
   ],
   imports: [
     BrowserModule,
