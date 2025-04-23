@@ -185,7 +185,7 @@ export class HeaderComponent implements OnInit {
         this.authService.updateUserData({
           username: updatedData.username,
           firstName: updatedData.firstName,
-          lastName: updatedData.lastName
+          lastName: updatedData.lastName,
         });
         
         this.closeModal();

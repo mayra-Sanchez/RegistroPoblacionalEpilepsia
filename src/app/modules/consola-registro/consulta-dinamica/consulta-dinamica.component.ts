@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { ChartConfiguration, ChartType } from 'chart.js';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -13,6 +13,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 type CrisisStatus = 'Activa' | 'Remisión' | 'Estable' | 'Crítica' | 'Recuperado' | string;
 type ChartDimension = 'sex' | 'education' | 'economic' | 'marital' | 'crisis' | 'currentCity' | 'hometown' | 'caregiver';
@@ -54,6 +55,8 @@ interface PatientStat {
   hometown: string;
   currentCity: string;
   hasCaregiver: boolean;
+  caregiverEducation: string;
+  caregiverOccupation: string;
   firstCrisisDate?: string;
 }
 
@@ -65,10 +68,12 @@ interface PatientStat {
 export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
 
   allRegisters: Register[] = [];
   filteredRegisters: Register[] = [];
   filteredData = new MatTableDataSource<PatientStat>([]);
+  currentChart: Chart | null = null;
 
   filters = {
     patientName: '',
@@ -84,7 +89,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     maritalStatus: '',
     hometown: '',
     currentCity: '',
-    hasCaregiver: null as boolean | null
+    hasCaregiver: null as boolean | null,
+    caregiverEducation: '',
+    caregiverOccupation: ''
   };
 
   currentPage = 0;
@@ -98,7 +105,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   chartOptions: ChartConfiguration['options'] = {
     responsive: true,
     plugins: {
-      legend: { 
+      legend: {
         position: 'top',
         labels: {
           font: {
@@ -106,7 +113,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
           }
         }
       },
-      tooltip: { 
+      tooltip: {
         enabled: true,
         callbacks: {
           label: (context) => {
@@ -118,6 +125,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
             return `${label}: ${value} (${percentage}%)`;
           }
         }
+      },
+      datalabels: {
+        display: false
       }
     },
     scales: {
@@ -127,13 +137,18 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
           stepSize: 1
         }
       }
+    },
+    elements: {
+      arc: {
+        borderWidth: 0
+      }
     }
   };
 
   availableDimensions: ChartDimension[] = [
     'sex', 'education', 'economic', 'marital', 'crisis', 'currentCity', 'hometown', 'caregiver'
   ];
-  
+
   dimensionLabels = {
     sex: 'Sexo',
     education: 'Nivel Educativo',
@@ -146,14 +161,14 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   };
 
   displayedColumns: string[] = [
-    'sex', 'age', 'status', 'date', 'educationLevel', 
+    'sex', 'age', 'status', 'date', 'educationLevel',
     'economicStatus', 'maritalStatus', 'city', 'hasCaregiver', 'variables'
   ];
 
   selectedDimension1: ChartDimension = 'sex';
   selectedDimension2: ChartDimension | null = null;
   showComparison: boolean = false;
-  
+
   availableChartTypes: ChartType[] = ['bar', 'pie', 'doughnut', 'line', 'radar'];
   chartColors = ['#4CAF50', '#2196F3', '#FFC107', '#F44336', '#9C27B0', '#607D8B', '#795548'];
 
@@ -166,10 +181,13 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   constructor(
     private registerService: ConsolaRegistroService,
     private authService: AuthService
-  ) { }
+  ) {
+    Chart.register(...registerables, ChartDataLabels);
+  }
 
   ngOnInit(): void {
     this.loadCurrentResearchLayer();
+    this.updateChartOptions();
   }
 
   ngAfterViewInit() {
@@ -178,8 +196,183 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyChart();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private destroyChart(): void {
+    if (this.currentChart) {
+      this.currentChart.destroy();
+      this.currentChart = null;
+    }
+  }
+
+  updateChartOptions() {
+    const isCircular = this.chartType === 'pie' || this.chartType === 'doughnut';
+    const isBar = this.chartType === 'bar';
+    const isLine = this.chartType === 'line';
+
+    const baseOptions: ChartConfiguration['options'] = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: {
+              size: 14
+            },
+            padding: 20,
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            label: (context) => {
+              const label = context.dataset.label || '';
+              const value = context.raw as number;
+              const data = context.dataset.data as number[];
+              const total = data.reduce((a, b) => a + b, 0);
+              const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        },
+        datalabels: {
+          display: false
+        }
+      }
+    };
+
+    if (isCircular) {
+      baseOptions.plugins = {
+        ...baseOptions.plugins,
+        datalabels: {
+          display: true,
+          formatter: (value: number, ctx: any) => {
+            const datasets = ctx.chart?.data?.datasets;
+            if (!datasets || !datasets[ctx.datasetIndex]?.data) return '';
+
+            const data = datasets[ctx.datasetIndex].data as number[];
+            const total = data.reduce((a, b) => a + b, 0);
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+            return percentage > 5 ? `${percentage}%` : '';
+          },
+          color: '#fff',
+          font: {
+            weight: 'bold',
+            size: 12
+          }
+        }
+      };
+
+      baseOptions.elements = {
+        arc: {
+          borderWidth: 1,
+          borderColor: '#fff'
+        }
+      };
+    }
+
+    if (isBar) {
+      baseOptions.scales = {
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            font: {
+              size: 12
+            }
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            color: '#e0e0e0'
+          }
+        }
+      };
+
+      baseOptions.elements = {
+        bar: {
+          borderRadius: 4,
+          borderWidth: 0
+        }
+      };
+    }
+
+    if (isLine) {
+      baseOptions.scales = {
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            font: {
+              size: 12
+            }
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            color: '#e0e0e0'
+          }
+        }
+      };
+
+      baseOptions.elements = {
+        line: {
+          tension: 0.4,
+          borderWidth: 2,
+          fill: false
+        },
+        point: {
+          radius: 4,
+          hoverRadius: 6,
+          backgroundColor: '#fff',
+          borderWidth: 2
+        }
+      };
+    }
+
+    this.chartOptions = baseOptions;
+  }
+
+  changeChartType(type: ChartType): void {
+    this.destroyChart();
+    this.chartType = type;
+    this.updateChartOptions();
+    this.prepareChartData();
+  }
+
+  private renderChart(): void {
+    if (!this.chartCanvas?.nativeElement) return;
+
+    const ctx = this.chartCanvas.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    this.currentChart = new Chart(ctx, {
+      type: this.chartType,
+      data: this.chartData,
+      options: this.chartOptions
+    });
   }
 
   loadCurrentResearchLayer(): void {
@@ -286,7 +479,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     this.filteredRegisters = this.allRegisters.filter(register => {
       const patientInfo = register.patientBasicInfo as PatientBasicInfo;
-      
+      const caregiverInfo = register.caregiver;
+
+      // Filtros existentes
       if (this.filters.sex && patientInfo?.sex !== this.filters.sex) return false;
 
       const age = patientInfo?.age;
@@ -300,28 +495,39 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       if (this.filters.educationLevel && patientInfo?.educationLevel !== this.filters.educationLevel) {
         return false;
       }
-      
+
       if (this.filters.economicStatus && patientInfo?.economicStatus !== this.filters.economicStatus) {
         return false;
       }
-      
+
       if (this.filters.maritalStatus && patientInfo?.maritalStatus !== this.filters.maritalStatus) {
         return false;
       }
-      
-      if (this.filters.hometown && 
-          !patientInfo?.hometown?.toLowerCase().includes(this.filters.hometown.toLowerCase())) {
+
+      if (this.filters.hometown &&
+        !patientInfo?.hometown?.toLowerCase().includes(this.filters.hometown.toLowerCase())) {
         return false;
       }
-      
-      if (this.filters.currentCity && 
-          !patientInfo?.currentCity?.toLowerCase().includes(this.filters.currentCity.toLowerCase())) {
+
+      if (this.filters.currentCity &&
+        !patientInfo?.currentCity?.toLowerCase().includes(this.filters.currentCity.toLowerCase())) {
         return false;
       }
-      
+
       if (this.filters.hasCaregiver !== null) {
         const hasCaregiver = !!register.caregiver;
         if (hasCaregiver !== this.filters.hasCaregiver) return false;
+      }
+
+      // Nuevos filtros para el cuidador
+      if (this.filters.caregiverEducation && caregiverInfo?.educationLevel !== this.filters.caregiverEducation) {
+        return false;
+      }
+
+      if (this.filters.caregiverOccupation && 
+          caregiverInfo?.occupation && 
+          !caregiverInfo.occupation.toLowerCase().includes(this.filters.caregiverOccupation.toLowerCase())) {
+        return false;
       }
 
       if (this.filters.dateRange.start || this.filters.dateRange.end) {
@@ -339,7 +545,8 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
 
     const data = this.filteredRegisters.map(register => {
       const patientInfo = register.patientBasicInfo as PatientBasicInfo;
-      
+      const caregiverInfo = register.caregiver;
+
       return {
         sex: patientInfo?.sex || 'No especificado',
         age: patientInfo?.age || 0,
@@ -352,37 +559,48 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
         hometown: patientInfo?.hometown || 'No especificado',
         currentCity: patientInfo?.currentCity || 'No especificado',
         hasCaregiver: !!register.caregiver,
+        caregiverEducation: caregiverInfo?.educationLevel || 'No especificado',
+        caregiverOccupation: caregiverInfo?.occupation || 'No especificado',
         firstCrisisDate: patientInfo?.firstCrisisDate
       };
     });
 
     this.filteredData.data = data;
     this.totalElements = data.length;
-    
-    this.filteredData.paginator = this.paginator;
-    this.filteredData.sort = this.sort;
+
+    if (this.paginator) {
+      this.filteredData.paginator = this.paginator;
+    }
+    if (this.sort) {
+      this.filteredData.sort = this.sort;
+    }
 
     this.prepareChartData();
   }
 
   prepareChartData(): void {
-    if (this.viewType !== 'chart') return;
+    if (this.viewType !== 'chart') {
+      this.destroyChart();
+      return;
+    }
 
     const dimension1Data = this.groupByDimension(this.selectedDimension1);
-    
+
     if (this.showComparison && this.selectedDimension2) {
       const dimension2Data = this.groupByDimension(this.selectedDimension2);
       this.chartData = this.createComparisonChart(dimension1Data, dimension2Data);
     } else {
       this.chartData = this.createSingleDimensionChart(dimension1Data, this.selectedDimension1);
     }
+
+    this.renderChart();
   }
 
   private groupByDimension(dimension: ChartDimension): Record<string, number> {
     return this.filteredData.data.reduce((acc: Record<string, number>, patient: PatientStat) => {
       let key: string;
-      
-      switch(dimension) {
+
+      switch (dimension) {
         case 'sex':
           key = patient.sex;
           break;
@@ -418,38 +636,78 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
 
   private createSingleDimensionChart(data: Record<string, number>, dimension: ChartDimension): ChartConfiguration['data'] {
     const labels = Object.keys(data);
+    const isBar = this.chartType === 'bar';
+    const isPie = this.chartType === 'pie' || this.chartType === 'doughnut';
+    const isLine = this.chartType === 'line';
+
     return {
       labels: labels,
       datasets: [{
         data: Object.values(data),
-        backgroundColor: this.chartColors.slice(0, labels.length),
-        label: this.dimensionLabels[dimension]
+        backgroundColor: isBar ? this.chartColors[0] :
+          isLine ? 'transparent' :
+            this.chartColors.slice(0, labels.length),
+        borderColor: isLine ? this.chartColors[0] : '#fff',
+        borderWidth: isPie ? 1 : isLine ? 2 : 0,
+        pointBackgroundColor: isLine ? '#fff' : undefined,
+        pointBorderColor: isLine ? this.chartColors[0] : undefined,
+        pointBorderWidth: isLine ? 2 : undefined,
+        pointRadius: isLine ? 4 : undefined,
+        pointHoverRadius: isLine ? 6 : undefined,
+        label: this.dimensionLabels[dimension],
+        fill: false
       }]
     };
   }
 
   private createComparisonChart(
-    data1: Record<string, number>, 
+    data1: Record<string, number>,
     data2: Record<string, number>
   ): ChartConfiguration['data'] {
-    const allLabels = new Set([...Object.keys(data1), ...Object.keys(data2)]);
-    const labels = Array.from(allLabels);
-    
+    const allLabels = Array.from(new Set([...Object.keys(data1), ...Object.keys(data2)]));
+
+    const backgroundColors = allLabels.map((_, i) => {
+      return this.chartColors[i % this.chartColors.length];
+    });
+
     return {
-      labels: labels,
+      labels: allLabels,
       datasets: [
         {
           label: this.dimensionLabels[this.selectedDimension1],
-          data: labels.map(label => data1[label] || 0),
-          backgroundColor: this.chartColors[0]
+          data: allLabels.map(label => data1[label] || 0),
+          backgroundColor: this.chartType === 'line' ? 'transparent' : backgroundColors,
+          borderColor: backgroundColors[0],
+          borderWidth: this.chartType === 'line' ? 2 : 1,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: backgroundColors[0],
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
         },
         {
           label: this.dimensionLabels[this.selectedDimension2!],
-          data: labels.map(label => data2[label] || 0),
-          backgroundColor: this.chartColors[1]
+          data: allLabels.map(label => data2[label] || 0),
+          backgroundColor: this.chartType === 'line' ? 'transparent' : backgroundColors.map(color => this.adjustColorOpacity(color, 0.6)),
+          borderColor: backgroundColors[1],
+          borderWidth: this.chartType === 'line' ? 2 : 1,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: backgroundColors[1],
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
         }
       ]
     };
+  }
+
+  private adjustColorOpacity(color: string, opacity: number): string {
+    if (color.startsWith('rgba')) return color;
+
+    const r = parseInt(color.substring(1, 3), 16);
+    const g = parseInt(color.substring(3, 5), 16);
+    const b = parseInt(color.substring(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   }
 
   exportToCSV(): void {
@@ -547,7 +805,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       maritalStatus: '',
       hometown: '',
       currentCity: '',
-      hasCaregiver: null
+      hasCaregiver: null,
+      caregiverEducation: '',
+      caregiverOccupation: ''
     };
     this.applyFilters();
   }
@@ -564,13 +824,27 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
   }
 
   exportChartAsImage(): void {
-    const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+    if (!this.currentChart) {
+      console.warn('No chart to export');
+      return;
+    }
+
+    const canvas = this.chartCanvas.nativeElement;
     if (canvas) {
       const image = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = 'grafico_epilepsia.png';
       link.href = image;
       link.click();
+    }
+  }
+
+  toggleView(view: 'chart' | 'table'): void {
+    this.viewType = view;
+    if (view === 'chart') {
+      this.prepareChartData();
+    } else {
+      this.destroyChart();
     }
   }
 }

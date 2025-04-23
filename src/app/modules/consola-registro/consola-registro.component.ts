@@ -295,14 +295,14 @@ export class ConsolaRegistroComponent implements OnInit {
     return new Promise((resolve, reject) => {
       this.isLoading = true;
       this.errorMessage = null;
-  
+
       const email = this.authService.getUserEmail();
       if (!email) {
         this.handleError('No se pudo obtener el email del usuario');
         reject('Email no disponible');
         return;
       }
-  
+
       this.consolaService.obtenerUsuarioAutenticado(email).subscribe({
         next: (response) => {
           if (!response?.[0]) {
@@ -310,7 +310,7 @@ export class ConsolaRegistroComponent implements OnInit {
             reject('Respuesta inválida');
             return;
           }
-  
+
           this.userData = response[0];
           resolve();
         },
@@ -329,7 +329,7 @@ export class ConsolaRegistroComponent implements OnInit {
   loadCapaInvestigacion(): Promise<void> {
     return new Promise((resolve, reject) => {
       const researchLayerId = this.userData?.attributes?.researchLayerId?.[0];
-  
+
       if (!researchLayerId) {
         console.warn('No se encontró ID de capa en userData');
         this.isLoading = false;
@@ -337,7 +337,7 @@ export class ConsolaRegistroComponent implements OnInit {
         reject('No hay ID de capa');
         return;
       }
-  
+
       this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({
         next: (capa) => {
           if (!capa?.id) {
@@ -345,7 +345,7 @@ export class ConsolaRegistroComponent implements OnInit {
             reject('Capa inválida');
             return;
           }
-  
+
           this.currentResearchLayer = capa;
           this.updateDatosCapa(capa);
           this.loadVariablesDeCapa(capa.id);
@@ -392,7 +392,7 @@ export class ConsolaRegistroComponent implements OnInit {
   loadRegistros(page: number = 0, size: number = 10, query: string = '') {
     if (!this.currentResearchLayer?.id) {
       console.warn('No hay capa de investigación asignada - Intentando cargar...');
-      
+
       this.loadCapaInvestigacion().then(() => {
         if (this.currentResearchLayer?.id) {
           this.loadRegistros(page, size, query);
@@ -404,12 +404,12 @@ export class ConsolaRegistroComponent implements OnInit {
         this.resetRegistros();
         console.error('Error al cargar capa:', err);
       });
-      
+
       return;
     }
-  
+
     this.loadingRegistros = true;
-  
+
     this.consolaService.obtenerRegistrosPorCapa(
       this.currentResearchLayer.id,
       page,
@@ -451,7 +451,7 @@ export class ConsolaRegistroComponent implements OnInit {
    */
   loadRegistrosPorPaciente(patientIdentificationNumber: number, page: number = 0, size: number = 10) {
     this.loadingRegistros = true;
-  
+
     this.consolaService.obtenerRegistrosPorPaciente(patientIdentificationNumber, page, size)
       .subscribe({
         next: (response) => this.procesarRespuestaRegistros(response),
@@ -665,7 +665,7 @@ export class ConsolaRegistroComponent implements OnInit {
   onPageChange(event: any) {
     this.currentPage = event.page;
     this.pageSize = event.rows;
-    
+
     if (this.modoBusqueda === 'profesional') {
       this.loadRegistrosPorProfesional(Number(this.profesionalBuscado), event.page, event.rows);
     } else if (this.modoBusqueda === 'paciente') {
@@ -686,33 +686,39 @@ export class ConsolaRegistroComponent implements OnInit {
    */
   private procesarRespuestaRegistros(response: any): void {
     this.registros = response.registers || [];
-  
+
     this.usuariosData = this.registros.map(registro => ({
       nombre: registro.patientBasicInfo?.name || 'No disponible',
       documento: registro.patientIdentificationNumber.toString(),
-      fechaRegistro: registro.registerDate
-        ? new Date(registro.registerDate).toLocaleDateString()
-        : 'Fecha no disponible',
+      fechaRegistro: registro.updateRegisterDate
+        ? new Date(registro.updateRegisterDate).toLocaleDateString()
+        : registro.registerDate
+          ? new Date(registro.registerDate).toLocaleDateString()
+          : 'Fecha no disponible',
       registradoPor: registro.healthProfessional?.name || 'Desconocido',
       _fullData: registro
     }));
-  
+
     this.currentPage = response.currentPage || 0;
     this.totalPages = response.totalPages || 0;
     this.totalElements = response.totalElements || 0;
     this.totalPacientes = this.totalElements;
-  
+
     this.registrosRecientes = this.registros
-      .sort((a, b) => new Date(b.registerDate).getTime() - new Date(a.registerDate).getTime())
+      .sort((a, b) => {
+        const dateA = a.updateRegisterDate || a.registerDate;
+        const dateB = b.updateRegisterDate || b.registerDate;
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      })
       .slice(0, 3)
       .map(registro => ({
         nombre: registro.patientBasicInfo?.name || 'No disponible',
         documento: registro.patientIdentificationNumber.toString(),
-        fecha: registro.registerDate,
+        fecha: registro.updateRegisterDate || registro.registerDate,
         registradoPor: registro.healthProfessional?.name || 'Desconocido',
         _fullData: registro
       }));
-  
+
     this.loadingRegistros = false;
     this.cdr.detectChanges();
   }

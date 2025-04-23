@@ -91,12 +91,14 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Ciudad de Origen</mat-label>
-        <input matInput type="text" [(ngModel)]="filters.hometown" (ngModelChange)="applyFilters()" placeholder="Filtrar por ciudad">
+        <input matInput type="text" [(ngModel)]="filters.hometown" (ngModelChange)="applyFilters()"
+          placeholder="Filtrar por ciudad">
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Ciudad Actual</mat-label>
-        <input matInput type="text" [(ngModel)]="filters.currentCity" (ngModelChange)="applyFilters()" placeholder="Filtrar por ciudad">
+        <input matInput type="text" [(ngModel)]="filters.currentCity" (ngModelChange)="applyFilters()"
+          placeholder="Filtrar por ciudad">
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -106,6 +108,25 @@
           <mat-option [value]="true">Con cuidador</mat-option>
           <mat-option [value]="false">Sin cuidador</mat-option>
         </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Educación del Cuidador</mat-label>
+        <mat-select [(ngModel)]="filters.caregiverEducation" (selectionChange)="applyFilters()">
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="primaria">Primaria</mat-option>
+          <mat-option value="secundaria">Secundaria</mat-option>
+          <mat-option value="tecnico">Técnico</mat-option>
+          <mat-option value="universitario">Universitario</mat-option>
+          <mat-option value="postgrado">Postgrado</mat-option>
+          <mat-option value="ninguno">Ninguno</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline">
+        <mat-label>Ocupación del Cuidador</mat-label>
+        <input matInput type="text" [(ngModel)]="filters.caregiverOccupation" 
+               (ngModelChange)="applyFilters()" placeholder="Filtrar por ocupación">
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="date-range-field">
@@ -120,8 +141,8 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Buscar Variable</mat-label>
-        <input matInput type="text" [(ngModel)]="filters.variableName" 
-               (ngModelChange)="applyFilters()" placeholder="Nombre de variable">
+        <input matInput type="text" [(ngModel)]="filters.variableName" (ngModelChange)="applyFilters()"
+          placeholder="Nombre de variable">
       </mat-form-field>
     </div>
 
@@ -168,7 +189,7 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-      
+
         <!-- Dimensión principal -->
         <mat-form-field appearance="outline">
           <mat-label>Dimensión Principal</mat-label>
@@ -178,12 +199,12 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-      
+
         <!-- Checkbox de comparación (DEBE estar antes del segundo selector) -->
         <mat-checkbox [(ngModel)]="showComparison" (change)="prepareChartData()">
           Comparar con
         </mat-checkbox>
-      
+
         <!-- Selector de dimensión secundaria (solo visible cuando showComparison es true) -->
         <mat-form-field appearance="outline" *ngIf="showComparison">
           <mat-label>Dimensión Secundaria</mat-label>
@@ -193,7 +214,7 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-      
+
         <!-- Botón de exportación -->
         <div class="chart-export-options" *ngIf="filteredData.data.length > 0">
           <button mat-icon-button (click)="exportChartAsImage()" matTooltip="Exportar como imagen">
@@ -203,10 +224,7 @@
       </div>
 
       <div *ngIf="filteredData.data.length > 0" class="chart-container">
-        <canvas baseChart
-                [type]="chartType"
-                [data]="chartData"
-                [options]="chartOptions">
+        <canvas baseChart [type]="chartType" [data]="chartData" [options]="chartOptions">
         </canvas>
       </div>
 

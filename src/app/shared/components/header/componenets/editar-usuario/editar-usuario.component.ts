@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from 'src/app/login/services/auth.service';
 import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-editar-usuario',
@@ -90,28 +91,10 @@ export class EditarUsuarioComponent implements OnInit {
       username: userData.username || '',
       identificationType: attributes.identificationType || '',
       identificationNumber: attributes.identificationNumber || '',
-      birthDate: attributes.birthDate ? this.formatDateForInput(attributes.birthDate) : '',
+      birthDate: attributes.birthDate,
       researchLayer: attributes.researchLayerId || '',
       role: attributes.role || this.authService.getUserRole()
     });
-  }
-  
-
-  private formatDateForInput(dateString: string): string {
-    if (!dateString) return '';
-    
-    try {
-      // Asegurarse de que la fecha esté en formato YYYY-MM-DD
-      const date = new Date(dateString);
-      const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      
-      return `${year}-${month}-${day}`;
-    } catch (error) {
-      console.error('Error formateando fecha:', error);
-      return '';
-    }
   }
 
   onSubmit(): void {
@@ -126,6 +109,8 @@ export class EditarUsuarioComponent implements OnInit {
 
   private getFormData(): any {
     const formValue = this.editForm.getRawValue();
+    
+  
     return {
       firstName: formValue.firstName,
       lastName: formValue.lastName,
@@ -133,8 +118,9 @@ export class EditarUsuarioComponent implements OnInit {
       username: formValue.username,
       password: formValue.password || undefined,
       identificationType: formValue.identificationType,
-      identificationNumber: formValue.identificationNumber,
-      birthDate: formValue.birthDate,
+      identificationNumber: Number(formValue.identificationNumber),
+      birthDate: formValue.birthDate || '',
+      // Usamos la fecha formateada
       researchLayer: formValue.researchLayer,
       role: formValue.role
     };
@@ -160,24 +146,42 @@ export class EditarUsuarioComponent implements OnInit {
   }
 
   private handleUpdateSuccess(response: any, updateData: any): void {
-    // Actualizar datos locales
     this.authService.updateUserData({
       username: updateData.username,
       firstName: updateData.firstName,
       lastName: updateData.lastName
     });
-    
-    this.updateSuccess.emit(response);
-    this.closeModal();
+  
+    Swal.fire({
+      icon: 'success',
+      title: 'Usuario actualizado',
+      text: 'Los datos se actualizaron correctamente.',
+      confirmButtonText: 'Aceptar'
+    }).then(() => {
+      // Asegurarse de que solo se emita una vez
+      this.updateSuccess.emit(response);
+      this.closeModal();
+    });
+  
     this.isUpdating = false;
   }
 
   private handleUpdateError(error: any): void {
-    this.errorMessage = 'Error al actualizar el usuario: ' + 
-      (error.error?.message || error.message || 'Error desconocido');
+    const message = error.error?.message || error.message || 'Error desconocido';
+  
+    this.errorMessage = 'Error al actualizar el usuario: ' + message;
     this.isUpdating = false;
+  
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al actualizar',
+      text: message,
+      confirmButtonText: 'Cerrar'
+    });
+  
     console.error('Error updating user:', error);
   }
+  
 
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {

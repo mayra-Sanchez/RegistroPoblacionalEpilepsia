@@ -178,9 +178,17 @@ export class DataTableComponent implements OnChanges {
   formatDate(dateString: string): string {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return isNaN(date.getTime()) ? 'Fecha inválida' : date.toLocaleString();
+  
+    // Usamos fecha local sin ajustar a zona horaria
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
-
+  
   /**
    * Formatea conteos (ej: variablesRegister.length)
    * @param value Valor a formatear
