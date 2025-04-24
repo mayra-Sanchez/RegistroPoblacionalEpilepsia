@@ -153,18 +153,18 @@ export class ConsolaAdministradorService {
   private isAdmin(): boolean {
     const token = localStorage.getItem('kc_token');
     if (!token) return false;
-  
+
     try {
       const decoded: any = jwtDecode(token);
       // Roles de cliente específico
       const clientRoles = decoded.resource_access?.['registers-users-api-rest']?.roles || [];
       // Roles de realm (globales)
       const realmRoles = decoded.realm_access?.roles || [];
-      
+
       // Verifica ambos tipos de roles
-      return clientRoles.includes('Admin_client_role') || 
-             clientRoles.includes('SuperAdmin_client_role') ||
-             realmRoles.includes('SuperAdmin');
+      return clientRoles.includes('Admin_client_role') ||
+        clientRoles.includes('SuperAdmin_client_role') ||
+        realmRoles.includes('SuperAdmin');
     } catch (error) {
       console.error('Error decodificando token:', error);
       return false;
@@ -181,9 +181,9 @@ export class ConsolaAdministradorService {
     if (!this.authService.isLoggedIn()) {
       return throwError(() => new Error('Usuario no autenticado'));
     }
-  
+
     const headers = this.getAuthHeaders();
-    
+
     return this.http.get<any[]>(`${this.API_LAYERS}/GetAll`, { headers }).pipe(
       catchError(error => {
         if (error.status === 403) {
@@ -311,12 +311,31 @@ export class ConsolaAdministradorService {
    * @returns Observable con la respuesta
    */
   updateUsuario(userId: string, usuario: any): Observable<any> {
-    if (!this.isAdmin()) {
-      console.error('⛔ Acceso denegado: solo los administradores pueden actualizar usuarios.');
-      return throwError(() => new Error('⛔ Acceso denegado.'));
-    }
-
     const url = `${this.API_USERS}/update?userId=${userId}`;
+
+    // Función para formatear la fecha
+    const formatDate = (dateStr: string): string => {
+      if (!dateStr) return '';
+
+      // Si ya está en formato YYYY-MM-DD, retornar directamente
+      if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+      }
+
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '';
+
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+      } catch (error) {
+        console.error('Error formateando fecha:', error);
+        return '';
+      }
+    };
 
     const payload = {
       firstName: usuario.firstName || usuario.nombre,
@@ -326,10 +345,12 @@ export class ConsolaAdministradorService {
       password: usuario.password || '',
       identificationType: usuario.identificationType || usuario.tipoDocumento,
       identificationNumber: usuario.identificationNumber || usuario.documento,
-      birthDate: usuario.birthDate || usuario.fechaNacimiento,
+      birthDate: formatDate(usuario.birthDate || usuario.fechaNacimiento),
       researchLayer: usuario.researchLayer || usuario.capaRawValue || usuario.capaId,
       role: usuario.role
     };
+
+    console.log('Payload enviado:', payload); // Para debugging
 
     return this.http.put<any>(url, payload, { headers: this.getAuthHeaders() }).pipe(
       tap(updatedUser => {
@@ -342,7 +363,6 @@ export class ConsolaAdministradorService {
       })
     );
   }
-
   /**
    * Elimina un usuario (solo para administradores)
    * @param userId ID del usuario a eliminar

@@ -1,0 +1,79 @@
+<div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa fa-user-edit"></i>
+          <h5>Editar Perfil de Usuario</h5>
+        </div>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-header">
+          <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" formControlName="firstName" class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label>Apellido</label>
+              <input type="text" formControlName="lastName" class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" formControlName="email" class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label>Nombre de usuario</label>
+              <input type="text" formControlName="username" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label>Contraseña (dejar vacío para no cambiar)</label>
+              <div class="input-group">
+                <input [type]="showPassword ? 'text' : 'password'" 
+                       formControlName="password" 
+                       class="form-control">
+                <div class="input-group-append">
+                  <button type="button" class="btn" (click)="togglePasswordVisibility()">
+                    <i class="fa" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Tipo de identificación</label>
+              <select formControlName="identificationType" class="form-control">
+                <option value="CC">Cédula de ciudadanía</option>
+                <option value="TI">Tarjeta de identidad</option>
+                <option value="CE">Cédula de extranjería</option>
+                <option value="PA">Pasaporte</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>Número de identificación</label>
+              <input type="text" formControlName="identificationNumber" class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label>Fecha de nacimiento</label>
+              <input type="date" formControlName="birthDate" class="form-control">
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()">
+          <i class="fa fa-times"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" (click)="onSubmit()" [disabled]="editForm.invalid">
+          <i class="fa fa-save"></i> Guardar cambios
+        </button>
+      </div>
+    </div>
+  </div>
