@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SignatureFormComponent } from './signature-form.component';
+import { SignaturePadComponent } from './signature-form.component';
 
 describe('SignatureFormComponent', () => {
-  let component: SignatureFormComponent;
-  let fixture: ComponentFixture<SignatureFormComponent>;
+  let component: SignaturePadComponent;
+  let fixture: ComponentFixture<SignaturePadComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [SignatureFormComponent]
+      declarations: [SignaturePadComponent]
     });
-    fixture = TestBed.createComponent(SignatureFormComponent);
+    fixture = TestBed.createComponent(SignaturePadComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

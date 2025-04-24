@@ -15,9 +15,19 @@ import { MatSort } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
+/**
+ * Tipos de estado de crisis posibles para un paciente
+ */
 type CrisisStatus = 'Activa' | 'Remisión' | 'Estable' | 'Crítica' | 'Recuperado' | string;
+
+/**
+ * Dimensiones disponibles para visualización en gráficos
+ */
 type ChartDimension = 'sex' | 'education' | 'economic' | 'marital' | 'crisis' | 'currentCity' | 'hometown' | 'caregiver';
 
+/**
+ * Interfaz que representa la información básica de un paciente
+ */
 interface PatientBasicInfo {
   name: string;
   sex: string;
@@ -43,6 +53,9 @@ interface PatientBasicInfo {
   };
 }
 
+/**
+ * Interfaz que representa las estadísticas de un paciente para visualización
+ */
 interface PatientStat {
   sex: string;
   age: number;
@@ -60,21 +73,33 @@ interface PatientStat {
   firstCrisisDate?: string;
 }
 
+/**
+ * Componente para consulta dinámica de registros de pacientes con epilepsia
+ * 
+ * Permite:
+ * - Filtrar registros por múltiples criterios
+ * - Visualizar datos en tabla o gráficos
+ * - Comparar diferentes dimensiones de datos
+ * - Exportar resultados en varios formatos (CSV, Excel, PDF, imagen)
+ */
 @Component({
   selector: 'app-consulta-dinamica',
   templateUrl: './consulta-dinamica.component.html',
   styleUrls: ['./consulta-dinamica.component.css']
 })
 export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
+  // Referencias a elementos del template
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
 
-  allRegisters: Register[] = [];
-  filteredRegisters: Register[] = [];
-  filteredData = new MatTableDataSource<PatientStat>([]);
-  currentChart: Chart | null = null;
+  // Datos
+  allRegisters: Register[] = []; // Todos los registros cargados
+  filteredRegisters: Register[] = []; // Registros después de aplicar filtros
+  filteredData = new MatTableDataSource<PatientStat>([]); // Datos para la tabla
+  currentChart: Chart | null = null; // Instancia del gráfico actual
 
+  // Configuración de filtros
   filters = {
     patientName: '',
     variableName: '',
@@ -94,61 +119,24 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     caregiverOccupation: ''
   };
 
+  // Paginación
   currentPage = 0;
   pageSize = 10;
   totalElements = 0;
   totalPages = 0;
 
-  viewType: 'chart' | 'table' = 'table';
-  chartType: ChartType = 'bar';
-  chartData: ChartConfiguration['data'] = { labels: [], datasets: [] };
-  chartOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          font: {
-            size: 14
-          }
-        }
-      },
-      tooltip: {
-        enabled: true,
-        callbacks: {
-          label: (context) => {
-            const label = context.dataset.label || '';
-            const value = context.raw as number;
-            const data = context.dataset.data as number[];
-            const total = data.reduce((a: number, b: number) => a + b, 0);
-            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-            return `${label}: ${value} (${percentage}%)`;
-          }
-        }
-      },
-      datalabels: {
-        display: false
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1
-        }
-      }
-    },
-    elements: {
-      arc: {
-        borderWidth: 0
-      }
-    }
-  };
+  // Configuración de visualización
+  viewType: 'chart' | 'table' = 'table'; // Vista actual (tabla o gráfico)
+  chartType: ChartType = 'bar'; // Tipo de gráfico seleccionado
+  chartData: ChartConfiguration['data'] = { labels: [], datasets: [] }; // Datos para el gráfico
+  chartOptions: ChartConfiguration['options'] = { /* Configuración inicial del gráfico */ };
 
+  // Dimensiones disponibles para gráficos
   availableDimensions: ChartDimension[] = [
     'sex', 'education', 'economic', 'marital', 'crisis', 'currentCity', 'hometown', 'caregiver'
   ];
 
+  // Etiquetas para las dimensiones
   dimensionLabels = {
     sex: 'Sexo',
     education: 'Nivel Educativo',
@@ -160,47 +148,68 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     caregiver: 'Tiene Cuidador'
   };
 
+  // Columnas a mostrar en la tabla
   displayedColumns: string[] = [
     'sex', 'age', 'status', 'date', 'educationLevel',
     'economicStatus', 'maritalStatus', 'city', 'hasCaregiver', 'variables'
   ];
 
+  // Dimensiones seleccionadas para comparación
   selectedDimension1: ChartDimension = 'sex';
   selectedDimension2: ChartDimension | null = null;
-  showComparison: boolean = false;
+  showComparison: boolean = false; // Mostrar comparación de dimensiones
 
+  // Tipos de gráficos disponibles
   availableChartTypes: ChartType[] = ['bar', 'pie', 'doughnut', 'line', 'radar'];
   chartColors = ['#4CAF50', '#2196F3', '#FFC107', '#F44336', '#9C27B0', '#607D8B', '#795548'];
 
+  // Estado de la capa de investigación
   currentResearchLayer: ResearchLayer | null = null;
-  loading = false;
-  errorMessage = '';
+  loading = false; // Indicador de carga
+  errorMessage = ''; // Mensajes de error
 
-  private destroy$ = new Subject<void>();
+  private destroy$ = new Subject<void>(); // Para manejo de suscripciones
 
+  /**
+   * Constructor del componente
+   * @param registerService Servicio para obtener registros de pacientes
+   * @param authService Servicio de autenticación
+   */
   constructor(
     private registerService: ConsolaRegistroService,
     private authService: AuthService
   ) {
-    Chart.register(...registerables, ChartDataLabels);
+    Chart.register(...registerables, ChartDataLabels); // Registra plugins de Chart.js
   }
 
+  /**
+   * Inicialización del componente
+   */
   ngOnInit(): void {
     this.loadCurrentResearchLayer();
     this.updateChartOptions();
   }
 
+  /**
+   * Configura paginación y ordenamiento después de que la vista se inicializa
+   */
   ngAfterViewInit() {
     this.filteredData.paginator = this.paginator;
     this.filteredData.sort = this.sort;
   }
 
+  /**
+   * Limpieza al destruir el componente
+   */
   ngOnDestroy(): void {
     this.destroyChart();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
+  /**
+   * Destruye el gráfico actual si existe
+   */
   private destroyChart(): void {
     if (this.currentChart) {
       this.currentChart.destroy();
@@ -208,6 +217,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Actualiza las opciones del gráfico según el tipo seleccionado
+   */
   updateChartOptions() {
     const isCircular = this.chartType === 'pie' || this.chartType === 'doughnut';
     const isBar = this.chartType === 'bar';
@@ -247,6 +259,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       }
     };
 
+    // Configuración específica para gráficos circulares
     if (isCircular) {
       baseOptions.plugins = {
         ...baseOptions.plugins,
@@ -277,6 +290,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       };
     }
 
+    // Configuración específica para gráficos de barras
     if (isBar) {
       baseOptions.scales = {
         x: {
@@ -311,6 +325,7 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
       };
     }
 
+    // Configuración específica para gráficos de líneas
     if (isLine) {
       baseOptions.scales = {
         x: {
@@ -355,6 +370,10 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     this.chartOptions = baseOptions;
   }
 
+  /**
+   * Cambia el tipo de gráfico y actualiza la visualización
+   * @param type Tipo de gráfico a mostrar
+   */
   changeChartType(type: ChartType): void {
     this.destroyChart();
     this.chartType = type;
@@ -362,6 +381,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     this.prepareChartData();
   }
 
+  /**
+   * Renderiza el gráfico en el canvas
+   */
   private renderChart(): void {
     if (!this.chartCanvas?.nativeElement) return;
 
@@ -375,6 +397,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Carga la capa de investigación actual del usuario
+   */
   loadCurrentResearchLayer(): void {
     this.loading = true;
 
@@ -406,6 +431,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Carga los datos iniciales de registros
+   */
   loadInitialData(): void {
     if (!this.currentResearchLayer?.id) {
       this.errorMessage = 'No se ha configurado la capa de investigación';
@@ -436,12 +464,21 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Maneja el cambio de página
+   * @param event Evento de paginación
+   */
   onPageChange(event: any): void {
     this.currentPage = event.pageIndex;
     this.pageSize = event.pageSize;
     this.loadInitialData();
   }
 
+  /**
+   * Obtiene la etiqueta legible para el nivel educativo
+   * @param value Valor del nivel educativo
+   * @returns Etiqueta traducida
+   */
   getEducationLabel(value: string): string {
     const labels: Record<string, string> = {
       'primaria': 'Primaria',
@@ -454,6 +491,11 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     return value in labels ? labels[value] : value;
   }
 
+  /**
+   * Obtiene la etiqueta legible para el nivel socioeconómico
+   * @param value Valor del nivel socioeconómico
+   * @returns Etiqueta traducida
+   */
   getEconomicStatusLabel(value: string): string {
     const labels: Record<string, string> = {
       'bajo': 'Bajo',
@@ -465,6 +507,11 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     return value in labels ? labels[value] : value;
   }
 
+  /**
+   * Obtiene la etiqueta legible para el estado civil
+   * @param value Valor del estado civil
+   * @returns Etiqueta traducida
+   */
   getMaritalStatusLabel(value: string): string {
     const labels: Record<string, string> = {
       'soltero': 'Soltero/a',
@@ -476,6 +523,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     return value in labels ? labels[value] : value;
   }
 
+  /**
+   * Aplica todos los filtros configurados a los datos
+   */
   applyFilters(): void {
     this.filteredRegisters = this.allRegisters.filter(register => {
       const patientInfo = register.patientBasicInfo as PatientBasicInfo;
@@ -578,6 +628,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     this.prepareChartData();
   }
 
+  /**
+   * Prepara los datos para ser visualizados en gráficos
+   */
   prepareChartData(): void {
     if (this.viewType !== 'chart') {
       this.destroyChart();
@@ -596,6 +649,11 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     this.renderChart();
   }
 
+  /**
+   * Agrupa los datos por la dimensión especificada
+   * @param dimension Dimensión por la cual agrupar
+   * @returns Objeto con conteos agrupados por valores de la dimensión
+   */
   private groupByDimension(dimension: ChartDimension): Record<string, number> {
     return this.filteredData.data.reduce((acc: Record<string, number>, patient: PatientStat) => {
       let key: string;
@@ -634,6 +692,12 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     }, {});
   }
 
+  /**
+   * Crea un gráfico para una sola dimensión
+   * @param data Datos agrupados por dimensión
+   * @param dimension Dimensión que se está visualizando
+   * @returns Configuración de datos para el gráfico
+   */
   private createSingleDimensionChart(data: Record<string, number>, dimension: ChartDimension): ChartConfiguration['data'] {
     const labels = Object.keys(data);
     const isBar = this.chartType === 'bar';
@@ -660,6 +724,12 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     };
   }
 
+  /**
+   * Crea un gráfico de comparación entre dos dimensiones
+   * @param data1 Datos de la primera dimensión
+   * @param data2 Datos de la segunda dimensión
+   * @returns Configuración de datos para el gráfico comparativo
+   */
   private createComparisonChart(
     data1: Record<string, number>,
     data2: Record<string, number>
@@ -701,6 +771,12 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     };
   }
 
+  /**
+   * Ajusta la opacidad de un color hexadecimal
+   * @param color Color en formato hexadecimal
+   * @param opacity Opacidad deseada (0-1)
+   * @returns Color en formato rgba
+   */
   private adjustColorOpacity(color: string, opacity: number): string {
     if (color.startsWith('rgba')) return color;
 
@@ -710,6 +786,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   }
 
+  /**
+   * Exporta los datos filtrados a CSV
+   */
   exportToCSV(): void {
     const headers = [
       'Sexo', 'Edad', 'Estado de crisis', 'Fecha registro',
@@ -737,6 +816,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     saveAs(blob, `estadisticas_epilepsia_${new Date().toISOString().slice(0, 10)}.csv`);
   }
 
+  /**
+   * Exporta los datos filtrados a Excel
+   */
   exportToExcel(): void {
     const data = this.filteredData.data.map(p => ({
       'Sexo': p.sex,
@@ -757,6 +839,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     XLSX.writeFile(workbook, `estadisticas_epilepsia_${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
+  /**
+   * Exporta los datos filtrados a PDF
+   */
   exportToPDF(): void {
     const doc = new jsPDF();
     const title = 'Reporte de Epilepsia - Estadísticas';
@@ -790,6 +875,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     doc.save(`reporte_epilepsia_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
+  /**
+   * Reinicia todos los filtros a sus valores por defecto
+   */
   resetFilters(): void {
     this.filters = {
       patientName: '',
@@ -812,6 +900,11 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  /**
+   * Obtiene el color asociado a un estado de crisis
+   * @param status Estado de crisis
+   * @returns Color en formato hexadecimal
+   */
   getStatusColor(status: string): string {
     switch (status.toLowerCase()) {
       case 'activa': return '#4CAF50';
@@ -823,6 +916,9 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Exporta el gráfico actual como imagen PNG
+   */
   exportChartAsImage(): void {
     if (!this.currentChart) {
       console.warn('No chart to export');
@@ -839,6 +935,10 @@ export class ConsultaDinamicaComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Cambia entre vista de tabla y gráfico
+   * @param view Tipo de vista a mostrar ('table' o 'chart')
+   */
   toggleView(view: 'chart' | 'table'): void {
     this.viewType = view;
     if (view === 'chart') {
