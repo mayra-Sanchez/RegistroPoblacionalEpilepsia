@@ -1,35 +1,64 @@
-<div class="container">
-    <div *ngIf="loading" class="loading-spinner">
-      <mat-spinner></mat-spinner>
-      <p>Cargando datos...</p>
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Panel de Investigación Epidemiológica</h1>
+    <p *ngIf="currentResearchLayer?.name">Capa actual: {{ currentResearchLayer.name }}</p>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando datos de investigación...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="errorMessage" class="error-overlay mat-elevation-z2">
+    <mat-icon color="warn">error_outline</mat-icon>
+    <p>{{ errorMessage }}</p>
+    <button mat-stroked-button color="warn" (click)="loadCurrentResearchLayer()">Reintentar</button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div *ngIf="!loading && !errorMessage" class="dashboard-content">
+    <!-- Tarjetas resumen -->
+    <div class="summary-cards">
+      <mat-card *ngFor="let card of summaryCards" class="summary-card mat-elevation-z2">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>{{card.icon}}</mat-icon>
+          <mat-card-title>{{card.title}}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="card-value">{{card.value}}</div>
+          <div class="card-trend" [class.up]="card.trend === 'up'" 
+                                [class.down]="card.trend === 'down'">
+            <mat-icon>{{card.trend === 'up' ? 'arrow_upward' : 
+                       card.trend === 'down' ? 'arrow_downward' : 'remove'}}</mat-icon>
+            <span>{{card.change}}%</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
-  
-    <div *ngIf="errorMessage" class="error-message">
-      <mat-icon>error_outline</mat-icon>
-      <p>{{ errorMessage }}</p>
-    </div>
-  
-    <div *ngIf="!loading && !errorMessage" class="charts-container">
-      <h2>Resumen de Datos Epidemiológicos</h2>
-      
-      <div class="chart-row">
-        <div class="chart-container">
-          <h3>Distribución por Sexo y Estado de Crisis</h3>
-          <canvas baseChart 
-            [data]="chartData1" 
-            [type]="chartType1" 
-            [options]="chartOptions">
+
+    <!-- Gráficas principales -->
+    <div class="main-charts">
+      <mat-card class="chart-card mat-elevation-z2">
+        <mat-card-header>
+          <mat-card-title>Distribución por Sexo</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <canvas #chartCanvas1 baseChart [data]="chartData1" [type]="chartType1" [options]="barChartOptions">
           </canvas>
-        </div>
-        
-        <div class="chart-container">
-          <h3>Distribución por Nivel Educativo</h3>
-          <canvas baseChart 
-            [data]="chartData2" 
-            [type]="chartType2" 
-            [options]="chartOptions">
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="chart-card mat-elevation-z2">
+        <mat-card-header>
+          <mat-card-title>Tipos de Crisis</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <canvas #chartCanvas2 baseChart [data]="chartData2" [type]="chartType2" [options]="pieChartOptions">
           </canvas>
-        </div>
-      </div>
+        </mat-card-content>
+      </mat-card>
     </div>
   </div>
+</div>
