@@ -1,5 +1,8 @@
 import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import * as L from 'leaflet';
+import emailjs, { EmailJSResponseStatus } from 'emailjs-com';
+import { jsPDF } from 'jspdf';
 
 interface Institucion {
   id: number;
@@ -46,7 +49,28 @@ interface Persona {
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements AfterViewInit {
-  constructor(private cdRef: ChangeDetectorRef) { }
+  registrationForm: FormGroup;
+  isSending = false;
+  showSuccessMessage = false;
+
+  constructor(private cdRef: ChangeDetectorRef, private fb: FormBuilder) {
+    // Inicializa EmailJS (reemplaza con tus credenciales)
+    emailjs.init('xK_AFqrBlOus7c0oD');
+    
+    this.registrationForm = this.fb.group({
+      nombre: new FormControl('', [Validators.required]),
+      apellido: new FormControl('', [Validators.required]),
+      tipoDocumento: new FormControl('', [Validators.required]),
+      numeroDocumento: new FormControl('', [Validators.required, Validators.pattern('^[0-9]+$')]),
+      fechaNacimiento: new FormControl('', [Validators.required]),
+      rol: new FormControl('', [Validators.required]),
+      capaInvestigacion: new FormControl('', [Validators.required]),
+      email: new FormControl('', [Validators.required, Validators.email]),
+      password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+      responsable: new FormControl('', [Validators.required])
+    });
+  }
+
   selectedTab: string = 'inicio';
   personaSeleccionada: Persona | null = null;
   instituciones: Institucion[] = [
@@ -389,5 +413,177 @@ export class HomeComponent implements AfterViewInit {
         this.map = null;
       }
     }
+  }
+
+  openRegistrationModal(): void {
+    this.showSuccessMessage = false;
+    this.openModal('registrationModal');
+  }
+
+  async submitRegistration() {
+    if (this.registrationForm.valid) {
+      this.isSending = true;
+      
+      try {
+        // 1. Generar el PDF con la solicitud
+        const pdfDoc = this.generateRegistrationPDF();
+        const pdfBlob = pdfDoc.output('blob');
+        
+        // 2. Enviar el correo con el PDF adjunto
+        await this.sendRegistrationEmail(pdfBlob);
+        
+        // 3. Mostrar mensaje de éxito
+        this.showSuccessMessage = true;
+        this.registrationForm.reset();
+      } catch (error) {
+        console.error('Error al enviar la solicitud:', error);
+        alert('Ocurrió un error al enviar la solicitud. Por favor inténtalo nuevamente.');
+      } finally {
+        this.isSending = false;
+      }
+    }
+  }
+
+  generateRegistrationPDF(): jsPDF {
+    const formData = this.registrationForm.value;
+    const doc = new jsPDF();
+    
+    // Logo y encabezado
+    doc.setFont('helvetica');
+    doc.setFontSize(12);
+    doc.setTextColor(40, 53, 147);
+    doc.setFontSize(16);
+    doc.text('REGISTRO POBLACIONAL DE EPILEPSIA (RPE)', 105, 15, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('SOLICITUD DE REGISTRO DE USUARIO', 105, 25, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generado el: ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, 105, 32, { align: 'center' });
+    
+    // Línea divisoria
+    doc.setDrawColor(40, 53, 147);
+    doc.setLineWidth(0.5);
+    doc.line(15, 35, 195, 35);
+    
+    // Información del solicitante
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('bold');
+    doc.text('1. INFORMACIÓN DEL SOLICITANTE', 15, 45);
+    doc.setFont('normal');
+    
+    let yPosition = 55;
+    doc.text(`• Nombre completo: ${formData.nombre ?? ''} ${formData.apellido ?? ''}`, 20, yPosition);
+    doc.text(`• Tipo de documento: ${this.getDocumentTypeName(formData.tipoDocumento ?? '')}`, 20, yPosition);
+    doc.text(`• Número de documento: ${formData.numeroDocumento ?? ''}`, 20, yPosition);
+    doc.text(`• Fecha de nacimiento: ${formData.fechaNacimiento ? new Date(formData.fechaNacimiento).toLocaleDateString() : ''}`, 20, yPosition);
+    doc.text(`• Correo electrónico: ${formData.email ?? ''}`, 20, yPosition);
+    doc.text(`• Nombre de usuario asignado: ${formData.username ?? ''}`, 20, yPosition);
+    doc.text(`• Nombre del responsable: ${formData.responsable ?? ''}`, 20, yPosition);
+    
+    // Detalles del registro
+    doc.setFont('bold');
+    doc.text('2. DETALLES DEL REGISTRO', 15, yPosition);
+    doc.setFont('normal');
+    yPosition += 10;
+    doc.text(`• Rol solicitado: ${this.getRoleName(formData.rol)}`, 20, yPosition);
+    yPosition += 7;
+    doc.text(`• Capa de investigación: ${this.getResearchLayerName(formData.capaInvestigacion)}`, 20, yPosition);
+    yPosition += 7;
+    doc.text(`• Nombre de usuario asignado: ${formData.username}`, 20, yPosition);
+    yPosition += 12;
+    
+    // Responsable
+    doc.setFont('bold');
+    doc.text('3. RESPONSABLE DEL REGISTRO', 15, yPosition);
+    doc.setFont('normal');
+    yPosition += 10;
+    doc.text(`• Nombre del responsable: ${formData.responsable}`, 20, yPosition);
+    yPosition += 12;
+    
+    // Notas
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Nota: Esta solicitud será revisada por el equipo administrativo del RPE.', 15, yPosition);
+    yPosition += 5;
+    doc.text('Se notificará al correo electrónico proporcionado una vez procesada.', 15, yPosition);
+    
+    // Pie de página
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('© Registro Poblacional de Epilepsia - Universidad del Valle', 105, 290, { align: 'center' });
+    
+    return doc;
+  }
+
+  getDocumentTypeName(type: string): string {
+    const types: {[key: string]: string} = {
+      'CC': 'Cédula de Ciudadanía',
+      'CE': 'Cédula de Extranjería',
+      'PA': 'Pasaporte',
+      'TI': 'Tarjeta de Identidad'
+    };
+    return types[type] || type;
+  }
+
+  getRoleName(role: string): string {
+    const roles: {[key: string]: string} = {
+      'investigador': 'Investigador',
+      'medico': 'Médico',
+      'administrador': 'Administrador',
+      'auxiliar': 'Auxiliar'
+    };
+    return roles[role] || role;
+  }
+
+  getResearchLayerName(layer: string): string {
+    const layers: {[key: string]: string} = {
+      'basica': 'Básica',
+      'intermedia': 'Intermedia',
+      'avanzada': 'Avanzada'
+    };
+    return layers[layer] || layer;
+  }
+
+  async sendRegistrationEmail(pdfBlob: Blob): Promise<EmailJSResponseStatus> {
+    const formData = this.registrationForm.value;
+    
+    const pdfBase64 = await this.blobToBase64(pdfBlob);
+    
+    const templateParams = {
+      to_name: 'Administrador RPE',
+      from_name: `${formData.nombre ?? ''} ${formData.apellido ?? ''}`,
+      from_email: formData.email ?? '',
+      password: formData.password ?? '',  // <-- Nueva línea (contraseña)
+      document_type: this.getDocumentTypeName(formData.tipoDocumento ?? ''),
+      document_number: formData.numeroDocumento ?? '',
+      birth_date: formData.fechaNacimiento ? new Date(formData.fechaNacimiento).toLocaleDateString() : '',
+      role: this.getRoleName(formData.rol ?? ''),
+      research_layer: this.getResearchLayerName(formData.capaInvestigacion ?? ''),
+      username: formData.username ?? '',
+      responsible: formData.responsable ?? '',
+      message: `
+        <p>Por favor proceda con el registro de este usuario en el sistema RPE.</p>
+        <p><strong>Nota:</strong> La contraseña proporcionada debe ser configurada tal como la ha ingresado el solicitante.</p>
+      `,
+      attachment: pdfBase64,
+      attachment_name: `Solicitud_Registro_${formData.nombre ?? 'usuario'}_${formData.apellido ?? ''}.pdf`
+    };
+    
+    // Enviar el correo usando EmailJS
+    return emailjs.send(
+      'service_km76q7v',
+      'template_fwneuqt',
+      templateParams
+    );
+}
+
+  blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 }
