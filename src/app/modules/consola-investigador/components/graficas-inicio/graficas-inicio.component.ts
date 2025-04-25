@@ -348,4 +348,12 @@ export class GraficasInicioComponent implements OnInit {
     if (this.chart1) this.chart1.destroy();
     if (this.chart2) this.chart2.destroy();
   }
+
+  getCardColor(trend: string): string {
+    switch(trend) {
+      case 'up': return '#4CAF50';
+      case 'down': return '#F44336';
+      default: return '#607D8B';
+    }
+  }
 }

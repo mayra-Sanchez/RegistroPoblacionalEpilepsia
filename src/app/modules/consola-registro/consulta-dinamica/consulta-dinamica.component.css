@@ -309,6 +309,12 @@ chart-container canvas {
   border-radius: var(--border-radius);
 }
 
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

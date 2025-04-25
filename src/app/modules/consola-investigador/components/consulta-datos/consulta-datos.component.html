@@ -1,1 +1,373 @@
-<p>consulta-datos works!</p>
+<div class="container">
+    <div class="header">
+      <div class="actions">
+        <button mat-raised-button color="primary" (click)="toggleView('table')"
+                [class.active]="viewType === 'table'">
+          <mat-icon>table_chart</mat-icon> Tabla
+        </button>
+        <button mat-raised-button color="primary" (click)="toggleView('chart')"
+                [class.active]="viewType === 'chart'">
+          <mat-icon>insert_chart</mat-icon> Gráficos
+        </button>
+        <button mat-raised-button color="accent" (click)="resetFilters()">
+          <mat-icon>filter_alt_off</mat-icon> Limpiar Filtros
+        </button>
+        <button mat-raised-button color="warn" [matMenuTriggerFor]="exportMenu">
+          <mat-icon>download</mat-icon> Exportar
+        </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item (click)="exportToCSV()">
+            <mat-icon>text_snippet</mat-icon> CSV
+          </button>
+          <button mat-menu-item (click)="exportToExcel()">
+            <mat-icon>grid_on</mat-icon> Excel
+          </button>
+          <button mat-menu-item (click)="exportToPDF()">
+            <mat-icon>picture_as_pdf</mat-icon> PDF
+          </button>
+          <button *ngIf="viewType === 'chart'" mat-menu-item (click)="exportChartAsImage()">
+            <mat-icon>image</mat-icon> Imagen
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  
+    <div *ngIf="errorMessage" class="error-message">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+  
+    <div *ngIf="loading" class="loading-overlay">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Cargando datos...</p>
+    </div>
+  
+    <div class="filters-section">
+      <mat-accordion>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>filter_list</mat-icon> Filtros Básicos
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+  
+          <div class="filter-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Sexo</mat-label>
+              <mat-select [(ngModel)]="filters.sex" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todos</mat-option>
+                <mat-option value="masculino">Masculino</mat-option>
+                <mat-option value="femenino">Femenino</mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <div class="age-range">
+              <mat-form-field appearance="outline">
+                <mat-label>Edad Mínima</mat-label>
+                <input matInput type="number" [(ngModel)]="filters.minAge" (ngModelChange)="applyFilters()">
+              </mat-form-field>
+              <span class="range-separator">-</span>
+              <mat-form-field appearance="outline">
+                <mat-label>Edad Máxima</mat-label>
+                <input matInput type="number" [(ngModel)]="filters.maxAge" (ngModelChange)="applyFilters()">
+              </mat-form-field>
+            </div>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Estado de Crisis</mat-label>
+              <mat-select [(ngModel)]="filters.crisisStatus" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let status of getUniqueCrisisStatuses()" [value]="status">
+                  {{ status }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Nivel Educativo</mat-label>
+              <mat-select [(ngModel)]="filters.educationLevel" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let level of getUniqueEducationLevels()" [value]="level">
+                  {{ level }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Nivel Socioeconómico</mat-label>
+              <mat-select [(ngModel)]="filters.economicStatus" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let status of getUniqueEconomicStatuses()" [value]="status">
+                  {{ status }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Estado Civil</mat-label>
+              <mat-select [(ngModel)]="filters.maritalStatus" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let status of getUniqueMaritalStatuses()" [value]="status">
+                  {{ status }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Ubicación</mat-label>
+              <mat-select [(ngModel)]="filters.location" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todas</mat-option>
+                <mat-option *ngFor="let location of getUniqueLocations()" [value]="location">
+                  {{ location }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Ciudad de Origen</mat-label>
+              <mat-select [(ngModel)]="filters.hometown" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todas</mat-option>
+                <mat-option *ngFor="let hometown of getUniqueHometowns()" [value]="hometown">
+                  {{ hometown }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Ciudad Actual</mat-label>
+              <mat-select [(ngModel)]="filters.currentCity" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todas</mat-option>
+                <mat-option *ngFor="let city of getUniqueCurrentCities()" [value]="city">
+                  {{ city }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Tiene Cuidador</mat-label>
+              <mat-select [(ngModel)]="filters.hasCaregiver" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todos</mat-option>
+                <mat-option [value]="true">Sí</mat-option>
+                <mat-option [value]="false">No</mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <div class="age-range">
+              <mat-form-field appearance="outline">
+                <mat-label>Edad Mínima Cuidador</mat-label>
+                <input matInput type="number" [(ngModel)]="filters.caregiverAge.min" (ngModelChange)="applyFilters()">
+              </mat-form-field>
+              <span class="range-separator">-</span>
+              <mat-form-field appearance="outline">
+                <mat-label>Edad Máxima Cuidador</mat-label>
+                <input matInput type="number" [(ngModel)]="filters.caregiverAge.max" (ngModelChange)="applyFilters()">
+              </mat-form-field>
+            </div>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Nivel Educativo Cuidador</mat-label>
+              <mat-select [(ngModel)]="filters.caregiverEducationLevel" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let level of getUniqueCaregiverEducationLevels()" [value]="level">
+                  {{ level }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Ocupación Cuidador</mat-label>
+              <mat-select [(ngModel)]="filters.caregiverOccupation" (ngModelChange)="applyFilters()">
+                <mat-option value="">Todas</mat-option>
+                <mat-option *ngFor="let occupation of getUniqueCaregiverOccupations()" [value]="occupation">
+                  {{ occupation }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </mat-expansion-panel>
+  
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>calendar_today</mat-icon> Rango de Fechas
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+  
+          <div class="date-range">
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha Registro Inicio</mat-label>
+              <input matInput [matDatepicker]="startPicker" [(ngModel)]="filters.dateRange.start"
+                     (ngModelChange)="applyFilters()">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha Registro Fin</mat-label>
+              <input matInput [matDatepicker]="endPicker" [(ngModel)]="filters.dateRange.end"
+                     (ngModelChange)="applyFilters()">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha Primera Crisis Inicio</mat-label>
+              <input matInput [matDatepicker]="crisisStartPicker" [(ngModel)]="filters.firstCrisisDateRange.start"
+                     (ngModelChange)="applyFilters()">
+              <mat-datepicker-toggle matSuffix [for]="crisisStartPicker"></mat-datepicker-toggle>
+              <mat-datepicker #crisisStartPicker></mat-datepicker>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha Primera Crisis Fin</mat-label>
+              <input matInput [matDatepicker]="crisisEndPicker" [(ngModel)]="filters.firstCrisisDateRange.end"
+                     (ngModelChange)="applyFilters()">
+              <mat-datepicker-toggle matSuffix [for]="crisisEndPicker"></mat-datepicker-toggle>
+              <mat-datepicker #crisisEndPicker></mat-datepicker>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha Fallecimiento Inicio</mat-label>
+              <input matInput [matDatepicker]="deathStartPicker" [(ngModel)]="filters.deathDateRange.start"
+                     (ngModelChange)="applyFilters()">
+              <mat-datepicker-toggle matSuffix [for]="deathStartPicker"></mat-datepicker-toggle>
+              <mat-datepicker #deathStartPicker></mat-datepicker>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha Fallecimiento Fin</mat-label>
+              <input matInput [matDatepicker]="deathEndPicker" [(ngModel)]="filters.deathDateRange.end"
+                     (ngModelChange)="applyFilters()">
+              <mat-datepicker-toggle matSuffix [for]="deathEndPicker"></mat-datepicker-toggle>
+              <mat-datepicker #deathEndPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  
+    <div *ngIf="viewType === 'chart'" class="chart-section">
+        <div class="chart-controls">
+          <mat-form-field appearance="outline">
+            <mat-label>Tipo de Gráfico</mat-label>
+            <mat-select [(ngModel)]="chartType" (ngModelChange)="changeChartType(chartType)">
+              <mat-option *ngFor="let type of availableChartTypes" [value]="type">
+                {{ getChartTypeName(type) }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+      
+          <mat-form-field appearance="outline">
+            <mat-label>Dimensión Principal</mat-label>
+            <mat-select [(ngModel)]="selectedDimension1" (ngModelChange)="onDimension1Change()">
+              <mat-option *ngFor="let dim of availableDimensions" [value]="dim">
+                {{ dimensionLabels[dim] }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+      
+          <mat-checkbox [(ngModel)]="showComparison" (ngModelChange)="prepareChartData()">
+            Comparar con
+          </mat-checkbox>
+      
+          <mat-form-field appearance="outline" *ngIf="showComparison">
+            <mat-label>Dimensión Secundaria</mat-label>
+            <mat-select [(ngModel)]="selectedDimension2" (ngModelChange)="onDimension2Change()">
+              <mat-option *ngFor="let dim of availableDimensions" [value]="dim">
+                {{ dimensionLabels[dim] }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      
+        <div *ngIf="chartErrorMessage" class="chart-error-message">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ chartErrorMessage }}</span>
+        </div>
+      
+        <div class="chart-container">
+          <canvas #chartCanvas></canvas>
+        </div>
+      </div>
+  
+    <div *ngIf="viewType === 'table'" class="table-section">
+      <div class="table-header">
+        <span class="results-count">{{ filteredData.data.length }} resultados encontrados</span>
+        <mat-paginator [length]="totalElements" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 100]"
+                       (page)="onPageChange($event)">
+        </mat-paginator>
+      </div>
+  
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="filteredData" matSort>
+          <ng-container matColumnDef="sex">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Sexo</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.sex }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="age">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Edad</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.age }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="ageGroup">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Grupo Edad</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.ageGroup }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="educationLevel">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Educación</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.educationLevel }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="economicStatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nivel Socio</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.economicStatus }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="maritalStatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado Civil</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.maritalStatus }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="crisisStatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado Crisis</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.crisisStatus }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="location">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Ubicación</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.location }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="hometown">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Ciudad Origen</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.hometown }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="currentCity">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Ciudad Actual</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.currentCity }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="firstCrisisDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Crisis</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.firstCrisisDate | date:'shortDate' }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="deathDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Fallecimiento</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.deathDate | date:'shortDate' }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="hasCaregiver">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Tiene Cuidador</th>
+            <td mat-cell *matCellDef="let patient">{{ patient.hasCaregiver ? 'Sí' : 'No' }}</td>
+          </ng-container>
+  
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="viewPatientDetails(row.id)"></tr>
+        </table>
+      </div>
+    </div>
+  </div>

@@ -3,10 +3,7 @@
 
   <div class="contentInvestigador">
     <div *ngIf="selectedTab === 'inicioInvestigador'" class="info-container">
-      <h1>Bienvenido investigador</h1>
-      <div class="inicio-content">
         <app-graficas-inicio></app-graficas-inicio>
-      </div>
     </div>
     <div *ngIf="selectedTab === 'consultaDatos'">
       <app-consulta-datos></app-consulta-datos>

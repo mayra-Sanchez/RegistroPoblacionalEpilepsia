@@ -35,8 +35,8 @@
       </mat-form-field>
 
       <mat-slider min="0" max="120" step="1" discrete class="age-slider">
-        <input matSliderStartThumb [(ngModel)]="filters.minAge" (change)="applyFilters()">
-        <input matSliderEndThumb [(ngModel)]="filters.maxAge" (change)="applyFilters()">
+        <input matSliderStartThumb [(ngModel)]="filters.minAge" (ngModelChange)="applyFilters()">
+        <input matSliderEndThumb [(ngModel)]="filters.maxAge" (ngModelChange)="applyFilters()">
       </mat-slider>
 
       <mat-form-field appearance="outline">
@@ -122,11 +122,11 @@
           <mat-option value="ninguno">Ninguno</mat-option>
         </mat-select>
       </mat-form-field>
-      
+
       <mat-form-field appearance="outline">
         <mat-label>Ocupación del Cuidador</mat-label>
-        <input matInput type="text" [(ngModel)]="filters.caregiverOccupation" 
-               (ngModelChange)="applyFilters()" placeholder="Filtrar por ocupación">
+        <input matInput type="text" [(ngModel)]="filters.caregiverOccupation"
+          (ngModelChange)="applyFilters()" placeholder="Filtrar por ocupación">
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="date-range-field">
@@ -155,10 +155,10 @@
 
   <section class="view-options mat-elevation-z2">
     <div class="view-toggle">
-      <button mat-button (click)="viewType = 'chart'; prepareChartData()" [class.active]="viewType === 'chart'">
+      <button mat-button (click)="toggleView('chart')" [class.active]="viewType === 'chart'">
         <mat-icon>bar_chart</mat-icon> Gráficos
       </button>
-      <button mat-button (click)="viewType = 'table'" [class.active]="viewType === 'table'">
+      <button mat-button (click)="toggleView('table')" [class.active]="viewType === 'table'">
         <mat-icon>table_chart</mat-icon> Tabla
       </button>
     </div>
@@ -183,7 +183,7 @@
         <!-- Selector de tipo de gráfico -->
         <mat-form-field appearance="outline">
           <mat-label>Tipo de Gráfico</mat-label>
-          <mat-select [(ngModel)]="chartType" (selectionChange)="prepareChartData()">
+          <mat-select [(ngModel)]="chartType" (selectionChange)="changeChartType($event.value)">
             <mat-option *ngFor="let type of availableChartTypes" [value]="type">
               {{ type | titlecase }}
             </mat-option>
@@ -200,12 +200,12 @@
           </mat-select>
         </mat-form-field>
 
-        <!-- Checkbox de comparación (DEBE estar antes del segundo selector) -->
+        <!-- Checkbox de comparación -->
         <mat-checkbox [(ngModel)]="showComparison" (change)="prepareChartData()">
           Comparar con
         </mat-checkbox>
 
-        <!-- Selector de dimensión secundaria (solo visible cuando showComparison es true) -->
+        <!-- Selector de dimensión secundaria -->
         <mat-form-field appearance="outline" *ngIf="showComparison">
           <mat-label>Dimensión Secundaria</mat-label>
           <mat-select [(ngModel)]="selectedDimension2" (selectionChange)="prepareChartData()">
@@ -224,8 +224,7 @@
       </div>
 
       <div *ngIf="filteredData.data.length > 0" class="chart-container">
-        <canvas baseChart [type]="chartType" [data]="chartData" [options]="chartOptions">
-        </canvas>
+        <canvas baseChart [type]="chartType" [data]="chartData" [options]="chartOptions"></canvas>
       </div>
 
       <div *ngIf="filteredData.data.length === 0" class="no-data">
@@ -292,7 +291,7 @@
               <mat-icon [style.color]="item.hasCaregiver ? 'green' : 'red'">
                 {{ item.hasCaregiver ? 'check_circle' : 'cancel' }}
               </mat-icon>
-              {{ item.hasCaregiver ? 'Sí' : 'No' }} <!-- Opcional: texto adicional -->
+              {{ item.hasCaregiver ? 'Sí' : 'No' }}
             </td>
           </ng-container>
 
@@ -319,7 +318,7 @@
           </button>
         </div>
 
-        <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+        <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons (page)="onPageChange($event)"></mat-paginator>
       </div>
     </ng-container>
   </section>
