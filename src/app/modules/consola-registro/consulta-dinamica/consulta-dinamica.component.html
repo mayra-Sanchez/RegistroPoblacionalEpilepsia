@@ -1,325 +1,48 @@
-<div class="rpe-container">
-  <!-- Loading overlay -->
-  <div *ngIf="loading" class="loading-overlay">
+<div #dashboardContainer class="dashboard-container" [class.fullscreen-mode]="isFullscreen">
+  <!-- Barra de controles minimalista -->
+  <div class="controls-bar">
+    <button mat-icon-button (click)="refreshDashboard()" [disabled]="isLoading" matTooltip="Actualizar">
+      <mat-icon>refresh</mat-icon>
+    </button>
+    <button mat-icon-button (click)="toggleFullscreen()" matTooltip="Pantalla completa">
+      <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+    </button>
+    <button mat-icon-button (click)="openInNewTab()" matTooltip="Abrir en nueva pestaña">
+      <mat-icon>open_in_new</mat-icon>
+    </button>
+  </div>
+
+  <!-- Estados de carga/error -->
+  <div *ngIf="isLoading" class="loading-state">
     <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando dashboard...</p>
   </div>
 
-  <!-- Error message display -->
-  <div *ngIf="errorMessage" class="error-message mat-elevation-z2">
-    <mat-icon>error</mat-icon>
-    {{ errorMessage }}
+  <div *ngIf="hasError" class="error-state">
+    <mat-icon color="warn">error_outline</mat-icon>
+    <h3>Error al cargar</h3>
+    <p>{{ errorMessage }}</p>
+    <button mat-raised-button color="primary" (click)="refreshDashboard()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
   </div>
 
-  <section class="filters-section mat-elevation-z2">
-    <h2>Filtrar por:</h2>
+  <!-- Iframe con ajustes específicos -->
+  <iframe #dashboardIframe
+    [src]="dashboardUrl"
+    width="100%"
+    frameborder="0"
+    (load)="onIframeLoad()"
+    (error)="onIframeError()"
+    [hidden]="!isIframeLoaded || hasError"
+    allowfullscreen
+    class="superset-iframe"
+    title="Dashboard de Superset">
+  </iframe>
 
-    <div class="filter-grid">
-      <!-- Filtros básicos -->
-      <mat-form-field appearance="outline">
-        <mat-label>Sexo</mat-label>
-        <mat-select [(ngModel)]="filters.sex" (selectionChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          <mat-option value="masculino">Masculino</mat-option>
-          <mat-option value="femenino">Femenino</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Edad mínima</mat-label>
-        <input matInput type="number" [(ngModel)]="filters.minAge" (ngModelChange)="applyFilters()" min="0" max="120">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Edad máxima</mat-label>
-        <input matInput type="number" [(ngModel)]="filters.maxAge" (ngModelChange)="applyFilters()" min="0" max="120">
-      </mat-form-field>
-
-      <mat-slider min="0" max="120" step="1" discrete class="age-slider">
-        <input matSliderStartThumb [(ngModel)]="filters.minAge" (ngModelChange)="applyFilters()">
-        <input matSliderEndThumb [(ngModel)]="filters.maxAge" (ngModelChange)="applyFilters()">
-      </mat-slider>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Estado de crisis</mat-label>
-        <mat-select [(ngModel)]="filters.crisisStatus" (selectionChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          <mat-option value="Activa">Activa</mat-option>
-          <mat-option value="Remisión">Remisión</mat-option>
-          <mat-option value="Estable">Estable</mat-option>
-          <mat-option value="Crítica">Crítica</mat-option>
-          <mat-option value="Recuperado">Recuperado</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <!-- Filtros demográficos -->
-      <mat-form-field appearance="outline">
-        <mat-label>Nivel Educativo</mat-label>
-        <mat-select [(ngModel)]="filters.educationLevel" (selectionChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          <mat-option value="primaria">Primaria</mat-option>
-          <mat-option value="secundaria">Secundaria</mat-option>
-          <mat-option value="tecnico">Técnico</mat-option>
-          <mat-option value="universitario">Universitario</mat-option>
-          <mat-option value="postgrado">Postgrado</mat-option>
-          <mat-option value="ninguno">Ninguno</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Nivel Socioeconómico</mat-label>
-        <mat-select [(ngModel)]="filters.economicStatus" (selectionChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          <mat-option value="bajo">Bajo</mat-option>
-          <mat-option value="medio_bajo">Medio bajo</mat-option>
-          <mat-option value="medio">Medio</mat-option>
-          <mat-option value="medio_alto">Medio alto</mat-option>
-          <mat-option value="alto">Alto</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Estado Civil</mat-label>
-        <mat-select [(ngModel)]="filters.maritalStatus" (selectionChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          <mat-option value="soltero">Soltero/a</mat-option>
-          <mat-option value="casado">Casado/a</mat-option>
-          <mat-option value="divorciado">Divorciado/a</mat-option>
-          <mat-option value="viudo">Viudo/a</mat-option>
-          <mat-option value="union_libre">Unión Libre</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Ciudad de Origen</mat-label>
-        <input matInput type="text" [(ngModel)]="filters.hometown" (ngModelChange)="applyFilters()"
-          placeholder="Filtrar por ciudad">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Ciudad Actual</mat-label>
-        <input matInput type="text" [(ngModel)]="filters.currentCity" (ngModelChange)="applyFilters()"
-          placeholder="Filtrar por ciudad">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Cuidador</mat-label>
-        <mat-select [(ngModel)]="filters.hasCaregiver" (selectionChange)="applyFilters()">
-          <mat-option [value]="null">Todos</mat-option>
-          <mat-option [value]="true">Con cuidador</mat-option>
-          <mat-option [value]="false">Sin cuidador</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Educación del Cuidador</mat-label>
-        <mat-select [(ngModel)]="filters.caregiverEducation" (selectionChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          <mat-option value="primaria">Primaria</mat-option>
-          <mat-option value="secundaria">Secundaria</mat-option>
-          <mat-option value="tecnico">Técnico</mat-option>
-          <mat-option value="universitario">Universitario</mat-option>
-          <mat-option value="postgrado">Postgrado</mat-option>
-          <mat-option value="ninguno">Ninguno</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Ocupación del Cuidador</mat-label>
-        <input matInput type="text" [(ngModel)]="filters.caregiverOccupation"
-          (ngModelChange)="applyFilters()" placeholder="Filtrar por ocupación">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="date-range-field">
-        <mat-label>Rango de fechas</mat-label>
-        <mat-date-range-input [rangePicker]="picker">
-          <input matStartDate placeholder="Inicio" [(ngModel)]="filters.dateRange.start" (dateChange)="applyFilters()">
-          <input matEndDate placeholder="Fin" [(ngModel)]="filters.dateRange.end" (dateChange)="applyFilters()">
-        </mat-date-range-input>
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-date-range-picker #picker></mat-date-range-picker>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Buscar Variable</mat-label>
-        <input matInput type="text" [(ngModel)]="filters.variableName" (ngModelChange)="applyFilters()"
-          placeholder="Nombre de variable">
-      </mat-form-field>
-    </div>
-
-    <div class="filter-actions">
-      <button mat-raised-button color="warn" (click)="resetFilters()">
-        <mat-icon>refresh</mat-icon> Limpiar filtros
-      </button>
-    </div>
-  </section>
-
-  <section class="view-options mat-elevation-z2">
-    <div class="view-toggle">
-      <button mat-button (click)="toggleView('chart')" [class.active]="viewType === 'chart'">
-        <mat-icon>bar_chart</mat-icon> Gráficos
-      </button>
-      <button mat-button (click)="toggleView('table')" [class.active]="viewType === 'table'">
-        <mat-icon>table_chart</mat-icon> Tabla
-      </button>
-    </div>
-
-    <div class="export-options">
-      <button mat-stroked-button (click)="exportToPDF()">
-        <mat-icon>picture_as_pdf</mat-icon> PDF
-      </button>
-      <button mat-stroked-button (click)="exportToExcel()">
-        <mat-icon>grid_on</mat-icon> Excel
-      </button>
-      <button mat-stroked-button (click)="exportToCSV()">
-        <mat-icon>text_snippet</mat-icon> CSV
-      </button>
-    </div>
-  </section>
-
-  <section class="visualization-section mat-elevation-z2">
-    <!-- Vista de Gráficos -->
-    <ng-container *ngIf="viewType === 'chart'">
-      <div class="chart-controls">
-        <!-- Selector de tipo de gráfico -->
-        <mat-form-field appearance="outline">
-          <mat-label>Tipo de Gráfico</mat-label>
-          <mat-select [(ngModel)]="chartType" (selectionChange)="changeChartType($event.value)">
-            <mat-option *ngFor="let type of availableChartTypes" [value]="type">
-              {{ type | titlecase }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <!-- Dimensión principal -->
-        <mat-form-field appearance="outline">
-          <mat-label>Dimensión Principal</mat-label>
-          <mat-select [(ngModel)]="selectedDimension1" (selectionChange)="prepareChartData()">
-            <mat-option *ngFor="let dim of availableDimensions" [value]="dim">
-              {{ dimensionLabels[dim] }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <!-- Checkbox de comparación -->
-        <mat-checkbox [(ngModel)]="showComparison" (change)="prepareChartData()">
-          Comparar con
-        </mat-checkbox>
-
-        <!-- Selector de dimensión secundaria -->
-        <mat-form-field appearance="outline" *ngIf="showComparison">
-          <mat-label>Dimensión Secundaria</mat-label>
-          <mat-select [(ngModel)]="selectedDimension2" (selectionChange)="prepareChartData()">
-            <mat-option *ngFor="let dim of availableDimensions" [value]="dim">
-              {{ dimensionLabels[dim] }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <!-- Botón de exportación -->
-        <div class="chart-export-options" *ngIf="filteredData.data.length > 0">
-          <button mat-icon-button (click)="exportChartAsImage()" matTooltip="Exportar como imagen">
-            <mat-icon>image</mat-icon>
-          </button>
-        </div>
-      </div>
-
-      <div *ngIf="filteredData.data.length > 0" class="chart-container">
-        <canvas baseChart [type]="chartType" [data]="chartData" [options]="chartOptions"></canvas>
-      </div>
-
-      <div *ngIf="filteredData.data.length === 0" class="no-data">
-        <mat-icon>info</mat-icon>
-        <p>No se encontraron pacientes que coincidan con los criterios de búsqueda</p>
-        <button mat-button color="primary" (click)="resetFilters()">
-          Limpiar todos los filtros
-        </button>
-      </div>
-    </ng-container>
-
-    <!-- Vista de Tabla -->
-    <ng-container *ngIf="viewType === 'table'">
-      <div class="table-container">
-        <table mat-table [dataSource]="filteredData" class="mat-elevation-z2" matSort>
-          <!-- Columnas -->
-          <ng-container matColumnDef="sex">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Sexo</th>
-            <td mat-cell *matCellDef="let item">{{ item.sex }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="age">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Edad</th>
-            <td mat-cell *matCellDef="let item">{{ item.age }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
-            <td mat-cell *matCellDef="let item">
-              <span class="status-badge" [style.background-color]="getStatusColor(item.crisisStatus)">
-                {{ item.crisisStatus }}
-              </span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
-            <td mat-cell *matCellDef="let item">{{ item.registerDate | date:'shortDate' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="educationLevel">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Educación</th>
-            <td mat-cell *matCellDef="let item">{{ getEducationLabel(item.educationLevel) }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="economicStatus">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nivel Socioeconómico</th>
-            <td mat-cell *matCellDef="let item">{{ getEconomicStatusLabel(item.economicStatus) }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="maritalStatus">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado Civil</th>
-            <td mat-cell *matCellDef="let item">{{ getMaritalStatusLabel(item.maritalStatus) }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="city">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Ciudad</th>
-            <td mat-cell *matCellDef="let item">{{ item.currentCity }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="hasCaregiver">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Cuidador</th>
-            <td mat-cell *matCellDef="let item">
-              <mat-icon [style.color]="item.hasCaregiver ? 'green' : 'red'">
-                {{ item.hasCaregiver ? 'check_circle' : 'cancel' }}
-              </mat-icon>
-              {{ item.hasCaregiver ? 'Sí' : 'No' }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="variables">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Variables</th>
-            <td mat-cell *matCellDef="let item">
-              <mat-chip-list>
-                <mat-chip *ngFor="let variable of item.variables" [title]="variable">
-                  {{ variable }}
-                </mat-chip>
-              </mat-chip-list>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <div *ngIf="filteredData.data.length === 0" class="no-data">
-          <mat-icon>info</mat-icon>
-          <p>No hay datos que coincidan con los filtros aplicados</p>
-          <button mat-button color="primary" (click)="resetFilters()">
-            Limpiar todos los filtros
-          </button>
-        </div>
-
-        <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons (page)="onPageChange($event)"></mat-paginator>
-      </div>
-    </ng-container>
-  </section>
+  <!-- Indicador de carga exitosa -->
+  <div *ngIf="isIframeLoaded && !hasError" class="last-update">
+    Última actualización: {{ lastLoadTime | date:'HH:mm:ss' }}
+  </div>
 </div>

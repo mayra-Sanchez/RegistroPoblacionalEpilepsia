@@ -18,7 +18,6 @@ import { PacienteFormComponent } from 'src/app/form-registro-paciente/components
 import { ViewRegistroModalComponent } from './view-registro-modal/view-registro-modal.component';
 import { EditRegistroModalComponent } from './edit-registro-modal/edit-registro-modal.component';
 import { ConsultaDinamicaComponent } from './consulta-dinamica/consulta-dinamica.component';
-import { TruncatePipe } from './consulta-dinamica/truncate.pipe';
 import { HttpClientModule } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -53,9 +52,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     ViewRegistroModalComponent,
     EditRegistroModalComponent,
     ConsultaDinamicaComponent,
-    TruncatePipe,
     BuscarProfesionalModalComponent,
-    BuscarPacienteModalComponent
+    BuscarPacienteModalComponent,
   ],
   imports: [
     CommonModule,
