@@ -7,11 +7,11 @@
         <h1 class="dashboard-title">Análisis de investigación</h1>
       </div>
       
-      <div class="header-actions">
+      <!-- <div class="header-actions">
         <button mat-icon-button class="theme-toggle" (click)="toggleTheme()" aria-label="Cambiar tema">
           <mat-icon>brightness_6</mat-icon>
         </button>
-      </div>
+      </div> -->
     </div>
     
     <div class="current-layer" *ngIf="currentResearchLayer?.layerName">
@@ -88,14 +88,14 @@
         </h2>
         <div class="time-filter">
           <button mat-button [matMenuTriggerFor]="timeMenu">
-            Últimos 30 días
+            {{ getSelectedTimeRangeLabel() }}
             <mat-icon>arrow_drop_down</mat-icon>
           </button>
           <mat-menu #timeMenu="matMenu">
-            <button mat-menu-item>Últimos 7 días</button>
-            <button mat-menu-item>Últimos 30 días</button>
-            <button mat-menu-item>Últimos 90 días</button>
-            <button mat-menu-item>Personalizado...</button>
+            <button mat-menu-item *ngFor="let range of timeRanges" 
+                    (click)="onTimeRangeChange(range.value)">
+              {{ range.label }}
+            </button>
           </mat-menu>
         </div>
       </div>
@@ -107,12 +107,23 @@
               <mat-icon>group</mat-icon>
               Distribución por Sexo
             </h3>
-            <button mat-icon-button>
+            <button mat-icon-button [matMenuTriggerFor]="chartMenu1">
               <mat-icon>more_vert</mat-icon>
             </button>
+            <mat-menu #chartMenu1="matMenu">
+              <button mat-menu-item (click)="downloadChart(1)">
+                <mat-icon>download</mat-icon>
+                Descargar imagen
+              </button>
+              <button mat-menu-item (click)="toggleChartType(1)">
+                <mat-icon>swap_horiz</mat-icon>
+                Cambiar tipo de gráfico
+              </button>
+            </mat-menu>
           </div>
           <div class="chart-wrapper">
-            <canvas #chartCanvas1 baseChart [data]="chartData1" [type]="chartType1" [options]="barChartOptions"></canvas>
+            <canvas #chartCanvas1 baseChart [data]="chartData1" [type]="chartType1" 
+                    [options]="chartType1 === 'bar' ? barChartOptions : pieChartOptions"></canvas>
           </div>
         </div>
 
@@ -122,15 +133,49 @@
               <mat-icon>warning</mat-icon>
               Tipos de Crisis
             </h3>
-            <button mat-icon-button>
+            <button mat-icon-button [matMenuTriggerFor]="chartMenu2">
               <mat-icon>more_vert</mat-icon>
             </button>
+            <mat-menu #chartMenu2="matMenu">
+              <button mat-menu-item (click)="downloadChart(2)">
+                <mat-icon>download</mat-icon>
+                Descargar imagen
+              </button>
+              <button mat-menu-item (click)="toggleChartType(2)">
+                <mat-icon>swap_horiz</mat-icon>
+                Cambiar tipo de gráfico
+              </button>
+            </mat-menu>
           </div>
           <div class="chart-wrapper">
-            <canvas #chartCanvas2 baseChart [data]="chartData2" [type]="chartType2" [options]="pieChartOptions"></canvas>
+            <canvas #chartCanvas2 baseChart [data]="chartData2" [type]="chartType2" 
+                    [options]="chartType2 === 'pie' ? pieChartOptions : barChartOptions"></canvas>
           </div>
         </div>
       </div>
     </section>
   </main>
+
+  <!-- Diálogo para rango personalizado -->
+  <ng-template #customRangeDialog>
+    <h2 mat-dialog-title>Seleccionar rango personalizado</h2>
+    <mat-dialog-content>
+      <mat-form-field>
+        <mat-label>Fecha de inicio</mat-label>
+        <input matInput [matDatepicker]="startPicker" [(ngModel)]="customRangeStart">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Fecha de fin</mat-label>
+        <input matInput [matDatepicker]="endPicker" [(ngModel)]="customRangeEnd">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions>
+      <button mat-button mat-dialog-close>Cancelar</button>
+      <button mat-button [mat-dialog-close]="true" (click)="applyCustomRange()">Aplicar</button>
+    </mat-dialog-actions>
+  </ng-template>
 </div>

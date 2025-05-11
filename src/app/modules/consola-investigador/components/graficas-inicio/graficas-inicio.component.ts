@@ -1,12 +1,13 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, TemplateRef } from '@angular/core';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 import { ConsolaRegistroService } from 'src/app/modules/consola-registro/services/consola-registro.service';
 import { AuthService } from 'src/app/login/services/auth.service';
 import { ResearchLayer } from '../../../consola-registro/interfaces';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Subject, takeUntil } from 'rxjs';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { MatDialog } from '@angular/material/dialog';
 
-// Tipos mejor definidos
 type ChartDimension = 'sex' | 'education' | 'economic' | 'marital' | 'crisis' | 'currentCity' | 'hometown' | 'caregiver';
 type TrendDirection = 'up' | 'down' | 'neutral';
 
@@ -33,7 +34,7 @@ interface PatientBasicInfo {
 
 export interface Register {
   registerId: string;
-  id?: string; // Añadir esta propiedad opcional
+  id?: string;
   registerDate: string;
   updateRegisterDate: string | null;
   patientIdentificationNumber: number;
@@ -83,8 +84,12 @@ interface DimensionLabels {
 export class GraficasInicioComponent implements OnInit, OnDestroy {
   @ViewChild('chartCanvas1') chartCanvas1!: ElementRef<HTMLCanvasElement>;
   @ViewChild('chartCanvas2') chartCanvas2!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('chartMenuTrigger1') chartMenuTrigger1!: MatMenuTrigger;
+  @ViewChild('chartMenuTrigger2') chartMenuTrigger2!: MatMenuTrigger;
+  @ViewChild('customRangeDialog') customRangeDialog!: TemplateRef<any>;
 
   isDarkMode = false;
+  allRegisters: Register[] = [];
   
   // Datos para gráficos
   chartData1: ChartConfiguration['data'] = { labels: [], datasets: [] };
@@ -144,8 +149,8 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   };
 
-  readonly chartType1: ChartType = 'bar';
-  readonly chartType2: ChartType = 'pie';
+  chartType1: ChartType = 'bar';
+  chartType2: ChartType = 'pie';
 
   // Tarjetas resumen con valores iniciales
   summaryCards: SummaryCard[] = [
@@ -167,6 +172,17 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     caregiver: 'Tiene Cuidador'
   };
 
+  // Filtro de tiempo
+  selectedTimeRange = '30';
+  timeRanges = [
+    { value: '7', label: 'Últimos 7 días' },
+    { value: '30', label: 'Últimos 30 días' },
+    { value: '90', label: 'Últimos 90 días' },
+    { value: 'custom', label: 'Personalizado' }
+  ];
+  customRangeStart: Date | null = null;
+  customRangeEnd: Date | null = null;
+
   currentResearchLayer: ResearchLayer | null = null;
   loading = false;
   errorMessage = '';
@@ -176,7 +192,8 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
 
   constructor(
     private registerService: ConsolaRegistroService,
-    private authService: AuthService
+    private authService: AuthService,
+    private dialog: MatDialog
   ) {
     Chart.register(...registerables, ChartDataLabels);
   }
@@ -268,7 +285,9 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     ).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: { registers: Register[] }) => {
-          this.prepareDashboardData(response.registers || []);
+          this.allRegisters = response.registers || [];
+          console.log('Datos recibidos:', this.allRegisters); // Para depuración
+          this.prepareDashboardData(this.allRegisters);
           this.loading = false;
         },
         error: (err) => {
@@ -278,13 +297,8 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
   }
 
   private prepareDashboardData(registers: Register[]): void {
-    // Actualizar tarjetas resumen
     this.updateSummaryCards(registers);
-
-    // Preparar datos para gráficos
     this.prepareChartData(registers);
-
-    // Renderizar gráficos
     this.renderCharts();
   }
 
@@ -300,21 +314,45 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       }]
     };
 
-    // Gráfica 2: Distribución por tipo de crisis
-    const crisisData = this.groupByDimension(registers, 'crisis');
+    // Gráfica 2: Distribución por estado de crisis - Versión corregida
+    const crisisData = this.groupByDimensionWithMapping(registers, 'crisis', {
+      'activa': 'Activa',
+      'inactiva': 'Inactiva',
+      'controlada': 'Controlada'
+    });
+
     this.chartData2 = {
       labels: Object.keys(crisisData),
       datasets: [{
         data: Object.values(crisisData),
         backgroundColor: ['#FFC107', '#F44336', '#9C27B0', '#607D8B', '#00BCD4'],
-        label: 'Tipos de Crisis'
+        label: 'Estado de Crisis'
       }]
     };
   }
 
+  private groupByDimensionWithMapping(
+    registers: Register[], 
+    dimension: ChartDimension,
+    valueMap: Record<string, string>
+  ): Record<string, number> {
+    return registers.reduce((acc: Record<string, number>, register) => {
+      const rawValue = this.getDimensionValue(dimension, register.patientBasicInfo || {}, register);
+      const mappedValue = valueMap[rawValue.toLowerCase()] || rawValue;
+      acc[mappedValue] = (acc[mappedValue] || 0) + 1;
+      return acc;
+    }, {});
+  }
+
   private updateSummaryCards(registers: Register[]): void {
     const totalPatients = registers.length;
-    const withCrisis = registers.filter(r => r.patientBasicInfo?.crisisStatus === 'activa').length;
+    
+    // Contar crisis activas - versión más robusta
+    const withCrisis = registers.filter(r => {
+      const status = r.patientBasicInfo?.crisisStatus?.toLowerCase();
+      return status === 'activa' || status === 'active';
+    }).length;
+    
     const withCaregiver = registers.filter(r => r.caregiver).length;
 
     // Calcular pacientes del mes actual
@@ -327,7 +365,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       return regDate.getMonth() === currentMonth && regDate.getFullYear() === currentYear;
     }).length;
 
-    // Calcular tendencias (simplificado - en producción usarías datos históricos)
+    // Calcular tendencias
     const prevMonthPatients = registers.filter(r => {
       const regDate = new Date(r.registerDate);
       const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
@@ -345,14 +383,14 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
         value: totalPatients,
         icon: 'people',
         trend: totalPatients > 0 ? 'up' : 'neutral',
-        change: 10 // Valor de ejemplo
+        change: 10
       },
       {
         title: 'Crisis Activas',
         value: withCrisis,
         icon: 'warning',
         trend: withCrisis > 0 ? 'down' : 'neutral',
-        change: 5 // Valor de ejemplo
+        change: 5
       },
       {
         title: 'Nuevos este Mes',
@@ -366,7 +404,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
         value: withCaregiver,
         icon: 'accessibility',
         trend: withCaregiver > 0 ? 'up' : 'neutral',
-        change: 8 // Valor de ejemplo
+        change: 8
       }
     ];
   }
@@ -386,7 +424,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       this.chart1 = new Chart(ctx1, {
         type: this.chartType1,
         data: this.chartData1,
-        options: this.barChartOptions
+        options: this.chartType1 === 'bar' ? this.barChartOptions : this.pieChartOptions
       });
     }
 
@@ -396,17 +434,15 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       this.chart2 = new Chart(ctx2, {
         type: this.chartType2,
         data: this.chartData2,
-        options: this.pieChartOptions
+        options: this.chartType2 === 'pie' ? this.pieChartOptions : this.barChartOptions
       });
     }
   }
 
   private groupByDimension(registers: Register[], dimension: ChartDimension): Record<string, number> {
     return registers.reduce((acc: Record<string, number>, register) => {
-      const patientInfo = register.patientBasicInfo || {};
-      const key = this.getDimensionValue(dimension, patientInfo, register);
-
-      acc[key] = (acc[key] || 0) + 1;
+      const value = this.getDimensionValue(dimension, register.patientBasicInfo || {}, register);
+      acc[value] = (acc[value] || 0) + 1;
       return acc;
     }, {});
   }
@@ -468,7 +504,6 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     return value ? labels[value] || value : 'No especificado';
   }
 
-  // Actualizar getCardColor para usar variables CSS
   getCardColor(trend: string): string {
     const colors = {
       'up': 'var(--success-color)',
@@ -488,5 +523,79 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
         host.classList.remove('dark-mode');
       }
     }
+  }
+
+  // Métodos para los menús de gráficos
+  downloadChart(chartNumber: number): void {
+    const chart = chartNumber === 1 ? this.chart1 : this.chart2;
+    if (chart) {
+      const url = chart.toBase64Image();
+      const link = document.createElement('a');
+      link.download = `grafica-${chartNumber}.png`;
+      link.href = url;
+      link.click();
+    }
+  }
+
+  toggleChartType(chartNumber: number): void {
+    if (chartNumber === 1) {
+      this.chartType1 = this.chartType1 === 'bar' ? 'pie' : 'bar';
+    } else {
+      this.chartType2 = this.chartType2 === 'pie' ? 'bar' : 'pie';
+    }
+    this.renderCharts();
+  }
+
+  // Métodos para el filtro de tiempo
+  getSelectedTimeRangeLabel(): string {
+    const range = this.timeRanges.find(r => r.value === this.selectedTimeRange);
+    return range ? range.label : 'Seleccionar período';
+  }
+
+  onTimeRangeChange(value: string): void {
+    if (value === 'custom') {
+      const dialogRef = this.dialog.open(this.customRangeDialog);
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.selectedTimeRange = 'custom';
+          this.filterDataByDateRange();
+        }
+      });
+    } else {
+      this.selectedTimeRange = value;
+      this.filterDataByDateRange();
+    }
+  }
+
+  applyCustomRange(): void {
+    if (this.customRangeStart && this.customRangeEnd) {
+      this.filterDataByDateRange();
+    }
+  }
+
+  filterDataByDateRange(): void {
+    let filteredRegisters = [...this.allRegisters];
+    
+    if (this.selectedTimeRange !== 'all') {
+      if (this.selectedTimeRange === 'custom') {
+        if (this.customRangeStart && this.customRangeEnd) {
+          filteredRegisters = filteredRegisters.filter(register => {
+            const registerDate = new Date(register.registerDate);
+            return registerDate >= this.customRangeStart! && registerDate <= this.customRangeEnd!;
+          });
+        }
+      } else {
+        const days = parseInt(this.selectedTimeRange, 10);
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - days);
+        
+        filteredRegisters = filteredRegisters.filter(register => {
+          const registerDate = new Date(register.registerDate);
+          return registerDate >= cutoffDate;
+        });
+      }
+    }
+    
+    this.prepareDashboardData(filteredRegisters);
   }
 }

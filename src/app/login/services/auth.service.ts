@@ -196,20 +196,23 @@ export class AuthService {
   refreshToken(): Observable<any> {
     const refreshToken = localStorage.getItem('refresh_token');
 
-    // Verificación más robusta del refresh token
     if (!refreshToken || refreshToken === 'undefined' || refreshToken === 'null') {
       console.error('⚠️ No hay refresh token válido en localStorage. Haciendo logout.');
       this.logout();
       return throwError(() => new Error('No hay refresh token disponible.'));
     }
 
-    // Configuración completa de la solicitud
     const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${refreshToken}` // Si tu backend lo requiere
+      'Content-Type': 'application/json'
     });
 
-    return this.http.post<any>('http://localhost:8080/auth/refresh', { refreshToken }, { headers }).pipe(
+    // Usar parámetro de query como espera el backend
+    const params = new HttpParams().set('refreshToken', refreshToken);
+
+    return this.http.post<any>(`${this.backendUrl}/auth/refresh`, null, {
+      headers: headers,
+      params: params
+    }).pipe(
       tap((response: any) => {
         if (!response?.access_token) {
           console.warn('⚠️ Respuesta inesperada del servidor:', response);
@@ -219,18 +222,20 @@ export class AuthService {
         console.log('🔄 Token refrescado con éxito');
         localStorage.setItem('kc_token', response.access_token);
 
-        // Solo actualiza el refresh_token si viene en la respuesta
         if (response.refresh_token) {
           localStorage.setItem('refresh_token', response.refresh_token);
         }
+
+        // Reiniciar el intervalo de refresco
+        this.startTokenRefresh();
       }),
       catchError(error => {
         console.error('❌ Error al refrescar token:', error);
 
-        // Manejo específico de errores HTTP
         if (error.status === 401 || error.status === 403) {
           console.warn('⚠️ Refresh token inválido o expirado');
           this.logout();
+          this.router.navigate(['/login']); // Redirigir a login
         }
 
         return throwError(() => new Error('No se pudo refrescar el token.'));
@@ -439,11 +444,11 @@ export class AuthService {
       catchError(error => {
         console.error('Error completo en updateUser:', error);
         let errorMessage = 'Error al actualizar el usuario';
-        
+
         if (error.error) {
-          errorMessage = error.error.message || 
-                        error.error.error || 
-                        JSON.stringify(error.error);
+          errorMessage = error.error.message ||
+            error.error.error ||
+            JSON.stringify(error.error);
         } else if (error.message) {
           errorMessage = error.message;
         }
@@ -451,7 +456,7 @@ export class AuthService {
         return throwError(() => new Error(errorMessage));
       })
     );
-}
+  }
 
   /**
    * Gets user by ID
@@ -493,5 +498,5 @@ export class AuthService {
         return throwError(() => new Error(error.error?.message || 'Ocurrió un error al obtener el usuario.'));
       })
     );
-}
+  }
 }
