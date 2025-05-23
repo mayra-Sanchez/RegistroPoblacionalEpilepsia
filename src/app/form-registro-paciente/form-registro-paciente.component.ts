@@ -1,34 +1,48 @@
+// Importaciones necesarias
 import { Component, OnInit } from '@angular/core';
 import { ConsolaRegistroService } from '../modules/consola-registro/services/consola-registro.service';
 import { AuthService } from 'src/app/login/services/auth.service';
 import Swal from 'sweetalert2';
 
+// Decorador del componente
 @Component({
   selector: 'app-form-registro-paciente',
   templateUrl: './form-registro-paciente.component.html',
   styleUrls: ['./form-registro-paciente.component.css']
 })
 export class FormRegistroPacienteComponent implements OnInit {
+  // Control del paso actual del formulario multipaso
   pasoActual = 1;
+
+  // Indica si el paciente tiene cuidador
   tieneCuidador = false;
+
+  // ID de la capa de investigación actual del usuario
   currentResearchLayerId: string = '';
+
+  // Estado para indicar si se está enviando el formulario
   isSending = false;
 
-  // Form data objects
+  // Datos de cada sección del formulario
   pacienteData: any = {};
   clinicalData: any[] = [];
   cuidadorData: any = {};
   profesionalData: any = {};
 
+  // Inyección de dependencias necesarias
   constructor(
     private consolaService: ConsolaRegistroService,
     private authService: AuthService
   ) { }
 
+  // Al iniciar el componente, se carga la capa de investigación del usuario
   ngOnInit(): void {
     this.loadUserResearchLayer();
   }
 
+  /**
+   * Carga el email del usuario autenticado y busca su capa de investigación.
+   */
   private loadUserResearchLayer(): void {
     const email = this.authService.getUserEmail();
     if (!email) {
@@ -52,6 +66,9 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Verifica si la capa de investigación existe por el ID proporcionado.
+   */
   private verifyResearchLayerExists(researchLayerId: string): void {
     this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({
       next: (capa) => {
@@ -68,7 +85,7 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
   }
 
-  // Form step handlers
+  // Handlers para cada paso del formulario
   handlePacienteData(data: any): void {
     this.pacienteData = data;
     this.tieneCuidador = Boolean(data.tieneCuidador);
@@ -90,7 +107,7 @@ export class FormRegistroPacienteComponent implements OnInit {
     this.prepareAndSendData();
   }
 
-  // Navigation
+  // Navegación entre pasos
   siguientePaso(): void {
     this.pasoActual++;
   }
@@ -99,7 +116,9 @@ export class FormRegistroPacienteComponent implements OnInit {
     this.pasoActual--;
   }
 
-  // Data preparation and submission
+  /**
+   * Prepara y confirma el envío del formulario al servidor.
+   */
   private prepareAndSendData(): void {
     if (!this.validateBeforeSend()) {
       this.showErrorAlert('Por favor complete todos los campos requeridos');
@@ -122,11 +141,13 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Construye el cuerpo de la solicitud y la envía al backend.
+   */
   private sendDataToServer(): void {
     const requestBody = this.buildRequestBody();
     const userEmail = this.authService.getUserEmail();
 
-    // Handle case where userEmail is null
     if (!userEmail) {
       this.showErrorAlert('No se pudo obtener el email del usuario. Por favor inicie sesión nuevamente.');
       this.isSending = false;
@@ -143,12 +164,16 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
 
     this.isSending = true;
+
     this.consolaService.registrarRegistro(requestBody, userEmail).subscribe({
       next: (response) => this.handleSuccess(response),
       error: (error) => this.handleError(error)
     });
   }
 
+  /**
+   * Arma el cuerpo del request con todos los datos del formulario.
+   */
   private buildRequestBody(): any {
     return {
       variables: this.clinicalData.map(item => ({
@@ -191,7 +216,9 @@ export class FormRegistroPacienteComponent implements OnInit {
     };
   }
 
-  // Helper methods
+  /**
+   * Genera un UUID único para los campos sin ID.
+   */
   private generateUUID(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       const r = Math.random() * 16 | 0,
@@ -200,12 +227,18 @@ export class FormRegistroPacienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Formatea una fecha al formato YYYY-MM-DD para el API.
+   */
   private formatDateForAPI(date: any): string {
     if (!date) return '';
     const d = new Date(date);
-    return d.toISOString().split('T')[0]; // YYYY-MM-DD format
+    return d.toISOString().split('T')[0];
   }
 
+  /**
+   * Convierte valores según su tipo declarado.
+   */
   private convertValue(value: any, type: string): any {
     switch (type) {
       case 'number': return Number(value);
@@ -215,6 +248,9 @@ export class FormRegistroPacienteComponent implements OnInit {
     }
   }
 
+  /**
+   * Calcula la edad a partir de una fecha de nacimiento.
+   */
   private calculateAge(birthdate: any): number {
     if (!birthdate) return 0;
     const birthDate = new Date(birthdate);
@@ -228,6 +264,9 @@ export class FormRegistroPacienteComponent implements OnInit {
     return age;
   }
 
+  /**
+   * Valida que todos los campos requeridos estén presentes antes de enviar.
+   */
   private validateBeforeSend(): boolean {
     const requiredFields = [
       this.pacienteData?.name,
@@ -251,7 +290,7 @@ export class FormRegistroPacienteComponent implements OnInit {
     return true;
   }
 
-  // Response handlers
+  // Manejadores de respuesta del servidor
   private handleSuccess(response: any): void {
     this.isSending = false;
     Swal.fire({
@@ -282,6 +321,9 @@ export class FormRegistroPacienteComponent implements OnInit {
     console.error('Error en el registro', error);
   }
 
+  /**
+   * Reinicia el formulario al estado inicial.
+   */
   private resetForm(): void {
     this.pasoActual = 1;
     this.pacienteData = {};
@@ -291,6 +333,9 @@ export class FormRegistroPacienteComponent implements OnInit {
     this.tieneCuidador = false;
   }
 
+  /**
+   * Muestra una alerta de error estándar con SweetAlert2.
+   */
   private showErrorAlert(message: string): void {
     Swal.fire({
       title: 'Error',

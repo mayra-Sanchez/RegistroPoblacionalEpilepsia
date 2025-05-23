@@ -8,9 +8,19 @@ import { Subject, takeUntil } from 'rxjs';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 
+/**
+ * Tipo que define las posibles dimensiones para agrupar datos en los gráficos
+ */
 type ChartDimension = 'sex' | 'education' | 'economic' | 'marital' | 'crisis' | 'currentCity' | 'hometown' | 'caregiver';
+
+/**
+ * Tipo que define las posibles direcciones de tendencia para las tarjetas resumen
+ */
 type TrendDirection = 'up' | 'down' | 'neutral';
 
+/**
+ * Interfaz para las tarjetas resumen del dashboard
+ */
 interface SummaryCard {
   title: string;
   value: number;
@@ -19,6 +29,9 @@ interface SummaryCard {
   change: number;
 }
 
+/**
+ * Interfaz para la información básica del paciente
+ */
 interface PatientBasicInfo {
   name?: string;
   sex?: string;
@@ -32,6 +45,9 @@ interface PatientBasicInfo {
   hometown?: string;
 }
 
+/**
+ * Interfaz completa para los registros de pacientes
+ */
 export interface Register {
   registerId: string;
   id?: string;
@@ -72,6 +88,9 @@ export interface Register {
   } | null;
 }
 
+/**
+ * Interfaz para las etiquetas de dimensiones traducidas
+ */
 interface DimensionLabels {
   [key: string]: string;
 }
@@ -82,12 +101,14 @@ interface DimensionLabels {
   styleUrls: ['./graficas-inicio.component.css']
 })
 export class GraficasInicioComponent implements OnInit, OnDestroy {
+  // Referencias a elementos del DOM
   @ViewChild('chartCanvas1') chartCanvas1!: ElementRef<HTMLCanvasElement>;
   @ViewChild('chartCanvas2') chartCanvas2!: ElementRef<HTMLCanvasElement>;
   @ViewChild('chartMenuTrigger1') chartMenuTrigger1!: MatMenuTrigger;
   @ViewChild('chartMenuTrigger2') chartMenuTrigger2!: MatMenuTrigger;
   @ViewChild('customRangeDialog') customRangeDialog!: TemplateRef<any>;
 
+  // Estado del componente
   isDarkMode = false;
   allRegisters: Register[] = [];
   
@@ -95,7 +116,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
   chartData1: ChartConfiguration['data'] = { labels: [], datasets: [] };
   chartData2: ChartConfiguration['data'] = { labels: [], datasets: [] };
 
-  // Opciones de gráficos
+  // Opciones de configuración para gráficos de barras
   readonly barChartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -120,6 +141,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   };
 
+  // Opciones de configuración para gráficos de torta
   readonly pieChartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -149,6 +171,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   };
 
+  // Tipos de gráficos iniciales
   chartType1: ChartType = 'bar';
   chartType2: ChartType = 'pie';
 
@@ -160,7 +183,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     { title: 'Con Cuidador', value: 0, icon: 'accessibility', trend: 'neutral', change: 0 }
   ];
 
-  // Dimensiones y traducciones
+  // Mapeo de dimensiones a etiquetas traducidas
   readonly dimensionLabels: DimensionLabels = {
     sex: 'Sexo',
     education: 'Nivel Educativo',
@@ -172,7 +195,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     caregiver: 'Tiene Cuidador'
   };
 
-  // Filtro de tiempo
+  // Configuración de rangos de tiempo para filtros
   selectedTimeRange = '30';
   timeRanges = [
     { value: '7', label: 'Últimos 7 días' },
@@ -183,9 +206,12 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
   customRangeStart: Date | null = null;
   customRangeEnd: Date | null = null;
 
+  // Estado de la capa de investigación actual
   currentResearchLayer: ResearchLayer | null = null;
   loading = false;
   errorMessage = '';
+  
+  // Instancias de gráficos y sujeto para manejo de suscripciones
   private chart1: Chart | null = null;
   private chart2: Chart | null = null;
   private destroy$ = new Subject<void>();
@@ -195,19 +221,29 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private dialog: MatDialog
   ) {
+    // Registra los componentes necesarios de Chart.js
     Chart.register(...registerables, ChartDataLabels);
   }
 
+  /**
+   * Método del ciclo de vida: Inicialización del componente
+   */
   ngOnInit(): void {
     this.loadCurrentResearchLayer();
   }
 
+  /**
+   * Método del ciclo de vida: Destrucción del componente
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     this.destroyCharts();
   }
 
+  /**
+   * Destruye las instancias de gráficos para liberar memoria
+   */
   private destroyCharts(): void {
     if (this.chart1) {
       this.chart1.destroy();
@@ -219,6 +255,11 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Formatea el tooltip para mostrar valores y porcentajes
+   * @param context Contexto del tooltip de Chart.js
+   * @returns Cadena formateada para el tooltip
+   */
   private formatTooltip(context: any): string {
     const label = context.dataset.label || '';
     const value = context.raw as number;
@@ -228,6 +269,9 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     return `${label}: ${value} (${percentage}%)`;
   }
 
+  /**
+   * Carga la capa de investigación del usuario actual
+   */
   loadCurrentResearchLayer(): void {
     this.loading = true;
     this.errorMessage = '';
@@ -248,6 +292,10 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Carga los detalles de la capa de investigación
+   * @param layerId ID de la capa de investigación
+   */
   private loadResearchLayerDetails(layerId: string): void {
     this.registerService.obtenerCapaPorId(layerId)
       .pipe(takeUntil(this.destroy$))
@@ -262,12 +310,20 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Maneja errores mostrando un mensaje y registrando en consola
+   * @param message Mensaje de error para mostrar al usuario
+   * @param error Objeto de error opcional para logging
+   */
   private handleError(message: string, error?: any): void {
     console.error(message, error);
     this.errorMessage = message;
     this.loading = false;
   }
 
+  /**
+   * Carga los datos iniciales de registros médicos
+   */
   loadInitialData(): void {
     if (!this.currentResearchLayer?.id) {
       this.handleError('No se ha configurado la capa de investigación');
@@ -286,7 +342,6 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response: { registers: Register[] }) => {
           this.allRegisters = response.registers || [];
-          console.log('Datos recibidos:', this.allRegisters); // Para depuración
           this.prepareDashboardData(this.allRegisters);
           this.loading = false;
         },
@@ -296,12 +351,20 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Prepara los datos para el dashboard (tarjetas y gráficos)
+   * @param registers Array de registros médicos
+   */
   private prepareDashboardData(registers: Register[]): void {
     this.updateSummaryCards(registers);
     this.prepareChartData(registers);
     this.renderCharts();
   }
 
+  /**
+   * Prepara los datos para los gráficos
+   * @param registers Array de registros médicos
+   */
   private prepareChartData(registers: Register[]): void {
     // Gráfica 1: Distribución por sexo
     const sexData = this.groupByDimension(registers, 'sex');
@@ -314,7 +377,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       }]
     };
 
-    // Gráfica 2: Distribución por estado de crisis - Versión corregida
+    // Gráfica 2: Distribución por estado de crisis
     const crisisData = this.groupByDimensionWithMapping(registers, 'crisis', {
       'activa': 'Activa',
       'inactiva': 'Inactiva',
@@ -331,6 +394,13 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     };
   }
 
+  /**
+   * Agrupa registros por dimensión aplicando un mapeo de valores
+   * @param registers Array de registros médicos
+   * @param dimension Dimensión por la que agrupar
+   * @param valueMap Mapeo de valores para traducción/estandarización
+   * @returns Objeto con conteos agrupados por valores mapeados
+   */
   private groupByDimensionWithMapping(
     registers: Register[], 
     dimension: ChartDimension,
@@ -344,10 +414,14 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }, {});
   }
 
+  /**
+   * Actualiza las tarjetas resumen con datos actuales
+   * @param registers Array de registros médicos
+   */
   private updateSummaryCards(registers: Register[]): void {
     const totalPatients = registers.length;
     
-    // Contar crisis activas - versión más robusta
+    // Contar crisis activas
     const withCrisis = registers.filter(r => {
       const status = r.patientBasicInfo?.crisisStatus?.toLowerCase();
       return status === 'activa' || status === 'active';
@@ -365,7 +439,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       return regDate.getMonth() === currentMonth && regDate.getFullYear() === currentYear;
     }).length;
 
-    // Calcular tendencias
+    // Calcular tendencias comparando con el mes anterior
     const prevMonthPatients = registers.filter(r => {
       const regDate = new Date(r.registerDate);
       const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
@@ -377,6 +451,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       ? Math.round(((thisMonthPatients - prevMonthPatients) / prevMonthPatients) * 100)
       : 0;
 
+    // Actualizar las tarjetas
     this.summaryCards = [
       {
         title: 'Pacientes Registrados',
@@ -409,12 +484,20 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     ];
   }
 
+  /**
+   * Determina la dirección de la tendencia basada en el cambio porcentual
+   * @param change Porcentaje de cambio
+   * @returns Dirección de la tendencia (up, down, neutral)
+   */
   private getTrendDirection(change: number): TrendDirection {
     if (change > 0) return 'up';
     if (change < 0) return 'down';
     return 'neutral';
   }
 
+  /**
+   * Renderiza los gráficos con los datos actuales
+   */
   private renderCharts(): void {
     this.destroyCharts();
 
@@ -439,6 +522,12 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Agrupa registros por una dimensión específica
+   * @param registers Array de registros médicos
+   * @param dimension Dimensión por la que agrupar
+   * @returns Objeto con conteos agrupados por valores de la dimensión
+   */
   private groupByDimension(registers: Register[], dimension: ChartDimension): Record<string, number> {
     return registers.reduce((acc: Record<string, number>, register) => {
       const value = this.getDimensionValue(dimension, register.patientBasicInfo || {}, register);
@@ -447,6 +536,13 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }, {});
   }
 
+  /**
+   * Obtiene el valor de una dimensión específica de un registro
+   * @param dimension Dimensión a obtener
+   * @param patientInfo Información del paciente
+   * @param register Registro completo
+   * @returns Valor formateado de la dimensión
+   */
   private getDimensionValue(dimension: ChartDimension, patientInfo: PatientBasicInfo, register: Register): string {
     switch (dimension) {
       case 'sex':
@@ -470,6 +566,11 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Obtiene la etiqueta traducida para el nivel educativo
+   * @param value Valor del nivel educativo
+   * @returns Etiqueta traducida o valor original si no hay traducción
+   */
   private getEducationLabel(value?: string): string {
     const labels: Record<string, string> = {
       'primaria': 'Primaria',
@@ -482,6 +583,11 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     return value ? labels[value] || value : 'No especificado';
   }
 
+  /**
+   * Obtiene la etiqueta traducida para el nivel socioeconómico
+   * @param value Valor del nivel socioeconómico
+   * @returns Etiqueta traducida o valor original si no hay traducción
+   */
   private getEconomicStatusLabel(value?: string): string {
     const labels: Record<string, string> = {
       'bajo': 'Bajo',
@@ -493,6 +599,11 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     return value ? labels[value] || value : 'No especificado';
   }
 
+  /**
+   * Obtiene la etiqueta traducida para el estado civil
+   * @param value Valor del estado civil
+   * @returns Etiqueta traducida o valor original si no hay traducción
+   */
   private getMaritalStatusLabel(value?: string): string {
     const labels: Record<string, string> = {
       'soltero': 'Soltero/a',
@@ -504,6 +615,11 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     return value ? labels[value] || value : 'No especificado';
   }
 
+  /**
+   * Obtiene el color CSS para una tarjeta basado en su tendencia
+   * @param trend Dirección de la tendencia
+   * @returns Color CSS correspondiente
+   */
   getCardColor(trend: string): string {
     const colors = {
       'up': 'var(--success-color)',
@@ -513,6 +629,9 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     return colors[trend as keyof typeof colors] || colors.neutral;
   }
 
+  /**
+   * Alterna entre modo claro y oscuro
+   */
   toggleTheme(): void {
     this.isDarkMode = !this.isDarkMode;
     const host = document.querySelector('app-graficas-inicio');
@@ -525,7 +644,10 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Métodos para los menús de gráficos
+  /**
+   * Descarga un gráfico como imagen PNG
+   * @param chartNumber Número del gráfico a descargar (1 o 2)
+   */
   downloadChart(chartNumber: number): void {
     const chart = chartNumber === 1 ? this.chart1 : this.chart2;
     if (chart) {
@@ -537,6 +659,10 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Alterna el tipo de gráfico entre barras y torta
+   * @param chartNumber Número del gráfico a alternar (1 o 2)
+   */
   toggleChartType(chartNumber: number): void {
     if (chartNumber === 1) {
       this.chartType1 = this.chartType1 === 'bar' ? 'pie' : 'bar';
@@ -546,12 +672,19 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     this.renderCharts();
   }
 
-  // Métodos para el filtro de tiempo
+  /**
+   * Obtiene la etiqueta del rango de tiempo seleccionado
+   * @returns Etiqueta del rango de tiempo
+   */
   getSelectedTimeRangeLabel(): string {
     const range = this.timeRanges.find(r => r.value === this.selectedTimeRange);
     return range ? range.label : 'Seleccionar período';
   }
 
+  /**
+   * Maneja el cambio en el selector de rango de tiempo
+   * @param value Valor del rango seleccionado
+   */
   onTimeRangeChange(value: string): void {
     if (value === 'custom') {
       const dialogRef = this.dialog.open(this.customRangeDialog);
@@ -567,12 +700,18 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Aplica un rango de fechas personalizado
+   */
   applyCustomRange(): void {
     if (this.customRangeStart && this.customRangeEnd) {
       this.filterDataByDateRange();
     }
   }
 
+  /**
+   * Filtra los datos según el rango de tiempo seleccionado
+   */
   filterDataByDateRange(): void {
     let filteredRegisters = [...this.allRegisters];
     

@@ -207,7 +207,6 @@ export class EditRegistroModalComponent {
       }
     };
 
-    // Incluye datos del cuidador solo si existen
     if (this.registro.caregiver && this.hasCaregiverData(this.registro.caregiver)) {
       payload.caregiver = {
         name: this.registro.caregiver.name || '',
@@ -219,7 +218,6 @@ export class EditRegistroModalComponent {
       };
     }
 
-    // Incluye datos del profesional de la salud si existen
     if (this.registro.healthProfessional) {
       payload.healthProfessional = {
         id: this.registro.healthProfessional.id || '',
@@ -389,16 +387,13 @@ export class EditRegistroModalComponent {
   prepareDateForInput(dateString: string | null | undefined): string {
     if (!dateString) return '';
 
-    // Si ya está en formato YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
 
-    // Convierte desde DD-MM-YYYY
     const [day, month, year] = dateString.split('-');
     if (day && month && year) {
       return `${year}-${month}-${day}`;
     }
 
-    // Intenta parsear como objeto Date
     const date = new Date(dateString);
     if (!isNaN(date.getTime())) {
       return date.toISOString().split('T')[0];

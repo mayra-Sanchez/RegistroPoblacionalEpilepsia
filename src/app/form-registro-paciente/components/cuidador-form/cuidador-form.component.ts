@@ -126,7 +126,6 @@ export class CuidadorFormComponent {
     if (this.form.valid) {
       const formData = this.form.value;
       
-      // Transforma los nombres de los campos para el objeto de salida
       const transformedData = {
         name: formData.caregiverName,
         identificationType: formData.caregiverIdentificationType,

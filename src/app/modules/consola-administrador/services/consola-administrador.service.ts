@@ -188,9 +188,7 @@ export class ConsolaAdministradorService {
       catchError(error => {
         if (error.status === 403) {
           console.error('Acceso denegado - Verifica los roles del usuario');
-          if (error.error?.message?.includes('expired')) {
-            this.authService.logout();
-          }
+          this.authService.logout(); // <-- Siempre llama a logout en error 403
         }
         return throwError(() => error);
       })

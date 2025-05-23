@@ -6,14 +6,21 @@ import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
 /**
- * Componente para el formulario de registro de capas de investigación
+ * Componente para el registro de capas de investigación
  * 
- * Este componente maneja la creación de nuevas capas de investigación con validación de datos,
- * confirmación de usuario y retroalimentación visual. Implementa OnInit para inicialización
- * y OnDestroy para limpieza de suscripciones.
+ * @remarks
+ * Este componente proporciona un formulario completo para registrar nuevas capas de investigación,
+ * incluyendo validaciones, confirmación mediante diálogos y manejo de errores. Implementa:
+ * - Formularios reactivos con validación en tiempo real
+ * - Confirmación de acciones con SweetAlert2
+ * - Manejo adecuado de suscripciones para prevenir memory leaks
+ * - Retroalimentación visual para el usuario
  * 
  * @example
+ * ```html
+ * <!-- Uso básico del componente -->
  * <app-form-registro-capas></app-form-registro-capas>
+ * ```
  */
 @Component({
   selector: 'app-form-registro-capas',
@@ -24,6 +31,12 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   /**
    * Formulario reactivo para el registro de capas
    * @type {FormGroup}
+   * @property {FormControl} layerName - Nombre de la capa (requerido, mínimo 3 caracteres)
+   * @property {FormControl} description - Descripción de la capa (requerido, mínimo 5 caracteres)
+   * @property {FormGroup} layerBoss - Grupo de controles para el jefe de capa
+   * @property {FormControl} layerBoss.id - ID del jefe (valor por defecto: 1)
+   * @property {FormControl} layerBoss.name - Nombre del jefe (requerido, mínimo 3 caracteres)
+   * @property {FormControl} layerBoss.identificationNumber - Número de identificación (requerido, mínimo 5 caracteres)
    */
   form!: FormGroup;
 
@@ -36,9 +49,9 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
 
   /**
    * Constructor del componente
-   * @param {FormBuilder} fb Servicio para construir formularios reactivos
-   * @param {ConsolaAdministradorService} consolaAdministradorService Servicio para operaciones de administración
-   * @param {MatDialog} dialog Servicio para manejo de diálogos modales
+   * @param {FormBuilder} fb - Servicio para construir formularios reactivos
+   * @param {ConsolaAdministradorService} consolaAdministradorService - Servicio para operaciones administrativas
+   * @param {MatDialog} dialog - Servicio para manejar diálogos modales
    */
   constructor(
     private fb: FormBuilder,
@@ -47,8 +60,9 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   ) { }
 
   /**
-   * Método del ciclo de vida Angular para inicialización
-   * Configura el formulario con validaciones
+   * Inicialización del componente
+   * @remarks
+   * Configura el formulario con sus controles y validaciones correspondientes
    */
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -63,7 +77,8 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Método del ciclo de vida Angular para destrucción
+   * Limpieza del componente
+   * @remarks
    * Cancela la suscripción activa para prevenir memory leaks
    */
   ngOnDestroy(): void {
@@ -71,10 +86,16 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       this.capasSubscription.unsubscribe();
     }
   }
- 
+
   /**
    * Maneja el registro de una nueva capa de investigación
-   * Valida el formulario, muestra confirmación y procesa la solicitud
+   * @remarks
+   * Realiza las siguientes acciones:
+   * 1. Valida el formulario
+   * 2. Muestra diálogo de confirmación
+   * 3. Envía los datos al servidor
+   * 4. Maneja la respuesta/errores
+   * 5. Proporciona retroalimentación al usuario
    */
   registrarCapa(): void {
     if (this.form.invalid) {
@@ -104,49 +125,76 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Sí, registrar',
-      cancelButtonText: 'Cancelar'
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.capasSubscription = this.consolaAdministradorService.registrarCapa(capaData).subscribe({
-          next: () => {
-            Swal.fire({
-              title: '¡Registro exitoso! 🎉',
-              html: `
-              <div style="text-align: center;">
-                <p>La capa ha sido registrada correctamente.</p>
-                <img src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" 
-                  alt="Éxito" style="width: 150px; margin-top: 10px;">
-              </div>
-            `,
-              icon: 'success',
-              confirmButtonText: 'Aceptar',
-              confirmButtonColor: '#3085d6',
-              background: '#f1f8ff',
-              timer: 5000,
-              timerProgressBar: true
-            });
-            this.form.reset();
-          },
-          error: (error) => {
-            let errorMessage = 'Ocurrió un problema al registrar la capa.';
-
-            if (error.error && typeof error.error === 'string') {
-              if (error.error.includes('ya existe')) {
-                errorMessage = 'El nombre de la capa ya existe.';
-              } else if (error.error.includes('demasiado largo')) {
-                errorMessage = 'Algunos campos exceden la longitud máxima permitida.';
-              }
-            }
-
-            Swal.fire({
-              title: 'Error',
-              text: errorMessage,
-              icon: 'error',
-              confirmButtonText: 'Aceptar'
-            });
-          }
-        });
+        this.procesarRegistro(capaData);
       }
+    });
+  }
+
+  /**
+   * Procesa el registro de la capa con el servidor
+   * @private
+   * @param {Object} capaData - Datos de la capa a registrar
+   */
+  private procesarRegistro(capaData: any): void {
+    this.capasSubscription = this.consolaAdministradorService.registrarCapa(capaData).subscribe({
+      next: () => this.mostrarExito(),
+      error: (error) => this.mostrarError(error)
+    });
+  }
+
+  /**
+   * Muestra mensaje de éxito en el registro
+   * @private
+   */
+  private mostrarExito(): void {
+    Swal.fire({
+      title: '¡Registro exitoso! 🎉',
+      html: `
+        <div style="text-align: center;">
+          <p>La capa ha sido registrada correctamente.</p>
+          <img src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" 
+            alt="Éxito" style="width: 150px; margin-top: 10px;">
+        </div>
+      `,
+      icon: 'success',
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#3085d6',
+      background: '#f1f8ff',
+      timer: 5000,
+      timerProgressBar: true
+    });
+    this.form.reset();
+  }
+
+  /**
+   * Muestra mensaje de error personalizado
+   * @private
+   * @param {any} error - Objeto de error recibido del servidor
+   */
+  private mostrarError(error: any): void {
+    let errorMessage = 'Ocurrió un problema al registrar la capa.';
+
+    if (error.error && typeof error.error === 'string') {
+      if (error.error.includes('ya existe')) {
+        errorMessage = 'El nombre de la capa ya existe. Por favor, elija otro.';
+      } else if (error.error.includes('demasiado largo')) {
+        errorMessage = 'Algunos campos exceden la longitud máxima permitida.';
+      } else if (error.error.includes('inválido')) {
+        errorMessage = 'Datos proporcionados no son válidos.';
+      }
+    }
+
+    Swal.fire({
+      title: 'Error',
+      text: errorMessage,
+      icon: 'error',
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#d33'
     });
   }
 }

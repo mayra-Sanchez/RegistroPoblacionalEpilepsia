@@ -164,7 +164,7 @@ export class ConsolaInvestigadorService {
        * @returns {Observable<ResearchLayer>} Observable con los datos de la capa
        */
     obtenerCapaPorId(id: string): Observable<ResearchLayer> {
-        const headers = this.getAuthHeaders(); // Asegúrate de que esto incluya el token
+        const headers = this.getAuthHeaders();
         const params = new HttpParams().set('id', id);
       
         return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, {
@@ -174,7 +174,6 @@ export class ConsolaInvestigadorService {
           catchError(error => {
             if (error.status === 403) {
               console.error('Acceso denegado. Verifica tus permisos o la validez de tu token.');
-              // Podrías redirigir al login o refrescar el token aquí
               this.authService.logout();
             }
             return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));

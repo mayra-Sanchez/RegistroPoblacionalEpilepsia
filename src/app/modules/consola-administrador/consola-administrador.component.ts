@@ -235,16 +235,16 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     { field: 'email', header: 'Correo Electrónico' },
     { field: 'usuario', header: 'Usuario' },
     {
-      field: 'capa', 
+      field: 'capa',
       header: 'Capa de Investigación',
       formatter: (value: string, row: any) => this.getCapaNombreById(row.capaRawValue)
     },
-    { 
-      field: 'rolDisplay', 
-      header: 'Rol' 
+    {
+      field: 'rolDisplay',
+      header: 'Rol'
     },
-    { 
-      field: 'enabled', 
+    {
+      field: 'enabled',
       header: 'Estado',
       formatter: (value: boolean) => value ? 'Habilitado' : 'Deshabilitado',
       type: 'boolean'
@@ -269,7 +269,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     { field: 'descripcion', header: 'Descripción' },
     { field: 'jefeCapaNombre', header: 'Jefe de capa' }
   ];
-  
+
   /**
    * Configuración de columnas para tabla de registros de capas
    */
@@ -361,7 +361,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         }));
 
         this.capas = this.capasData;
-        this.updateDashboard(); 
+        this.updateDashboard();
         this.totalCapas = this.capasData.length;
         this.cdr.detectChanges();
 
@@ -394,7 +394,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           jefeIdentificacion: capa.layerBoss?.identificationNumber || 'Sin asignar'
         }));
         this.capas = this.capasData;
-        this.updateDashboard(); 
+        this.updateDashboard();
         this.totalCapas = this.capasData.length;
       },
       error: (err) => {
@@ -419,7 +419,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           ...variable,
           capaNombre: this.getCapaNombreByIdVariables(variable.researchLayerId)
         }));
-        this.updateDashboard(); 
+        this.updateDashboard();
         this.cdr.detectChanges();
       },
       error: () => {
@@ -461,7 +461,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             enabled: this.transformarString(user.enabled)
           };
         });
-        this.updateDashboard(); 
+        this.updateDashboard();
         this.cdr.detectChanges();
       },
       error: () => this.mostrarMensajeError('No se pudo cargar la información de los usuarios'),
@@ -654,10 +654,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * Maneja la eliminación de un registro
    * @param event Registro a eliminar
    */
-  handleDeleteRegistro(event: any): void {
+  handleDeleteRegistro(registro: any): void {
     Swal.fire({
       title: '¿Estás seguro?',
-      text: `Estás a punto de eliminar el registro ${event.registerId}`,
+      text: `Estás a punto de eliminar el registro ${registro.registerId}`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -666,14 +666,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.consolaService.deleteRegistroCapa(event.registerId).subscribe({
+        this.consolaService.deleteRegistroCapa(registro.registerId).subscribe({
           next: () => {
             Swal.fire('¡Eliminado!', 'El registro ha sido eliminado.', 'success');
             this.loadRegistrosCapas();
           },
           error: (err) => {
             console.error('Error al eliminar registro:', err);
-            Swal.fire('Error', 'No se pudo eliminar el registro.', 'error');
+            this.mostrarMensajeError('No se pudo eliminar el registro.');
           }
         });
       }
@@ -688,20 +688,28 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * @returns Nombre de la capa o mensaje predeterminado
    */
   getCapaNombreById(idOrName: string): string {
-    if (!idOrName || idOrName === 'undefined' || idOrName === 'null') return 'Sin asignar';
-
-    if (typeof idOrName === 'string' && !idOrName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      return idOrName;
+    // Validar valor vacío o nulo
+    if (!idOrName || idOrName === 'undefined' || idOrName === 'null') {
+      return 'Sin asignar';
     }
 
-    const capa = this.capas.find(c =>
+    // Concatenar ambos arreglos (capas y capasData)
+    const allCapas = [...(this.capas || []), ...(this.capasData || [])];
+    const capa = allCapas.find(c =>
       c.id === idOrName ||
       c._id === idOrName ||
       c.layerId === idOrName
     );
 
-    return capa ? (capa.layerName || capa.nombreCapa || 'Capa sin nombre') : 'Capa no encontrada';
+    // Si se encuentra, devolver su nombre
+    if (capa) {
+      return capa.layerName || capa.nombreCapa || 'Capa sin nombre';
+    }
+
+    // Si no existe, mensaje por defecto
+    return 'Capa no encontrada';
   }
+
 
   /**
    * Obtiene el nombre de una capa por su ID (para variables)
@@ -715,19 +723,21 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
   /**
    * Transforma valores de texto a formatos más legibles
-   * @param string Texto a transformar
+   * @param value Texto a transformar
    * @returns Texto transformado o el original si no hay coincidencia
    */
-  transformarString(string: string): string {
-    const stingMap: { [key: string]: string } = {
+  transformarString(value: string): string {
+    const stringMap: { [key: string]: string } = {
+      'ADMIN': 'Administrador',
       'Admin': 'Administrador',
       'Doctor': 'Doctor',
       'Researcher': 'Investigador',
       'true': 'Activo',
       'false': 'Inactivo'
     };
-    return stingMap[string] || string;
+    return stringMap[value] || value;
   }
+
 
   /**
    * Muestra un mensaje de error usando SweetAlert2

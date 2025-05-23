@@ -499,4 +499,9 @@ export class AuthService {
       })
     );
   }
+
+  requestPasswordReset(email: string): Observable<any> {
+    // Ajusta esta URL según tu API
+    return this.http.post(`${this.backendUrl}/auth/forgot-password`, { email });
+  }
 }
