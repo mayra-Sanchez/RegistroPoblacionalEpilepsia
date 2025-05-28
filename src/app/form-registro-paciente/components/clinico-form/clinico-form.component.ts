@@ -29,7 +29,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   // Inputs: Recibe datos del componente padre
   @Input() researchLayerId: string = ''; // ID de la capa de investigación
   @Input() initialData: any[] = []; // Datos iniciales para el formulario
-  
+
   // Outputs: Emite eventos al componente padre
   @Output() next = new EventEmitter<any[]>(); // Evento al avanzar
   @Output() prev = new EventEmitter<void>(); // Evento al retroceder
@@ -116,32 +116,32 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   initializeForm(variables: Variable[]): void {
     this.saveCurrentValues();
     this.variablesClinicas.clear();
-  
+
     // Calculate unique display types from actual variables
     const uniqueDisplayTypes = new Set<string>();
-  
+
     variables
       .filter(v => v.isEnabled)
       .forEach(variable => {
         const variableGroup = this.createVariableGroup(variable);
-        
+
         // Add to form array
         this.variablesClinicas.push(variableGroup);
-        
+
         // Get display type and add to unique types
         const displayType = variableGroup.get('type')?.value;
         if (displayType) {
           uniqueDisplayTypes.add(displayType);
         }
       });
-  
+
     // Update available types based on actual variables
     this.availableTypes = Array.from(uniqueDisplayTypes).sort((a, b) => {
       // Custom sorting to keep consistent order
       const order = ['Entero', 'Decimal', 'Texto', 'Opciones', 'Booleano', 'Fecha'];
       return order.indexOf(a) - order.indexOf(b);
     });
-  
+
     this.applyFilters();
   }
 
@@ -160,9 +160,9 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * @param variableId ID de la variable
    * @returns Valor guardado o null si no existe
    */
-  private getSavedValue(variableId: string): any {
+  getSavedValue(variableId: string): any {
     console.log('Buscando valor para:', variableId, 'InitialData:', this.initialData); // <-- Añade esto
-    
+
     if (this.initialData && this.initialData.length > 0) {
       const initialVar = this.initialData.find((v: any) => v.id === variableId);
       if (initialVar) {
@@ -170,7 +170,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
         return initialVar.valor;
       }
     }
-  
+
     const savedData = localStorage.getItem('clinicalFormData');
     if (savedData) {
       try {
@@ -184,7 +184,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
         console.error('Error parsing saved form data:', e);
       }
     }
-  
+
     console.log('No se encontró valor para:', variableId); // <-- Añade esto
     return null;
   }
@@ -197,10 +197,10 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   createVariableGroup(variable: Variable): FormGroup {
     const validators = variable.required ? [Validators.required] : [];
     const options = Array.isArray(variable.options) ? variable.options : [];
-    
+
     // Determinar el tipo de control a mostrar
     let displayType = variable.type;
-    
+
     // Si tiene opciones, forzar el tipo a 'Opciones'
     if (options.length > 0) {
       displayType = 'Opciones';
@@ -215,7 +215,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
     } else if (variable.type === 'Real') {
       displayType = 'Decimal';
     }
-    
+
     return this.fb.group({
       id: [variable.id],
       variableName: [variable.variableName],
@@ -231,7 +231,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   /**
    * Guarda los valores actuales en localStorage
    */
-  private saveToLocalStorage(): void {
+  saveToLocalStorage(): void {
     const values = this.variablesClinicas.controls.map(control => ({
       id: control.get('id')?.value,
       valor: control.get('valor')?.value
@@ -242,7 +242,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   /**
    * Carga datos guardados desde localStorage
    */
-  private loadFromLocalStorage(): void {
+  loadFromLocalStorage(): void {
     const savedData = localStorage.getItem('clinicalFormData');
     if (savedData) {
       try {
@@ -267,7 +267,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * Aplica los filtros de búsqueda y tipo a las variables
    */
   applyFilters(): void {
-    console.log('Aplicando filtros. Término:', this.searchTerm, 'Tipo:', this.activeTypeFilter); 
+    console.log('Aplicando filtros. Término:', this.searchTerm, 'Tipo:', this.activeTypeFilter);
     let filtered = this.variablesClinicas.controls as FormGroup[];
 
     // Filtra por término de búsqueda
@@ -326,7 +326,13 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * Actualiza el contador de variables completadas
    */
   private updateCompletedCount(): void {
-    this.completedVariables = this.filteredVariables.filter(control => control.valid).length;
+    this.completedVariables = this.filteredVariables
+      .filter(control => {
+        const isRequired = control.get('required')?.value;
+        const value = control.get('valor')?.value;
+        return isRequired && (value !== null && value !== undefined && value !== '');
+      })
+      .length;
   }
 
   /**
@@ -337,7 +343,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   getPlaceholder(variableGroup: FormGroup): string {
     const type = variableGroup.get('type')?.value;
     const name = variableGroup.get('variableName')?.value;
-  
+
     const placeholders: Record<string, string> = {
       'Entero': `Ingrese ${name} (número entero)`,
       'Decimal': `Ingrese ${name} (número decimal)`,
@@ -345,7 +351,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       'Booleano': `Seleccione ${name}`,
       'Fecha': `Seleccione fecha para ${name}`
     };
-  
+
     return placeholders[type] || `Ingrese ${name}`;
   }
 
@@ -404,7 +410,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * @param frontendType Tipo en frontend
    * @returns Tipo equivalente en backend
    */
-  private mapToBackendType(frontendType: string): string {
+  mapToBackendType(frontendType: string): string {
     const typeMap: Record<string, string> = {
       'Entero': 'number',
       'Decimal': 'number',

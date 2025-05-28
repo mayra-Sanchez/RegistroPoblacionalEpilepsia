@@ -174,7 +174,7 @@ export class FormRegistroPacienteComponent implements OnInit {
   /**
    * Arma el cuerpo del request con todos los datos del formulario.
    */
-  private buildRequestBody(): any {
+  public  buildRequestBody(): any {
     return {
       variables: this.clinicalData.map(item => ({
         id: item.id || this.generateUUID(),
@@ -251,7 +251,7 @@ export class FormRegistroPacienteComponent implements OnInit {
   /**
    * Calcula la edad a partir de una fecha de nacimiento.
    */
-  private calculateAge(birthdate: any): number {
+  public calculateAge(birthdate: any): number {
     if (!birthdate) return 0;
     const birthDate = new Date(birthdate);
     const today = new Date();
@@ -267,7 +267,7 @@ export class FormRegistroPacienteComponent implements OnInit {
   /**
    * Valida que todos los campos requeridos estén presentes antes de enviar.
    */
-  private validateBeforeSend(): boolean {
+  public validateBeforeSend(): boolean {
     const requiredFields = [
       this.pacienteData?.name,
       this.pacienteData?.identificationNumber,
@@ -324,7 +324,7 @@ export class FormRegistroPacienteComponent implements OnInit {
   /**
    * Reinicia el formulario al estado inicial.
    */
-  private resetForm(): void {
+  public  resetForm(): void {
     this.pasoActual = 1;
     this.pacienteData = {};
     this.clinicalData = [];

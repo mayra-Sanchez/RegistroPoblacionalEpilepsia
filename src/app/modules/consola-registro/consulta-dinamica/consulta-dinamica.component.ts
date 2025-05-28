@@ -20,10 +20,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestroy {
   // Referencia al iframe que contiene el dashboard
   @ViewChild('dashboardIframe') iframe!: ElementRef<HTMLIFrameElement>;
-  
+
   // Referencia al contenedor padre del iframe
   @ViewChild('dashboardContainer') container!: ElementRef<HTMLDivElement>;
-  
+
   // Configuración de URL base y parámetros para Superset
   private readonly baseUrl = 'http://localhost/superset/dashboard/1/';
   private readonly urlParams = {
@@ -35,7 +35,7 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
     width: '100%',            // Ancho responsive
     height: '100%'            // Alto responsive
   };
-  
+
   // Propiedades públicas del estado del componente
   dashboardUrl: SafeResourceUrl;  // URL sanitizada para el iframe
   isIframeLoaded = false;         // Bandera de carga completada
@@ -44,7 +44,7 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
   errorMessage = '';              // Mensaje de error descriptivo
   lastLoadTime: Date | null = null; // Timestamp de última carga exitosa
   isFullscreen = false;           // Estado de pantalla completa
-  
+
   private resizeObserver!: ResizeObserver; // Observer para cambios de tamaño
 
   /**
@@ -60,7 +60,7 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   // === Ciclo de vida del componente ===
-  
+
   ngOnInit(): void {
     this.initDashboard();
   }
@@ -104,14 +104,14 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
     this.isLoading = true;
     this.hasError = false;
     this.isIframeLoaded = false;
-    
+
     // Nueva URL con timestamp para evitar caché
     const timestamp = new Date().getTime();
     const updatedUrl = `${this.baseUrl}?${new URLSearchParams({
       ...this.urlParams,
       t: timestamp.toString()
     }).toString()}`;
-    
+
     this.dashboardUrl = this.sanitizer.bypassSecurityTrustResourceUrl(updatedUrl);
   }
 
@@ -122,8 +122,8 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
     requestAnimationFrame(() => {
       const container = this.container.nativeElement;
       const controlsHeight = 60; // Altura fija de controles UI
-      
-      this.iframe.nativeElement.style.height = this.isFullscreen 
+
+      this.iframe.nativeElement.style.height = this.isFullscreen
         ? `${window.innerHeight - controlsHeight}px`
         : `${container.clientHeight - controlsHeight}px`;
     });
@@ -136,10 +136,13 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
     try {
       const iframeWindow = this.iframe.nativeElement.contentWindow;
       if (iframeWindow) {
-        iframeWindow.postMessage({
-          type: 'resize',
-          height: this.iframe.nativeElement.clientHeight
-        }, '*');
+        iframeWindow.postMessage(
+          {
+            type: 'resize',
+            height: this.iframe.nativeElement.clientHeight
+          },
+          { targetOrigin: '*' } // Cambiado de '*' a objeto
+        );
       }
     } catch (e) {
       console.warn('No se pudo ajustar el tamaño interno del dashboard');
@@ -190,7 +193,7 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
     this.isIframeLoaded = true;
     this.lastLoadTime = new Date();
     this.hasError = false;
-    
+
     // Ajustes finales después de la carga
     setTimeout(() => {
       this.adjustIframeSize();

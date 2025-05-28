@@ -201,9 +201,9 @@ export class ConsolaRegistroService {
    * @returns {Observable<any>} Observable con los registros paginados
    */
   obtenerRegistros(
-    page: number = 0, 
-    size: number = 10, 
-    sort: string = 'registerDate', 
+    page: number = 0,
+    size: number = 10,
+    sort: string = 'registerDate',
     sortDirection: string = 'DESC'
   ): Observable<any> {
     const params = new HttpParams()
@@ -271,7 +271,7 @@ export class ConsolaRegistroService {
     sortDirection: string = 'DESC'
   ): Observable<any> {
     const headers = this.getAuthHeaders();
-    
+
     const params = new HttpParams()
       .set('patientIdentificationNumber', patientIdentificationNumber.toString())
       .set('page', page.toString())
@@ -520,11 +520,21 @@ export class ConsolaRegistroService {
    * @returns {string} Fecha formateada
    */
   private formatDateToBackend(dateString: string): string {
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    // Validate input
+    if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      console.warn(`Invalid date format: ${dateString}. Expected YYYY-MM-DD.`);
+      return dateString; // Return original string or handle as needed
+    }
+
+    // Split the date string and create a UTC date
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day)); // month is 0-based in JavaScript
+
+    // Format as DD-MM-YYYY using UTC methods
+    const formattedDay = date.getUTCDate().toString().padStart(2, '0');
+    const formattedMonth = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const formattedYear = date.getUTCFullYear();
+    return `${formattedDay}-${formattedMonth}-${formattedYear}`;
   }
 
   /**

@@ -102,15 +102,25 @@ export class PacienteFormComponent {
    * @param dateValue - Fecha en cualquier formato compatible con Date
    * @returns string formateado o vacío
    */
-  private formatDate(dateValue: any): string {
-    if (!dateValue) return '';
-    const date = new Date(dateValue);
-    if (isNaN(date.getTime())) return '';
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
+private formatDate(dateValue: any): string {
+  if (!dateValue) return '';
+  
+  if (dateValue instanceof Date) {
+    if (isNaN(dateValue.getTime())) return '';
+    const day = dateValue.getDate().toString().padStart(2, '0');
+    const month = (dateValue.getMonth() + 1).toString().padStart(2, '0');
+    const year = dateValue.getFullYear();
     return `${day}-${month}-${year}`;
   }
+
+  if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    const [year, month, day] = dateValue.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-based in JS
+    if (isNaN(date.getTime())) return '';
+    return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
+  }
+  return '';
+}
 
   /**
    * Prepara y formatea los datos del formulario para ser emitidos
