@@ -1,10 +1,24 @@
-/* Estructura principal */
+/* ==================== */
+/* ESTRUCTURA PRINCIPAL */
+/* ==================== */
+
+/**
+ * Estilos para el elemento host del componente
+ * - Ocupa todo el espacio disponible del contenedor padre
+ * - Se comporta como un elemento de bloque
+ */
 :host {
   display: block;
   height: 100%;
   width: 100%;
 }
 
+/**
+ * Contenedor principal del dashboard
+ * - Diseño flexible en columna
+ * - Fondo gris claro con bordes redondeados
+ * - Posicionamiento relativo para elementos hijos absolutos
+ */
 .dashboard-container {
   position: relative;
   height: 100%;
@@ -16,6 +30,12 @@
   overflow: hidden;
 }
 
+/**
+ * Modificador para modo pantalla completa
+ * - Cubre toda la ventana (posición fija)
+ * - Fondo blanco sin bordes redondeados
+ * - Alto z-index para asegurar visibilidad
+ */
 .dashboard-container.fullscreen-mode {
   position: fixed;
   top: 0;
@@ -27,7 +47,16 @@
   border-radius: 0;
 }
 
-/* Barra de controles */
+/* ================= */
+/* BARRA DE CONTROLES */
+/* ================= */
+
+/**
+ * Barra superior de controles
+ * - Fondo blanco con borde inferior sutil
+ * - Diseño flexible con espacio entre elementos
+ * - Pequeño padding interno
+ */
 .controls-bar {
   padding: 8px 12px;
   background: white;
@@ -37,7 +66,16 @@
   z-index: 2;
 }
 
-/* Iframe con ajustes específicos */
+/* ============== */
+/* IFRAME SUPERSET */
+/* ============== */
+
+/**
+ * Estilos base para el iframe que contiene el dashboard
+ * - Ocupa todo el espacio disponible (flex: 1)
+ * - Sin bordes y fondo blanco
+ * - Altura mínima para evitar colapso
+ */
 .superset-iframe {
   flex: 1;
   border: none;
@@ -49,13 +87,24 @@
   transform-origin: 0 0;
 }
 
-/* Corrección específica para Superset */
+/**
+ * Corrección específica para Superset
+ * - Fuerza el ocultamiento de scroll/desbordamiento
+ */
 .superset-iframe {
-  /* Fuerza el redimensionamiento interno */
   overflow: hidden !important;
 }
 
-/* Estados */
+/* ========== */
+/* ESTADOS UI */
+/* ========== */
+
+/**
+ * Estilos base para estados de carga y error
+ * - Cubre el área del dashboard
+ * - Fondo semitransparente
+ * - Contenido centrado vertical/horizontalmente
+ */
 .loading-state, .error-state {
   position: absolute;
   top: 60px;
@@ -71,6 +120,12 @@
   gap: 16px;
 }
 
+/**
+ * Estilos específicos para estado de error
+ * - Texto centrado con padding
+ * - Icono grande (48px)
+ * - Título en color rojo
+ */
 .error-state {
   text-align: center;
   padding: 20px;
@@ -87,6 +142,16 @@
   }
 }
 
+/* ====================== */
+/* INDICADOR DE ACTUALIZACIÓN */
+/* ====================== */
+
+/**
+ * Indicador de última actualización
+ * - Texto pequeño en gris
+ * - Fondo muy sutil
+ * - Alineado a la derecha
+ */
 .last-update {
   padding: 4px 8px;
   background: rgba(0, 0, 0, 0.05);
@@ -95,7 +160,14 @@
   color: #666;
 }
 
-/* Corrección para Firefox */
+/* ====================== */
+/* HACKS PARA NAVEGADORES */
+/* ====================== */
+
+/**
+ * Corrección específica para Firefox
+ * - Aumenta la altura mínima del iframe
+ */
 @-moz-document url-prefix() {
   .superset-iframe {
     min-height: 600px;

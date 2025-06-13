@@ -1,227 +1,295 @@
-/* Estilos generales */
+/**
+ * login-styles.css
+ * 
+ * Estilos para sistema de autenticación con diseño moderno y animaciones
+ * Incluye formulario de login con validaciones, efectos hover y diseño responsivo
+ * 
+ * Estructura:
+ * 1. Estilos globales
+ * 2. Contenedores principales
+ * 3. Animaciones
+ * 4. Tipografía
+ * 5. Componentes de formulario
+ * 6. Botones y acciones
+ * 7. Mensajes de feedback
+ * 8. Elementos interactivos
+ */
+
+/* ==================== 1. Estilos Globales ==================== */
+/**
+ * body - Configuración de fondo y layout principal
+ * Fondo con gradiente animado y centrado vertical
+ */
 body {
-  font-family: 'Montserrat', sans-serif; /* 🔹 Corregido el nombre de la fuente */
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  font-family: 'Montserrat', sans-serif; /* Fuente moderna sin serifa */
+  background: linear-gradient(135deg, #6a11cb, #2575fc); /* Gradiente violeta a azul */
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  overflow: hidden; /* 🔹 Evita el desplazamiento innecesario */
+  justify-content: center; /* Centrado horizontal */
+  align-items: center; /* Centrado vertical */
+  height: 100vh; /* Altura completa del viewport */
+  margin: 0; /* Elimina márgenes por defecto */
+  overflow: hidden; /* Oculta scrollbars innecesarios */
 }
 
+/* ==================== 2. Contenedores Principales ==================== */
+/**
+ * .login-container - Contenedor flexible para la tarjeta de login
+ */
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  padding: 20px;
+  width: 100%; /* Ancho completo */
+  padding: 20px; /* Espaciado de seguridad */
 }
 
+/**
+ * .login-card - Tarjeta principal del formulario
+ * Con sombra pronunciada y animación de entrada
+ */
 .login-card {
   position: relative;
-  background: #fff;
-  border-radius: 15px; /* 🔹 Bordes más redondeados */
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* 🔹 Sombra más pronunciada */
-  padding: 40px; /* 🔹 Más espacio interno */
-  max-width: 400px;
-  width: 100%;
-  text-align: center;
-  animation: fadeIn 0.5s ease-in-out;
-  overflow: hidden; /* 🔹 Evita que el contenido se desborde */
+  background: #fff; /* Fondo blanco */
+  border-radius: 15px; /* Bordes muy redondeados */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Sombra intensa para efecto 3D */
+  padding: 40px; /* Espaciado interno generoso */
+  max-width: 400px; /* Ancho máximo controlado */
+  width: 100%; /* Responsive */
+  text-align: center; /* Alineación central */
+  animation: fadeIn 0.5s ease-in-out; /* Animación de entrada */
+  overflow: hidden; /* Contención de elementos hijos */
 }
 
+/* ==================== 3. Animaciones ==================== */
+/**
+ * fadeIn - Animación para aparición suave de la tarjeta
+ */
 @keyframes fadeIn {
   from {
-    opacity: 0;
-    transform: translateY(-20px);
+    opacity: 0; /* Inicio transparente */
+    transform: translateY(-20px); /* Desplazado hacia arriba */
   }
   to {
-    opacity: 1;
-    transform: translateY(0);
+    opacity: 1; /* Opacidad completa */
+    transform: translateY(0); /* Posición natural */
   }
 }
 
+/**
+ * spin - Animación para spinner de carga
+ */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Rotación inicial */
+  }
+  100% {
+    transform: rotate(360deg); /* Rotación completa */
+  }
+}
+
+/* ==================== 4. Tipografía ==================== */
+/**
+ * h2 - Título principal del formulario
+ */
 h2 {
   margin-bottom: 15px;
-  font-size: 28px; /* 🔹 Título más grande */
-  color: #333;
-  font-weight: 600; /* 🔹 Texto más grueso */
+  font-size: 28px; /* Tamaño grande */
+  color: #333; /* Color oscuro */
+  font-weight: 600; /* Semi-negrita */
 }
 
+/**
+ * p - Texto descriptivo/helper
+ */
 p {
   margin-bottom: 25px;
-  color: #666;
-  font-size: 14px; /* 🔹 Texto más pequeño */
+  color: #666; /* Gris medio */
+  font-size: 14px; /* Tamaño pequeño */
 }
 
+/* ==================== 5. Componentes de Formulario ==================== */
+/**
+ * .form-group - Grupo de campos del formulario
+ */
 .form-group {
-  margin-bottom: 20px;
-  text-align: left;
+  margin-bottom: 20px; /* Espaciado entre grupos */
+  text-align: left; /* Alineación izquierda para labels */
 }
 
+/**
+ * label - Etiquetas de campos
+ */
 label {
-  display: block;
-  margin-bottom: 8px; /* 🔹 Más espacio entre label e input */
-  font-weight: 500; /* 🔹 Texto semi-negrita */
-  color: #444;
-  font-size: 14px;
+  display: block; /* Ocupa línea completa */
+  margin-bottom: 8px; /* Espacio bajo la etiqueta */
+  font-weight: 500; /* Peso medio */
+  color: #444; /* Gris oscuro */
+  font-size: 14px; /* Tamaño consistente */
 }
 
+/**
+ * input - Campos de entrada
+ */
 input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px; /* 🔹 Bordes más redondeados */
-  font-size: 14px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%; /* Ancho completo */
+  padding: 12px; /* Espaciado interno */
+  border: 1px solid #ddd; /* Borde sutil */
+  border-radius: 8px; /* Bordes redondeados */
+  font-size: 14px; /* Tamaño legible */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transiciones suaves */
 }
 
+/**
+ * input:focus - Estado de foco en campos
+ */
 input:focus {
-  border-color: #3367f8;
-  outline: none;
-  box-shadow: 0 0 8px rgba(106, 17, 203, 0.3); /* 🔹 Sombra al enfocar */
+  border-color: #3367f8; /* Borde azul */
+  outline: none; /* Elimina outline nativo */
+  box-shadow: 0 0 8px rgba(106, 17, 203, 0.3); /* Sombra violeta suave */
 }
 
+/**
+ * .password-input - Contenedor especial para campo de contraseña
+ */
 .password-input {
-  position: relative;
+  position: relative; /* Para posicionar el icono */
 }
 
+/**
+ * .toggle-password - Icono para mostrar/ocultar contraseña
+ */
 .toggle-password {
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #666;
-  font-size: 18px;
-  transition: color 0.3s ease;
+  right: 12px; /* Alineado a la derecha */
+  top: 50%; /* Centrado vertical */
+  transform: translateY(-50%); /* Ajuste fino de centrado */
+  cursor: pointer; /* Cambia cursor */
+  color: #666; /* Color discreto */
+  font-size: 18px; /* Tamaño visible */
+  transition: color 0.3s ease; /* Transición suave */
 }
 
 .toggle-password:hover {
-  color: #333;
+  color: #333; /* Color más oscuro al hover */
 }
 
+/* ==================== 6. Botones y Acciones ==================== */
+/**
+ * button - Estilo base para botones primarios
+ */
 button {
-  width: 100%;
-  padding: 14px;
-  background: #4c79c7;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
-  margin-top: 10px; /* 🔹 Espacio superior para separarlo de los inputs */
+  width: 100%; /* Ancho completo */
+  padding: 14px; /* Espaciado generoso */
+  background: #4c79c7; /* Azul medio */
+  color: #fff; /* Texto blanco */
+  border: none; /* Sin bordes */
+  border-radius: 8px; /* Bordes redondeados */
+  font-size: 16px; /* Tamaño legible */
+  font-weight: 500; /* Peso medio */
+  cursor: pointer; /* Cursor indicador */
+  transition: background 0.3s ease, transform 0.2s ease; /* Transiciones */
+  margin-top: 10px; /* Espacio superior */
 }
 
 button:hover {
-  background: #2575fc;
-  transform: translateY(-2px); /* 🔹 Efecto de elevación */
+  background: #2575fc; /* Azul más brillante */
+  transform: translateY(-2px); /* Efecto de elevación */
 }
 
 button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  transform: none;
+  background: #ccc; /* Gris deshabilitado */
+  cursor: not-allowed; /* Cursor prohibido */
+  transform: none; /* Sin transformación */
 }
 
+/**
+ * .secondary-button - Botón secundario
+ */
+.secondary-button {
+  background: #f5f5f5; /* Fondo gris claro */
+  color: #333; /* Texto oscuro */
+  margin-top: 10px; /* Espaciado consistente */
+}
+
+.secondary-button:hover {
+  background: #e0e0e0; /* Gris más oscuro */
+  transform: translateY(-2px); /* Efecto de elevación */
+}
+
+/**
+ * .spinner - Indicador de carga
+ */
 .spinner {
   display: inline-block;
   width: 20px;
   height: 20px;
-  border: 3px solid #fff;
-  border-top: 3px solid #6a11cb;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  border: 3px solid #fff; /* Base blanca */
+  border-top: 3px solid #6a11cb; /* Parte superior violeta */
+  border-radius: 50%; /* Circular */
+  animation: spin 1s linear infinite; /* Animación continua */
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.links {
-  margin-top: 20px;
-  display: flex;
-  justify-content: space-between; /* 🔹 Espacio entre enlaces */
-}
-
-.links a {
-  color: #6a11cb;
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.3s ease;
-}
-
-.links a:hover {
-  color: #2575fc;
-  text-decoration: underline; /* 🔹 Subrayado al pasar el mouse */
-}
-
+/* ==================== 7. Mensajes de Feedback ==================== */
+/**
+ * .error-message - Mensajes de error
+ */
 .error-message {
   margin-top: 15px;
-  color: #ff4444;
+  color: #ff4444; /* Rojo claro */
+  font-weight: 500; /* Semi-negrita */
+  font-size: 14px; /* Tamaño legible */
+}
+
+/**
+ * .success-message - Mensajes positivos
+ */
+.success-message {
+  margin-top: 15px;
+  color: #4CAF50; /* Verde */
   font-weight: 500;
   font-size: 14px;
 }
 
+/* ==================== 8. Elementos Interactivos ==================== */
+/**
+ * .links - Enlaces de ayuda/navegación
+ */
+.links {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center; /* Centrado (originalmente space-between) */
+}
+
+.links a {
+  color: #6a11cb; /* Violeta */
+  text-decoration: none; /* Sin subrayado */
+  font-size: 14px; /* Tamaño pequeño */
+  transition: color 0.3s ease; /* Transición suave */
+  cursor: pointer; /* Cursor indicador */
+}
+
+.links a:hover {
+  color: #2575fc; /* Azul al hover */
+  text-decoration: underline; /* Subrayado al hover */
+}
+
+/**
+ * .close - Botón de cerrar (×)
+ */
 .close {
   position: absolute;
   top: 15px;
-  right: 15px;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  transition: color 0.3s ease;
+  right: 15px; /* Posición esquina superior derecha */
+  font-size: 24px; /* Tamaño grande */
+  cursor: pointer; /* Cursor indicador */
+  color: #666; /* Gris medio */
+  background: transparent; /* Sin fondo */
+  border: none; /* Sin bordes */
+  padding: 0; /* Reset */
+  margin: 0; /* Reset */
+  transition: color 0.3s ease; /* Transición suave */
 }
 
 .close:hover {
-  color: #333;
-}
-
-.secondary-button {
-  background: #f5f5f5;
-  color: #333;
-  margin-top: 10px;
-}
-
-.secondary-button:hover {
-  background: #e0e0e0;
-  transform: translateY(-2px);
-}
-
-.success-message {
-  margin-top: 15px;
-  color: #4CAF50;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.links {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.links a {
-  color: #6a11cb;
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.3s ease;
-  cursor: pointer;
-}
-
-.links a:hover {
-  color: #2575fc;
-  text-decoration: underline;
+  color: #333; /* Más oscuro al hover */
 }

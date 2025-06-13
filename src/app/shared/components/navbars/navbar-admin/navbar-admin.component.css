@@ -1,90 +1,113 @@
-/* Estilos generales del navbar */
+/* ============ BARRA DE NAVEGACIÓN PRINCIPAL ============ */
 .navbar {
   display: flex;
-  align-items: center; /* Centra verticalmente los elementos */
-  justify-content: center; /* Centra horizontalmente los elementos */
+  align-items: center;
+  justify-content: center;
   background-image: url("/assets/headers/6.svg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   width: 100%;
   height: 80px;
-  padding: 0 20px; /* Padding lateral */
+  padding: 0 20px;
   box-sizing: border-box;
-  z-index: 0;
-  position: relative; /* Para posicionar elementos hijos si es necesario */
+  z-index: 1000;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilo base de los enlaces */
+/* ============ LISTA DE ENLACES ============ */
 .navbar-links {
   list-style-type: none;
   display: flex;
-  gap: 25px; /* Espaciado entre los enlaces */
-  align-items: center; /* Centra verticalmente los elementos */
+  gap: 25px;
+  align-items: center;
   margin: 0;
   padding: 0;
 }
 
+/* ============ ESTILOS DE ENLACES ============ */
 .navbar-links li a {
   text-decoration: none;
-  color: #333; /* Un gris oscuro, más profesional que negro puro */
-  background-color: #fff; /* Un gris claro elegante */
+  color: #2d3748;
+  background-color: #ffffff;
   font-size: 16px;
-  font-weight: 500; /* Un poco más de peso para visibilidad */
+  font-weight: 500;
   padding: 10px 18px;
   display: block;
   cursor: pointer;
-  border-radius: 8px; /* Bordes sutilmente redondeados */
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  border: 1px solid #ddd; /* Borde suave para definición */
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Efecto hover */
 .navbar-links li a:hover {
-  background-color: #0056B3; /* Un gris claro más oscuro */
-  color: #fff; /* Azul institucional, profesional */
-  transform: scale(1.02); /* Pequeña expansión para mejor UX */
+  background-color: #0056B3;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: transparent;
 }
 
-/* Estado seleccionado */
+/* Estado activo/seleccionado */
 .navbar-links li.selected a {
-  background-color: #d6d8db; /* Un gris intermedio */
-  color: #333;
-  font-weight: bold; /* Un poco más de peso para resaltar */
-  border-bottom: 3px solid #0056b3; /* Azul médico para destacar */
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+  font-weight: 600;
+  border-bottom: 3px solid #3182ce;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Efecto de "clic" */
+/* Efecto al hacer clic */
 .navbar-links li a:active {
-  transform: scale(0.98);
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Media Queries para Responsive Design */
+/* ============ DISEÑO RESPONSIVE ============ */
 
-/* Pantallas medianas (tablets) */
+/* Tabletas (768px o menos) */
 @media (max-width: 768px) {
+  .navbar {
+    height: 70px;
+    padding: 0 15px;
+  }
+  
   .navbar-links {
-    gap: 15px; /* Reduce el espaciado entre enlaces */
+    gap: 15px;
   }
 
   .navbar-links li a {
-    font-size: 14px; /* Reduce el tamaño de la fuente */
-    padding: 8px 12px; /* Reduce el padding */
+    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 6px;
   }
 }
 
-/* Pantallas pequeñas (móviles) */
+/* Móviles (480px o menos) */
 @media (max-width: 480px) {
   .navbar {
-    padding: 0 10px; /* Reduce el padding lateral */
+    height: 60px;
+    padding: 0 10px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
   }
-
+  
+  .navbar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+  
   .navbar-links {
-    gap: 10px; /* Reduce aún más el espaciado entre enlaces */
+    gap: 10px;
+    padding: 0 10px;
   }
 
   .navbar-links li a {
-    font-size: 12px; /* Reduce el tamaño de la fuente */
-    padding: 6px 10px; /* Reduce el padding */
+    font-size: 13px;
+    padding: 6px 12px;
+    white-space: nowrap;
   }
 }

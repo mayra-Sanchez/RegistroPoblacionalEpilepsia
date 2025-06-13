@@ -1,347 +1,410 @@
-/* Estilos base del modal */
+/**
+ * modal-styles.css
+ * 
+ * Estilos para componente modal con formulario avanzado
+ * Incluye: header gradiente, formulario responsive, validaciones y scroll personalizado
+ * 
+ * Estructura:
+ * 1. Contenedores principales
+ * 2. Encabezado y pie de modal
+ * 3. Cuerpo del modal
+ * 4. Componentes de formulario
+ * 5. Botones y acciones
+ * 6. Estados y validaciones
+ * 7. Scroll personalizado
+ * 8. Media queries responsive
+ */
+
+/* ==================== 1. Contenedores Principales ==================== */
+/**
+ * .modal-overlay - Fondo oscuro semi-transparente
+ * Posicionamiento fijo para cubrir toda la pantalla
+ */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semi-transparente */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  padding: 1rem;
-  overflow-y: auto;
+  z-index: 1000; /* Por encima de otros elementos */
+  padding: 1rem; /* Espaciado de seguridad */
+  overflow-y: auto; /* Scroll vertical si es necesario */
 }
 
+/**
+ * .modal-content - Contenedor principal del modal
+ * Diseño tipo "tarjeta" con sombra y bordes redondeados
+ */
 .modal-content {
-  max-width: 800px;
-  width: 100%;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 800px; /* Ancho máximo */
+  width: 100%; /* Responsive */
+  background: white; /* Fondo blanco */
+  border-radius: 8px; /* Bordes redondeados */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra suave */
   display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-  margin: auto;
+  flex-direction: column; /* Disposición vertical */
+  max-height: 90vh; /* Altura máxima */
+  margin: auto; /* Centrado */
 }
 
-/* Header del modal */
+/* ==================== 2. Encabezado y Pie de Modal ==================== */
+/**
+ * .modal-header - Cabecera con gradiente azul
+ */
 .modal-header {
-  padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, #0f5ead, #11A6DA);
-  color: white;
-  flex-shrink: 0;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
+  padding: 1.25rem 1.5rem; /* Espaciado interno */
+  background: linear-gradient(135deg, #0f5ead, #11A6DA); /* Gradiente azul */
+  color: white; /* Texto blanco */
+  flex-shrink: 0; /* Evita compresión */
+  border-top-left-radius: 8px; /* Redondeo superior izquierdo */
+  border-top-right-radius: 8px; /* Redondeo superior derecho */
 }
 
+/**
+ * .modal-title - Estilo del título
+ */
 .modal-title {
-  margin: 0;
-  color: white;
-  font-size: 1.3rem;
-  font-weight: 500;
+  margin: 0; /* Reset margen */
+  color: white; /* Texto blanco */
+  font-size: 1.3rem; /* Tamaño mediano */
+  font-weight: 500; /* Peso medio */
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: center; /* Alineación vertical */
+  gap: 0.5rem; /* Espacio entre icono y texto */
 }
 
-/* Cuerpo del modal - Área de scroll */
+/**
+ * .modal-footer - Pie del modal con acciones
+ */
+.modal-footer {
+  padding: 1rem 1.5rem; /* Espaciado interno */
+  border-top: 1px solid #e0e6ed; /* Borde superior */
+  display: flex;
+  justify-content: flex-end; /* Botones alineados a la derecha */
+  gap: 0.75rem; /* Espacio entre botones */
+  flex-shrink: 0; /* Evita compresión */
+}
+
+/* ==================== 3. Cuerpo del Modal ==================== */
+/**
+ * .modal-body - Área de contenido principal
+ * Con scroll vertical cuando el contenido excede el espacio
+ */
 .modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
+  padding: 1.5rem; /* Espaciado interno */
+  overflow-y: auto; /* Scroll vertical */
+  flex: 1; /* Ocupa espacio disponible */
+  min-height: 0; /* Permite compresión */
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Disposición vertical */
 }
 
-/* Contenedor del formulario */
+/**
+ * .form-header - Cabecera del formulario
+ */
 .form-header {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 0; /* Permite compresión */
 }
 
-/* Formularios */
+/* ==================== 4. Componentes de Formulario ==================== */
+/**
+ * form - Contenedor principal del formulario
+ * Diseño grid responsive con columnas flexibles
+ */
 form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  min-width: 0;
-  flex: 1;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Columnas responsivas */
+  gap: 1.5rem; /* Espacio entre campos */
+  min-width: 0; /* Solución para flex/grid */
+  flex: 1; /* Ocupa espacio disponible */
 }
 
+/**
+ * .form-group - Grupo de campos del formulario
+ */
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.25rem; /* Espaciado inferior */
 }
 
+/**
+ * Etiquetas de formulario
+ */
 .form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #2c3e50;
-  font-size: 0.85rem;
+  display: block; /* Ocupa línea completa */
+  margin-bottom: 0.5rem; /* Espacio bajo la etiqueta */
+  font-weight: 500; /* Peso medio */
+  color: #2c3e50; /* Azul oscuro/gris */
+  font-size: 0.85rem; /* Tamaño pequeño */
 }
 
+/**
+ * .form-control - Estilo base para controles
+ */
 .form-control {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e0e6ed;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background-color: #f8fafc;
-  box-sizing: border-box;
-  transition: all 0.3s ease;
+  width: 100%; /* Ancho completo */
+  padding: 0.75rem 1rem; /* Espaciado interno */
+  border: 1px solid #e0e6ed; /* Borde sutil */
+  border-radius: 6px; /* Bordes redondeados */
+  font-size: 0.9rem; /* Tamaño estándar */
+  background-color: #f8fafc; /* Fondo gris muy claro */
+  box-sizing: border-box; /* Modelo de caja */
+  transition: all 0.3s ease; /* Transiciones suaves */
 }
 
 .form-control:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-  background-color: white;
+  outline: none; /* Elimina outline nativo */
+  border-color: #3498db; /* Borde azul al enfocar */
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); /* Sombra de foco */
+  background-color: white; /* Fondo blanco */
 }
 
+/**
+ * Textarea específico
+ */
 textarea.form-control {
-  min-height: 100px;
-  resize: vertical;
+  min-height: 100px; /* Altura mínima */
+  resize: vertical; /* Redimensionamiento vertical */
 }
 
-/* Grupos de inputs */
+/**
+ * .input-group - Grupo de inputs con elementos anexos
+ */
 .input-group {
   display: flex;
-  position: relative;
+  position: relative; /* Para posicionar elementos hijos */
 }
 
 .input-group .form-control {
-  padding-right: 2.5rem;
+  padding-right: 2.5rem; /* Espacio para botón anexo */
 }
 
 .input-group-append {
   position: absolute;
-  right: 0.5rem;
+  right: 0.5rem; /* Posición a la derecha */
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%); /* Centrado vertical */
 }
 
 .input-group-append .btn {
-  padding: 0.5rem;
-  background: transparent;
-  border: none;
-  color: #7f8c8d;
+  padding: 0.5rem; /* Espaciado compacto */
+  background: transparent; /* Sin fondo */
+  border: none; /* Sin bordes */
+  color: #7f8c8d; /* Gris medio */
 }
 
 .input-group-append .btn:hover {
-  color: #3498db;
+  color: #3498db; /* Azul al hover */
 }
 
-/* Checkbox */
+/**
+ * Checkboxes personalizados
+ */
 .form-check {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  align-items: center; /* Centrado vertical */
+  gap: 0.5rem; /* Espacio entre checkbox y label */
+  margin-bottom: 1rem; /* Espaciado inferior */
 }
 
 .form-check-input {
   width: 1rem;
   height: 1rem;
-  margin: 0;
+  margin: 0; /* Reset margen */
 }
 
 .form-check-label {
-  font-size: 0.85rem;
-  color: #2c3e50;
-  cursor: pointer;
+  font-size: 0.85rem; /* Tamaño pequeño */
+  color: #2c3e50; /* Azul oscuro/gris */
+  cursor: pointer; /* Cursor indicador */
 }
 
-/* Opciones */
+/**
+ * Contenedor de opciones
+ */
 .options-container {
-  grid-column: 1 / -1;
-  background-color: #f8fafc;
-  padding: 1.5rem;
-  border-radius: 6px;
-  margin-top: 0.5rem;
+  grid-column: 1 / -1; /* Ocupa todas las columnas */
+  background-color: #f8fafc; /* Fondo gris claro */
+  padding: 1.5rem; /* Espaciado interno */
+  border-radius: 6px; /* Bordes redondeados */
+  margin-top: 0.5rem; /* Espaciado superior */
 }
 
 .option-item {
-  margin-bottom: 1rem;
+  margin-bottom: 1rem; /* Espaciado entre opciones */
 }
 
-/* Footer del modal */
-.modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e0e6ed;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-/* Botones */
+/* ==================== 5. Botones y Acciones ==================== */
+/**
+ * .btn - Estilo base para botones
+ */
 .btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  padding: 0.75rem 1.5rem; /* Espaciado interno */
+  border-radius: 6px; /* Bordes redondeados */
+  font-size: 0.9rem; /* Tamaño estándar */
+  font-weight: 500; /* Peso medio */
+  cursor: pointer; /* Cursor indicador */
+  transition: all 0.3s ease; /* Transiciones suaves */
   display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: center; /* Centrado vertical */
+  gap: 0.5rem; /* Espacio entre icono y texto */
 }
 
+/**
+ * Botón secundario
+ */
 .btn-secondary {
-  background-color: #f8fafc;
-  border: 1px solid #e0e6ed;
-  color: #2c3e50;
+  background-color: #f8fafc; /* Gris muy claro */
+  border: 1px solid #e0e6ed; /* Borde sutil */
+  color: #2c3e50; /* Azul oscuro/gris */
 }
 
 .btn-secondary:hover {
-  background-color: #e0e6ed;
+  background-color: #e0e6ed; /* Gris claro al hover */
 }
 
+/**
+ * Botón primario con gradiente
+ */
 .btn-primary {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  border: none;
-  color: white;
-  box-shadow: 0 2px 10px rgba(52, 152, 219, 0.2);
+  background: linear-gradient(135deg, #3498db, #2980b9); /* Gradiente azul */
+  border: none; /* Sin bordes */
+  color: white; /* Texto blanco */
+  box-shadow: 0 2px 10px rgba(52, 152, 219, 0.2); /* Sombra sutil */
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  transform: translateY(-2px); /* Efecto de elevación */
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3); /* Sombra más pronunciada */
 }
 
+/**
+ * Botón de peligro outline
+ */
 .btn-outline-danger {
-  background-color: white;
-  border: 1px solid #e74c3c;
-  color: #e74c3c;
-  padding: 0.5rem 0.75rem;
+  background-color: white; /* Fondo blanco */
+  border: 1px solid #e74c3c; /* Borde rojo */
+  color: #e74c3c; /* Texto rojo */
+  padding: 0.5rem 0.75rem; /* Espaciado compacto */
 }
 
 .btn-outline-danger:hover {
-  background-color: #e74c3c;
-  color: white;
+  background-color: #e74c3c; /* Fondo rojo */
+  color: white; /* Texto blanco */
 }
 
+/**
+ * Botón pequeño
+ */
 .btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
+  padding: 0.5rem 1rem; /* Espaciado compacto */
+  font-size: 0.85rem; /* Tamaño pequeño */
 }
 
-/* Iconos en el header */
-.modal-header .modal-title i, 
-.modal-header .modal-title h5 {
-  font-size: 1.5rem;
-  margin-right: 0.75rem;
-  color: white;
-}
-
-/* Select personalizado */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237f8c8d'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 12px;
-  padding-right: 2.5rem !important;
-}
-
-/* Mensajes de error */
+/* ==================== 6. Estados y Validaciones ==================== */
+/**
+ * Mensajes de error
+ */
 .error-message {
-  color: #e74c3c;
-  font-size: 0.75rem;
-  margin-top: 0.5rem;
+  color: #e74c3c; /* Rojo */
+  font-size: 0.75rem; /* Tamaño pequeño */
+  margin-top: 0.5rem; /* Espaciado superior */
   display: flex;
-  align-items: center;
-  gap: 0.3rem;
+  align-items: center; /* Centrado vertical */
+  gap: 0.3rem; /* Espacio entre icono y texto */
 }
 
-/* Scroll personalizado */
+/* ==================== 7. Scroll Personalizado ==================== */
+/**
+ * Personalización de scrollbar (WebKit)
+ */
 .modal-body::-webkit-scrollbar {
-  width: 8px;
+  width: 8px; /* Ancho del scroll */
 }
 
 .modal-body::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: #f1f1f1; /* Fondo gris claro */
+  border-radius: 4px; /* Bordes redondeados */
 }
 
 .modal-body::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: #c1c1c1; /* Color del thumb */
+  border-radius: 4px; /* Bordes redondeados */
 }
 
 .modal-body::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #a8a8a8; /* Color al hover */
 }
 
-/* Responsive Design */
+/* ==================== 8. Media Queries Responsive ==================== */
 @media (max-width: 768px) {
   .modal-overlay {
-    align-items: flex-start;
-    padding: 0;
+    align-items: flex-start; /* Alineación superior en móviles */
+    padding: 0; /* Sin espaciado */
   }
   
   .modal-content {
-    max-height: 100vh;
-    height: 100vh;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    border-radius: 0;
+    max-height: 100vh; /* Altura completa */
+    height: 100vh; /* Altura completa */
+    width: 100%; /* Ancho completo */
+    max-width: 100%; /* Ancho completo */
+    margin: 0; /* Sin margen */
+    border-radius: 0; /* Sin bordes redondeados */
   }
   
   .modal-header {
-    border-radius: 0;
+    border-radius: 0; /* Sin bordes redondeados */
   }
   
   .modal-body {
-    padding: 1rem;
-    max-height: none;
+    padding: 1rem; /* Espaciado reducido */
+    max-height: none; /* Altura flexible */
   }
   
   form {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: 1fr; /* Una sola columna */
+    gap: 1rem; /* Espaciado reducido */
   }
   
   .modal-footer {
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 0.75rem;
+    flex-wrap: wrap; /* Multi-línea si es necesario */
+    justify-content: center; /* Centrado en móviles */
+    padding: 0.75rem; /* Espaciado reducido */
   }
   
   .btn {
-    flex: 1;
-    min-width: 120px;
-    padding: 0.75rem;
+    flex: 1; /* Ocupa espacio disponible */
+    min-width: 120px; /* Ancho mínimo */
+    padding: 0.75rem; /* Espaciado estándar */
   }
   
   .modal-header .modal-title i, 
   .modal-header .modal-title h5 {
-    font-size: 1.3rem;
+    font-size: 1.3rem; /* Tamaño reducido */
   }
 }
 
 @media (max-width: 480px) {
   .modal-header {
-    padding: 1rem;
+    padding: 1rem; /* Espaciado reducido */
   }
   
   .modal-title {
-    font-size: 1.1rem;
+    font-size: 1.1rem; /* Tamaño más pequeño */
   }
   
   .btn {
-    padding: 0.6rem 1rem;
-    font-size: 0.8rem;
+    padding: 0.6rem 1rem; /* Espaciado compacto */
+    font-size: 0.8rem; /* Tamaño pequeño */
   }
   
   .form-control {
-    padding: 0.6rem 0.8rem;
+    padding: 0.6rem 0.8rem; /* Espaciado compacto */
   }
 }

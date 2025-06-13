@@ -21,7 +21,7 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
   // Referencias a elementos del DOM
   @ViewChild('dashboardIframe') iframe!: ElementRef<HTMLIFrameElement>;
   @ViewChild('dashboardContainer') container!: ElementRef<HTMLDivElement>;
-  
+
   // Configuración optimizada de URL para el dashboard de Superset
   private readonly baseUrl = 'http://localhost/superset/dashboard/1/';
   private readonly urlParams = {
@@ -33,7 +33,7 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
     width: '100%',            // Ancho completo
     height: '100%'            // Alto completo
   };
-  
+
   // Propiedades del estado del componente
   dashboardUrl: SafeResourceUrl;  // URL segura para el iframe
   isIframeLoaded = false;        // Indica si el iframe ha cargado
@@ -42,7 +42,7 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
   errorMessage = '';             // Mensaje de error
   lastLoadTime: Date | null = null; // Último tiempo de carga
   isFullscreen = false;          // Estado de pantalla completa
-  
+
   private resizeObserver!: ResizeObserver; // Observador de cambios de tamaño
 
   constructor(
@@ -113,14 +113,14 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
     this.isLoading = true;
     this.hasError = false;
     this.isIframeLoaded = false;
-    
+
     // Nueva URL con timestamp para evitar caché
     const timestamp = new Date().getTime();
     const updatedUrl = `${this.baseUrl}?${new URLSearchParams({
       ...this.urlParams,
       t: timestamp.toString()  // Parámetro anti-caché
     }).toString()}`;
-    
+
     this.dashboardUrl = this.sanitizer.bypassSecurityTrustResourceUrl(updatedUrl);
   }
 
@@ -132,7 +132,7 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
     this.isIframeLoaded = true;
     this.lastLoadTime = new Date();
     this.hasError = false;
-    
+
     // Ajustes post-carga con pequeño retraso para asegurar renderizado
     setTimeout(() => {
       this.adjustIframeSize();
@@ -155,16 +155,11 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
    */
   private adjustIframeSize(): void {
     requestAnimationFrame(() => {
-      const container = this.container.nativeElement;
-      const controlsHeight = 60; // Altura de controles en la interfaz
-      
-      if (this.isFullscreen) {
-        // En pantalla completa usa el alto de la ventana
-        this.iframe.nativeElement.style.height = `${window.innerHeight - controlsHeight}px`;
-      } else {
-        // En modo normal usa el alto del contenedor
-        this.iframe.nativeElement.style.height = `${container.clientHeight - controlsHeight}px`;
-      }
+      const controlsHeight = 60;
+      const height = this.isFullscreen
+        ? window.innerHeight - controlsHeight
+        : this.container.nativeElement.clientHeight - controlsHeight;
+      this.iframe.nativeElement.style.height = `${height}px`;
     });
   }
 
@@ -176,11 +171,12 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
     try {
       const iframeWindow = this.iframe.nativeElement.contentWindow;
       if (iframeWindow) {
-        // Envía mensaje al iframe para forzar resize
         iframeWindow.postMessage({
           type: 'resize',
           height: this.iframe.nativeElement.clientHeight
         }, '*');
+      } else {
+        console.warn('No se pudo ajustar el tamaño interno del dashboard');
       }
     } catch (e) {
       console.warn('No se pudo ajustar el tamaño interno del dashboard');
@@ -192,7 +188,7 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
    */
   toggleFullscreen(): void {
     this.isFullscreen = !this.isFullscreen;
-    
+
     if (this.isFullscreen) {
       this.enterFullscreen();
     } else {

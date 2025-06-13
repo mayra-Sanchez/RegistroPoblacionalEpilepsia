@@ -562,5 +562,36 @@ export class ConsolaRegistroService {
     );
   }
 
+  /**
+   * Obtiene los IDs únicos de capas de investigación de los registros de un profesional de salud
+   * @param healthProfessionalId ID del profesional
+   * @returns {Observable<string[]>} Lista de researchLayerId únicos
+   */
+  obtenerResearchLayerIdsPorProfesional(healthProfessionalId: number): Observable<string[]> {
+    return this.obtenerRegistrosPorProfesional(healthProfessionalId, 0, 100, 'registerDate', 'DESC').pipe(
+      map(response => {
+        const registros: Register[] = response.registers || [];
+
+        // Extraer todos los researchLayerId únicos desde variablesRegister
+        const layerIds = new Set<string>();
+
+        registros.forEach((reg: Register) => {
+          reg.variablesRegister.forEach((variable: { researchLayerId?: string }) => {
+            if (variable.researchLayerId) {
+              layerIds.add(variable.researchLayerId);
+            }
+          });
+        });
+
+        return Array.from(layerIds);
+      }),
+      catchError(error => {
+        console.error('❌ Error al obtener capas de investigación del profesional:', error);
+        return throwError(() => new Error('No se pudieron obtener las capas del profesional.'));
+      })
+    );
+  }
+
+
   //#endregion
 }

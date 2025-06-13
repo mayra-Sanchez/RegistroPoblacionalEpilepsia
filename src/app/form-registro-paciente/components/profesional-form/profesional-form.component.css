@@ -1,116 +1,190 @@
-/* profesional-form.component.css */
+/**
+ * profesional-form.component.css
+ * 
+ * Estilos para el componente de formulario profesional multi-paso
+ * Diseño responsivo con enfoque en usabilidad y experiencia de usuario
+ * 
+ * Estructura:
+ * 1. Variables (si las hubiera)
+ * 2. Estilos base del contenedor
+ * 3. Estilos de títulos y encabezados
+ * 4. Estilos de grupos de formulario
+ * 5. Estilos de inputs y controles
+ * 6. Estilos de botones y acciones
+ * 7. Media queries para diseño responsivo
+ */
 
+/* ==================== 1. Contenedor Principal ==================== */
+/**
+ * .form-step - Contenedor principal del formulario
+ * Diseñado como una tarjeta elevada con sombra para destacar del fondo
+ */
 .form-step {
-    margin: 2rem auto;
-    padding: 2rem;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .form-title {
-    color: #2c3e50;
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  
-  .form-title i {
-    font-size: 1.25rem;
-    color: #3498db;
-  }
-  
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #34495e;
-  }
-  
-  .form-group input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-    background-color: #f9f9f9;
-    color: #333;
-  }
-  
-  .form-group input:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-  }
-  
-  .form-group input[readonly] {
-    background-color: #f0f0f0;
-    cursor: not-allowed;
-  }
-  
-  .form-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2rem;
-    gap: 1rem;
-  }
-  
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .btn-prev {
-    background-color: #95a5a6;
-    color: white;
-  }
-  
-  .btn-prev:hover {
-    background-color: #7f8c8d;
-  }
-  
-  .btn-submit {
-    background-color: #3498db;
-    color: white;
-  }
-  
-  .btn-submit:hover {
-    background-color: #2980b9;
-  }
-  
-  .btn-submit:disabled {
-    background-color: #bdc3c7;
-    cursor: not-allowed;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
+    margin: 2rem auto;       /* Centrado vertical y horizontal */
+    padding: 2rem;           /* Espaciado interno generoso */
+    background-color: #ffffff; /* Fondo blanco puro */
+    border-radius: 8px;       /* Esquinas redondeadas suaves */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Sombra sutil para efecto elevado */
+    max-width: 800px;         /* Ancho máximo para mejor legibilidad */
+}
+
+/* ==================== 2. Título del Formulario ==================== */
+/**
+ * .form-title - Estilo para el título principal del formulario
+ * Combina texto e icono para mejor jerarquía visual
+ */
+.form-title {
+    color: #2c3e50;          /* Color oscuro azulado/grisáceo */
+    margin-bottom: 1.5rem;   /* Espaciado inferior */
+    font-size: 1.5rem;       /* Tamaño de fuente grande */
+    font-weight: 600;        /* Grosor semi-negrita */
+    display: flex;           /* Layout flex para alinear icono y texto */
+    align-items: center;     /* Centrado vertical */
+    gap: 0.75rem;            /* Espacio entre icono y texto */
+}
+
+/**
+ * .form-title i - Estilo para el icono dentro del título
+ */
+.form-title i {
+    font-size: 1.25rem;      /* Tamaño ligeramente menor que el texto */
+    color: #3498db;          /* Color azul brillante para contraste */
+}
+
+/* ==================== 3. Grupos de Formulario ==================== */
+/**
+ * .form-group - Contenedor para cada campo/control del formulario
+ */
+.form-group {
+    margin-bottom: 1.5rem;   /* Espaciado entre grupos */
+}
+
+/**
+ * .form-group label - Estilo para las etiquetas de los campos
+ */
+.form-group label {
+    display: block;          /* Hace que ocupe toda la línea */
+    margin-bottom: 0.5rem;  /* Espacio entre label y input */
+    font-weight: 500;       /* Grosor medio para mejor legibilidad */
+    color: #34495e;         /* Color oscuro azulado/grisáceo */
+}
+
+/* ==================== 4. Controles de Entrada ==================== */
+/**
+ * .form-group input - Estilo base para inputs de texto
+ */
+.form-group input {
+    width: 100%;            /* Ocupa todo el ancho disponible */
+    padding: 0.75rem;       /* Espaciado interno cómodo */
+    border: 1px solid #ddd; /* Borde sutil */
+    border-radius: 4px;     /* Esquinas ligeramente redondeadas */
+    font-size: 1rem;        /* Tamaño de fuente estándar */
+    background-color: #f9f9f9; /* Fondo ligeramente gris para mejor contraste */
+    color: #333;            /* Color de texto oscuro */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transición suave */
+}
+
+/**
+ * Estado focus para inputs
+ */
+.form-group input:focus {
+    outline: none;          /* Elimina el outline por defecto */
+    border-color: #3498db;  /* Borde azul al enfocar */
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); /* Sombra interior para efecto de foco */
+}
+
+/**
+ * Inputs en modo readonly
+ */
+.form-group input[readonly] {
+    background-color: #f0f0f0; /* Fondo más gris para indicar no editable */
+    cursor: not-allowed;     /* Cursor que indica no editable */
+}
+
+/* ==================== 5. Acciones del Formulario ==================== */
+/**
+ * .form-actions - Contenedor para los botones de acción
+ */
+.form-actions {
+    display: flex;           /* Layout flex para alinear botones */
+    justify-content: space-between; /* Botones en extremos opuestos */
+    margin-top: 2rem;        /* Espaciado superior generoso */
+    gap: 1rem;               /* Espacio entre botones */
+}
+
+/**
+ * .btn - Estilo base para botones
+ */
+.btn {
+    padding: 0.75rem 1.5rem; /* Espaciado interno cómodo */
+    border: none;            /* Sin bordes */
+    border-radius: 4px;      /* Esquinas redondeadas */
+    font-size: 1rem;        /* Tamaño de fuente estándar */
+    font-weight: 500;       /* Grosor medio */
+    cursor: pointer;        /* Cursor tipo pointer */
+    transition: all 0.3s ease; /* Transiciones suaves para hover */
+    display: flex;          /* Flex para alinear iconos */
+    align-items: center;   /* Centrado vertical de icono/texto */
+    gap: 0.5rem;          /* Espacio entre icono y texto */
+}
+
+/**
+ * .btn-prev - Botón para retroceder
+ */
+.btn-prev {
+    background-color: #95a5a6; /* Color gris azulado */
+    color: white;           /* Texto blanco */
+}
+
+/**
+ * Hover para botón previo
+ */
+.btn-prev:hover {
+    background-color: #7f8c8d; /* Color más oscuro al pasar mouse */
+}
+
+/**
+ * .btn-submit - Botón principal de enviar
+ */
+.btn-submit {
+    background-color: #3498db; /* Azul brillante */
+    color: white;           /* Texto blanco */
+}
+
+/**
+ * Hover para botón de enviar
+ */
+.btn-submit:hover {
+    background-color: #2980b9; /* Azul más oscuro al pasar mouse */
+}
+
+/**
+ * Estado disabled para botón de enviar
+ */
+.btn-submit:disabled {
+    background-color: #bdc3c7; /* Gris apagado */
+    cursor: not-allowed;     /* Cursor que indica no disponible */
+}
+
+/* ==================== 6. Diseño Responsivo ==================== */
+/**
+ * Media query para pantallas medianas/pequeñas (tablets/móviles)
+ */
+@media (max-width: 768px) {
+    /* Ajustes para el contenedor principal */
     .form-step {
-      padding: 1.5rem;
-      margin: 1rem;
+        padding: 1.5rem;    /* Menor espaciado interno */
+        margin: 1rem;       /* Menor margen exterior */
     }
     
+    /* Cambia disposición de botones a columna */
     .form-actions {
-      flex-direction: column;
+        flex-direction: column; /* Apila botones verticalmente */
     }
     
+    /* Botones a ancho completo */
     .btn {
-      width: 100%;
-      justify-content: center;
+        width: 100%;       /* Ocupa todo el ancho */
+        justify-content: center; /* Centra contenido */
     }
-  }
+}

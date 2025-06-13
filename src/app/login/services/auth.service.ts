@@ -28,7 +28,7 @@ export class AuthService {
 
     this.tokenRefreshInterval = setInterval(() => {
       this.refreshToken().subscribe({
-        error: () => this.stopTokenRefresh() // Si falla, detenemos el refresco
+        error: () => this.stopTokenRefresh() 
       });
     }, this.refreshTimeMs);
   }
@@ -301,9 +301,8 @@ export class AuthService {
 
     try {
       const decoded: any = jwtDecode(token);
-      console.log('Decoded token:', decoded); // For debugging
+      console.log('Decoded token:', decoded); 
 
-      // Check multiple possible locations for the identification number
       return decoded.identificationNumber ||
         decoded.identification_number ||
         decoded.documentNumber ||
@@ -342,7 +341,6 @@ export class AuthService {
 
     try {
       const decoded: any = jwtDecode(token);
-      // Usamos 'sub' que es el estándar en Keycloak para el ID de usuario
       return decoded.sub || null;
     } catch (error) {
       console.error('Error decodificando token para obtener ID:', error);
@@ -361,23 +359,18 @@ export class AuthService {
     try {
       const decoded: any = jwtDecode(token);
 
-      // Actualizar campos específicos si se proporcionan
       if (data.username) {
-        // Actualiza el username en el token (esto es solo en memoria)
         decoded.preferred_username = data.username;
-        // También puedes almacenarlo por separado si lo necesitas
         localStorage.setItem('current_username', data.username);
       }
 
       if (data.role) {
-        // Actualizar roles si es necesario
         const roles = this.getStoredRoles();
         if (!roles.includes(data.role)) {
           localStorage.setItem('userRoles', JSON.stringify([...roles, data.role]));
         }
       }
 
-      // Emitir evento de actualización
       this.authStatus.next(true);
       this.userProfile.next(this.getUserData());
 
@@ -437,7 +430,6 @@ export class AuthService {
       'Content-Type': 'application/json'
     });
 
-    // Asegúrate de que la URL coincida con tu backend
     const url = `${this.API_USERS_URL}/update?userId=${encodeURIComponent(userId)}`;
 
     return this.http.put(url, userData, { headers }).pipe(
@@ -488,7 +480,6 @@ export class AuthService {
       'Content-Type': 'application/json'
     });
 
-    // Make sure this matches your backend endpoint
     const url = `${this.API_USERS_URL}`;
     const params = new HttpParams().set('email', email);
 

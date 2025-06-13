@@ -1,136 +1,185 @@
-/* Contenedor Principal */
+/**
+ * manual-styles.css
+ * 
+ * Estilos para sistema de manual interactivo con navegación lateral
+ * Diseño de dos paneles (índice/contenido) con transiciones suaves
+ * 
+ * Estructura:
+ * 1. Contenedores principales
+ * 2. Componentes del menú lateral
+ * 3. Área de contenido
+ * 4. Navegación y controles
+ * 5. Overlay/backdrop
+ * 6. Estados y transiciones
+ */
+
+/* ==================== 1. Contenedores Principales ==================== */
+/**
+ * .manual-container - Contenedor principal del manual
+ * Diseño de dos columnas con sombra y bordes redondeados
+ */
 .manual-container {
-  position: relative;
+  position: relative; /* Para posicionar elementos hijos absolutos */
   display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 1200px;
-  margin: auto;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  flex-direction: row; /* Disposición horizontal */
+  width: 100%; /* Responsive */
+  max-width: 1200px; /* Ancho máximo fijo */
+  margin: auto; /* Centrado horizontal */
+  border-radius: 10px; /* Esquinas redondeadas */
+  overflow: hidden; /* Oculta desbordamientos */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra media */
 }
 
-/* Botón de Cerrar */
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #888;
-}
-
-.close-btn:hover {
-  color: black;
-}
-
-/* Menú de Contenidos */
-.manual-menu {
-  background: #f4f4f4;
-  width: 30%;
-  min-width: 250px;
-  padding: 20px;
-  box-sizing: border-box;
-  border-right: 1px solid #ddd;
-  overflow-y: auto;
-  max-height: 80vh;
-}
-
-.manual-menu h2 {
-  margin-bottom: 15px;
-  font-size: 20px;
-  color: #1976d2;
-}
-
-.manual-menu ul {
-  list-style: none;
-  padding: 0;
-}
-
-.manual-menu li {
-  margin-bottom: 10px;
-}
-
-.manual-menu button {
-  background: transparent;
-  border: none;
-  font-size: 16px;
-  text-align: left;
-  cursor: pointer;
-  color: #333;
-  padding: 5px 10px;
-  width: 100%;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.manual-menu button:hover {
-  background-color: #1976d2;
-  color: white;
-}
-
-/* Contenedor de Páginas */
-.manual-pages {
-  flex: 1;
-  background: white;
-  max-height: 500px;
-  overflow-y: auto;
-  padding: 20px;
-  border-left: 1px solid #ddd;
-}
-
-/* Estilo de las Páginas */
-.page {
-  display: none;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.page.active {
-  display: block;
-  opacity: 1;
-}
-
-/* Navegación */
-.manual-navigation {
-  margin-top: 20px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.manual-navigation button {
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-.manual-navigation button:hover {
-  background-color: #125699;
-}
-
-.manual-navigation button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
+/**
+ * .backdrop - Overlay semi-transparente
+ * Se activa cuando el manual está visible
+ */
 .backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Ajusta la opacidad si es necesario */
-  z-index: 999;
-  display: none; /* Oculta por defecto */
+  background: rgba(0, 0, 0, 0.5); /* Negro semi-transparente */
+  z-index: 999; /* Por encima de otros elementos */
+  display: none; /* Oculto por defecto */
 }
 
 .backdrop.active {
-  display: block;
+  display: block; /* Visible cuando se activa */
+}
+
+/* ==================== 2. Menú Lateral ==================== */
+/**
+ * .manual-menu - Panel lateral de navegación
+ * Contiene el índice/table of contents
+ */
+.manual-menu {
+  background: #f4f4f4; /* Fondo gris claro */
+  width: 30%; /* Ancho relativo */
+  min-width: 250px; /* Ancho mínimo */
+  padding: 20px;
+  box-sizing: border-box; /* Padding incluido en el ancho */
+  border-right: 1px solid #ddd; /* Separador visual */
+  overflow-y: auto; /* Scroll vertical si es necesario */
+  max-height: 80vh; /* Altura máxima */
+}
+
+/**
+ * Título del menú
+ */
+.manual-menu h2 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #1976d2; /* Azul corporativo */
+}
+
+/**
+ * Lista de contenidos
+ */
+.manual-menu ul {
+  list-style: none; /* Elimina viñetas */
+  padding: 0; /* Reset padding */
+}
+
+.manual-menu li {
+  margin-bottom: 10px; /* Espaciado entre ítems */
+}
+
+/**
+ * Botones de sección del menú
+ */
+.manual-menu button {
+  background: transparent; /* Fondo transparente */
+  border: none;
+  font-size: 16px;
+  text-align: left; /* Alineación izquierda */
+  cursor: pointer;
+  color: #333; /* Color texto oscuro */
+  padding: 5px 10px;
+  width: 100%; /* Ancho completo */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transiciones suaves */
+}
+
+.manual-menu button:hover {
+  background-color: #1976d2; /* Azul al hover */
+  color: white; /* Texto blanco */
+}
+
+/* ==================== 3. Área de Contenido ==================== */
+/**
+ * .manual-pages - Contenedor de páginas de contenido
+ */
+.manual-pages {
+  flex: 1; /* Ocupa espacio restante */
+  background: white; /* Fondo blanco */
+  max-height: 500px; /* Altura máxima */
+  overflow-y: auto; /* Scroll vertical */
+  padding: 20px;
+  border-left: 1px solid #ddd; /* Separador visual */
+}
+
+/**
+ * .page - Páginas individuales
+ */
+.page {
+  display: none; /* Ocultas por defecto */
+  opacity: 0; /* Transparencia inicial */
+  transition: opacity 0.5s ease-in-out; /* Transición suave */
+}
+
+.page.active {
+  display: block; /* Visible cuando está activa */
+  opacity: 1; /* Opacidad completa */
+}
+
+/* ==================== 4. Controles y Navegación ==================== */
+/**
+ * .close-btn - Botón para cerrar el manual
+ */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px; /* Posición esquina superior derecha */
+  background: none; /* Sin fondo */
+  border: none;
+  font-size: 24px; /* Tamaño grande */
+  cursor: pointer;
+  color: #888; /* Gris medio */
+}
+
+.close-btn:hover {
+  color: black; /* Negro al hover */
+}
+
+/**
+ * .manual-navigation - Barra de navegación inferior
+ */
+.manual-navigation {
+  margin-top: 20px; /* Espaciado superior */
+  display: flex;
+  justify-content: space-between; /* Botones en extremos */
+}
+
+/**
+ * Botones de navegación
+ */
+.manual-navigation button {
+  background-color: #1976d2; /* Azul corporativo */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px; /* Bordes redondeados */
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease; /* Transición suave */
+}
+
+.manual-navigation button:hover {
+  background-color: #125699; /* Azul más oscuro */
+}
+
+.manual-navigation button:disabled {
+  background-color: #ccc; /* Gris deshabilitado */
+  cursor: not-allowed; /* Cursor prohibido */
 }

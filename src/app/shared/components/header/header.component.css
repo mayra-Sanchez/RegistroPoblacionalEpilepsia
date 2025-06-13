@@ -1,93 +1,199 @@
-/* ========== Estilos del Header ========== */
+/* ========== HEADER PRINCIPAL ========== */
 .header {
   display: flex;
-  justify-content: space-between; /* Distribuye el espacio entre el logo y los botones */
-  align-items: center; /* Centra verticalmente los elementos */
+  justify-content: space-between;
+  align-items: center;
   background-color: white;
   width: 100%;
-  height: 95px; /* Altura del header */
+  height: 95px;
   padding: 0 30px;
   box-sizing: border-box;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: 1000;
-  flex-wrap: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
+/* ========== LOGO Y TÍTULOS ========== */
 .logo {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   flex: 1;
-  gap: 40px;
+  gap: 20px;
+  min-width: 0; /* Permite que el texto se trunque */
 }
 
 .uv-logo {
-  width:50px;
+  width: 50px;
   height: auto;
+  flex-shrink: 0;
 }
 
 .logo-text {
   display: flex;
   flex-direction: column;
-  line-height: 0.90;
+  line-height: 0.9;
+  min-width: 0; /* Permite que el texto se trunque */
 }
 
 .main-title {
-  font-size: 80px; /* Tamaño del título principal */
-  font-weight: bold;
+  font-size: 2.5rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #1a237e;
 }
 
 .subtitle {
-  font-size: 10px; /* Tamaño más pequeño para el subtítulo */
-  color: gray; /* Color más sutil */
+  font-size: 0.625rem;
+  color: #616161;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
-/* Botones de navegación */
+/* ========== BOTONES DE NAVEGACIÓN ========== */
 .nav-buttons {
   display: flex;
   align-items: center;
   gap: 15px;
-  white-space: nowrap;
 }
 
-/* Botón de ingresar */
+/* Botón principal */
 button.ingresar {
   background-color: #1976d2;
   color: white;
   border: none;
-  padding: 12px 20px;
+  padding: 12px 24px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 1rem;
   display: flex;
   align-items: center;
-  gap: 10px;
-  white-space: nowrap;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
 }
 
 button.ingresar:hover {
-  background-color: #125699;
+  background-color: #1565c0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
 }
 
 button.ingresar i {
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 /* Botón de ayuda */
 button.help-icon {
   background-color: transparent;
   border: none;
-  color: black;
-  font-size: 24px;
+  color: #424242;
+  font-size: 1.5rem;
   cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 50%;
 }
 
 button.help-icon:hover {
-  color: #125699;
+  color: #1976d2;
+  background-color: rgba(25, 118, 210, 0.1);
 }
 
-/* Modal */
+/* ========== USUARIO Y CONFIGURACIÓN ========== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  position: relative;
+}
+
+.user-icon {
+  font-size: 1.75rem;
+  color: #424242;
+}
+
+.username-button {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.username-button:hover {
+  background-color: #1565c0;
+}
+
+.settings-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: #424242;
+  transition: all 0.2s ease;
+}
+
+.settings-button:hover {
+  color: #1976d2;
+  transform: rotate(30deg);
+}
+
+/* ========== MENÚ DESPLEGABLE ========== */
+.menu-dropdown {
+  position: absolute;
+  background: white;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  right: 0;
+  top: 50px;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  z-index: 1100;
+  min-width: 180px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.menu-dropdown button {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.875rem;
+  color: #424242;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.1s ease;
+}
+
+.menu-dropdown button:hover {
+  background-color: #f5f5f5;
+  color: #1976d2;
+}
+
+.menu-dropdown button i {
+  font-size: 1rem;
+  width: 20px;
+}
+
+/* ========== MODALES ========== */
 .modal {
   display: flex;
   justify-content: center;
@@ -98,31 +204,45 @@ button.help-icon:hover {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
 }
 
-.modal-content {
+.modal-content, .manual-content {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 24px;
+  border-radius: 12px;
   width: 90%;
   max-width: 600px;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  margin: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   position: relative;
+  animation: modalSlideIn 0.3s ease;
 }
 
-.modal-content .close {
+.manual-content {
+  max-width: 800px;
+}
+
+.modal-content .close, .manual-content .close {
   position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 20px;
+  top: 16px;
+  right: 16px;
+  font-size: 1.5rem;
   cursor: pointer;
+  color: #757575;
+  transition: all 0.2s ease;
 }
 
-/* Animación de entrada */
+.modal-content .close:hover, .manual-content .close:hover {
+  color: #212121;
+}
+
 @keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
   from {
     transform: translateY(-20px);
     opacity: 0;
@@ -133,164 +253,87 @@ button.help-icon:hover {
   }
 }
 
-.manual-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 800px;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.3s ease;
-}
-
-.manual-content .close {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: 20px;
-  cursor: pointer;
-  color: #888;
-}
-
-.manual-content .close:hover {
-  color: black;
-}
-
-/* Usuario y configuración */
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.user-icon {
-  font-size: 25px;
-  color: black;
-}
-
-.username-button {
-  background-color: #1273c4;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 15px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.settings-button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: black;
-}
-
-/* Menú desplegable */
-.menu-dropdown {
-  position: absolute;
-  background: white;
-  border: 1px solid #ddd;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-  right: 0;
-  top: 40px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  border-radius: 5px;
-  z-index: 100;
-}
-
-.menu-dropdown button {
-  background: none;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  font-size: 14px;
-}
-
-.menu-dropdown button:hover {
-  background-color: #f5f5f5;
-}
-
-/* ========== Responsividad ========== */
+/* ========== RESPONSIVIDAD ========== */
 @media (max-width: 1024px) {
   .header {
-    padding: 10px 20px;
+    padding: 0 20px;
+    height: 80px;
   }
-
+  
   .main-title {
-    font-size: 60px; /* Reducir el tamaño del título principal */
+    font-size: 2rem;
   }
-
-  .subtitle {
-    font-size: 8px; /* Reducir el tamaño del subtítulo */
-  }
-
+  
   .uv-logo {
-    width: 30px; /* Reducir el tamaño del logo UV */
+    width: 40px;
+  }
+  
+  button.ingresar {
+    padding: 10px 18px;
   }
 }
 
 @media (max-width: 768px) {
   .header {
-    flex-direction: row;
-    height: auto;
-    padding: 10px;
+    padding: 0 15px;
+    height: 70px;
   }
-
+  
   .main-title {
-    font-size: 40px; /* Reducir aún más el tamaño del título principal */
+    font-size: 1.5rem;
   }
-
+  
   .subtitle {
-    font-size: 6px; /* Reducir aún más el tamaño del subtítulo */
+    font-size: 0.5rem;
   }
-
-  .uv-logo {
-    width: 30px; /* Reducir aún más el tamaño del logo UV */
-  }
-
+  
   .nav-buttons {
     gap: 10px;
   }
-
+  
   button.ingresar {
-    padding: 10px 15px; /* Reducir el padding del botón */
-    font-size: 14px; /* Reducir el tamaño del texto */
+    padding: 8px 14px;
+    font-size: 0.875rem;
   }
-
-  .user-info {
-    flex-direction: row; /* Mantener los elementos en fila */
+  
+  .user-icon {
+    font-size: 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
+  .header {
+    padding: 0 10px;
+    height: 60px;
+  }
+  
+  .logo {
+    gap: 10px;
+  }
+  
   .main-title {
-    font-size: 30px; /* Tamaño mínimo del título principal */
+    font-size: 1.25rem;
   }
-
-  .subtitle {
-    font-size: 5px; /* Tamaño mínimo del subtítulo */
-  }
-
+  
   .uv-logo {
-    width: 30px; /* Tamaño mínimo del logo UV */
+    width: 30px;
   }
-
+  
   .nav-buttons {
-    flex-direction: row; /* Mantener los botones en fila */
-    align-items: center;
+    gap: 6px;
   }
-
-  .user-info {
-    flex-direction: row; /* Mantener los elementos en fila */
+  
+  button.ingresar {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+  
+  .username-button {
+    display: none;
+  }
+  
+  .menu-dropdown {
+    top: 40px;
+    right: -10px;
   }
 }

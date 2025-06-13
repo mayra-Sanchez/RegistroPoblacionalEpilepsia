@@ -1,255 +1,310 @@
-/* Estilos generales para la tabla */
+/**
+ * table-styles.css
+ * 
+ * Estilos para componente de tabla con controles avanzados:
+ * - Filtrado, búsqueda y ordenamiento
+ * - Paginación responsive
+ * - Acciones inline
+ * - Estados de carga y vacío
+ * 
+ * Estructura:
+ * 1. Controles superiores
+ * 2. Estilos de tabla
+ * 3. Acciones y botones
+ * 4. Estados especiales
+ * 5. Paginación
+ * 6. Media queries responsive
+ */
+
+/* ==================== 1. Controles Superiores ==================== */
+/**
+ * Contenedor principal de controles (filtros, búsqueda)
+ */
 .table-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 1rem; /* Espaciado entre grupos */
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: #f8f9fa; /* Fondo gris claro */
     border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-  
-  .control-group {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+/**
+ * Grupos de controles individuales (filtros, selectores)
+ */
+.control-group {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-  }
-  
-  .control-group label {
+    gap: 0.75rem; /* Espaciado interno */
+}
+
+.control-group label {
     font-weight: 500;
-    color: #495057;
-    white-space: nowrap;
-  }
-  
-  select, input {
+    color: #495057; /* Gris oscuro */
+    white-space: nowrap; /* Evita salto de línea */
+}
+
+/**
+ * Estilos base para inputs y selects
+ */
+select, input {
     padding: 0.5rem 1rem;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border: 1px solid #ced4da; /* Borde gris */
+    border-radius: 0.375rem; /* Bordes redondeados */
+    font-size: 0.875rem; /* 14px */
     background-color: white;
-    transition: border-color 0.15s ease-in-out;
-  }
-  
-  select:focus, input:focus {
+    transition: border-color 0.15s ease-in-out; /* Transición suave */
+}
+
+select:focus, input:focus {
     outline: none;
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-  }
-  
-  .search-bar {
+    border-color: #86b7fe; /* Azul claro */
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Sombra de foco */
+}
+
+/**
+ * Barra de búsqueda con icono
+ */
+.search-bar {
     position: relative;
-    flex-grow: 1;
+    flex-grow: 1; /* Crecimiento flexible */
     min-width: 200px;
     max-width: 400px;
-  }
-  
-  .search-bar input {
+}
+
+.search-bar input {
     width: 100%;
-    padding-left: 2.25rem;
-  }
-  
-  .search-bar i {
+    padding-left: 2.25rem; /* Espacio para icono */
+}
+
+.search-bar i {
     position: absolute;
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #6c757d;
-  }
-  
-  .table-container {
+    color: #6c757d; /* Gris medio */
+}
+
+/* ==================== 2. Estilos de Tabla ==================== */
+/**
+ * Contenedor para scroll horizontal
+ */
+.table-container {
     width: 100%;
-    overflow-x: auto;
+    overflow-x: auto; /* Scroll horizontal en móviles */
     margin-bottom: 1.5rem;
     border-radius: 0.5rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  }
-  
-  table {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
+}
+
+/**
+ * Estilos base de tabla
+ */
+table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
-  }
-  
-  th, td {
+    font-size: 0.875rem; /* 14px base */
+}
+
+th, td {
     padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid #dee2e6;
-  }
-  
-  th {
-    background-color: #2D9FEF;
+    border-bottom: 1px solid #dee2e6; /* Borde divisorio */
+}
+
+/**
+ * Cabeceras de tabla
+ */
+th {
+    background-color: #2D9FEF; /* Azul corporativo */
     color: white;
     font-weight: 600;
     position: relative;
-    cursor: pointer;
-    user-select: none;
-  }
-  
-  th.sorted {
-    background-color: #2488d8;
-  }
-  
-  .sort-icon {
-    margin-left: 0.5rem;
-  }
-  
-  .actions {
+    cursor: pointer; /* Indica que es clickeable */
+    user-select: none; /* Evita selección de texto */
+}
+
+th.sorted {
+    background-color: #2488d8; /* Azul más oscuro al ordenar */
+}
+
+.sort-icon {
+    margin-left: 0.5rem; /* Espaciado para icono */
+}
+
+/* ==================== 3. Acciones y Botones ==================== */
+/**
+ * Contenedor de botones de acción
+ */
+.actions {
     display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-  }
-  
-  .action-btn {
+    gap: 0.5rem; /* Espaciado entre botones */
+    justify-content: flex-end; /* Alineado a la derecha */
+}
+
+/**
+ * Botones de acción circular
+ */
+.action-btn {
     width: 2rem;
     height: 2rem;
     border: none;
-    border-radius: 50%;
+    border-radius: 50%; /* Forma circular */
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease; /* Transición suave */
     background-color: transparent;
-  }
-  
-  .action-btn i {
-    font-size: 0.875rem;
-  }
-  
-  .action-btn.view { color: #17a2b8; }
-  .action-btn.edit { color: #ffc107; }
-  .action-btn.delete { color: #dc3545; }
-  
-  .action-btn:hover {
-    transform: scale(1.1);
+}
+
+.action-btn i {
+    font-size: 0.875rem; /* 14px */
+}
+
+/* Colores específicos para cada acción */
+.action-btn.view { color: #17a2b8; } /* Turquesa */
+.action-btn.edit { color: #ffc107; } /* Amarillo */
+.action-btn.delete { color: #dc3545; } /* Rojo */
+
+.action-btn:hover {
+    transform: scale(1.1); /* Efecto de zoom */
     opacity: 0.9;
-  }
-  
-  .loading-indicator {
+}
+
+/* ==================== 4. Estados Especiales ==================== */
+/**
+ * Indicador de carga
+ */
+.loading-indicator {
     padding: 2rem;
     text-align: center;
-    color: #6c757d;
+    color: #6c757d; /* Gris medio */
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 0.75rem;
-  }
-  
-  .loading-indicator i {
-    font-size: 1.25rem;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
+}
+
+.loading-indicator i {
+    font-size: 1.25rem; /* 20px */
+    animation: spin 1s linear infinite; /* Animación de rotación */
+}
+
+@keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-  }
-  
-  .no-data {
+}
+
+/**
+ * Estado sin datos
+ */
+.no-data {
     padding: 2rem;
     text-align: center;
-    color: #6c757d;
+    color: #6c757d; /* Gris medio */
     font-style: italic;
-  }
-  
-  /* Paginación */
-  .pagination-controls {
+}
+
+/* ==================== 5. Paginación ==================== */
+.pagination-controls {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 0.5rem;
     margin-top: 1.5rem;
-    flex-wrap: wrap;
-  }
-  
-  .pagination-controls button {
+    flex-wrap: wrap; /* Ajuste en móviles */
+}
+
+.pagination-controls button {
     padding: 0.5rem 0.75rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid #dee2e6; /* Borde gris */
     background-color: white;
-    color: #2D9FEF;
+    color: #2D9FEF; /* Azul corporativo */
     cursor: pointer;
-    border-radius: 0.375rem;
+    border-radius: 0.375rem; /* Bordes redondeados */
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 2.5rem;
-  }
-  
-  .pagination-controls button:hover:not(:disabled) {
-    background-color: #e9ecef;
-  }
-  
-  .pagination-controls button:disabled {
+    min-width: 2.5rem; /* Ancho mínimo */
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background-color: #e9ecef; /* Gris muy claro */
+}
+
+.pagination-controls button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    color: #6c757d;
-  }
-  
-  .page-info {
+    color: #6c757d; /* Gris medio */
+}
+
+.page-info {
     padding: 0 1rem;
-    color: #495057;
-  }
-  
-  /* Estilos responsive */
-  @media (max-width: 768px) {
+    color: #495057; /* Gris oscuro */
+}
+
+/* ==================== 6. Media Queries Responsive ==================== */
+@media (max-width: 768px) {
     .table-controls {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
     }
     
     .control-group {
-      width: 100%;
+        width: 100%;
     }
     
     .search-bar {
-      max-width: 100%;
+        max-width: 100%;
     }
     
     th, td {
-      padding: 0.75rem;
-      font-size: 0.8125rem;
+        padding: 0.75rem;
+        font-size: 0.8125rem; /* 13px */
     }
     
     .actions {
-      gap: 0.25rem;
+        gap: 0.25rem;
     }
     
     .action-btn {
-      width: 1.75rem;
-      height: 1.75rem;
+        width: 1.75rem;
+        height: 1.75rem;
     }
-  }
-  
-  @media (max-width: 576px) {
+}
+
+@media (max-width: 576px) {
     th, td {
-      padding: 0.5rem;
-      font-size: 0.75rem;
+        padding: 0.5rem;
+        font-size: 0.75rem; /* 12px */
     }
     
     .pagination-controls {
-      gap: 0.25rem;
+        gap: 0.25rem;
     }
     
     .pagination-controls button {
-      padding: 0.25rem 0.5rem;
-      min-width: 2rem;
+        padding: 0.25rem 0.5rem;
+        min-width: 2rem;
     }
     
     .page-info {
-      padding: 0 0.5rem;
-      font-size: 0.875rem;
+        padding: 0 0.5rem;
+        font-size: 0.875rem; /* 14px */
     }
     
     .control-group label {
-      font-size: 0.875rem;
+        font-size: 0.875rem; /* 14px */
     }
     
     select, input {
-      padding: 0.375rem 0.75rem;
+        padding: 0.375rem 0.75rem;
     }
-  }
+}

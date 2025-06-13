@@ -1,69 +1,117 @@
+/**
+ * researcher-styles.css
+ * 
+ * Estilos para el panel de investigador con:
+ * - Diseño flexible y responsive
+ * - Componentes de consola interactivos
+ * - Sección de inicio con imagen y texto
+ * - Centrado vertical y horizontal
+ * 
+ * Estructura:
+ * 1. Contenedores principales
+ * 2. Componentes de consola
+ * 3. Sección de inicio
+ * 4. Tipografía y elementos básicos
+ */
+
+/* ==================== 1. Contenedores Principales ==================== */
+/**
+ * Contenedor principal del investigador
+ * Diseño flex en columna que ocupa todo el espacio disponible
+ */
 .investigador {
   display: flex;
-  flex-direction: column;  
-  height: 100%;            
-  justify-content: flex-start; 
-  width: 100%;             
-  padding: 0;
+  flex-direction: column;  /* Disposición vertical */
+  height: 100%;           /* Altura completa del contenedor padre */            
+  justify-content: flex-start; /* Alineación al inicio */
+  width: 100%;             /* Ancho completo */
+  padding: 0;              /* Sin padding interno */
 }
 
+/**
+ * Contenedor de contenido principal
+ * Espaciado generoso para el contenido
+ */
 .contentInvestigador {
-  padding: 30px;
+  padding: 30px; /* Espaciado interno amplio */
 }
 
+/**
+ * Contenedor de contenido secundario
+ * Centrado perfecto tanto horizontal como verticalmente
+ */
 .contentInvestigador2 {
   display: flex;
-  justify-content: center; /* Centra horizontalmente */
-  align-items: center; /* Centra verticalmente */
-  min-height: auto; /* Ajusta altura completa restando el tamaño del navbar */
-  padding: 20px;
-  box-sizing: border-box;
+  justify-content: center; /* Centrado horizontal */
+  align-items: center;     /* Centrado vertical */
+  min-height: auto;       /* Altura automática (se ajusta al contenido) */
+  padding: 20px;          /* Espaciado interno */
+  box-sizing: border-box;  /* Modelo de caja incluyendo padding */
 }
 
-h2, h1 {
-  text-align: center;
-  color: #333;
-}
-
-/* Estilos para enlaces de consola */
+/* ==================== 2. Componentes de Consola ==================== */
+/**
+ * Enlaces estilo consola
+ * Diseño moderno con transición suave al hover
+ */
 .console-link {
-  display: inline-block;
-  margin: 10px;
-  padding: 10px 20px;
-  text-decoration: none;
-  background-color: #4a90e2;
-  color: white;
-  border-radius: 5px;
-  font-weight: bold;
-  transition: background-color 0.3s;
+  display: inline-block;   /* Permite margin/padding */
+  margin: 10px;           /* Espaciado externo */
+  padding: 10px 20px;     /* Espaciado interno */
+  text-decoration: none;  /* Sin subrayado */
+  background-color: #4a90e2; /* Azul corporativo */
+  color: white;           /* Texto blanco */
+  border-radius: 5px;     /* Bordes redondeados */
+  font-weight: bold;      /* Texto en negrita */
+  transition: background-color 0.3s; /* Transición suave */
 }
 
+/* Efecto hover para enlaces de consola */
 .console-link:hover {
-  background-color: #357ab8;
+  background-color: #357ab8; /* Azul más oscuro */
 }
 
+/**
+ * Contenedor de información centrada
+ */
 .info-container {
-  text-align: center;
+  text-align: center; /* Centrado de texto */
 }
 
+/* ==================== 3. Sección de Inicio ==================== */
+/**
+ * Contenedor flexible para la sección de inicio
+ * Combina imagen y texto en layout horizontal
+ */
 .inicio-content {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 30px;
-  margin-top: 5%;
+  justify-content: center; /* Centrado horizontal */
+  align-items: center;     /* Centrado vertical */
+  gap: 30px;              /* Espacio entre elementos */
+  margin-top: 5%;        /* Margen superior porcentual */
 }
 
+/* Párrafo en sección inicio */
 .inicio-content p {
-  flex: 1;
-  text-align: justify;
-  font-size: 18px;
-  line-height: 3;
+  flex: 1;                /* Ocupa espacio disponible */
+  text-align: justify;    /* Texto justificado */
+  font-size: 18px;        /* Tamaño de fuente legible */
+  line-height: 3;         /* Interlineado amplio */
 }
 
+/* Imagen en sección inicio */
 .inicio-content img {
-  flex: 1;
-  max-width: 550px;
-  height: auto;
-  border-radius: 10px;
+  flex: 1;                /* Ocupa espacio disponible */
+  max-width: 550px;       /* Ancho máximo controlado */
+  height: auto;           /* Altura proporcional */
+  border-radius: 10px;    /* Bordes redondeados */
+}
+
+/* ==================== 4. Tipografía y Elementos Básicos ==================== */
+/**
+ * Títulos principales
+ */
+h1, h2 {
+  text-align: center; /* Centrado */
+  color: #333;        /* Color gris oscuro */
 }

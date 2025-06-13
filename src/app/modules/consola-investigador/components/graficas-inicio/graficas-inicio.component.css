@@ -1,287 +1,325 @@
-/* Estilos base */
+/**
+ * research-dashboard-styles.css
+ * 
+ * Estilos para dashboard de investigación con:
+ * - Soporte para modo claro/oscuro
+ * - Tarjetas de métricas interactivas
+ * - Visualización de gráficos
+ * - Estados de carga y error
+ * - Diseño completamente responsive
+ * 
+ * Variables CSS:
+ * --background-primary: Color de fondo principal
+ * --background-secondary: Color de fondo secundario
+ * --text-primary: Color de texto principal
+ * --text-secondary: Color de texto secundario
+ * --accent-primary: Color de acento
+ * --success-color: Color para indicadores positivos
+ * --error-color: Color para errores/indicadores negativos
+ */
+
+/* ==================== 1. Estilos Base ==================== */
 .research-dashboard {
-  font-family: 'Roboto', sans-serif;
-  padding: 20px;
-  min-height: 100vh;
-  background-color: var(--background-primary);
-  color: var(--text-primary);
-  transition: all 0.3s ease;
+  font-family: 'Roboto', sans-serif; /* Fuente principal */
+  padding: 20px; /* Espaciado general */
+  min-height: 100vh; /* Altura mínima completa */
+  background-color: var(--background-primary); /* Fondo usando variable */
+  color: var(--text-primary); /* Texto usando variable */
+  transition: all 0.3s ease; /* Transición suave para cambios de tema */
 }
 
+/* Modo oscuro - sobrescribe variables */
 .dark-mode .research-dashboard {
   background-color: var(--background-dark);
   color: var(--text-light);
 }
 
-/* Header */
+/* ==================== 2. Cabecera del Dashboard ==================== */
 .dashboard-header {
-  margin-bottom: 24px;
+  margin-bottom: 24px; /* Espaciado inferior */
 }
 
 .header-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  justify-content: space-between; /* Distribución horizontal */
+  align-items: center; /* Centrado vertical */
+  margin-bottom: 16px; /* Espaciado inferior */
 }
 
 .header-brand {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: center; /* Centrado vertical */
+  gap: 12px; /* Espacio entre elementos */
 }
 
 .brand-icon {
-  color: var(--accent-primary);
-  font-size: 32px;
+  color: var(--accent-primary); /* Color de acento */
+  font-size: 32px; /* Tamaño grande */
   width: 32px;
   height: 32px;
 }
 
 .dashboard-title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 500;
+  margin: 0; /* Reset margen */
+  font-size: 24px; /* Tamaño grande */
+  font-weight: 500; /* Peso medio */
 }
 
 .theme-toggle {
-  color: var(--text-secondary);
+  color: var(--text-secondary); /* Color secundario */
 }
 
+/* Indicadores de capa */
 .current-layer {
   display: flex;
-  gap: 20px;
-  font-size: 14px;
+  gap: 20px; /* Espacio entre elementos */
+  font-size: 14px; /* Tamaño pequeño */
 }
 
 .layer-badge, .layer-boss {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 16px;
-  background-color: var(--background-secondary);
+  align-items: center; /* Centrado vertical */
+  gap: 8px; /* Espacio entre icono y texto */
+  padding: 6px 12px; /* Espaciado interno */
+  border-radius: 16px; /* Bordes muy redondeados */
+  background-color: var(--background-secondary); /* Fondo secundario */
 }
 
+/* Modo oscuro para badges */
 .dark-mode .layer-badge, 
 .dark-mode .layer-boss {
   background-color: var(--background-dark-secondary);
 }
 
-/* Tarjetas métricas */
+/* ==================== 3. Tarjetas de Métricas ==================== */
 .metrics-section {
-  margin-bottom: 32px;
+  margin-bottom: 32px; /* Espaciado inferior */
 }
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Grid responsivo */
+  gap: 16px; /* Espacio entre tarjetas */
 }
 
 .metric-card {
   display: flex;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: var(--background-secondary);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
+  padding: 16px; /* Espaciado interno */
+  border-radius: 8px; /* Bordes redondeados */
+  background-color: var(--background-secondary); /* Fondo secundario */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra sutil */
+  transition: transform 0.2s; /* Transición para efecto hover */
 }
 
+/* Modo oscuro para tarjetas */
 .dark-mode .metric-card {
   background-color: var(--background-dark-secondary);
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
+/* Efecto hover */
 .metric-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px); /* Levantamiento sutil */
 }
 
+/* Icono de métrica */
 .metric-icon mat-icon {
-  padding: 12px;
-  border-radius: 50%;
-  color: white;
-  margin-right: 16px;
+  padding: 12px; /* Espaciado interno */
+  border-radius: 50%; /* Forma circular */
+  color: white; /* Icono blanco */
+  margin-right: 16px; /* Espacio a la derecha */
 }
 
 .metric-data {
-  flex: 1;
+  flex: 1; /* Ocupa espacio disponible */
 }
 
 .metric-title {
   display: block;
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
+  font-size: 14px; /* Tamaño pequeño */
+  color: var(--text-secondary); /* Color secundario */
+  margin-bottom: 4px; /* Espaciado inferior */
 }
 
 .metric-value {
-  font-size: 24px;
-  font-weight: 500;
+  font-size: 24px; /* Tamaño grande */
+  font-weight: 500; /* Peso medio */
 }
 
+/* Indicador de tendencia */
 .metric-trend {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-end; /* Alineado a la derecha */
   justify-content: center;
-  font-size: 14px;
+  font-size: 14px; /* Tamaño pequeño */
 }
 
+/* Colores para tendencias */
 .trend-up .metric-trend {
-  color: var(--success-color);
+  color: var(--success-color); /* Verde para tendencia positiva */
 }
 
 .trend-down .metric-trend {
-  color: var(--error-color);
+  color: var(--error-color); /* Rojo para tendencia negativa */
 }
 
-/* Sección de gráficos */
+/* ==================== 4. Sección de Gráficos ==================== */
 .visualization-section {
-  margin-bottom: 32px;
+  margin-bottom: 32px; /* Espaciado inferior */
 }
 
 .section-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  justify-content: space-between; /* Distribución horizontal */
+  align-items: center; /* Centrado vertical */
+  margin-bottom: 20px; /* Espaciado inferior */
 }
 
 .section-header h2 {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 20px;
+  align-items: center; /* Centrado vertical */
+  gap: 8px; /* Espacio entre icono y texto */
+  margin: 0; /* Reset margen */
+  font-size: 20px; /* Tamaño mediano */
 }
 
+/* Filtro de tiempo */
 .time-filter button {
-  color: var(--accent-primary);
+  color: var(--accent-primary); /* Color de acento */
 }
 
+/* Grid de gráficos */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Grid responsivo */
+  gap: 24px; /* Espacio entre gráficos */
 }
 
+/* Contenedor de gráfico */
 .chart-container {
-  background-color: var(--background-secondary);
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: var(--background-secondary); /* Fondo secundario */
+  border-radius: 8px; /* Bordes redondeados */
+  padding: 16px; /* Espaciado interno */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra sutil */
 }
 
+/* Modo oscuro para gráficos */
 .dark-mode .chart-container {
   background-color: var(--background-dark-secondary);
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
+/* Cabecera de gráfico */
 .chart-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  justify-content: space-between; /* Distribución horizontal */
+  align-items: center; /* Centrado vertical */
+  margin-bottom: 12px; /* Espaciado inferior */
 }
 
 .chart-header h3 {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 16px;
+  align-items: center; /* Centrado vertical */
+  gap: 8px; /* Espacio entre icono y texto */
+  margin: 0; /* Reset margen */
+  font-size: 16px; /* Tamaño estándar */
 }
 
+/* Contenedor del gráfico */
 .chart-wrapper {
   position: relative;
-  height: 300px;
-  width: 100%;
+  height: 300px; /* Altura fija */
+  width: 100%; /* Ancho completo */
 }
 
-/* Estados de carga y error */
+/* ==================== 5. Estados de Carga y Error ==================== */
+/* Esqueleto de carga */
 .loading-state {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
+  flex-direction: column; /* Disposición vertical */
+  gap: 24px; /* Espacio entre elementos */
 }
 
 .skeleton-header {
-  height: 40px;
-  width: 300px;
-  background-color: var(--background-secondary);
-  border-radius: 4px;
-  animation: pulse 1.5s infinite;
+  height: 40px; /* Altura fija */
+  width: 300px; /* Ancho fijo */
+  background-color: var(--background-secondary); /* Fondo */
+  border-radius: 4px; /* Bordes redondeados */
+  animation: pulse 1.5s infinite; /* Animación de carga */
 }
 
 .skeleton-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Grid responsivo */
+  gap: 16px; /* Espacio entre elementos */
 }
 
 .skeleton-card {
-  height: 100px;
-  background-color: var(--background-secondary);
-  border-radius: 8px;
-  animation: pulse 1.5s infinite;
+  height: 100px; /* Altura fija */
+  background-color: var(--background-secondary); /* Fondo */
+  border-radius: 8px; /* Bordes redondeados */
+  animation: pulse 1.5s infinite; /* Animación de carga */
 }
 
 .skeleton-charts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Grid responsivo */
+  gap: 24px; /* Espacio entre elementos */
 }
 
 .skeleton-chart {
-  height: 350px;
-  background-color: var(--background-secondary);
-  border-radius: 8px;
-  animation: pulse 1.5s infinite;
+  height: 350px; /* Altura fija */
+  background-color: var(--background-secondary); /* Fondo */
+  border-radius: 8px; /* Bordes redondeados */
+  animation: pulse 1.5s infinite; /* Animación de carga */
 }
 
+/* Estado de error */
 .error-state {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
+  justify-content: center; /* Centrado horizontal */
+  align-items: center; /* Centrado vertical */
+  min-height: 300px; /* Altura mínima */
 }
 
 .error-card {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  max-width: 500px;
-  padding: 24px;
-  background-color: var(--background-secondary);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  flex-direction: column; /* Disposición vertical */
+  align-items: center; /* Centrado horizontal */
+  text-align: center; /* Texto centrado */
+  max-width: 500px; /* Ancho máximo */
+  padding: 24px; /* Espaciado interno */
+  background-color: var(--background-secondary); /* Fondo */
+  border-radius: 8px; /* Bordes redondeados */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Sombra sutil */
 }
 
 .error-icon {
-  color: var(--error-color);
-  font-size: 48px;
+  color: var(--error-color); /* Color de error */
+  font-size: 48px; /* Tamaño grande */
   width: 48px;
   height: 48px;
-  margin-bottom: 16px;
+  margin-bottom: 16px; /* Espaciado inferior */
 }
 
 .error-content h3 {
-  margin: 0 0 8px;
-  color: var(--error-color);
+  margin: 0 0 8px; /* Espaciado inferior */
+  color: var(--error-color); /* Color de error */
 }
 
 .retry-button {
-  margin-top: 16px;
+  margin-top: 16px; /* Espaciado superior */
 }
 
+/* Animación de carga */
 @keyframes pulse {
   0% { opacity: 0.6; }
   50% { opacity: 0.3; }
   100% { opacity: 0.6; }
 }
 
+/* ==================== 6. Definición de Temas ==================== */
 /* Modo oscuro */
 .dark-mode {
   --background-primary: #121212;
@@ -291,18 +329,18 @@
   --text-primary: #ffffff;
   --text-secondary: #b0b0b0;
   --text-light: #f5f5f5;
-  --accent-primary: #bb86fc;
-  --success-color: #4caf50;
-  --error-color: #f44336;
+  --accent-primary: #bb86fc; /* Morado claro */
+  --success-color: #4caf50; /* Verde */
+  --error-color: #f44336; /* Rojo */
 }
 
 /* Modo claro (valores por defecto) */
 :root {
-  --background-primary: #f5f5f5;
-  --background-secondary: #ffffff;
-  --text-primary: #212121;
-  --text-secondary: #757575;
-  --accent-primary: #673ab7;
-  --success-color: #4caf50;
-  --error-color: #f44336;
+  --background-primary: #f5f5f5; /* Gris muy claro */
+  --background-secondary: #ffffff; /* Blanco */
+  --text-primary: #212121; /* Casi negro */
+  --text-secondary: #757575; /* Gris medio */
+  --accent-primary: #673ab7; /* Morado */
+  --success-color: #4caf50; /* Verde */
+  --error-color: #f44336; /* Rojo */
 }

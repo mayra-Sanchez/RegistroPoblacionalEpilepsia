@@ -6,7 +6,7 @@
       <!-- Card: ¿Qué es RPE? -->
       <div class="card1">
         <div class="card-header">
-          <i class="fas fa-brain icon"></i> <!-- Icono alusivo -->
+          <i class="fas fa-brain icon"></i>
           <h2>¿Qué es RPE?</h2>
         </div>
         <div class="card-body">
@@ -22,7 +22,7 @@
       <!-- Card: Instituciones -->
       <div class="card" (click)="openModal('institucionesModal')">
         <div class="card-header">
-          <i class="fas fa-university icon"></i> <!-- Icono para instituciones -->
+          <i class="fas fa-university icon"></i>
           <h2>Instituciones</h2>
         </div>
         <div class="card-body">
@@ -37,7 +37,7 @@
       <!-- Card: Grupo Humano -->
       <div class="card" (click)="openModal('grupoHumanoModal')">
         <div class="card-header">
-          <i class="fas fa-users icon"></i> <!-- Icono para grupo humano -->
+          <i class="fas fa-users icon"></i>
           <h2>Grupo Humano</h2>
         </div>
         <div class="card-body">
@@ -49,7 +49,6 @@
         </div>
       </div>
     </div>
-
 
     <div *ngIf="selectedTab === 'sistema'" class="container">
       <div class="card-sistema">
@@ -71,7 +70,6 @@
               generalmente recolectan y clasifican datos, que son procesados por personas y/o con recursos informáticos,
               para que sean fáciles de comprender y recuperar. Así, esta información queda almacenada para ser
               consultada de manera sencilla o para ser divulgada cuando sea necesario</p>
-
           </div>
         </div>
       </div>
@@ -85,11 +83,19 @@
             <i class="fas fa-file-alt"></i>
           </div>
           <h2>Registro en el Sistema</h2>
-          <p>Para registrarse en nuestra plataforma, por favor haga clic en el botón:</p>
+          <p>Para registrarse en nuestra plataforma, por favor seleccione una opción:</p>
 
           <button class="register-btn" (click)="openRegistrationModal()">
             <i class="fas fa-user-plus"></i>
-            Solicitar Registro
+            Solicitar Registro de Usuario
+          </button>
+          <button class="register-btn" (click)="openLayerRegistrationModal()">
+            <i class="fas fa-layer-group"></i>
+            Solicitar Registro de Capa
+          </button>
+          <button class="register-btn" (click)="openVariableRegistrationModal()">
+            <i class="fas fa-list-alt"></i>
+            Solicitar Registro de Variable
           </button>
 
           <div class="note-box">
@@ -126,8 +132,7 @@
             <i class="fas fa-at"></i>
             <div>
               <h3>Correos Electrónicos</h3>
-              <p>Soporte: <strong>correo</strong><br>
-                Registros: <strong>correo</strong></p>
+              <p>Soporte y reclamos: <strong>soporte.registroepilepsia&#64;gmail.com</strong><br>
             </div>
           </div>
 
@@ -136,21 +141,14 @@
             <div>
               <h3>Horario de Atención</h3>
               <p>Lunes a Viernes: 8:00 - 18:00 hrs<br>
-                Sábados: 9:00 - 13:00 hrs</p>
+                Sábados: 9:30 - 11:30 hrs</p>
             </div>
           </div>
 
           <div class="social-media">
-            <h3>Síguenos en:</h3>
             <div class="social-icons">
-              <a href="#" aria-label="Facebook">
-                <i class="fab fa-facebook-f"></i>
-              </a>
-              <a href="#" aria-label="Twitter">
-                <i class="fab fa-twitter"></i>
-              </a>
-              <a href="#" aria-label="LinkedIn">
-                <i class="fab fa-linkedin-in"></i>
+              <a href="https://www.linkedin.com/in/registro-de-epilepsia-341b0936a/" title="LinkedIn">
+                <i class="fab fa-linkedin"></i>
               </a>
             </div>
           </div>
@@ -162,7 +160,7 @@
   <!-- Modal para Instituciones -->
   <div id="institucionesModal" class="modal">
     <div class="modal-content">
-      <span class="close" (click)="closeModal('institucionesModal')">&times;</span>
+      <span class="close" (click)="closeModal('institucionesModal')">×</span>
       <h2>Instituciones Colaboradoras</h2>
       <p>Trabajamos en conjunto con las siguientes instituciones y laboratorios:</p>
 
@@ -181,7 +179,7 @@
     <div class="modal-content-institucion">
 
       <div class="institucion-header">
-        <span class="close-institucion-detalle" (click)="closeModal('institucionDetailModal')">&times;</span>
+        <span class="close-institucion-detalle" (click)="closeModal('institucionDetailModal')">×</span>
         <img [src]="institucionSeleccionada.imagen" [alt]="institucionSeleccionada.nombre"
           class="institucion-logo-modal">
         <div class="institucion-titulo">
@@ -227,7 +225,7 @@
   <!-- Modal para Grupo Humano -->
   <div id="grupoHumanoModal" class="modal">
     <div class="modal-content">
-      <span class="close" (click)="closeModal('grupoHumanoModal')">&times;</span>
+      <span class="close" (click)="closeModal('grupoHumanoModal')">×</span>
       <h2>Grupo Humano</h2>
       <p>Para conocer más al detalle a las personas del grupo humano, dale clic a su nombre</p>
       <!-- Contenedor de personas -->
@@ -237,9 +235,6 @@
           <img src="../../assets/directores_estudiantes/paty.png" alt="Director 1" class="persona-img" />
           <h3 class="persona-nombre">Maria Patricia Trujillo Uribe</h3>
           <p class="persona-rol">Directora</p>
-          <!-- <p class="persona-descripcion">
-          Breve descripción del director 1 y su contribución al proyecto.
-        </p> -->
         </div>
 
         <!-- Persona 2: Director -->
@@ -247,9 +242,6 @@
           <img src="../../assets/directores_estudiantes/deisy.jpg" alt="Director 2" class="persona-img" />
           <h3 class="persona-nombre">Deisy Chaves Sánchez</h3>
           <p class="persona-rol">Directora</p>
-          <!-- <p class="persona-descripcion">
-          Breve descripción del director 2 y su contribución al proyecto.
-        </p> -->
         </div>
 
         <!-- Persona 3: Director -->
@@ -257,9 +249,6 @@
           <img src="../../assets/directores_estudiantes/jhonma.jpg" alt="Director 3" class="persona-img" />
           <h3 class="persona-nombre">Jhon Mauro Gómez Benitez</h3>
           <p class="persona-rol">Director</p>
-          <!-- <p class="persona-descripcion">
-          Breve descripción del director 3 y su contribución al proyecto.
-        </p> -->
         </div>
 
         <!-- Persona 4: Director -->
@@ -268,20 +257,14 @@
             class="persona-img" />
           <h3 class="persona-nombre">Alejandro Herrera Trujillo</h3>
           <p class="persona-rol">Director</p>
-          <!-- <p class="persona-descripcion">
-          Breve descripción del director 4 y su contribución al proyecto.
-        </p> -->
         </div>
-
       </div>
       <div class="personas-container-centrado">
+        <!-- Persona 5: Director -->
         <div class="persona" (click)="openPersonaModal('juan')">
           <img src="../../assets/directores_estudiantes/Rivas.jpg" alt="Director 5" class="persona-img" />
           <h3 class="persona-nombre">Juan Carlos Rivas Nieto</h3>
           <p class="persona-rol">Director</p>
-          <!-- <p class="persona-descripcion">
-          Breve descripción del director 5 y su contribución al proyecto.
-        </p> -->
         </div>
 
         <!-- Persona 6: Estudiante -->
@@ -289,9 +272,6 @@
           <img src="../../assets/directores_estudiantes/may.jpg" alt="Estudiante 1" class="persona-img" />
           <h3 class="persona-nombre">Mayra Alejandra Sánchez Salinas</h3>
           <p class="persona-rol">Estudiante</p>
-          <!-- <p class="persona-descripcion">
-          Breve descripción del estudiante 1 y su contribución al proyecto.
-        </p> -->
         </div>
 
         <!-- Persona 7: Estudiante -->
@@ -299,9 +279,6 @@
           <img src="../../assets/directores_estudiantes/laura.jpg" alt="Estudiante 2" class="persona-img" />
           <h3 class="persona-nombre">Laura Daniela Jaimes Cardenas</h3>
           <p class="persona-rol">Estudiante</p>
-          <!-- <p class="persona-descripcion">
-          Breve descripción del estudiante 2 y su contribución al proyecto.
-        </p> -->
         </div>
       </div>
     </div>
@@ -314,7 +291,7 @@
       <div class="persona-detalle-container">
         <!-- Encabezado -->
         <div class="persona-detalle-header">
-          <span class="close-persona-detalle" (click)="closeModal('personaDetailModal')">&times;</span>
+          <span class="close-persona-detalle" (click)="closeModal('personaDetailModal')">×</span>
           <div class="persona-icono">
             <img [src]="personaSeleccionada.imagen" alt="Foto de {{personaSeleccionada.nombre}}"
               class="persona-imagen-detalle" *ngIf="personaSeleccionada.imagen">
@@ -414,9 +391,10 @@
     </div>
   </div>
 
+  <!-- Modal para Registro de Usuario -->
   <div id="registrationModal" class="modal">
     <div class="modal-content registration-modal">
-      <span class="close" (click)="closeModal('registrationModal')">&times;</span>
+      <span class="close" (click)="closeModal('registrationModal')">×</span>
 
       <div *ngIf="!showSuccessMessage; else successTemplate">
         <h2>Solicitud de Registro</h2>
@@ -498,7 +476,7 @@
 
             <div class="form-group">
               <label for="capaInvestigacion">Capa de Investigación*</label>
-                <input type="text" id="capaInvestigacion" formControlName="capaInvestigacion"
+              <input type="text" id="capaInvestigacion" formControlName="capaInvestigacion"
                 placeholder="Ingrese el nombre de la capa a la que desea registrarse">
               <div
                 *ngIf="registrationForm.get('capaInvestigacion')?.invalid && registrationForm.get('capaInvestigacion')?.touched"
@@ -567,3 +545,186 @@
       </ng-template>
     </div>
   </div>
+
+  <!-- Modal para Registro de Capa de Investigación -->
+  <div id="researchLayerModal" class="modal">
+    <div class="modal-content registration-modal">
+      <span class="close" (click)="closeModal('researchLayerModal')">×</span>
+
+      <div *ngIf="!showLayerSuccessMessage; else layerSuccessTemplate">
+        <h2>Solicitud de Registro de Capa de Investigación</h2>
+
+        <form [formGroup]="researchLayerForm" (ngSubmit)="submitResearchLayer()"
+          *ngIf="!isSending; else sendingTemplate">
+          <div class="form-group">
+            <label for="layerName">Nombre de la Capa*</label>
+            <input type="text" id="layerName" formControlName="layerName" placeholder="Ingrese el nombre de la capa">
+            <div *ngIf="researchLayerForm.get('layerName')?.invalid && researchLayerForm.get('layerName')?.touched"
+              class="error-message">
+              Nombre de la capa es requerido
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Descripción*</label>
+            <textarea id="description" formControlName="description" placeholder="Describa el propósito de la capa"
+              rows="4"></textarea>
+            <div *ngIf="researchLayerForm.get('description')?.invalid && researchLayerForm.get('description')?.touched"
+              class="error-message">
+              Descripción es requerida
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="layerBossName">Nombre del Responsable*</label>
+            <input type="text" id="layerBossName" formControlName="layerBossName"
+              placeholder="Ingrese el nombre del responsable">
+            <div
+              *ngIf="researchLayerForm.get('layerBossName')?.invalid && researchLayerForm.get('layerBossName')?.touched"
+              class="error-message">
+              Nombre del responsable es requerido
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="layerBossId">Número de Identificación*</label>
+            <input type="text" id="layerBossId" formControlName="layerBossId"
+              placeholder="Ingrese el número de identificación">
+            <div *ngIf="researchLayerForm.get('layerBossId')?.invalid && researchLayerForm.get('layerBossId')?.touched"
+              class="error-message">
+              Número de identificación es requerido y debe ser numérico
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="layerBossEmail">Correo Electrónico*</label>
+            <input type="email" id="layerBossEmail" formControlName="layerBossEmail"
+              placeholder="Ingrese el correo del responsable">
+            <div
+              *ngIf="researchLayerForm.get('layerBossEmail')?.invalid && researchLayerForm.get('layerBossEmail')?.touched"
+              class="error-message">
+              Correo electrónico válido es requerido
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="cancel-btn" (click)="closeModal('researchLayerModal')">Cancelar</button>
+            <button type="submit" class="submit-btn" [disabled]="!researchLayerForm.valid">
+              <i class="fas fa-paper-plane"></i> Enviar Solicitud
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <ng-template #layerSuccessTemplate>
+        <div class="success-container">
+          <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h2>Solicitud Enviada Exitosamente</h2>
+          <p>Hemos recibido tu solicitud de registro de capa de investigación correctamente.</p>
+          <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez procesada.
+          </p>
+          <button class="close-btn" (click)="closeModal('researchLayerModal')">Cerrar</button>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Modal para Registro de Variable -->
+  <div id="variableModal" class="modal">
+    <div class="modal-content registration-modal">
+      <span class="close" (click)="closeModal('variableModal')">×</span>
+
+      <div *ngIf="!showVariableSuccessMessage; else variableSuccessTemplate">
+        <h2>Solicitud de Registro de Variable</h2>
+
+        <form [formGroup]="variableForm" (ngSubmit)="submitVariable()" *ngIf="!isSending; else sendingTemplate">
+          <div class="form-group">
+            <label for="researchLayerId">ID de la Capa de Investigación*</label>
+            <input type="text" id="researchLayerId" formControlName="researchLayerId"
+              placeholder="Ingrese el ID de la capa">
+            <div *ngIf="variableForm.get('researchLayerId')?.invalid && variableForm.get('researchLayerId')?.touched"
+              class="error-message">
+              ID de la capa es requerido
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="variableName">Nombre de la Variable*</label>
+            <input type="text" id="variableName" formControlName="variableName"
+              placeholder="Ingrese el nombre de la variable">
+            <div *ngIf="variableForm.get('variableName')?.invalid && variableForm.get('variableName')?.touched"
+              class="error-message">
+              Nombre de la variable es requerido
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Descripción*</label>
+            <textarea id="description" formControlName="description" placeholder="Describa la variable"
+              rows="4"></textarea>
+            <div *ngIf="variableForm.get('description')?.invalid && variableForm.get('description')?.touched"
+              class="error-message">
+              Descripción es requerida
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="type">Tipo de Variable*</label>
+            <select id="type" formControlName="type">
+              <option value="" disabled selected>Seleccione el tipo...</option>
+              <option value="numerica">Entero</option>
+              <option value="categorica">Real</option>
+              <option value="texto">Cadena</option>
+              <option value="fecha">Fecha</option>
+              <option value="logico">Lógico</option>
+            </select>
+            <div *ngIf="variableForm.get('type')?.invalid && variableForm.get('type')?.touched" class="error-message">
+              Tipo de variable es requerido
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="hasOptions">¿Tiene Opciones?</label>
+            <input type="checkbox" id="hasOptions" formControlName="hasOptions">
+          </div>
+
+          <div class="form-group" *ngIf="variableForm.get('hasOptions')?.value">
+            <label for="options">Opciones (separadas por comas)*</label>
+            <input type="text" id="options" formControlName="options" placeholder="Ej: Sí,No,Otro">
+            <div *ngIf="variableForm.get('options')?.invalid && variableForm.get('options')?.touched"
+              class="error-message">
+              Opciones son requeridas si la variable tiene opciones
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="isEnabled">Habilitada</label>
+            <input type="checkbox" id="isEnabled" formControlName="isEnabled">
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="cancel-btn" (click)="closeModal('variableModal')">Cancelar</button>
+            <button type="submit" class="submit-btn" [disabled]="!variableForm.valid">
+              <i class="fas fa-paper-plane"></i> Enviar Solicitud
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <ng-template #variableSuccessTemplate>
+        <div class="success-container">
+          <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h2>Solicitud Enviada Exitosamente</h2>
+          <p>Hemos recibido tu solicitud de registro de variable correctamente.</p>
+          <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez procesada.
+          </p>
+          <button class="close-btn" (click)="closeModal('variableModal')">Cerrar</button>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

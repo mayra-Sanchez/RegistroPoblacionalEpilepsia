@@ -1,6 +1,80 @@
+/* =========================================== */
+/* ESTILOS GLOBALES - RESET BÁSICO */
+/* =========================================== */
+
+/**
+ * SELECTORES HTML Y BODY
+ * Propósito: Establecer estilos base para toda la aplicación
+ * Características principales:
+ * - Altura completa del viewport
+ * - Eliminación de márgenes por defecto
+ * - Fuente predeterminada consistente
+ * - Modelo de caja más intuitivo
+ */
 html, body {
-  height: 100%;
-  margin: 0;
-  font-family: 'Arial', sans-serif;
+  height: 100%;           /* Ocupa toda la altura del viewport */
+  margin: 0;              /* Elimina márgenes por defecto del navegador */
+  font-family: 'Arial', sans-serif; /* Fuente predeterminada */
+  box-sizing: border-box; /* Modelo de caja más predecible */
 }
 
+/**
+ * HERENCIA DEL MODELO DE CAJA
+ * Mejora la consistencia en todos los elementos
+ */
+*, *::before, *::after {
+  box-sizing: inherit;     /* Hereda el box-sizing del elemento padre */
+}
+
+/* =========================================== */
+/* MEJORAS ADICIONALES RECOMENDADAS */
+/* =========================================== */
+
+/**
+ * ESTILOS PARA ELEMENTOS DE TEXTO
+ * Mejora la legibilidad y consistencia tipográfica
+ */
+body {
+  line-height: 1.5;        /* Espaciado entre líneas para mejor lectura */
+  -webkit-font-smoothing: antialiased; /* Suavizado de fuentes en macOS */
+  text-rendering: optimizeLegibility; /* Optimización de renderizado */
+}
+
+/**
+ * RESET PARA ELEMENTOS DE FORMULARIO
+ * Normaliza estilos entre navegadores
+ */
+input, button, textarea, select {
+  font: inherit;          /* Hereda la familia de fuentes del body */
+}
+
+/**
+ * MANEJO DE IMÁGENES
+ * Previene problemas comunes con imágenes
+ */
+img, picture, video, canvas, svg {
+  display: block;         /* Elimina espacio inferior no deseado */
+  max-width: 100%;        /* Previene desbordamiento en contenedores */
+}
+
+/**
+ * CORRECCIÓN PARA TEXTOS LARGOS
+ * Evita desbordamiento en elementos de texto
+ */
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word; /* Rompe palabras largas para evitar overflow */
+}
+
+/* =========================================== */
+/* MEDIA QUERIES PARA AJUSTES ESPECÍFICOS */
+/* =========================================== */
+
+/**
+ * AJUSTES PARA DISPOSITIVOS TÁCTILES
+ * Mejora la interacción en móviles y tablets
+ */
+@media (hover: none) {
+  body {
+    -webkit-tap-highlight-color: transparent; /* Elimina highlight azul en taps */
+  }
+}

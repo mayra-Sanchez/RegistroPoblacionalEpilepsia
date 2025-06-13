@@ -1,11 +1,16 @@
+/* ============================================= */
+/* Estilos base del contenedor del formulario */
+/* ============================================= */
+
 .user-form-container {
-  /* max-width: 1000px;
-  margin: 2rem auto;
-  padding: 2rem; */
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
+
+/* ============================================= */
+/* Componente para saltar pasos */
+/* ============================================= */
 
 .skip-step {
   text-align: center;
@@ -22,6 +27,10 @@
   color: #6c757d;
 }
 
+/* ============================================= */
+/* Estilos para botones */
+/* ============================================= */
+
 .btn-next {
   background-color: #28a745;
   color: white;
@@ -35,6 +44,32 @@
   background-color: #218838;
 }
 
+/* Clase base para botones */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+/* Variante específica para botón siguiente */
+.btn-next {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-next:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+/* ============================================= */
+/* Estilos para títulos y estructura del formulario */
+/* ============================================= */
+
 .form-title {
   color: #2c3e50;
   font-size: 1.5rem;
@@ -44,12 +79,28 @@
   font-weight: 600;
 }
 
+/* Versión alternativa con badge */
+.form-title .badge {
+  background: #3498db;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+/* Contenedor de cada paso del formulario */
 .form-step {
   background-color: white;
   padding: 1.5rem;
   border-radius: 10px;
   margin-bottom: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
+
+/* ============================================= */
+/* Estructura de filas y grupos de formulario */
+/* ============================================= */
 
 .form-row {
   display: grid;
@@ -70,6 +121,10 @@
   font-size: 0.9rem;
 }
 
+/* ============================================= */
+/* Estilos para inputs y selects */
+/* ============================================= */
+
 .form-group input,
 .form-group select {
   width: 100%;
@@ -79,6 +134,7 @@
   font-size: 0.95rem;
   transition: all 0.3s;
   background-color: #f8fafc;
+  max-width: 90%; /* Limita el ancho máximo */
 }
 
 .form-group input:focus,
@@ -89,7 +145,23 @@
   background-color: white;
 }
 
+/* Estilos para inputs readonly */
+.form-group input[readonly] {
+  background-color: #f8f9fa;
+  border-color: #e9ecef;
+  color: #495057;
+  cursor: not-allowed;
+}
+
+.form-group input[readonly]:focus {
+  box-shadow: none;
+  border-color: #ced4da;
+}
+
+/* ============================================= */
 /* Estilos para checkbox */
+/* ============================================= */
+
 .checkbox-container {
   display: flex;
   align-items: center;
@@ -111,32 +183,10 @@
   cursor: pointer;
 }
 
-/* Mejoras para botones */
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-}
+/* ============================================= */
+/* Mensajes de error y validación */
+/* ============================================= */
 
-.btn-next {
-  background-color: #3498db;
-  color: white;
-}
-
-.btn-next:hover {
-  background-color: #2980b9;
-  transform: translateY(-2px);
-}
-
-input, select{
-  max-width: 90%;
-}
-
-/* Estilos para mensajes de error */
 .error-message {
   color: #e74c3c;
   font-size: 0.8rem;
@@ -144,59 +194,20 @@ input, select{
   display: block;
 }
 
-/* Estilos responsivos */
-@media (max-width: 768px) {
-  .user-form-container {
-    padding: 1.5rem;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .form-group {
-    margin-bottom: 1rem;
-  }
-}
-
-/* Estilos para campos inválidos */
+/* Campos inválidos */
 .ng-invalid.ng-touched {
   border-color: #e74c3c !important;
 }
 
+/* Campos válidos */
 .ng-valid.ng-touched {
   border-color: #2ecc71 !important;
 }
 
-/* Estilos para el paso clínico */
-.form-step {
-  background: white;
-  border-radius: 10px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
+/* ============================================= */
+/* Componente de filtros */
+/* ============================================= */
 
-.form-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #3498db;
-}
-
-.form-title .badge {
-  background: #3498db;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  margin-left: auto;
-}
-
-/* Filtros */
 .filters-container {
   background: #f8f9fa;
   padding: 1rem;
@@ -208,6 +219,7 @@ input, select{
   gap: 1rem;
 }
 
+/* Barra de búsqueda */
 .search-box {
   position: relative;
 }
@@ -235,6 +247,7 @@ input, select{
   color: #6c757d;
 }
 
+/* Filtros por tipo */
 .type-filters {
   display: flex;
   flex-wrap: wrap;
@@ -261,19 +274,10 @@ input, select{
   border-color: #3498db;
 }
 
-.form-group input[readonly] {
-  background-color: #f8f9fa;
-  border-color: #e9ecef;
-  color: #495057;
-  cursor: not-allowed;
-}
-
-.form-group input[readonly]:focus {
-  box-shadow: none;
-  border-color: #ced4da;
-}
-
+/* ============================================= */
 /* Grid de variables */
+/* ============================================= */
+
 .variables-grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -284,7 +288,10 @@ input, select{
   margin-bottom: 1.5rem;
 }
 
-/* Tarjeta de variable */
+/* ============================================= */
+/* Tarjetas de variables */
+/* ============================================= */
+
 .variable-card {
   background: white;
   border-radius: 8px;
@@ -293,6 +300,7 @@ input, select{
   transition: all 0.2s;
 }
 
+/* Destacar variables requeridas */
 .variable-card.required-highlight {
   border-left: 3px solid #3498db;
 }
@@ -302,6 +310,7 @@ input, select{
   transform: translateY(-2px);
 }
 
+/* Cabecera de la tarjeta */
 .variable-header {
   display: flex;
   justify-content: space-between;
@@ -319,6 +328,7 @@ input, select{
   gap: 0.5rem;
 }
 
+/* Iconos de estado */
 .variable-header h3 i.fa-check-circle {
   color: #2ecc71;
 }
@@ -327,6 +337,7 @@ input, select{
   color: #e74c3c;
 }
 
+/* Badge de tipo de variable */
 .variable-type-badge {
   font-size: 0.7rem;
   padding: 0.25rem 0.75rem;
@@ -335,7 +346,7 @@ input, select{
   color: #4a5568;
 }
 
-/* Colores por tipo */
+/* Colores específicos por tipo de variable */
 .variable-type-badge.Entero { background: #bee3f8; color: #2b6cb0; }
 .variable-type-badge.Decimal { background: #feebc8; color: #b7791f; }
 .variable-type-badge.Texto { background: #c6f6d5; color: #276749; }
@@ -343,7 +354,7 @@ input, select{
 .variable-type-badge.Opciones { background: #e9d8fd; color: #553c9a; }
 .variable-type-badge.Fecha { background: #d6bcfa; color: #6b46c1; }
 
-/* Controles */
+/* Controles dentro de la tarjeta */
 .variable-control input,
 .variable-control select {
   width: 100%;
@@ -360,19 +371,12 @@ input, select{
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-/* Footer de variable */
+/* Pie de tarjeta */
 .variable-footer {
   margin-top: 0.75rem;
 }
 
-.error-message {
-  color: #e74c3c;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
+/* Descripción de la variable */
 .variable-description {
   color: #718096;
   font-size: 0.8rem;
@@ -380,7 +384,10 @@ input, select{
   margin-top: 0.5rem;
 }
 
-/* Navegación */
+/* ============================================= */
+/* Navegación del formulario */
+/* ============================================= */
+
 .form-navigation {
   display: flex;
   justify-content: space-between;
@@ -403,39 +410,9 @@ input, select{
   border-radius: 3px;
 }
 
-/* Scrollbar */
-.variables-grid-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.variables-grid-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.variables-grid-container::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
-  border-radius: 3px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .variables-grid-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-navigation {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .form-progress {
-    width: 100%;
-  }
-  
-  .form-progress progress {
-    width: 100%;
-  }
-}
+/* ============================================= */
+/* Estilos para el modal */
+/* ============================================= */
 
 .modal {
   position: fixed;
@@ -456,8 +433,17 @@ input, select{
   border-radius: 5px;
   width: 80%;
   max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
 }
 
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Contenedor de firma */
 .signature-container {
   margin: 20px 0;
   border: 1px solid #ccc;
@@ -469,13 +455,17 @@ canvas {
   background: white;
 }
 
+/* Acciones del modal */
 .modal-actions {
   display: flex;
   justify-content: space-between;
   margin-top: 20px;
 }
 
-/* Estilos adicionales para el modal de confirmación */
+/* ============================================= */
+/* Grid clínico y de información */
+/* ============================================= */
+
 .clinical-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -520,13 +510,61 @@ canvas {
   gap: 10px;
 }
 
-.modal-content {
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
+/* ============================================= */
+/* Estilos para la barra de scroll */
+/* ============================================= */
+
+.variables-grid-container::-webkit-scrollbar {
+  width: 6px;
 }
 
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
+.variables-grid-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.variables-grid-container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+/* ============================================= */
+/* Media queries para diseño responsivo */
+/* ============================================= */
+
+@media (max-width: 768px) {
+  /* Ajustes para el contenedor del formulario */
+  .user-form-container {
+    padding: 1.5rem;
+  }
+  
+  /* Cambiar a una sola columna en móviles */
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Reducir margen inferior en móviles */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  /* Ajustes para el grid de variables */
+  .variables-grid-container {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Cambiar navegación a columna en móviles */
+  .form-navigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Ajustar progreso al ancho completo */
+  .form-progress {
+    width: 100%;
+  }
+  
+  .form-progress progress {
+    width: 100%;
+  }
 }

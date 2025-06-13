@@ -1,58 +1,61 @@
+/* ============================================= */
+/* ============ IMPORTS Y FUENTES ============== */
+/* ============================================= */
+
+/* Importar Font Awesome para iconos */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+/* Importar fuente Montserrat de Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* ============================================= */
+/* ============ ESTILOS GENERALES ============== */
+/* ============================================= */
 
 .home {
   width: 100%;
   margin: 0 auto;
 }
 
-/* Aplicar Montserrat sin afectar iconos */
+/* Aplicar Montserrat a elementos de texto sin afectar iconos */
 body, p, h1, h2, h3, h4, h5, h6, span, div, button, input, textarea, select {
   font-family: 'Montserrat', sans-serif;
 }
 
-/* Asegurar que los iconos de Leaflet se muestren correctamente */
+/* Corrección para iconos de Leaflet */
 :host ::ng-deep .leaflet-default-icon-path {
   background-image: url(https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png);
 }
 
-/* Corrección para el tamaño del mapa en móviles */
-@media (max-width: 576px) {
-  .institucion-content {
-    flex-direction: column-reverse; /* Mapa arriba en móviles */
-  }
-  
-  .map-container {
-    height: 250px; /* Altura un poco menor en móviles */
-    margin-bottom: 15px;
-  }
-}
-
-h2,
-h1 {
+/* Estilos para títulos */
+h2, h1 {
   text-align: center;
   color: #333;
   margin-top: 3%;
 }
-.text-footer{
+
+/* Estilos para el footer */
+.text-footer {
   display: flex;
   text-align: center;
   justify-content: center;
   margin-top: 30px;
 }
 
-.text-footer:hover{
-  display: flex;
+.text-footer:hover {
   transform: scale(1.05);
-  text-align: center;
-  justify-content: center;
-  margin-top: 30px;
   cursor: pointer;
 }
+
+/* Contenedor principal */
 .contentHome {
   padding: 60px 30px;
   height: 100%;
 }
+
+/* ============================================= */
+/* ============ TARJETAS INICIO ================ */
+/* ============================================= */
 
 .info-container {
   display: flex;
@@ -61,9 +64,8 @@ h1 {
   gap: 20px;
 }
 
-/* Inicio */
-.card,
-.card1 {
+/* Estilos base para tarjetas */
+.card, .card1 {
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -74,11 +76,11 @@ h1 {
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.card:hover,
-.card1:hover {
+.card:hover, .card1:hover {
   transform: scale(1.03);
 }
 
+/* Encabezado de tarjeta */
 .card-header .icon {
   font-size: 40px;
   color: #4a90e2;
@@ -91,12 +93,17 @@ h1 {
   margin: 10px 0;
 }
 
+/* Cuerpo de tarjeta */
 .card-body p {
   font-size: 16px;
   color: #555;
   line-height: 1.6;
   text-align: justify;
 }
+
+/* ============================================= */
+/* ============ MODALES GENERALES ============== */
+/* ============================================= */
 
 .modal {
   display: none;
@@ -135,11 +142,9 @@ h1 {
   color: #000;
 }
 
-.modal-content h2 {
-  text-align: center;
-  color: #4a90e2;
-  margin-bottom: 20px;
-}
+/* ============================================= */
+/* ============ INSTITUCIONES ================== */
+/* ============================================= */
 
 .instituciones-container {
   display: grid;
@@ -155,6 +160,7 @@ h1 {
   gap: 20px;
 }
 
+/* Estilos para cada institución */
 .institucion {
   background-color: #f9f9f9;
   border-radius: 10px;
@@ -170,6 +176,7 @@ h1 {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* Imagen de institución */
 .institucion-img {
   width: 100%;
   height: 150px;
@@ -178,6 +185,7 @@ h1 {
   margin-bottom: 10px;
 }
 
+/* Texto de institución */
 .institucion-nombre {
   font-size: 18px;
   color: #333;
@@ -189,6 +197,10 @@ h1 {
   color: #555;
   line-height: 1.5;
 }
+
+/* ============================================= */
+/* ============ PERSONAS ======================= */
+/* ============================================= */
 
 .personas-container {
   display: grid;
@@ -204,6 +216,7 @@ h1 {
   gap: 20px;
 }
 
+/* Estilos para cada persona */
 .persona {
   background-color: #f9f9f9;
   border-radius: 10px;
@@ -219,6 +232,7 @@ h1 {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* Imagen de persona */
 .persona-img {
   width: 100px;
   height: 100px;
@@ -227,6 +241,7 @@ h1 {
   margin-bottom: 10px;
 }
 
+/* Texto de persona */
 .persona-nombre {
   font-size: 18px;
   color: #333;
@@ -245,75 +260,10 @@ h1 {
   line-height: 1.5;
 }
 
-@media (max-width: 768px) {
-  .info-container {
-    flex-direction: column;
-    align-items: center;
-  }
+/* ============================================= */
+/* ============ SISTEMA DE INFORMACIÓN ========= */
+/* ============================================= */
 
-  .card,
-  .card1 {
-    max-width: 100%;
-    margin: 10px 0;
-  }
-
-  .instituciones-container,
-  .personas-container,
-  .instituciones-container-center,
-  .personas-container-centrado {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .institucion-img,
-  .persona-img {
-    height: 120px;
-  }
-
-  .institucion-nombre,
-  .persona-nombre {
-    font-size: 16px;
-  }
-
-  .institucion-descripcion,
-  .persona-descripcion {
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .contentHome {
-    padding: 10px;
-  }
-
-  .instituciones-container,
-  .personas-container,
-  .instituciones-container-center,
-  .personas-container-centrado {
-    grid-template-columns: 1fr;
-  }
-
-  .institucion,
-  .persona {
-    width: 100%;
-  }
-
-  .institucion-img,
-  .persona-img {
-    height: 100px;
-  }
-
-  .institucion-nombre,
-  .persona-nombre {
-    font-size: 14px;
-  }
-
-  .institucion-descripcion,
-  .persona-descripcion {
-    font-size: 12px;
-  }
-}
-
-/* Sistema de información */
 .container {
   display: flex;
   justify-content: center;
@@ -331,11 +281,12 @@ h1 {
 
 .card-content-sistema {
   display: flex;
-  flex-direction: row; /* Horizontal en desktop */
+  flex-direction: row;
   align-items: center;
   gap: 50px;
 }
 
+/* Imagen izquierda */
 .image-left-sistema {
   flex: 1;
   display: flex;
@@ -359,6 +310,7 @@ h1 {
   text-align: center;
 }
 
+/* Texto derecho */
 .text-right-sistema {
   flex: 2;
   text-align: left;
@@ -377,43 +329,10 @@ h1 {
   margin-bottom: 15px;
 }
 
-@media (max-width: 768px) {
-  .card-content-sistema {
-    flex-direction: column;
-    gap: 30px;
-  }
-  
-  .text-right-sistema {
-    order: -1; 
-    text-align: center;
-    width: 100%;
-  }
-  
-  .image-left-sistema {
-    width: 100%;
-  }
-  
-  .image-left-sistema img {
-    max-width: 100%;
-  }
-}
+/* ============================================= */
+/* ============ CONTACTO ====================== */
+/* ============================================= */
 
-@media (max-width: 480px) {
-  .container {
-    padding: 10px;
-  }
-  
-  .card-sistema {
-    padding: 20px;
-  }
-  
-  .card-content-sistema {
-    gap: 20px;
-  }
-}
-
-/* Contacto */
-/* Contacto - Versión Mejorada */
 .contact-container {
   width: 100%;
   padding: 1rem 3rem;
@@ -429,6 +348,7 @@ h1 {
   justify-content: center;
 }
 
+/* Tarjetas de contacto */
 .contact-card {
   flex: 1;
   min-width: 300px;
@@ -440,25 +360,17 @@ h1 {
   transition: transform 0.3s ease;
 }
 
-/* Efecto hover solo para dispositivos con mouse */
-@media (hover: hover) {
-  .contact-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  }
-}
-
-/* Card izquierda (Instrucciones) */
+/* Tarjeta de instrucciones */
 .instruction-card {
   border-top: 4px solid #4a90e2;
 }
 
-/* Card derecha (Información) */
+/* Tarjeta de información */
 .info-card {
   border-top: 4px solid #2ecc71;
 }
 
-/* Estilos comunes */
+/* Iconos de contacto */
 .card-icon {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -493,7 +405,7 @@ h1 {
   background: #2ecc71;
 }
 
-/* Estilos para lista de pasos */
+/* Lista de pasos */
 .steps-list {
   list-style: none;
   padding: 0;
@@ -514,7 +426,7 @@ h1 {
   margin-top: 0.25rem;
 }
 
-/* Botón de descarga mejorado */
+/* Botón de descarga */
 .download-btn {
   display: inline-flex;
   align-items: center;
@@ -632,59 +544,10 @@ h1 {
   font-size: 1rem;
 }
 
-/* Media Queries específicos para contacto */
-@media (max-width: 1024px) {
-  .contact-card {
-    padding: 1.5rem;
-  }
-}
+/* ============================================= */
+/* ============ DETALLE DE PERSONA ============= */
+/* ============================================= */
 
-@media (max-width: 768px) {
-  .contact-wrapper {
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-  }
-  
-  .contact-card {
-    width: 100%;
-    max-width: 500px;
-    min-width: auto;
-  }
-  
-  .contact-card h2 {
-    font-size: 1.3rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .contact-container {
-    padding: 1.5rem 0.75rem;
-  }
-  
-  .contact-card {
-    padding: 1.25rem;
-  }
-  
-  .steps-list li,
-  .contact-method {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .download-btn {
-    width: 100%;
-    padding: 0.75rem;
-  }
-  
-  .note-box {
-    flex-direction: column;
-    text-align: center;
-    align-items: center;
-  }
-}
-
-/* Estilos específicos para el detalle de persona */
 .modal-persona-detalle {
   display: none;
   position: fixed;
@@ -715,14 +578,14 @@ h1 {
 
 .close-persona-detalle {
   color: #000;
-  position: absolute;  /* Posicionamiento absoluto */
-  top: 20px;          /* Distancia desde arriba */
-  right: 20px;        /* Distancia desde la derecha */
+  position: absolute;
+  top: 20px;
+  right: 20px;
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
-  z-index: 1001;      /* Asegura que esté por encima de otros elementos */
-  background: rgba(255, 255, 255, 0.8);  /* Fondo semitransparente */
+  z-index: 1001;
+  background: rgba(255, 255, 255, 0.8);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -731,7 +594,6 @@ h1 {
   justify-content: center;
   transition: all 0.3s ease;
 }
-
 
 .close-persona-detalle:hover {
   color: #fff;
@@ -744,6 +606,7 @@ h1 {
   flex-direction: column;
 }
 
+/* Encabezado del detalle */
 .persona-detalle-header {
   position: relative;
   display: flex;
@@ -792,6 +655,7 @@ h1 {
   font-size: 0.8rem;
 }
 
+/* Contenido del detalle */
 .persona-detalle-content {
   padding: 25px;
 }
@@ -821,9 +685,10 @@ h1 {
 .persona-descripcion-detalle {
   line-height: 1.6;
   color: #555;
-  margin-left: 28px; /* Para alinear con el icono */
+  margin-left: 28px;
 }
 
+/* Información de contacto */
 .persona-contacto {
   display: flex;
   flex-wrap: wrap;
@@ -844,6 +709,7 @@ h1 {
   text-align: center;
 }
 
+/* Listas de formación y proyectos */
 .persona-formacion, .persona-proyectos {
   margin-left: 28px;
   padding-left: 0;
@@ -865,7 +731,7 @@ h1 {
   top: -5px;
 }
 
-/* Estilos para la sección de redes sociales */
+/* Redes sociales */
 .redes-sociales-section {
   margin-top: 20px;
   padding-top: 20px;
@@ -899,7 +765,7 @@ h1 {
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-/* Colores específicos para cada red social */
+/* Colores específicos para redes sociales */
 .red-social-link:nth-child(1) { color: #0077b5; } /* LinkedIn */
 .red-social-link:nth-child(1):hover { background-color: #0077b5; color: white; }
 
@@ -918,74 +784,19 @@ h1 {
 .red-social-link:nth-child(6) { color: #e4405f; } /* Instagram */
 .red-social-link:nth-child(6):hover { background-color: #e4405f; color: white; }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .redes-sociales-container {
-    gap: 10px;
-  }
-  
-  .red-social-link {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-  }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .modal-content {
-    width: 90%;
-    margin: 10% auto;
-  }
-  
-  .persona-detalle-header {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .persona-icono {
-    margin-right: 0;
-    margin-bottom: 15px;
-  }
-}
-
-@media (max-width: 768px) {
-  .close-persona-detalle {
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    width: 36px;
-    height: 36px;
-  }
-  
-  .modal-content-persona-detalle {
-    width: 95%;
-    margin: 20px auto;
-  }
-}
-
-.persona-imagen-detalle {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-/* Versión con borde decorativo */
+/* Imagen de persona en detalle */
 .persona-imagen-detalle {
   width: 95px;
   height: 95px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 0px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* modal detalle instituciones */
+/* ============================================= */
+/* ============ DETALLE INSTITUCIÓN ============ */
+/* ============================================= */
 
 .modal-content-institucion {
   background-color: #fff;
@@ -998,11 +809,7 @@ h1 {
   animation: modalopen 0.4s;
 }
 
-.modal-content-institucion h2, h3, p {
-  cursor: default;
-}
-
-/* Header del modal de instituciones*/
+/* Encabezado de institución */
 .institucion-header {
   position: relative;
   display: flex;
@@ -1012,20 +819,20 @@ h1 {
   background: linear-gradient(135deg, #1976D2, #11A6DA);
   color: white;
   z-index: 0;
-  text-align: left; /* Alineación izquierda */
-  justify-content: flex-start; /* Alinea contenido al inicio */
+  text-align: left;
+  justify-content: flex-start;
 }
 
 .close-institucion-detalle {
   color: #000;
-  position: absolute;  /* Posicionamiento absoluto */
-  top: 20px;          /* Distancia desde arriba */
-  right: 20px;        /* Distancia desde la derecha */
+  position: absolute;
+  top: 20px;
+  right: 20px;
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
-  z-index: 1001;     
-  background: rgba(255, 255, 255, 0.8);  
+  z-index: 1001;
+  background: rgba(255, 255, 255, 0.8);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -1053,8 +860,8 @@ h1 {
 }
 
 .institucion-titulo h2 {
-  text-align: left; /* Asegura alineación izquierda */
-  margin-right: auto; /* Empuja el botón de cerrar a la derecha */
+  text-align: left;
+  margin-right: auto;
   margin: 0;
   margin-bottom: 10px;
   font-size: 1.8rem;
@@ -1162,61 +969,9 @@ h1 {
   margin-top: 5px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .modal-content-institucion {
-    width: 95%;
-    margin: 2% auto;
-  }
-  
-  .institucion-content {
-    flex-direction: column;
-    padding: 20px;
-  }
-  
-  .institucion-info {
-    padding-right: 0;
-    margin-bottom: 25px;
-  }
-  
-  .institucion-header {
-    flex-direction: column;
-    text-align: center;
-    padding: 25px 20px;
-  }
-  
-  .institucion-logo-modal {
-    margin-right: 0;
-    margin-bottom: 15px;
-  }
-  
-  .map-container {
-    height: 250px;
-  }
-}
-
-@media (max-width: 480px) {
-  .institucion-titulo h2 {
-    font-size: 1.5rem;
-  }
-  
-  .institucion-tipo {
-    font-size: 1rem;
-  }
-  
-  .institucion-logo-modal {
-    width: 80px;
-    height: 80px;
-  }
-  
-  .close-institucion-detalle {
-    top: 10px;
-    right: 10px;
-    width: 35px;
-    height: 35px;
-    font-size: 24px;
-  }
-}
+/* ============================================= */
+/* ============ REGISTRO ======================= */
+/* ============================================= */
 
 .registration-modal {
   max-width: 700px;
@@ -1332,27 +1087,395 @@ h1 {
   margin-right: 8px;
 }
 
-/* Estilos para el estado de envío */
-.sending-container {
+/* Animaciones */
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+@keyframes slideDown {
+  from {transform: translateY(-20px); opacity: 0;}
+  to {transform: translateY(0); opacity: 1;}
+}
+
+.registration-modal {
+  padding: 35px 40px;
+}
+
+.registration-modal h2 {
+  font-size: 24px;
+  color: #2c3e50;
   text-align: center;
-  padding: 30px;
+  margin-bottom: 25px;
+}
+
+/* Formulario */
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.form-group {
+  flex: 1 1 100%;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  resize: vertical;
+  font-family: inherit;
+}
+
+textarea {
+  min-height: 100px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+  outline: none;
+}
+
+/* Mensajes de error */
+.error-message {
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Acciones del formulario */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.cancel-btn,
+.submit-btn,
+.close-btn {
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s;
+}
+
+.cancel-btn {
+  background-color: #95a5a6;
+  color: #fff;
+}
+
+.cancel-btn:hover {
+  background-color: #7f8c8d;
+}
+
+.submit-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.submit-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #27ae60;
+}
+
+.close-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.close-btn:hover {
+  background-color: #2980b9;
+}
+
+/* Iconos */
+.submit-btn i,
+.register-btn i,
+.close-btn i {
+  margin-right: 6px;
+}
+
+/* Envío / éxito */
+.sending-container,
+.success-container {
+  text-align: center;
+  padding: 40px 20px;
 }
 
 .spinner {
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #3498db;
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #3498db;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   animation: spin 1s linear infinite;
   margin: 0 auto 20px;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
+  0% { transform: rotate(0); }
   100% { transform: rotate(360deg); }
 }
 
-.submit-btn i {
-  margin-right: 8px;
+.success-icon i {
+  font-size: 50px;
+  color: #2ecc71;
+  margin-bottom: 15px;
+}
+
+/* ============================================= */
+/* ============ MEDIA QUERIES ================= */
+/* ============================================= */
+
+/* Móviles pequeños (hasta 480px) */
+@media (max-width: 480px) {
+  .contentHome {
+    padding: 10px;
+  }
+
+  .instituciones-container,
+  .personas-container,
+  .instituciones-container-center,
+  .personas-container-centrado {
+    grid-template-columns: 1fr;
+  }
+
+  .institucion,
+  .persona {
+    width: 100%;
+  }
+
+  .institucion-img,
+  .persona-img {
+    height: 100px;
+  }
+
+  .institucion-nombre,
+  .persona-nombre {
+    font-size: 14px;
+  }
+
+  .institucion-descripcion,
+  .persona-descripcion {
+    font-size: 12px;
+  }
+
+  .contact-container {
+    padding: 1.5rem 0.75rem;
+  }
+  
+  .contact-card {
+    padding: 1.25rem;
+  }
+  
+  .steps-list li,
+  .contact-method {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .download-btn {
+    width: 100%;
+    padding: 0.75rem;
+  }
+  
+  .note-box {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .institucion-titulo h2 {
+    font-size: 1.5rem;
+  }
+  
+  .institucion-tipo {
+    font-size: 1rem;
+  }
+  
+  .institucion-logo-modal {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .close-institucion-detalle {
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+    font-size: 24px;
+  }
+
+  .close-persona-detalle {
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .modal-content-persona-detalle,
+  .modal-content-institucion {
+    width: 95%;
+    margin: 20px auto;
+  }
+}
+
+/* Tabletas y móviles grandes (481px - 768px) */
+@media (max-width: 768px) {
+  .info-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card,
+  .card1 {
+    max-width: 100%;
+    margin: 10px 0;
+  }
+
+  .instituciones-container,
+  .personas-container,
+  .instituciones-container-center,
+  .personas-container-centrado {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .institucion-img,
+  .persona-img {
+    height: 120px;
+  }
+
+  .institucion-nombre,
+  .persona-nombre {
+    font-size: 16px;
+  }
+
+  .institucion-descripcion,
+  .persona-descripcion {
+    font-size: 12px;
+  }
+
+  .card-content-sistema {
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .text-right-sistema {
+    order: -1; 
+    text-align: center;
+    width: 100%;
+  }
+  
+  .image-left-sistema {
+    width: 100%;
+  }
+  
+  .image-left-sistema img {
+    max-width: 100%;
+  }
+
+  .contact-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  
+  .contact-card {
+    width: 100%;
+    max-width: 500px;
+    min-width: auto;
+  }
+  
+  .contact-card h2 {
+    font-size: 1.3rem;
+  }
+
+  .modal-content {
+    width: 90%;
+    margin: 10% auto;
+  }
+  
+  .persona-detalle-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .persona-icono {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+
+  .modal-content-institucion {
+    width: 95%;
+    margin: 2% auto;
+  }
+  
+  .institucion-content {
+    flex-direction: column;
+    padding: 20px;
+  }
+  
+  .institucion-info {
+    padding-right: 0;
+    margin-bottom: 25px;
+  }
+  
+  .institucion-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 25px 20px;
+  }
+  
+  .institucion-logo-modal {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+  
+  .map-container {
+    height: 250px;
+  }
+}
+
+/* Tabletas grandes y pantallas pequeñas (769px - 1024px) */
+@media (max-width: 1024px) {
+  .contact-card {
+    padding: 1.5rem;
+  }
+}
+
+/* Corrección para el tamaño del mapa en móviles */
+@media (max-width: 576px) {
+  .institucion-content {
+    flex-direction: column-reverse; /* Mapa arriba en móviles */
+  }
+  
+  .map-container {
+    height: 250px; /* Altura un poco menor en móviles */
+    margin-bottom: 15px;
+  }
 }

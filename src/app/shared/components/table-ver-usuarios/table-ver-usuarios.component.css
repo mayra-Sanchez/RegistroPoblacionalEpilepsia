@@ -1,4 +1,19 @@
-/* Contenedor principal de controles */
+/* 
+ * Estilos para un sistema de controles de tabla con funcionalidades completas:
+ * - Filtrado
+ * - Ordenamiento
+ * - Paginación
+ * - Búsqueda
+ * - Diseño responsive
+ */
+
+/* ==================== CONTROLES SUPERIORES ==================== */
+
+/**
+ * Contenedor principal que agrupa todos los controles superiores de la tabla
+ * - Diseño flexible que se adapta a diferentes tamaños de pantalla
+ * - Espaciado y márgenes para separación visual
+ */
 .table-controls {
   display: flex;
   flex-wrap: wrap;
@@ -10,7 +25,11 @@
   margin-top: 20px;
 }
 
-/* Controles individuales */
+/**
+ * Controles individuales (items por página, ordenamiento, búsqueda)
+ * - Diseño en línea con elementos alineados verticalmente
+ * - Espaciado consistente entre elementos
+ */
 .items-per-page, 
 .sort-options, 
 .search-bar {
@@ -19,15 +38,21 @@
   gap: 10px;
 }
 
-/* Estilos para etiquetas */
+/* Estilos para etiquetas de los controles */
 .table-controls label {
   font-weight: 600;
   font-size: 0.9rem;
   color: #34495e;
-  white-space: nowrap;
+  white-space: nowrap; /* Evita que el texto se divida en varias líneas */
 }
 
-/* Selects personalizados */
+/* ==================== ELEMENTOS DE FORMULARIO ==================== */
+
+/**
+ * Estilos personalizados para elementos select
+ * - Apariencia limpia y moderna
+ * - Efectos de focus para mejor usabilidad
+ */
 .table-controls select {
   padding: 8px 12px;
   border: 1px solid #ddd;
@@ -35,7 +60,7 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 120px;
+  min-width: 120px; /* Ancho mínimo para mejor legibilidad */
 }
 
 .table-controls select:focus {
@@ -44,16 +69,22 @@
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
-/* Barra de búsqueda */
+/* ==================== BARRA DE BÚSQUEDA ==================== */
+
+/**
+ * Barra de búsqueda con icono integrado
+ * - Diseño flexible que ocupa el espacio disponible
+ * - Posicionamiento relativo para el icono de búsqueda
+ */
 .search-bar {
   position: relative;
   flex-grow: 1;
-  max-width: 300px;
+  max-width: 300px; /* Ancho máximo para evitar que crezca demasiado */
 }
 
 .search-bar input {
   width: 100%;
-  padding: 8px 35px 8px 15px;
+  padding: 8px 35px 8px 15px; /* Espacio para el icono a la derecha */
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 0.9rem;
@@ -66,6 +97,7 @@
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
+/* Icono de búsqueda posicionado absolutamente dentro del input */
 .search-bar i {
   position: absolute;
   right: 12px;
@@ -75,7 +107,13 @@
   font-size: 0.9rem;
 }
 
-/* Contenedor de la tabla */
+/* ==================== CONTENEDOR Y ESTILOS DE TABLA ==================== */
+
+/**
+ * Contenedor de la tabla con scroll horizontal para dispositivos pequeños
+ * - Sombra sutil para efecto de elevación
+ * - Bordes redondeados para coincidir con el diseño general
+ */
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -84,18 +122,20 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilos de la tabla */
+/* Estilos base de la tabla */
 table {
   width: 100%;
   border-collapse: collapse;
   background-color: #fff;
 }
 
+/* Cabecera de la tabla con color distintivo */
 thead {
   background-color: #2D9FEF;
   color: white;
 }
 
+/* Celdas de la tabla */
 th, td {
   padding: 12px 15px;
   text-align: left;
@@ -107,22 +147,30 @@ th {
   font-size: 0.9rem;
 }
 
+/* Efecto hover para filas */
 tbody tr:hover {
   background-color: #f5f9fd;
 }
 
-/* Acciones */
+/* ==================== BOTONES DE ACCIÓN ==================== */
+
+/**
+ * Contenedor para botones de acción (ver, editar, eliminar)
+ * - Alineados a la derecha de la celda
+ * - Espaciado consistente entre botones
+ */
 .actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
 }
 
+/* Estilo base para botones de acción */
 .action-btn {
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 50%;
+  border-radius: 50%; /* Forma circular */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,6 +182,7 @@ tbody tr:hover {
   font-size: 0.9rem;
 }
 
+/* Variantes de botones de acción */
 .action-btn.view {
   background-color: #e8f4fc;
   color: #3498db;
@@ -161,7 +210,13 @@ tbody tr:hover {
   background-color: #fadbd8;
 }
 
-/* Controles de paginación */
+/* ==================== CONTROLES DE PAGINACIÓN ==================== */
+
+/**
+ * Controles de paginación en la parte inferior de la tabla
+ * - Centrado horizontalmente
+ * - Estilos para botones de navegación
+ */
 .pagination-controls {
   display: flex;
   justify-content: center;
@@ -197,7 +252,11 @@ tbody tr:hover {
   color: #7f8c8d;
 }
 
-/* Responsive */
+/* ==================== MEDIA QUERIES (RESPONSIVE) ==================== */
+
+/**
+ * Estilos para tablets y dispositivos medianos (hasta 768px)
+ */
 @media (max-width: 768px) {
   .table-controls {
     flex-direction: column;
@@ -230,6 +289,9 @@ tbody tr:hover {
   }
 }
 
+/**
+ * Estilos para móviles (hasta 480px)
+ */
 @media (max-width: 480px) {
   .pagination-controls {
     flex-direction: column;

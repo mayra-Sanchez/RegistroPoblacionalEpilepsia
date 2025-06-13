@@ -1,334 +1,379 @@
-/* Estilos mejorados para el modal de edición */
+/**
+ * enhanced-edit-modal-styles.css
+ * 
+ * Estilos avanzados para modal de edición con:
+ * - Efectos visuales mejorados (blur, sombras)
+ * - Sistema de pestañas interactivo
+ * - Formulario responsive con grid
+ * - Manejo de variables y grupos
+ * - Estados de validación y feedback
+ * - Totalmente adaptable a dispositivos móviles
+ * 
+ * Estructura:
+ * 1. Overlay y contenedor principal
+ * 2. Cabecera del modal
+ * 3. Sistema de pestañas
+ * 4. Formulario y controles
+ * 5. Grupos de variables
+ * 6. Alertas y mensajes
+ * 7. Acciones y botones
+ * 8. Efectos y animaciones
+ * 9. Media queries responsive
+ */
+
+/* ==================== 1. Overlay y Contenedor Principal ==================== */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
   display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
-  backdrop-filter: blur(3px);
+  justify-content: center; /* Centrado horizontal */
+  align-items: center; /* Centrado vertical */
+  z-index: 1050; /* Alto z-index para superposición */
+  backdrop-filter: blur(3px); /* Efecto de desenfoque */
 }
 
 .modal-container {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-  width: 90%;
-  max-width: 1000px;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: modalFadeIn 0.3s ease-out;
-  border: 2px solid rgb(255, 255, 255);
+  background-color: #fff; /* Fondo blanco */
+  border-radius: 12px; /* Bordes redondeados */
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2); /* Sombra pronunciada */
+  width: 90%; /* Ancho responsive */
+  max-width: 1000px; /* Ancho máximo */
+  max-height: 90vh; /* Altura máxima */
+  overflow-y: auto; /* Scroll vertical */
+  animation: modalFadeIn 0.3s ease-out; /* Animación de entrada */
+  border: 2px solid rgb(255, 255, 255); /* Borde sutil */
 }
 
+/* Animación de entrada del modal */
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px); /* Desplazamiento inicial */
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); /* Posición final */
+  }
 }
 
+/* ==================== 2. Cabecera del Modal ==================== */
 .modal-header {
-  padding: 20px 30px;
-  border-bottom: 1px solid #f0f2f5;
-  background: linear-gradient(135deg, #0f5ead, #11A6DA);
+  padding: 20px 30px; /* Espaciado interno */
+  border-bottom: 1px solid #f0f2f5; /* Borde inferior sutil */
+  background: linear-gradient(135deg, #0f5ead, #11A6DA); /* Gradiente azul */
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  color: white;
+  justify-content: space-between; /* Distribución horizontal */
+  align-items: center; /* Centrado vertical */
+  position: sticky; /* Fijo al hacer scroll */
   top: 0;
-  z-index: 10;
+  z-index: 10; /* Por encima del contenido */
+  color: white; /* Texto blanco */
 }
 
 .modal-title {
-  margin: 0;
-  font-size: 1.5rem;
-  color: white;
-  font-weight: 600;
+  margin: 0; /* Reset margen */
+  font-size: 1.5rem; /* Tamaño grande */
+  color: white; /* Texto blanco */
+  font-weight: 600; /* Semi-negrita */
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: center; /* Centrado vertical */
+  gap: 10px; /* Espacio entre icono y texto */
 }
 
+/* Botón de cierre */
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 1.8rem;
-  cursor: pointer;
-  padding: 5px;
-  color: #000000;
-  transition: all 0.3s;
-  line-height: 1;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  background: none; /* Sin fondo */
+  border: none; /* Sin bordes */
+  font-size: 1.8rem; /* Tamaño grande */
+  cursor: pointer; /* Cursor indicador */
+  padding: 5px; /* Espaciado interno */
+  color: #000000; /* Color inicial */
+  transition: all 0.3s; /* Transición suave */
+  line-height: 1; /* Altura de línea */
+  border-radius: 50%; /* Forma circular */
+  width: 36px; /* Ancho fijo */
+  height: 36px; /* Alto fijo */
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center; /* Centrado vertical */
+  justify-content: center; /* Centrado horizontal */
 }
 
+/* Efectos hover para botón de cierre */
 .close-btn:hover {
-  background-color: #f5f7fa;
-  color: #e74c3c;
-  transform: rotate(90deg);
+  background-color: #f5f7fa; /* Fondo gris claro */
+  color: #e74c3c; /* Rojo al hover */
+  transform: rotate(90deg); /* Rotación */
 }
 
 .close-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.5; /* Transparencia cuando está deshabilitado */
+  cursor: not-allowed; /* Cursor prohibido */
 }
 
-.modal-body {
-  padding: 25px 30px;
-}
-
-/* Estilos mejorados para pestañas */
+/* ==================== 3. Sistema de Pestañas ==================== */
 .tabs {
   display: flex;
-  border-bottom: 1px solid #eaeef2;
-  margin-bottom: 25px;
-  gap: 8px;
-  padding-bottom: 2px;
+  border-bottom: 1px solid #eaeef2; /* Borde inferior */
+  margin-bottom: 25px; /* Espaciado inferior */
+  gap: 8px; /* Espacio entre pestañas */
+  padding-bottom: 2px; /* Espaciado para borde activo */
 }
 
+/* Botones de pestaña */
 .tab-btn {
-  padding: 12px 20px;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-  font-size: 0.95rem;
-  color: #7f8c8d;
-  transition: all 0.3s;
-  font-weight: 500;
-  border-radius: 6px 6px 0 0;
+  padding: 12px 20px; /* Espaciado interno */
+  background: none; /* Sin fondo */
+  border: none; /* Sin bordes */
+  border-bottom: 3px solid transparent; /* Borde inferior transparente */
+  cursor: pointer; /* Cursor indicador */
+  font-size: 0.95rem; /* Tamaño estándar */
+  color: #7f8c8d; /* Gris medio */
+  transition: all 0.3s; /* Transición suave */
+  font-weight: 500; /* Peso medio */
+  border-radius: 6px 6px 0 0; /* Redondeo solo arriba */
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: center; /* Centrado vertical */
+  gap: 8px; /* Espacio entre icono y texto */
 }
 
+/* Efecto hover para pestañas inactivas */
 .tab-btn:hover:not(.active) {
-  color: #3498db;
-  background-color: #f8fafb;
+  color: #3498db; /* Azul al hover */
+  background-color: #f8fafb; /* Fondo gris muy claro */
 }
 
+/* Estado activo de pestaña */
 .tab-btn.active {
-  color: #3498db;
-  border-bottom-color: #3498db;
-  background-color: #f5f9fd;
+  color: #3498db; /* Azul */
+  border-bottom-color: #3498db; /* Borde inferior azul */
+  background-color: #f5f9fd; /* Fondo azul muy claro */
 }
 
 .tab-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background-color: transparent !important;
+  opacity: 0.5; /* Transparencia cuando está deshabilitado */
+  cursor: not-allowed; /* Cursor prohibido */
+  background-color: transparent !important; /* Fondo transparente */
 }
 
-/* Estilos para formulario */
+/* ==================== 4. Formulario y Controles ==================== */
 .form-edit {
   display: flex;
-  flex-direction: column;
-  gap: 30px;
+  flex-direction: column; /* Disposición vertical */
+  gap: 30px; /* Espacio entre secciones */
 }
 
 .form-section {
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* Espaciado inferior */
 }
 
 .section-title {
-  margin: 0 0 20px 0;
-  font-size: 1.2rem;
-  color: #2c3e50;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f2f5;
-  font-weight: 600;
+  margin: 0 0 20px 0; /* Espaciado inferior */
+  font-size: 1.2rem; /* Tamaño mediano */
+  color: #2c3e50; /* Azul oscuro */
+  padding-bottom: 10px; /* Espaciado para borde */
+  border-bottom: 1px solid #f0f2f5; /* Borde inferior */
+  font-weight: 600; /* Semi-negrita */
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: center; /* Centrado vertical */
+  gap: 10px; /* Espacio entre icono y texto */
 }
 
+/* Grid para formulario responsive */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Columnas adaptables */
+  gap: 20px; /* Espacio entre campos */
 }
 
 .form-group {
-  margin-bottom: 18px;
+  margin-bottom: 18px; /* Espaciado inferior */
 }
 
+/* Etiquetas de formulario */
 .form-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #4a5568;
-  font-size: 0.92rem;
+  display: block; /* Ocupa línea completa */
+  margin-bottom: 8px; /* Espaciado inferior */
+  font-weight: 500; /* Peso medio */
+  color: #4a5568; /* Gris oscuro */
+  font-size: 0.92rem; /* Tamaño pequeño */
 }
 
+/* Indicador de campo requerido */
 .form-label .required {
-  color: #e53e3e;
-  margin-left: 3px;
+  color: #e53e3e; /* Rojo */
+  margin-left: 3px; /* Espacio a la izquierda */
 }
 
+/* Inputs de formulario */
 .form-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  transition: all 0.3s;
-  box-sizing: border-box;
-  background-color: #fff;
-  color: #2d3748;
+  width: 100%; /* Ancho completo */
+  padding: 10px 14px; /* Espaciado interno */
+  border: 1px solid #e2e8f0; /* Borde gris claro */
+  border-radius: 6px; /* Bordes redondeados */
+  font-size: 0.95rem; /* Tamaño estándar */
+  transition: all 0.3s; /* Transición suave */
+  box-sizing: border-box; /* Modelo de caja */
+  background-color: #fff; /* Fondo blanco */
+  color: #2d3748; /* Gris muy oscuro */
 }
 
+/* Estado focus para inputs */
 .form-input:focus {
-  border-color: #4299e1;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+  border-color: #4299e1; /* Azul */
+  outline: none; /* Elimina outline por defecto */
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); /* Sombra de foco */
 }
 
+/* Estados readonly y disabled */
 .form-input[readonly], 
 .form-input[disabled] {
-  background-color: #f8fafc;
-  color: #718096;
-  border-color: #e2e8f0;
+  background-color: #f8fafc; /* Gris muy claro */
+  color: #718096; /* Gris medio */
+  border-color: #e2e8f0; /* Borde gris claro */
 }
 
+/* Select personalizado */
 select.form-input {
-  appearance: none;
+  appearance: none; /* Elimina estilo nativo */
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 16px;
-  padding-right: 30px;
+  padding-right: 30px; /* Espacio para flecha */
 }
 
-/* Estilos para grupos de variables */
+/* ==================== 5. Grupos de Variables ==================== */
 .variables-container {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  flex-direction: column; /* Disposición vertical */
+  gap: 20px; /* Espacio entre grupos */
 }
 
 .variable-group {
-  background-color: #f8fafc;
-  padding: 18px;
-  border-radius: 8px;
-  border-left: 4px solid #4299e1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #f8fafc; /* Gris muy claro */
+  padding: 18px; /* Espaciado interno */
+  border-radius: 8px; /* Bordes redondeados */
+  border-left: 4px solid #4299e1; /* Borde izquierdo azul */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Sombra sutil */
 }
 
 .variable-header {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 15px;
+  align-items: baseline; /* Alineación en la línea base */
+  gap: 8px; /* Espacio entre elementos */
+  margin-bottom: 15px; /* Espaciado inferior */
 }
 
 .variable-header h5 {
-  margin: 0;
-  font-size: 1.05rem;
-  color: #2d3748;
+  margin: 0; /* Reset margen */
+  font-size: 1.05rem; /* Tamaño mediano */
+  color: #2d3748; /* Gris muy oscuro */
 }
 
 .variable-unit {
-  font-size: 0.85rem;
-  color: #718096;
+  font-size: 0.85rem; /* Tamaño pequeño */
+  color: #718096; /* Gris medio */
 }
 
 .reference-range,
 .last-update {
-  display: block;
-  padding: 8px 0;
-  color: #4a5568;
-  font-size: 0.9rem;
+  display: block; /* Ocupa línea completa */
+  padding: 8px 0; /* Espaciado vertical */
+  color: #4a5568; /* Gris oscuro */
+  font-size: 0.9rem; /* Tamaño pequeño */
 }
 
-/* Alertas mejoradas */
+/* ==================== 6. Alertas y Mensajes ==================== */
 .alert {
-  padding: 14px 18px;
-  border-radius: 6px;
-  margin-bottom: 25px;
-  font-size: 0.95rem;
+  padding: 14px 18px; /* Espaciado interno */
+  border-radius: 6px; /* Bordes redondeados */
+  margin-bottom: 25px; /* Espaciado inferior */
+  font-size: 0.95rem; /* Tamaño estándar */
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: flex-start; /* Alineación arriba */
+  gap: 12px; /* Espacio entre icono y texto */
 }
 
 .alert i {
-  font-size: 1.1rem;
-  margin-top: 2px;
+  font-size: 1.1rem; /* Tamaño grande */
+  margin-top: 2px; /* Ajuste fino */
 }
 
+/* Alerta de peligro/error */
 .alert-danger {
-  background-color: #fff5f5;
-  color: #c53030;
-  border: 1px solid #fed7d7;
+  background-color: #fff5f5; /* Rojo muy claro */
+  color: #c53030; /* Rojo oscuro */
+  border: 1px solid #fed7d7; /* Borde rojo claro */
 }
 
+/* Alerta de éxito */
 .alert-success {
-  background-color: #f0fff4;
-  color: #2f855a;
-  border: 1px solid #c6f6d5;
+  background-color: #f0fff4; /* Verde muy claro */
+  color: #2f855a; /* Verde oscuro */
+  border: 1px solid #c6f6d5; /* Borde verde claro */
 }
 
-/* Botones de acción */
+/* ==================== 7. Acciones y Botones ==================== */
 .form-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #f0f2f5;
+  justify-content: flex-end; /* Alineado a la derecha */
+  gap: 15px; /* Espacio entre botones */
+  margin-top: 20px; /* Espaciado superior */
+  padding-top: 20px; /* Espaciado superior */
+  border-top: 1px solid #f0f2f5; /* Borde superior */
 }
 
+/* Estilo base para botones */
 .btn {
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: all 0.3s;
-  border: none;
+  padding: 10px 20px; /* Espaciado interno */
+  border-radius: 6px; /* Bordes redondeados */
+  cursor: pointer; /* Cursor indicador */
+  font-size: 0.95rem; /* Tamaño estándar */
+  font-weight: 500; /* Peso medio */
+  transition: all 0.3s; /* Transición suave */
+  border: none; /* Sin bordes */
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  align-items: center; /* Centrado vertical */
+  justify-content: center; /* Centrado horizontal */
+  gap: 8px; /* Espacio entre icono y texto */
 }
 
+/* Botón primario */
 .btn-primary {
-  background-color: #4299e1;
-  color: white;
+  background-color: #4299e1; /* Azul */
+  color: white; /* Texto blanco */
 }
 
 .btn-primary:hover {
-  background-color: #3182ce;
-  transform: translateY(-1px);
+  background-color: #3182ce; /* Azul más oscuro */
+  transform: translateY(-1px); /* Levantamiento sutil */
 }
 
 .btn-primary:disabled {
-  background-color: #a0aec0;
-  transform: none !important;
+  background-color: #a0aec0; /* Gris */
+  transform: none !important; /* Sin transformación */
 }
 
+/* Botón secundario */
 .btn-secondary {
-  background-color: #fff;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
+  background-color: #fff; /* Blanco */
+  color: #4a5568; /* Gris oscuro */
+  border: 1px solid #e2e8f0; /* Borde gris claro */
 }
 
 .btn-secondary:hover {
-  background-color: #f7fafc;
-  border-color: #cbd5e0;
+  background-color: #f7fafc; /* Gris muy claro */
+  border-color: #cbd5e0; /* Borde gris */
 }
 
-/* Iconos */
+/* ==================== 8. Efectos y Animaciones ==================== */
+/* Animación de spinner */
 .fa-spinner {
-  animation: spin 1s linear infinite;
+  animation: spin 1s linear infinite; /* Rotación continua */
 }
 
 @keyframes spin {
@@ -336,53 +381,56 @@ select.form-input {
   to { transform: rotate(360deg); }
 }
 
-/* Responsive */
+/* Efecto hover para inputs */
+input:not([readonly]):not([disabled]):hover,
+select:not([readonly]):not([disabled]):hover {
+  border-color: #cbd5e0; /* Borde gris al hover */
+}
+
+/* ==================== 9. Media Queries Responsive ==================== */
 @media (max-width: 768px) {
   .modal-container {
-    width: 95%;
-    max-height: 85vh;
+    width: 95%; /* Más ancho en móviles */
+    max-height: 85vh; /* Altura máxima reducida */
   }
   
   .modal-header {
-    padding: 15px 20px;
+    padding: 15px 20px; /* Espaciado reducido */
   }
   
   .modal-body {
-    padding: 20px;
+    padding: 20px; /* Espaciado reducido */
   }
   
+  /* Pestañas en móviles */
   .tabs {
-    overflow-x: auto;
-    padding-bottom: 5px;
-    scrollbar-width: none;
+    overflow-x: auto; /* Scroll horizontal */
+    padding-bottom: 5px; /* Espacio para scroll */
+    scrollbar-width: none; /* Oculta scrollbar en Firefox */
   }
   
   .tabs::-webkit-scrollbar {
-    display: none;
+    display: none; /* Oculta scrollbar en Chrome/Safari */
   }
   
   .tab-btn {
-    padding: 10px 15px;
-    font-size: 0.9rem;
-    white-space: nowrap;
+    padding: 10px 15px; /* Espaciado reducido */
+    font-size: 0.9rem; /* Tamaño reducido */
+    white-space: nowrap; /* Evita saltos de línea */
   }
   
+  /* Formulario en una columna */
   .form-grid {
     grid-template-columns: 1fr;
   }
   
+  /* Botones en columna en móviles */
   .form-actions {
     flex-direction: column;
     gap: 10px;
   }
   
   .btn {
-    width: 100%;
+    width: 100%; /* Ancho completo */
   }
-}
-
-/* Efectos de hover para inputs */
-input:not([readonly]):not([disabled]):hover,
-select:not([readonly]):not([disabled]):hover {
-  border-color: #cbd5e0;
 }
