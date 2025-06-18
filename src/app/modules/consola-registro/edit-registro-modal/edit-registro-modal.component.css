@@ -46,6 +46,7 @@
   overflow-y: auto; /* Scroll vertical */
   animation: modalFadeIn 0.3s ease-out; /* Animación de entrada */
   border: 2px solid rgb(255, 255, 255); /* Borde sutil */
+  padding: 10px;
 }
 
 /* Animación de entrada del modal */

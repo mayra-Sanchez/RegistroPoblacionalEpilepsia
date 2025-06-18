@@ -18,7 +18,7 @@ import { Register, ResearchLayer } from './../../consola-registro/interfaces';
  * constructor(private consolaService: ConsolaRegistroService) {}
  */
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class ConsolaInvestigadorService {
 
@@ -28,11 +28,11 @@ export class ConsolaInvestigadorService {
    */
   private readonly API_URL = 'http://localhost:8080/api/v1/registers';
 
-    /**
-   * URL base para operaciones con capas de investigación
-   * @type {string}
-   */
-    private readonly API_RESEARCH_LAYER_URL = 'http://localhost:8080/api/v1/ResearchLayer';
+  /**
+ * URL base para operaciones con capas de investigación
+ * @type {string}
+ */
+  private readonly API_RESEARCH_LAYER_URL = 'http://localhost:8080/api/v1/ResearchLayer';
 
   /**
    * Subject para notificar actualizaciones de datos
@@ -111,74 +111,80 @@ export class ConsolaInvestigadorService {
     return userRoles.includes('Doctor_client_role');
   }
 
-/**
- * Obtiene registros filtrados por capa de investigación
- * @param {string} researchLayerId ID de la capa de investigación
- * @param {number} [page=0] Número de página
- * @param {number} [size=10] Tamaño de la página
- * @param {string} [sort='registerDate'] Campo para ordenar
- * @param {string} [sortDirection='DESC'] Dirección de ordenamiento
- * @returns {Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }>} 
- * Observable con los registros paginados y metadatos
- */
-    obtenerRegistrosPorCapa(
-        researchLayerId: string,
-        page: number = 0,
-        size: number = 10,
-        sort: string = 'registerDate',
-        sortDirection: string = 'DESC'
-    ): Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }> {
-        const headers = this.getAuthHeaders();
+  /**
+   * Obtiene registros filtrados por capa de investigación
+   * @param {string} researchLayerId ID de la capa de investigación
+   * @param {number} [page=0] Número de página
+   * @param {number} [size=10] Tamaño de la página
+   * @param {string} [sort='registerDate'] Campo para ordenar
+   * @param {string} [sortDirection='DESC'] Dirección de ordenamiento
+   * @returns {Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }>} 
+   * Observable con los registros paginados y metadatos
+   */
+  obtenerRegistrosPorCapa(
+    researchLayerId: string,
+    page: number = 0,
+    size: number = 10,
+    sort: string = 'registerDate',
+    sortDirection: string = 'DESC'
+  ): Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }> {
+    const headers = this.getAuthHeaders();
 
-        console.log('Realizando petición para obtener registros por capa:', {
-            researchLayerId,
-            page,
-            size,
-            sort,
-            sortDirection
+    console.log('Realizando petición para obtener registros por capa:', {
+      researchLayerId,
+      page,
+      size,
+      sort,
+      sortDirection
+    });
+
+    const params = new HttpParams()
+      .set('researchLayerId', researchLayerId)
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sort', sort)
+      .set('sortDirection', sortDirection);
+
+    return this.http.get<any>(`${this.API_URL}/allByResearchLayer`, { headers, params }).pipe(
+      tap(response => console.log('Respuesta del servidor:', response)),
+      catchError(error => {
+        console.error('Error al obtener registros por capa:', {
+          status: error.status,
+          message: error.message,
+          error: error.error
         });
+        return throwError(() => new Error('Error al cargar registros'));
+      })
+    );
+  }
 
-        const params = new HttpParams()
-            .set('researchLayerId', researchLayerId)
-            .set('page', page.toString())
-            .set('size', size.toString())
-            .set('sort', sort)
-            .set('sortDirection', sortDirection);
+  /**
+* Obtiene una capa por su ID y la guarda en localStorage
+* @param {string} id ID de la capa
+* @returns {Observable<ResearchLayer>} Observable con los datos de la capa
+*/
+  obtenerCapaPorId(id: string): Observable<ResearchLayer> {
+    const headers = this.getAuthHeaders();
+    const params = new HttpParams().set('id', id);
 
-        return this.http.get<any>(`${this.API_URL}/allByResearchLayer`, { headers, params }).pipe(
-            tap(response => console.log('Respuesta del servidor:', response)),
-            catchError(error => {
-                console.error('Error al obtener registros por capa:', {
-                    status: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-                return throwError(() => new Error('Error al cargar registros'));
-            })
-        );
-    }
+    return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, {
+      headers,
+      params
+    }).pipe(
+      tap((capa) => {
+        // Guardar la capa completa o solo su ID/nombre, según lo que necesites
+        localStorage.setItem('capaInvestigacion', JSON.stringify(capa));
+        console.log('✅ Capa guardada en localStorage:', capa);
+      }),
+      catchError(error => {
+        if (error.status === 403) {
+          console.error('Acceso denegado. Verifica tus permisos o la validez de tu token.');
+          this.authService.logout();
+        }
+        return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));
+      })
+    );
+  }
 
-    /**
-       * Obtiene una capa por su ID
-       * @param {string} id ID de la capa
-       * @returns {Observable<ResearchLayer>} Observable con los datos de la capa
-       */
-    obtenerCapaPorId(id: string): Observable<ResearchLayer> {
-        const headers = this.getAuthHeaders();
-        const params = new HttpParams().set('id', id);
-      
-        return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, {
-          headers,
-          params
-        }).pipe(
-          catchError(error => {
-            if (error.status === 403) {
-              console.error('Acceso denegado. Verifica tus permisos o la validez de tu token.');
-              this.authService.logout();
-            }
-            return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));
-          })
-        );
-      }
-    
+
 }

@@ -1,203 +1,119 @@
-/* =========================================== */
-/* ESTILOS GLOBALES Y RESET BÁSICO */
-/* =========================================== */
-
-/**
- * ESTRUCTURA BASE DEL DOCUMENTO
- * - Altura completa del viewport
- * - Reset de márgenes
- * - Fuente principal Montserrat
- */
+/* Estilos globales */
 html, body {
-  height: 100%;            /* Ocupa toda la altura disponible */
-  margin: 0;               /* Elimina márgenes por defecto */
+  height: 100%;
 }
 
-/**
- * ESTADO CUANDO MODAL ESTÁ ABIERTO
- * - Deshabilita el scroll del body
- */
 body.modal-open {
-  overflow: hidden;        /* Previene scroll cuando modal está abierto */
+  overflow: hidden;
 }
 
-/**
- * ESTILOS GENERALES DEL BODY
- * - Fuente Montserrat forzada (con !important)
- */
 body {
   margin: 0;
   font-family: 'Montserrat', sans-serif !important;
-  line-height: 1.6;        /* Mejor espaciado entre líneas */
-  color: #333;             /* Color de texto principal */
-  background-color: #f5f5f5; /* Fondo gris claro */
 }
 
-/* =========================================== */
-/* TIPOGRAFÍA Y TEXTOS */
-/* =========================================== */
-
-/**
- * APLICACIÓN DE FUENTE MONTSSERAT
- * - Selectores globales para consistencia tipográfica
- */
-*, h1, h2, h3 {
-  font-family: 'Montserrat', sans-serif;
-}
-
-/**
- * ESTILOS PARA COMPONENTES ANGULAR MATERIAL
- * - Sobreescribe estilos de typografía de Material
- */
 .mat-h2, .mat-headline-6, 
 .mat-typography .mat-h2, 
 .mat-typography .mat-headline-6, 
 .mat-typography h2 {
   font-family: 'Montserrat', sans-serif !important;
-  font-weight: 500;       /* Peso medio para headers */
 }
 
-/* =========================================== */
-/* COMPONENTES DE NOTIFICACIÓN (SNACK-BAR) */
-/* =========================================== */
+/* Aplicar Montserrat a todos los elementos */
+* {
+  font-family: 'Montserrat';
+}
 
-/**
- * SNACKBAR DE ÉXITO
- * - Fondo verde con texto blanco
- */
+h1, h2, h3 {
+  font-family: 'Montserrat';
+}
+
+/* Estilos para mensajes de snack-bar */
 .snack-success {
-  background-color: #4caf50 !important; /* Verde */
-  color: white !important;
+  background-color: #4caf50;
+  color: white;
 }
 
-/**
- * SNACKBAR DE ERROR
- * - Fondo rojo con texto blanco
- */
 .snack-error {
-  background-color: #f44336 !important; /* Rojo */
-  color: white !important;
+  background-color: #f44336;
+  color: white;
 }
 
-/* =========================================== */
-/* ESTILOS PARA MODALES (DIALOGS) */
-/* =========================================== */
-
-/**
- * CONTENEDOR PRINCIPAL DE MODALES
- * - Estilos base para todos los modales
- */
-.mat-dialog-container, 
+/* Clase personalizada para el modal */
 .custom-modal .mat-dialog-container {
   background-color: white;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   padding: 20px;
-  max-width: 90vw;        /* Ancho máximo responsivo */
 }
 
-/**
- * TÍTULO DEL MODAL
- * - Estilo centrado y destacado
- */
-.modal-title {
-  text-align: center;
-  font-size: 1.25rem;    /* 20px equivalente */
-  font-weight: 600;      /* Semi-bold */
-  margin-bottom: 1rem;   /* 16px equivalente */
-  color: #212121;        /* Negro más oscuro */
+/* Estilos globales para los contenedores de diálogo de Angular Material */
+.mat-dialog-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px;
 }
 
-/**
- * CONTENIDO DEL MODAL
- * - Texto principal centrado
- */
-.modal-content {
-  text-align: center;
-  font-size: 1rem;       /* 16px base */
-  margin-bottom: 1.25rem; /* 20px equivalente */
-  color: #424242;        /* Gris oscuro */
-  line-height: 1.5;      /* Mejor legibilidad */
-}
-
-/* =========================================== */
-/* BOTONES DE ACCIÓN EN MODALES */
-/* =========================================== */
-
-/**
- * CONTENEDOR DE ACCIONES
- * - Diseño flexible centrado
- */
+/* Acciones del modal */
+/* Contenedor de las acciones (botones) */
 .modal-actions {
   display: flex;
   justify-content: center;
-  gap: 15px;             /* Espacio entre botones */
-  margin: 1.5rem 0;      /* 24px arriba/abajo */
+  gap: 15px;
+  margin-top: 15px;
+  margin-bottom: 15px;
 }
 
-/**
- * ESTILO BASE PARA BOTONES
- * - Transiciones suaves
- * - Sombras y bordes redondeados
- */
-button.btn-cancel,
-button.btn-confirm {
-  border: none;
+/* Botón de cancelar */
+button.btn-cancel {
+  background-color: #f44336;
+  color: white;
   border-radius: 8px;
   padding: 10px 20px;
-  font-size: 0.875rem;   /* 14px equivalente */
-  font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
+  border: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-  min-width: 100px;      /* Ancho mínimo consistente */
-}
-
-/**
- * BOTÓN DE CANCELAR
- * - Color rojo con estados hover
- */
-button.btn-cancel {
-  background-color: #f44336; /* Rojo */
-  color: white;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 button.btn-cancel:hover {
-  background-color: #d32f2f; /* Rojo más oscuro */
+  background-color: #d32f2f;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/**
- * BOTÓN DE CONFIRMAR
- * - Color azul con estados hover
- */
+/* Botón de confirmar */
 button.btn-confirm {
-  background-color: #2196f3; /* Azul */
+  background-color: #2196f3;
   color: white;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 button.btn-confirm:hover {
-  background-color: #1976d2; /* Azul más oscuro */
+  background-color: #1976d2;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* =========================================== */
-/* MEDIA QUERIES PARA RESPONSIVIDAD */
-/* =========================================== */
+/* Título del modal */
+.modal-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
 
-@media (max-width: 600px) {
-  /* Ajustes para móviles */
-  .modal-actions {
-    flex-direction: column; /* Apila botones en móviles */
-    gap: 10px;
-  }
-  
-  button.btn-cancel,
-  button.btn-confirm {
-    width: 100%;          /* Botones de ancho completo */
-  }
-  
-  .mat-dialog-container {
-    padding: 15px;        /* Padding reducido */
-  }
+/* Contenido del modal */
+.modal-content {
+  text-align: center;
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: #555;
 }

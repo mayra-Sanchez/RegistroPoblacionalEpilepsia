@@ -8,10 +8,5 @@
     <div *ngIf="selectedTab === 'consultaDatos'">
       <app-consulta-datos></app-consulta-datos>
     </div>
-    <div *ngIf="selectedTab === 'consultasGuardadas'" class="contentInvestigador2">
-      <app-table-ver-consultas [data]="consultasData" [columns]="consultasColumns" [itemsPerPageOptions]="[5, 10, 20]"
-        (onView)="handleView($event)" (onEdit)="handleEdit($event)"
-        (onDelete)="handleDelete($event)"></app-table-ver-consultas>
-    </div>
   </div>
 </div>

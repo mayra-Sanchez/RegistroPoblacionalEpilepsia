@@ -17,6 +17,7 @@ import { AuthInterceptor } from './auth.interceptor';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { EditarUsuarioComponent } from './shared/components/header/componenets/editar-usuario/editar-usuario.component';
+import { SafePipe } from './pipes/safe.pipe';
 @NgModule({
   declarations: [
     AppComponent,
@@ -26,7 +27,8 @@ import { EditarUsuarioComponent } from './shared/components/header/componenets/e
     ModalConfirmacionComponent,
     ManualComponent,
     LoginComponent,
-    EditarUsuarioComponent
+    EditarUsuarioComponent,
+    SafePipe
   ],
   imports: [
     BrowserModule,
@@ -43,6 +45,9 @@ import { EditarUsuarioComponent } from './shared/components/header/componenets/e
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  exports: [
+    SafePipe
+  ]
 })
 export class AppModule { }

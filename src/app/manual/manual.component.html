@@ -1,33 +1,88 @@
-<div class="manual-container">
-  <!-- Menú de contenido -->
+<div class="manual-overlay" [class.active]="isModalOpen">
+  <div class="manual-container">
+    <!-- Cabecera -->
+    <div class="manual-header">
+      <div class="header-content">
+        <h1>Manual del Sistema RPE</h1>
+      </div>
+      <button class="close-btn" (click)="closeModal()" aria-label="Cerrar manual">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
 
-  <button class="close-btn" (click)="closeModal()">✖</button>
-  
-  <div class="manual-menu">
-    <h2>Contenido</h2>
-    <ul>
-      <li *ngFor="let section of manualSections; let i = index">
-        <button (click)="goToSection(i)">{{ section.title }}</button>
-      </li>
-    </ul>
-  </div>
+    <div class="manual-body">
+      <!-- Menú lateral -->
+      <div class="manual-sidebar">
+        <div class="search-box">
+          <input type="text" placeholder="Buscar en el manual..." (keyup)="searchManual($event)">
+          <span class="material-icons">search</span>
+        </div>
 
-  <!-- Páginas del Manual -->
-  <div class="manual-pages">
-    <div 
-      class="page" 
-      *ngFor="let page of manualSections; let i = index" 
-      [class.active]="currentSection === i">
-      
-      <h2>{{ page.title }}</h2>
-      <h3>{{ page.subtitle }}</h3>
-      <p *ngFor="let paragraph of page.content">{{ paragraph }}</p>
+        <h2 class="sidebar-title">Contenido</h2>
+        <ul class="section-list">
+          <li *ngFor="let section of filteredSections; let i = index">
+            <button class="section-btn" (click)="goToSection(i)" [class.active]="currentSection === i">
+              {{section.title}}
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="manual-content">
+        <div class="page" *ngFor="let page of manualSections; let i = index" [class.active]="currentSection === i">
+
+          <div class="page-header">
+            <h2>{{page.title}}</h2>
+            <h3>{{page.subtitle}}</h3>
+          </div>
+
+          <div class="page-body">
+            <!-- Contenido de texto -->
+            <div class="text-content">
+              <p *ngFor="let paragraph of page.content">{{paragraph}}</p>
+            </div>
+
+            <!-- Videos embebidos -->
+            <div class="video-container" *ngIf="page.videoUrl">
+              <iframe width="100%" height="400" [src]="page.videoUrl | safe:'resourceUrl'" frameborder="0"
+                allowfullscreen></iframe>
+            </div>
+
+            <!-- Imágenes de ayuda -->
+            <div class="image-help" *ngIf="page.helpImage">
+              <img [src]="page.helpImage" alt="Imagen de ayuda">
+              <p class="image-caption">{{page.imageCaption}}</p>
+            </div>
+
+            <!-- Contenido adicional -->
+            <div class="additional-content" *ngIf="page.subtitle2">
+              <h4>{{page.subtitle2}}</h4>
+              <p *ngFor="let paragraph of page.content2">{{paragraph}}</p>
+            </div>
+          </div>
+
+          <div class="page-footer">
+            <div class="page-counter">
+              Página {{ currentSection + 1 }} de {{ manualSections.length }}
+            </div>
+            <button class="print-btn" (click)="printSection()">
+              <span class="material-icons">print</span> Imprimir esta sección
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegación -->
+    <div class="manual-navigation">
+      <button class="nav-btn prev-btn" (click)="prevSection()" [disabled]="currentSection === 0">
+        <span class="material-icons">chevron_left</span> Anterior
+      </button>
+      <button class="nav-btn next-btn" (click)="nextSection()"
+        [disabled]="currentSection === manualSections.length - 1">
+        Siguiente <span class="material-icons">chevron_right</span>
+      </button>
     </div>
   </div>
-</div>
-
-<!-- Navegación -->
-<div class="manual-navigation">
-  <button (click)="prevSection()" [disabled]="currentSection === 0">Anterior</button>
-  <button (click)="nextSection()" [disabled]="currentSection === manualSections.length - 1">Siguiente</button>
 </div>

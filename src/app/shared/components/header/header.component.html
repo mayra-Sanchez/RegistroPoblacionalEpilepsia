@@ -8,6 +8,12 @@
   </div>
 
   <div class="nav-buttons">
+    <!-- Botón de Manual visible siempre -->
+    <button class="ingresar" *ngIf="!isLoggedIn" (click)="openModal('manual')">
+      <i class="fa fa-book"></i>
+      Manual
+    </button>
+
     <!-- Si el usuario NO está autenticado, mostrar botón de Ingresar -->
     <button class="ingresar" *ngIf="!isLoggedIn" (click)="openModal('login')">
       <i class="fa fa-sign-in-alt"></i>
@@ -16,7 +22,7 @@
 
     <!-- Si el usuario está autenticado, mostrar el usuario y ajustes -->
     <div class="user-info" *ngIf="isLoggedIn">
-      <i [class]="userIcon"></i> 
+      <i [class]="userIcon"></i>
       <button class="username-button">{{ username }}</button>
 
       <button class="settings-button" (click)="toggleSettingsMenu()">
@@ -24,9 +30,9 @@
       </button>
 
       <div class="menu-dropdown" *ngIf="isSettingsMenuVisible">
-        <button (click)="logout()">Cerrar sesión</button>
+        <button (click)="openEditUserModal()">Editar perfil</button>
         <button (click)="openModal('manual')">Manual</button>
-        <button (click)="openEditUserModal()">Editar perfil</button> <!-- Nueva opción -->
+        <button (click)="logout()">Cerrar sesión</button>
       </div>
     </div>
   </div>
@@ -47,9 +53,7 @@
         <p>Cargando datos del usuario...</p>
       </div>
       <ng-template #userForm>
-        <app-editar-usuario
-          [userData]="currentUserData"
-          (close)="closeModal()"
+        <app-editar-usuario [userData]="currentUserData" (close)="closeModal()"
           (updateSuccess)="handleUserUpdate($event)">
         </app-editar-usuario>
       </ng-template>

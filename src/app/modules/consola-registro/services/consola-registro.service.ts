@@ -447,7 +447,7 @@ export class ConsolaRegistroService {
   }
 
   /**
-   * Obtiene una capa por su ID
+   * Obtiene una capa por su ID y la guarda en localStorage
    * @param {string} id ID de la capa
    * @returns {Observable<ResearchLayer>} Observable con los datos de la capa
    */
@@ -459,12 +459,18 @@ export class ConsolaRegistroService {
       headers,
       params
     }).pipe(
+      tap((capa: ResearchLayer) => {
+        // Guardar en localStorage para uso en Superset
+        localStorage.setItem('capaInvestigacion', JSON.stringify(capa));
+        console.log('✅ Capa almacenada en localStorage:', capa);
+      }),
       catchError(error => {
-        console.error('Error al obtener capa por ID:', error);
+        console.error('❌ Error al obtener capa por ID:', error);
         return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));
       })
     );
   }
+
 
   //#endregion
 
