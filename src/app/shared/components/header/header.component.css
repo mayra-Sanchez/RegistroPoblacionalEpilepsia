@@ -86,6 +86,32 @@ button.ingresar i {
   font-size: 1.25rem;
 }
 
+/* Botón principal */
+button.manual {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+}
+
+button.manual:hover {
+  background-color: #1565c0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+}
+
+button.manual i {
+  font-size: 1.25rem;
+}
+
 /* Botón de ayuda */
 button.help-icon {
   background-color: transparent;

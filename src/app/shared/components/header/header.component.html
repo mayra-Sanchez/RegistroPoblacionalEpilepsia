@@ -8,16 +8,17 @@
   </div>
 
   <div class="nav-buttons">
-    <!-- Botón de Manual visible siempre -->
-    <button class="ingresar" *ngIf="!isLoggedIn" (click)="openModal('manual')">
-      <i class="fa fa-book"></i>
-      Manual
-    </button>
 
     <!-- Si el usuario NO está autenticado, mostrar botón de Ingresar -->
     <button class="ingresar" *ngIf="!isLoggedIn" (click)="openModal('login')">
       <i class="fa fa-sign-in-alt"></i>
       Ingresar
+    </button>
+
+    <!-- Botón de Manual visible siempre -->
+    <button class="manual" *ngIf="!isLoggedIn" (click)="openModal('manual')">
+      <i class="fa fa-book"></i>
+      Manual
     </button>
 
     <!-- Si el usuario está autenticado, mostrar el usuario y ajustes -->

@@ -42,7 +42,7 @@ export class ManualComponent {
         "Este sistema permite a los profesionales de la salud registrar, monitorear y analizar datos clínicos de manera segura y eficiente.",
         "El manual proporciona guías completas para el uso de todas las funcionalidades del sistema."
       ],
-      videoUrl: "https://www.youtube.com/embed/ejemplo_intro",
+      videoUrl: "https://www.youtube.com/embed/-EhGpD57jI0",
       tips: [
         "Utiliza el buscador para encontrar rápidamente temas específicos.",
         "Puedes navegar entre secciones con las flechas del teclado (← →)."
@@ -51,7 +51,8 @@ export class ManualComponent {
         "Todos los datos ingresados en el sistema están protegidos por las normas de confidencialidad médica.",
         "Es responsabilidad del usuario mantener sus credenciales de acceso seguras."
       ]
-    },
+    }
+    ,
     {
       title: "Registro de Usuarios, Capas y Variables",
       subtitle: "Solicitudes de creación en el sistema",
@@ -67,7 +68,7 @@ export class ManualComponent {
         "- **Registro de Capa**: Para crear una nueva línea de investigación o grupo de estudio.",
         "- **Registro de Variable**: Para solicitar una nueva variable clínica no existente en el sistema."
       ],
-      helpImage: "../../assets/manual/registro.png", 
+      helpImage: "../../assets/manual/registro.png",
       imageCaption: "Figura 5. Módulo de solicitud de registro en el sistema",
       tips: [
         "Verifica tus datos antes de enviar la solicitud.",
@@ -88,7 +89,7 @@ export class ManualComponent {
         "Después de 15 minutos de inactividad, el sistema cierra sesión automáticamente por seguridad.",
         "En caso de olvidar la contraseña, se puede solicitar un enlace de recuperación al correo electrónico registrado."
       ],
-      videoUrl: "https://www.youtube.com/embed/ejemplo_login",
+      videoUrl: "https://www.youtube.com/embed/MkVb9yZSgTU",
       tips: [
         "Utiliza contraseñas seguras con letras, números y símbolos.",
         "No compartas tu usuario con otros miembros del equipo."
@@ -97,7 +98,8 @@ export class ManualComponent {
         "El acceso está basado en roles. Asegúrate de tener los permisos correctos antes de realizar acciones críticas.",
         "El sistema registra el historial de accesos y acciones para auditoría."
       ]
-    },
+    }
+    ,
     {
       title: "Rol Administrador",
       subtitle: "Gestión del Sistema RPE",
@@ -116,7 +118,7 @@ export class ManualComponent {
         "Configuración de alertas y notificaciones automáticas.",
         "Gestión de capas de investigación y permisos asociados."
       ],
-      videoUrl: "https://www.youtube.com/embed/admin_demo",
+      videoUrl: "https://www.youtube.com/embed/2LanMirMx60",
       helpImage: "../../assets/manual/administrador.png",
       imageCaption: "Figura 1. Vista del panel de administración",
       tips: [
@@ -127,7 +129,8 @@ export class ManualComponent {
         "El administrador tiene acceso a toda la información del sistema.",
         "Los cambios en la configuración pueden afectar el funcionamiento global del sistema."
       ]
-    },
+    }
+    ,
     {
       title: "Gestión de Capas de Investigación",
       subtitle: "Administración de grupos de análisis",
@@ -217,7 +220,7 @@ export class ManualComponent {
         "Cómo generar certificados médicos",
         "Cómo exportar datos para referencias"
       ],
-      videoUrl: "https://www.youtube.com/embed/doctor_demo",
+      videoUrl: "https://www.youtube.com/embed/pfV6h0F5-Vg",
       helpImage: "../../assets/manual/doctor.png",
       imageCaption: "Figura 3. Formulario de registro clínico",
       tips: [
@@ -248,7 +251,7 @@ export class ManualComponent {
         "Cómo exportar datos cumpliendo con protocolos de anonimización",
         "Cómo colaborar con otros investigadores"
       ],
-      videoUrl: "https://www.youtube.com/embed/researcher_demo",
+      videoUrl: "https://www.youtube.com/embed/hczG_Yim9xM",
       helpImage: "../../assets/manual/investigador.png",
       imageCaption: "Figura 4. Panel de análisis de investigación",
       tips: [
