@@ -130,7 +130,7 @@
   text-align: center;
   padding: 20px;
   
-  mat-icon {
+ :is(mat-icon) {
     font-size: 48px;
     width: 48px;
     height: 48px;
