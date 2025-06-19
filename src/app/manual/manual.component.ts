@@ -190,7 +190,7 @@ export class ManualComponent {
         "Los campos se generan dinámicamente según las variables configuradas.",
         "Solo los usuarios autorizados pueden registrar en determinadas capas."
       ],
-      helpImage: "assets/images/register-form.png",
+      helpImage: "../../assets/manual/registro-paciente.png",
       imageCaption: "Figura 2. Formulario de ingreso de paciente",
       tips: [
         "Verifica que todos los datos estén completos antes de guardar.",
