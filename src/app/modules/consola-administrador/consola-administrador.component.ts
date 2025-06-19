@@ -1,12 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef, OnDestroy, ViewChild } from '@angular/core';
-import { ConsolaAdministradorService } from './services/consola-administrador.service';
+import { ConsolaAdministradorService } from '../../services/consola-administrador.service';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 /**
  * Interfaz para el tipo Registro que representa un item en el historial de actividad

@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, TemplateRef } from '@angular/core';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
-import { ConsolaRegistroService } from 'src/app/modules/consola-registro/services/consola-registro.service';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { ResearchLayer } from '../../../consola-registro/interfaces';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Subject, takeUntil } from 'rxjs';

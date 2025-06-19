@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
+import { ConsolaAdministradorService } from 'src/app/services/consola-administrador.service';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';

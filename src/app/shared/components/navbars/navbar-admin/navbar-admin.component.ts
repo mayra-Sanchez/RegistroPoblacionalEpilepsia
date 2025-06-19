@@ -1,5 +1,5 @@
 import { Component, Output, EventEmitter, OnInit } from '@angular/core';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { AuthService } from 'src/app/services/auth.service';
 import {jwtDecode} from 'jwt-decode';
 @Component({
   selector: 'app-navbar-admin',

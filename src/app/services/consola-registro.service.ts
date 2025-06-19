@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError, Subject } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
-import { AuthService } from 'src/app/login/services/auth.service';
-import { ResearchLayer, Variable, Register } from '../interfaces';
+import { AuthService } from 'src/app/services/auth.service';
+import { ResearchLayer, Variable, Register } from '../modules/consola-registro/interfaces';
 
 /**
  * Servicio para manejar operaciones relacionadas con registros médicos

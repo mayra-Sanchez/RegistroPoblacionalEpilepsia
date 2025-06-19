@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthService } from 'src/app/login/services/auth.service';
-import { ConsolaRegistroService } from './services/consola-registro.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
 import { Variable, UserResponse, ResearchLayer, Register } from './interfaces';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
 import Swal from 'sweetalert2';

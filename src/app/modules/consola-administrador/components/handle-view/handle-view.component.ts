@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { ConsolaAdministradorService } from '../../services/consola-administrador.service';
+import { ConsolaAdministradorService } from '../../../../services/consola-administrador.service';
 
 /**
  * Componente para visualización detallada de elementos

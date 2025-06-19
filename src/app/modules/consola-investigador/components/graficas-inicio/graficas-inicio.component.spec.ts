@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { GraficasInicioComponent } from './graficas-inicio.component';
 import { ConsolaRegistroService } from 'src/app/modules/consola-registro/services/consola-registro.service';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { NO_ERRORS_SCHEMA } from '@angular/core';

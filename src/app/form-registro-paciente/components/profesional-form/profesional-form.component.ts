@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from 'src/app/login/services/auth.service';
-import { ConsolaRegistroService } from 'src/app/modules/consola-registro/services/consola-registro.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
 
 /**
  * Componente de formulario para la captura de información del profesional de salud

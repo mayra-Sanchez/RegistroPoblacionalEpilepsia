@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { EditarUsuarioComponent } from './editar-usuario.component';
 import { ReactiveFormsModule } from '@angular/forms';
-import { AuthService } from 'src/app/login/services/auth.service';
-import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { ConsolaAdministradorService } from 'src/app/services/consola-administrador.service';
 import { of, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
 

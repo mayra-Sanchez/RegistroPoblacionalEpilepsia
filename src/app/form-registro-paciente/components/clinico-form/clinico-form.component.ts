@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ConsolaRegistroService } from 'src/app/modules/consola-registro/services/consola-registro.service';
+import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
 import { Subject, takeUntil } from 'rxjs';
 
 /**

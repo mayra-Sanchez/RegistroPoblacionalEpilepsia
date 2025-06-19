@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from 'src/app/login/services/auth.service';
-import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { ConsolaAdministradorService } from 'src/app/services/consola-administrador.service';
 import Swal from 'sweetalert2';
 
 @Component({

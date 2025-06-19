@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from 'src/app/login/services/auth.service';
-import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { ConsolaAdministradorService } from 'src/app/services/consola-administrador.service';
 
 @Component({
   selector: 'app-header',

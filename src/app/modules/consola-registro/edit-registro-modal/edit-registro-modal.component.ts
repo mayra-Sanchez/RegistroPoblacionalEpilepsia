@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { ConsolaRegistroService } from '../services/consola-registro.service';
+import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
 import { Register, Variable } from '../interfaces';
 import { finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';

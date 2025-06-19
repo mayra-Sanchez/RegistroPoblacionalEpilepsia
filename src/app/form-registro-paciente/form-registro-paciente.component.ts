@@ -1,7 +1,7 @@
 // Importaciones necesarias
 import { Component, OnInit } from '@angular/core';
-import { ConsolaRegistroService } from '../modules/consola-registro/services/consola-registro.service';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { ConsolaRegistroService } from '../services/consola-registro.service';
+import { AuthService } from 'src/app/services/auth.service';
 import Swal from 'sweetalert2';
 
 // Decorador del componente

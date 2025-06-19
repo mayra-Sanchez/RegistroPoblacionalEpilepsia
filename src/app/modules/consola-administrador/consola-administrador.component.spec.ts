@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { ConsolaAdministradorComponent } from './consola-administrador.component';
-import { ConsolaAdministradorService } from './services/consola-administrador.service';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { ConsolaAdministradorService } from '../../services/consola-administrador.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';

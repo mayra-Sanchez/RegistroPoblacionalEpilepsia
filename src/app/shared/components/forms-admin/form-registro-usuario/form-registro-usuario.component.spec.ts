@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormRegistroUsuarioComponent } from './form-registro-usuario.component';
-import { ConsolaAdministradorService } from 'src/app/modules/consola-administrador/services/consola-administrador.service';
+import { ConsolaAdministradorService } from 'src/app/services/consola-administrador.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { of, throwError } from 'rxjs';
 import Swal, { SweetAlertResult, SweetAlertOptions, SweetAlertIcon } from 'sweetalert2';

@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ConsolaInvestigadorService } from './consola-investigador.service';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { Observable, of } from 'rxjs';
-import { Register, ResearchLayer } from '../../consola-registro/interfaces';
+import { Register, ResearchLayer } from '../modules/consola-registro/interfaces';
 
 describe('ConsolaInvestigadorService', () => {
   let service: ConsolaInvestigadorService;

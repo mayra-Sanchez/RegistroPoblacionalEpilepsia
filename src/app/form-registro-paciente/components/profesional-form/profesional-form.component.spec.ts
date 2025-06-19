@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { ProfesionalFormComponent } from './profesional-form.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { ConsolaRegistroService } from 'src/app/modules/consola-registro/services/consola-registro.service';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 

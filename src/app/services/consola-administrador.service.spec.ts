@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { ConsolaAdministradorService } from './consola-administrador.service';
-import { AuthService } from 'src/app/login/services/auth.service';
+import { ConsolaAdministradorService } from '../../../services/consola-administrador.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { throwError, of } from 'rxjs';
 
 describe('ConsolaAdministradorService', () => {
