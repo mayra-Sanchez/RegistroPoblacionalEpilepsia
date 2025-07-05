@@ -1,8 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule, FormBuilder, FormArray, FormGroup } from '@angular/forms';
 import { ClinicoFormComponent } from './clinico-form.component';
-import { ConsolaRegistroService } from 'src/app/modules/consola-registro/services/consola-registro.service';
-import { of, throwError } from 'rxjs';
+import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 interface Variable {

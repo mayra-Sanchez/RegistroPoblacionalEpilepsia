@@ -282,7 +282,7 @@ export class HomeComponent implements AfterViewInit {
       biografia: 'Estudiante de Ingeniería de Sistemas en la Universidad del Valle, con interés en desarrollo de software...',
       formacion: ['Ingeniería de Sistemas - Universidad del Valle'],
       contacto: {
-        email: 'mayra.sanchez@correounivalle.edu.co',
+        email: 'mayra.alejandra.sanchez@correounivalle.edu.co',
         oficina: 'Laboratorio MVC - Edificio B13'
       },
       proyectos: ['Registro Poblacional de Epilepsia - Desarrollo Frontend'],
