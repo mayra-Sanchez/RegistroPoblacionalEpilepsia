@@ -12,7 +12,7 @@ import Swal from 'sweetalert2';
 export class EditarUsuarioComponent implements OnInit {
   // Recibe los datos del usuario a editar desde el componente padre
   @Input() userData: any;
-  
+
   // Eventos para cerrar el modal y notificar éxito en la actualización
   @Output() close = new EventEmitter<void>();
   @Output() updateSuccess = new EventEmitter<any>();
@@ -31,17 +31,18 @@ export class EditarUsuarioComponent implements OnInit {
   ) {
     // Inicializa el formulario con validadores
     this.editForm = this.fb.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
+      firstName: [{ value: '', disabled: true }],
+      lastName: [{ value: '', disabled: true }],
       email: ['', [Validators.required, Validators.email]],
-      username: [{ value: '', disabled: true }, Validators.required],
+      username: [{ value: '', disabled: true }],
       password: [''],
-      identificationType: ['', Validators.required],
-      identificationNumber: ['', Validators.required],
-      birthDate: ['', Validators.required],
-      researchLayer: [''], // Campo opcional
-      role: [{ value: '', disabled: true }] // Solo visualización
+      identificationType: [{ value: '', disabled: true }],
+      identificationNumber: [{ value: '', disabled: true }],
+      birthDate: [{ value: '', disabled: true }],
+      researchLayer: [{ value: '', disabled: true }],
+      role: [{ value: '', disabled: true }]
     });
+
   }
 
   ngOnInit(): void {
@@ -51,11 +52,11 @@ export class EditarUsuarioComponent implements OnInit {
     if (this.userData) {
       this.prepareFormData(this.userData);
       this.isLoading = false;
-    } 
+    }
     // Si no, se intenta obtener los datos del usuario logueado
     else if (this.currentUserId) {
       this.loadUserData();
-    } 
+    }
     else {
       this.errorMessage = 'No se pudo identificar al usuario';
       this.isLoading = false;
@@ -119,21 +120,14 @@ export class EditarUsuarioComponent implements OnInit {
 
   // Extrae los datos del formulario, incluyendo campos deshabilitados
   private getFormData(): any {
-    const formValue = this.editForm.getRawValue();
+    const formValue = this.editForm.getRawValue(); // incluye campos deshabilitados
 
     return {
-      firstName: formValue.firstName,
-      lastName: formValue.lastName,
       email: formValue.email,
-      username: formValue.username,
-      password: formValue.password || undefined,
-      identificationType: formValue.identificationType,
-      identificationNumber: Number(formValue.identificationNumber),
-      birthDate: formValue.birthDate || '',
-      researchLayer: formValue.researchLayer,
-      role: formValue.role
+      password: formValue.password || undefined
     };
   }
+
 
   // Envía la petición de actualización al backend
   private updateUserData(updateData: any): void {

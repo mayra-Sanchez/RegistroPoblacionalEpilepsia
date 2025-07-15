@@ -1,235 +1,136 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { formatDate } from '@angular/common';
+import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, Subject } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
 import { AuthService } from 'src/app/services/auth.service';
 import { ResearchLayer, Variable, Register } from '../modules/consola-registro/interfaces';
 
-/**
- * Servicio para manejar operaciones relacionadas con registros médicos
- * 
- * Este servicio proporciona métodos para:
- * - Obtener y gestionar registros de pacientes
- * - Interactuar con capas de investigación
- * - Manejar variables de investigación
- * - Realizar operaciones CRUD sobre registros médicos
- * 
- * @example
- * constructor(private consolaService: ConsolaRegistroService) {}
- */
 @Injectable({
   providedIn: 'root'
 })
 export class ConsolaRegistroService {
   //#region Constantes de URL
-
-  /**
-   * URL base para operaciones con registros
-   * @type {string}
-   */
   private readonly API_URL = 'http://localhost:8080/api/v1/registers';
-
-  /**
-   * URL base para operaciones con usuarios
-   * @type {string}
-   */
   private readonly API_USERS_URL = 'http://localhost:8080/api/v1/users';
-
-  /**
-   * URL base para operaciones con variables
-   * @type {string}
-   */
   private readonly API_VARIABLE_URL = 'http://localhost:8080/api/v1/Variable';
-
-  /**
-   * URL base para operaciones con capas de investigación
-   * @type {string}
-   */
   private readonly API_RESEARCH_LAYER_URL = 'http://localhost:8080/api/v1/ResearchLayer';
-
   //#endregion
 
   //#region Subjects y Observables
-
-  /**
-   * Subject para notificar actualizaciones de datos
-   * @private
-   * @type {Subject<void>}
-   */
   private dataUpdated = new Subject<void>();
-
-  /**
-   * Subject para notificar cambios en los datos
-   * @private
-   * @type {Subject<void>}
-   */
   private dataChanged = new Subject<void>();
-
   //#endregion
 
-  //#region Constructor
-
-  /**
-   * Constructor del servicio
-   * @param {HttpClient} http Cliente HTTP de Angular
-   * @param {AuthService} authService Servicio de autenticación
-   */
   constructor(private http: HttpClient, private authService: AuthService) { }
 
-  //#endregion
-
   //#region Métodos Públicos
-
-  /**
-   * Obtiene un observable para escuchar actualizaciones de datos
-   * @returns {Observable<void>} Observable que emite cuando hay actualizaciones
-   */
   getDataUpdatedListener(): Observable<void> {
     return this.dataUpdated.asObservable();
   }
 
-  /**
-   * Observable público para que otros componentes se suscriban a cambios de datos
-   * @type {Observable<void>}
-   */
   dataChanged$ = this.dataChanged.asObservable();
 
-  /**
-   * Notifica a los suscriptores que los datos han cambiado
-   */
   notifyDataChanged() {
     this.dataChanged.next();
   }
-
   //#endregion
 
   //#region Métodos de Autenticación y Autorización
-
-  /**
-   * Obtiene los headers de autenticación
-   * @private
-   * @returns {HttpHeaders} Headers con el token de autenticación
-   */
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
     return new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     });
   }
 
-  /**
-   * Verifica si el usuario actual tiene rol de doctor
-   * @private
-   * @returns {boolean} True si el usuario es doctor
-   */
   private isDoctor(): boolean {
-    const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-    return userRoles.includes('Doctor_client_role');
+    try {
+      const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      return userRoles.includes('Doctor_client_role');
+    } catch (error) {
+      console.error('Error parsing user roles:', error);
+      return false;
+    }
   }
-
   //#endregion
 
   //#region Métodos de Usuarios
-
-  /**
-   * Obtiene información del usuario autenticado
-   * @param {string} email Email del usuario a buscar
-   * @returns {Observable<any>} Observable con los datos del usuario
-   */
   obtenerUsuarioAutenticado(email: string): Observable<any> {
-    const token = this.authService.getToken();
-
-    if (!token) {
-      console.error('⚠️ No hay token disponible, abortando solicitud.');
-      return throwError(() => new Error('No hay token disponible.'));
+    if (!email) {
+      return throwError(() => this.createError('Email is required', 'VALIDATION_ERROR'));
     }
 
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
+    try {
+      const token = this.authService.getToken();
+      if (!token) {
+        return throwError(() => this.createError('No authentication token available', 'AUTH_ERROR'));
+      }
 
-    const params = new HttpParams().set('email', email);
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
 
-    return this.http.get<any>(`${this.API_USERS_URL}`, {
-      headers: headers,
-      params: params
-    }).pipe(
-      catchError(error => {
-        console.error('❌ Error al obtener usuario:', error);
-        return throwError(() => new Error(error.error?.message || 'Ocurrió un error al obtener el usuario.'));
-      })
-    );
+      const params = new HttpParams().set('email', email);
+
+      return this.http.get<any>(`${this.API_USERS_URL}`, { headers, params }).pipe(
+        catchError(error => this.handleHttpError(error, 'Failed to fetch user'))
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
-
   //#endregion
 
   //#region Métodos de Registros
-
-  /**
-   * Registra un nuevo registro médico
-   * @param {any} registerData Datos del registro a crear
-   * @param {string} userEmail Email del usuario que realiza el registro
-   * @returns {Observable<any>} Observable con la respuesta del servidor
-   */
   registrarRegistro(registerData: any, userEmail: string): Observable<any> {
     if (!userEmail) {
-      return throwError(() => new Error('Email del usuario es requerido'));
+      return throwError(() => this.createError('User email is required', 'VALIDATION_ERROR'));
     }
 
-    const headers = this.getAuthHeaders();
-    const params = new HttpParams().set('userEmail', userEmail);
+    if (!registerData) {
+      return throwError(() => this.createError('Register data is required', 'VALIDATION_ERROR'));
+    }
 
-    return this.http.post(this.API_URL, registerData, {
-      headers,
-      params
-    }).pipe(
-      catchError(error => {
-        console.error('Error en el registro:', error);
-        return throwError(() => error);
-      })
-    );
+    try {
+      const headers = this.getAuthHeaders();
+      const params = new HttpParams().set('userEmail', userEmail);
+
+      return this.http.post(this.API_URL, registerData, { headers, params }).pipe(
+        tap(() => console.log('Register created successfully')),
+        catchError(error => this.handleHttpError(error, 'Failed to create register'))
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
 
-  /**
-   * Obtiene todos los registros paginados
-   * @param {number} [page=0] Número de página
-   * @param {number} [size=10] Tamaño de la página
-   * @param {string} [sort='registerDate'] Campo para ordenar
-   * @param {string} [sortDirection='DESC'] Dirección de ordenamiento
-   * @returns {Observable<any>} Observable con los registros paginados
-   */
   obtenerRegistros(
     page: number = 0,
     size: number = 10,
     sort: string = 'registerDate',
     sortDirection: string = 'DESC'
   ): Observable<any> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sort', sort)
-      .set('sortDirection', sortDirection);
+    try {
+      const params = new HttpParams()
+        .set('page', page.toString())
+        .set('size', size.toString())
+        .set('sort', sort)
+        .set('sortDirection', sortDirection);
 
-    return this.http.get<any>(`${this.API_URL}/all`, { params })
-      .pipe(
-        catchError(error => {
-          console.error('Error en obtenerRegistros:', error);
-          return throwError(() => new Error('Error al cargar registros'));
-        })
+      return this.http.get<any>(`${this.API_URL}/all`, { params }).pipe(
+        catchError(error => this.handleHttpError(error, 'Failed to fetch registers'))
       );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
 
-  /**
-   * Obtiene registros filtrados por profesional de salud
-   * @param {number} healthProfessionalId ID del profesional
-   * @param {number} [page=0] Número de página
-   * @param {number} [size=10] Tamaño de la página
-   * @param {string} [sort='registerDate'] Campo para ordenar
-   * @param {string} [sortDirection='DESC'] Dirección de ordenamiento
-   * @returns {Observable<any>} Observable con los registros paginados
-   */
   obtenerRegistrosPorProfesional(
     healthProfessionalId: number,
     page: number = 0,
@@ -237,32 +138,27 @@ export class ConsolaRegistroService {
     sort: string = 'registerDate',
     sortDirection: string = 'DESC'
   ): Observable<any> {
-    const headers = this.getAuthHeaders();
+    if (!healthProfessionalId) {
+      return throwError(() => this.createError('Health professional ID is required', 'VALIDATION_ERROR'));
+    }
 
-    const params = new HttpParams()
-      .set('healthProfesionalIdentificationNumber', healthProfessionalId.toString())
-      .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sort', sort)
-      .set('sortDirection', sortDirection);
+    try {
+      const headers = this.getAuthHeaders();
+      const params = new HttpParams()
+        .set('healthProfesionalIdentificationNumber', healthProfessionalId.toString())
+        .set('page', page.toString())
+        .set('size', size.toString())
+        .set('sort', sort)
+        .set('sortDirection', sortDirection);
 
-    return this.http.get<any>(`${this.API_URL}/allByHealtProfessional`, { headers, params }).pipe(
-      catchError(error => {
-        console.error('Error al obtener registros por profesional:', error);
-        return throwError(() => new Error('Error al cargar registros por profesional'));
-      })
-    );
+      return this.http.get<any>(`${this.API_URL}/allByHealtProfessional`, { headers, params }).pipe(
+        catchError(error => this.handleHttpError(error, 'Failed to fetch registers by professional'))
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
 
-  /**
-   * Obtiene registros filtrados por paciente
-   * @param {number} patientIdentificationNumber ID del paciente
-   * @param {number} [page=0] Número de página
-   * @param {number} [size=10] Tamaño de la página
-   * @param {string} [sort='registerDate'] Campo para ordenar
-   * @param {string} [sortDirection='DESC'] Dirección de ordenamiento
-   * @returns {Observable<any>} Observable con los registros paginados
-   */
   obtenerRegistrosPorPaciente(
     patientIdentificationNumber: number,
     page: number = 0,
@@ -270,33 +166,27 @@ export class ConsolaRegistroService {
     sort: string = 'registerDate',
     sortDirection: string = 'DESC'
   ): Observable<any> {
-    const headers = this.getAuthHeaders();
+    if (!patientIdentificationNumber) {
+      return throwError(() => this.createError('Patient identification number is required', 'VALIDATION_ERROR'));
+    }
 
-    const params = new HttpParams()
-      .set('patientIdentificationNumber', patientIdentificationNumber.toString())
-      .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sort', sort)
-      .set('sortDirection', sortDirection);
+    try {
+      const headers = this.getAuthHeaders();
+      const params = new HttpParams()
+        .set('patientIdentificationNumber', patientIdentificationNumber.toString())
+        .set('page', page.toString())
+        .set('size', size.toString())
+        .set('sort', sort)
+        .set('sortDirection', sortDirection);
 
-    return this.http.get<any>(`${this.API_URL}/allByPatient`, { headers, params }).pipe(
-      catchError(error => {
-        console.error('Error al obtener registros por paciente:', error);
-        return throwError(() => new Error('Error al cargar registros por paciente'));
-      })
-    );
+      return this.http.get<any>(`${this.API_URL}/allByPatient`, { headers, params }).pipe(
+        catchError(error => this.handleHttpError(error, 'Failed to fetch registers by patient'))
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
 
-  /**
-   * Obtiene registros filtrados por capa de investigación
-   * @param {string} researchLayerId ID de la capa de investigación
-   * @param {number} [page=0] Número de página
-   * @param {number} [size=10] Tamaño de la página
-   * @param {string} [sort='registerDate'] Campo para ordenar
-   * @param {string} [sortDirection='DESC'] Dirección de ordenamiento
-   * @returns {Observable<{registers: Register[], currentPage: number, totalPages: number, totalElements: number}>} 
-   * Observable con los registros paginados y metadatos
-   */
   obtenerRegistrosPorCapa(
     researchLayerId: string,
     page: number = 0,
@@ -304,112 +194,107 @@ export class ConsolaRegistroService {
     sort: string = 'registerDate',
     sortDirection: string = 'DESC'
   ): Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }> {
-    const headers = this.getAuthHeaders();
+    if (!researchLayerId) {
+      return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
+    }
 
-    console.log('Realizando petición para obtener registros por capa:', {
-      researchLayerId,
-      page,
-      size,
-      sort,
-      sortDirection
-    });
+    try {
+      const headers = this.getAuthHeaders();
+      const params = new HttpParams()
+        .set('researchLayerId', researchLayerId)
+        .set('page', page.toString())
+        .set('size', size.toString())
+        .set('sort', sort)
+        .set('sortDirection', sortDirection);
 
-    const params = new HttpParams()
-      .set('researchLayerId', researchLayerId)
-      .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sort', sort)
-      .set('sortDirection', sortDirection);
-
-    return this.http.get<any>(`${this.API_URL}/allByResearchLayer`, { headers, params }).pipe(
-      tap(response => console.log('Respuesta del servidor:', response)),
-      catchError(error => {
-        console.error('Error al obtener registros por capa:', {
-          status: error.status,
-          message: error.message,
-          error: error.error
-        });
-        return throwError(() => new Error('Error al cargar registros'));
-      })
-    );
+      return this.http.get<any>(`${this.API_URL}/allByResearchLayer`, { headers, params }).pipe(
+        tap(response => console.log('Server response:', response)),
+        catchError(error => this.handleHttpError(error, 'Failed to fetch registers by research layer'))
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
 
-  /**
-   * Actualiza un registro existente
-   * @param {string} registerId ID del registro a actualizar
-   * @param {any} data Nuevos datos del registro
-   * @returns {Observable<any>} Observable con la respuesta del servidor
-   */
   actualizarRegistro(registerId: string, data: any): Observable<any> {
+    if (!registerId) {
+      return throwError(() => this.createError('Register ID is required', 'VALIDATION_ERROR'));
+    }
+
+    if (!data) {
+      return throwError(() => this.createError('Update data is required', 'VALIDATION_ERROR'));
+    }
+
     if (!this.isDoctor()) {
-      return throwError(() => new Error('⛔ Acceso denegado: solo los doctores pueden realizar esta acción.'));
+      return throwError(() => this.createError('Only doctors can perform this action', 'AUTH_ERROR', null, 403));
     }
 
-    const userEmail = this.authService.getUserEmail();
-    if (!userEmail) {
-      return throwError(() => new Error('⚠️ No se pudo obtener el email del usuario.'));
+    try {
+      const userEmail = this.authService.getUserEmail();
+      if (!userEmail) {
+        return throwError(() => this.createError('User email not available', 'AUTH_ERROR'));
+      }
+
+      // Ensure variables array exists
+      if (!data.variablesRegister || !Array.isArray(data.variablesRegister)) {
+        data.variablesRegister = [];
+      }
+
+      // Format dates and prepare payload
+      const formattedData = this.formatRegisterData(data);
+
+      const token = this.authService.getToken();
+      if (!token) {
+        return throwError(() => this.createError('No authentication token available', 'AUTH_ERROR'));
+      }
+
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+
+      const params = new HttpParams()
+        .set('registerId', registerId)
+        .set('userEmail', userEmail);
+
+      return this.http.put(this.API_URL, formattedData, { headers, params }).pipe(
+        tap(() => {
+          this.notifyDataChanged();
+        }),
+        catchError(error => {
+          console.error('Detailed error:', {
+            url: error.url,
+            status: error.status,
+            error: error.error,
+            message: error.message
+          });
+          return this.handleHttpError(error, 'Failed to update register');
+        })
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
     }
-
-    const token = this.authService.getToken();
-    if (!token) {
-      return throwError(() => new Error('⚠️ No hay token disponible.'));
-    }
-
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
-
-    const params = new HttpParams()
-      .set('registerId', registerId)
-      .set('userEmail', userEmail);
-
-    const formattedData = this.formatRegisterData(data);
-
-    return this.http.put(this.API_URL, formattedData, {
-      headers: headers,
-      params: params
-    }).pipe(
-      tap(() => console.log('✅ Registro actualizado exitosamente')),
-      catchError(error => {
-        console.error('❌ Error al actualizar registro:', error);
-
-        if (error.status === 401) {
-          return throwError(() => new Error('🔐 Sesión expirada. Por favor inicie sesión nuevamente.'));
-        } else if (error.status === 403) {
-          return throwError(() => new Error('⛔ No tiene permisos para realizar esta acción.'));
-        } else {
-          return throwError(() => new Error(error.error?.message || 'Error desconocido al actualizar el registro.'));
-        }
-      })
-    );
   }
-
   //#endregion
 
   //#region Métodos de Capas de Investigación
-
-  /**
-   * Obtiene todas las capas de investigación
-   * @returns {Observable<ResearchLayer[]>} Observable con la lista de capas
-   */
   obtenerTodasLasCapas(): Observable<ResearchLayer[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<ResearchLayer[]>(`${this.API_RESEARCH_LAYER_URL}/GetAll`, { headers }).pipe(
-      tap(response => console.log('Todas las capas obtenidas:', response)),
-      catchError(error => {
-        console.error('Error al obtener todas las capas:', error);
-        return throwError(() => new Error('Error al obtener la lista de capas'));
-      })
-    );
+    try {
+      const headers = this.getAuthHeaders();
+      return this.http.get<ResearchLayer[]>(`${this.API_RESEARCH_LAYER_URL}/GetAll`, { headers }).pipe(
+        tap(response => console.log('All layers fetched:', response)),
+        catchError(error => this.handleHttpError(error, 'Failed to fetch all research layers'))
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
 
-  /**
-   * Busca una capa por nombre (insensible a mayúsculas)
-   * @param {string} nombreCapa Nombre de la capa a buscar
-   * @returns {Observable<ResearchLayer>} Observable con los datos de la capa encontrada
-   */
   buscarCapaPorNombre(nombreCapa: string): Observable<ResearchLayer> {
+    if (!nombreCapa) {
+      return throwError(() => this.createError('Layer name is required', 'VALIDATION_ERROR'));
+    }
+
     return this.obtenerTodasLasCapas().pipe(
       map(capas => {
         const capaEncontrada = capas.find(c =>
@@ -417,22 +302,19 @@ export class ConsolaRegistroService {
         );
 
         if (!capaEncontrada) {
-          throw new Error(`No se encontró la capa: ${nombreCapa}`);
+          throw this.createError(`Layer not found: ${nombreCapa}`, 'NOT_FOUND_ERROR');
         }
         return capaEncontrada;
       }),
       catchError(error => {
-        console.error('Error al buscar capa:', error);
-        return throwError(() => new Error(error.message || 'Error al buscar capa'));
+        if (error.code === 'NOT_FOUND_ERROR') {
+          return throwError(() => error);
+        }
+        return throwError(() => this.createError('Failed to search layer', 'SEARCH_ERROR', error));
       })
     );
   }
 
-  /**
-   * Obtiene información completa de una capa por su nombre
-   * @param {string} nombreCapa Nombre de la capa
-   * @returns {Observable<ResearchLayer>} Observable con los datos completos de la capa
-   */
   obtenerCapaCompleta(nombreCapa: string): Observable<ResearchLayer> {
     return this.buscarCapaPorNombre(nombreCapa).pipe(
       switchMap(capa => {
@@ -440,164 +322,218 @@ export class ConsolaRegistroService {
           map(detalles => ({
             ...capa,
             ...detalles
-          }))
+          })),
+          catchError(error => throwError(() =>
+            this.createError('Failed to get layer details', 'DETAILS_FETCH_ERROR', error)
+          ))
         );
-      })
-    );
-  }
-
-  /**
-   * Obtiene una capa por su ID y la guarda en localStorage
-   * @param {string} id ID de la capa
-   * @returns {Observable<ResearchLayer>} Observable con los datos de la capa
-   */
-  obtenerCapaPorId(id: string): Observable<ResearchLayer> {
-    const headers = this.getAuthHeaders();
-    const params = new HttpParams().set('id', id);
-
-    return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, {
-      headers,
-      params
-    }).pipe(
-      tap((capa: ResearchLayer) => {
-        // Guardar en localStorage para uso en Superset
-        localStorage.setItem('capaInvestigacion', JSON.stringify(capa));
-        console.log('✅ Capa almacenada en localStorage:', capa);
       }),
-      catchError(error => {
-        console.error('❌ Error al obtener capa por ID:', error);
-        return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));
-      })
+      catchError(error => throwError(() =>
+        this.createError('Failed to get complete layer', 'LAYER_FETCH_ERROR', error)
+      ))
     );
   }
 
+  obtenerCapaPorId(id: string): Observable<ResearchLayer> {
+    if (!id) {
+      return throwError(() => this.createError('Layer ID is required', 'VALIDATION_ERROR'));
+    }
 
+    try {
+      const headers = this.getAuthHeaders();
+      const params = new HttpParams().set('id', id);
+
+      return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, { headers, params }).pipe(
+        tap((capa: ResearchLayer) => {
+          try {
+            localStorage.setItem('capaInvestigacion', JSON.stringify(capa));
+          } catch (storageError) {
+            console.error('Failed to store layer in localStorage:', storageError);
+          }
+        }),
+        catchError(error => this.handleHttpError(error, `Failed to fetch layer with ID: ${id}`))
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
+  }
   //#endregion
 
   //#region Métodos de Variables
-
-  /**
-   * Obtiene variables asociadas a una capa de investigación
-   * @param {string} researchLayerId ID de la capa de investigación
-   * @returns {Observable<Variable[]>} Observable con la lista de variables
-   */
   obtenerVariablesPorCapa(researchLayerId: string): Observable<Variable[]> {
-    const headers = this.getAuthHeaders();
-    const params = new HttpParams().set('researchLayerId', researchLayerId);
+    if (!researchLayerId) {
+      return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
+    }
 
-    return this.http.get<Variable[]>(`${this.API_VARIABLE_URL}/ResearchLayerId`, {
-      headers,
-      params
-    }).pipe(
-      catchError(error => {
-        console.error('Error al obtener variables:', error);
-        return throwError(() => new Error('Error al obtener variables de la capa'));
-      })
-    );
+    try {
+      const headers = this.getAuthHeaders();
+      const params = new HttpParams().set('researchLayerId', researchLayerId);
+
+      return this.http.get<Variable[]>(`${this.API_VARIABLE_URL}/ResearchLayerId`, { headers, params }).pipe(
+        catchError(error => this.handleHttpError(error, 'Failed to fetch variables for layer'))
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
-
   //#endregion
 
   //#region Métodos Privados
 
-  /**
-   * Formatea los datos de un registro para enviar al backend
-   * @private
-   * @param {any} data Datos del registro
-   * @returns {any} Datos formateados
-   */
+  private validateRegisterData(data: any): void {
+    if (!data.patient) {
+        throw new Error('Patient data is required');
+    }
+    if (!data.variablesRegister) {
+        data.variablesRegister = [];
+    }
+}
+
   private formatRegisterData(data: any): any {
-    const formattedData = { ...data };
+    try {
+      this.validateRegisterData(data);
 
-    if (formattedData.patient?.birthDate) {
-      formattedData.patient.birthDate = this.formatDateToBackend(data.patient.birthDate);
-    }
-    if (formattedData.patient?.deathDate) {
-      formattedData.patient.deathDate = this.formatDateToBackend(data.patient.deathDate);
-    }
+      const formattedData = { ...data };
 
-    return formattedData;
+      // Format dates
+      if (formattedData.patient?.birthDate) {
+        formattedData.patient.birthDate = this.formatDateToBackend(data.patient.birthDate);
+      }
+      if (formattedData.patient?.deathDate) {
+        formattedData.patient.deathDate = this.formatDateToBackend(data.patient.deathDate);
+      }
+
+      return formattedData;
+    } catch (error) {
+      console.error('Error formatting register data:', error);
+      throw this.createError('Failed to format register data', 'DATA_FORMAT_ERROR', error);
+    }
   }
 
-  /**
-   * Formatea una fecha al formato dd-MM-yyyy para el backend
-   * @private
-   * @param {string} dateString Fecha a formatear
-   * @returns {string} Fecha formateada
-   */
-  private formatDateToBackend(dateString: string): string {
-    // Validate input
-    if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-      console.warn(`Invalid date format: ${dateString}. Expected YYYY-MM-DD.`);
-      return dateString; // Return original string or handle as needed
+private formatDateToBackend(dateString: string | null | undefined): string | null {
+    if (!dateString) return null;
+
+    try {
+      // Handle multiple possible date formats
+      if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) { // dd-MM-yyyy format
+        const [day, month, year] = dateString.split('-');
+        return `${year}-${month}-${day}`; // Convert to yyyy-MM-dd
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) { // Already yyyy-MM-dd
+        return dateString;
+      }
+
+      // Fallback for Date objects or other formats
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid date');
+      }
+
+      return formatDate(date, 'yyyy-MM-dd', 'en-US');
+    } catch (e) {
+      console.error('Date formatting error:', e);
+      return dateString; // fallback
     }
-
-    // Split the date string and create a UTC date
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day)); // month is 0-based in JavaScript
-
-    // Format as DD-MM-YYYY using UTC methods
-    const formattedDay = date.getUTCDate().toString().padStart(2, '0');
-    const formattedMonth = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-    const formattedYear = date.getUTCFullYear();
-    return `${formattedDay}-${formattedMonth}-${formattedYear}`;
   }
 
-  /**
-   * Obtiene detalles adicionales de una capa por ID
-   * @private
-   * @param {string} id ID de la capa
-   * @returns {Observable<ResearchLayer>} Observable con los detalles de la capa
-   */
   private obtenerDetallesCapa(id: string): Observable<ResearchLayer> {
-    const headers = this.getAuthHeaders();
-    const params = new HttpParams().set('id', id);
+    try {
+      const headers = this.getAuthHeaders();
+      const params = new HttpParams().set('id', id);
 
-    return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, {
-      headers,
-      params
-    }).pipe(
-      tap(response => console.log('Detalles de capa obtenidos:', response)),
-      catchError(error => {
-        console.error('Error al obtener detalles:', error);
-        if (error.status === 404) {
-          return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));
-        }
-        return throwError(() => new Error(`Error del servidor al obtener la capa: ${error.message}`));
-      })
-    );
+      return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, { headers, params }).pipe(
+        tap(response => console.log('Layer details fetched:', response)),
+        catchError(error => {
+          if (error.status === 404) {
+            throw this.createError(`Layer not found with ID: ${id}`, 'NOT_FOUND_ERROR', error);
+          }
+          throw this.createError('Server error fetching layer', 'SERVER_ERROR', error);
+        })
+      );
+    } catch (error) {
+      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
+    }
   }
 
-  /**
-   * Obtiene los IDs únicos de capas de investigación de los registros de un profesional de salud
-   * @param healthProfessionalId ID del profesional
-   * @returns {Observable<string[]>} Lista de researchLayerId únicos
-   */
   obtenerResearchLayerIdsPorProfesional(healthProfessionalId: number): Observable<string[]> {
+    if (!healthProfessionalId) {
+      return throwError(() => this.createError('Health professional ID is required', 'VALIDATION_ERROR'));
+    }
+
     return this.obtenerRegistrosPorProfesional(healthProfessionalId, 0, 100, 'registerDate', 'DESC').pipe(
       map(response => {
-        const registros: Register[] = response.registers || [];
+        try {
+          const registros: Register[] = response.registers || [];
+          const layerIds = new Set<string>();
 
-        // Extraer todos los researchLayerId únicos desde variablesRegister
-        const layerIds = new Set<string>();
-
-        registros.forEach((reg: Register) => {
-          reg.variablesRegister.forEach((variable: { researchLayerId?: string }) => {
-            if (variable.researchLayerId) {
-              layerIds.add(variable.researchLayerId);
-            }
+          registros.forEach((reg: Register) => {
+            reg.variablesRegister.forEach((variable: { researchLayerId?: string }) => {
+              if (variable.researchLayerId) {
+                layerIds.add(variable.researchLayerId);
+              }
+            });
           });
-        });
 
-        return Array.from(layerIds);
+          return Array.from(layerIds);
+        } catch (error) {
+          throw this.createError('Failed to process research layer IDs', 'PROCESSING_ERROR', error);
+        }
       }),
-      catchError(error => {
-        console.error('❌ Error al obtener capas de investigación del profesional:', error);
-        return throwError(() => new Error('No se pudieron obtener las capas del profesional.'));
-      })
+      catchError(error => throwError(() =>
+        this.createError('Failed to fetch research layers for professional', 'FETCH_ERROR', error)
+      ))
     );
   }
 
+  private handleHttpError(error: HttpErrorResponse, defaultMessage: string): Observable<never> {
+    console.error('HTTP Error:', error);
 
+    if (error.status === 0) {
+      // Network error
+      return throwError(() => this.createError('Network error - please check your connection', 'NETWORK_ERROR', error));
+    }
+
+    if (error.status === 401) {
+      // Unauthorized
+      return throwError(() => this.createError('Session expired - please login again', 'AUTH_ERROR', error, 401));
+    }
+
+    if (error.status === 403) {
+      // Forbidden
+      return throwError(() => this.createError('You do not have permission for this action', 'PERMISSION_ERROR', error, 403));
+    }
+
+    if (error.status === 404) {
+      // Not found
+      return throwError(() => this.createError('Resource not found', 'NOT_FOUND_ERROR', error, 404));
+    }
+
+    if (error.status >= 500) {
+      // Server error
+      return throwError(() => this.createError('Server error - please try again later', 'SERVER_ERROR', error, error.status));
+    }
+
+    // Business logic error from server
+    const serverMessage = error.error?.message || error.message || defaultMessage;
+    return throwError(() => this.createError(serverMessage, 'API_ERROR', error, error.status));
+  }
+
+  private createError(
+    message: string,
+    code: string,
+    originalError?: any,
+    status?: number
+  ): ErrorWithCode {
+    const error = new Error(message) as ErrorWithCode;
+    error.code = code;
+    error.originalError = originalError;
+    error.status = status;
+    return error;
+  }
   //#endregion
+}
+
+interface ErrorWithCode extends Error {
+  code: string;
+  originalError?: any;
+  status?: number;
 }

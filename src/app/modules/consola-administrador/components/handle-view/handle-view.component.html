@@ -90,6 +90,62 @@
                         <span>{{viewedItem.jefeIdentificacion || (viewedItem.layerBoss?.identificationNumber || 'Sin
                             asignar')}}</span>
                     </div>
+                    <div *ngIf="variablesAsociadas.length > 0" class="detail-row">
+                        <div class="variables-section">
+                            <span class="detail-label">Variables Asociadas ({{filteredVariables.length}}):</span>
+
+                            <!-- Barra de búsqueda -->
+                            <div class="search-container">
+                                <input type="text" [(ngModel)]="searchTerm" (input)="filterVariables()"
+                                    placeholder="Buscar variables..." class="search-input">
+                                <i class="fas fa-search search-icon"></i>
+                            </div>
+
+                            <div class="variables-container">
+                                <div *ngFor="let variable of paginatedVariables" class="variable-card">
+                                    <div class="variable-header">
+                                        <span class="variable-name">{{ variable.variableName }}</span>
+                                        <span class="variable-type">{{ variable.type }}</span>
+                                    </div>
+                                    <div *ngIf="variable.description" class="variable-description">
+                                        {{ variable.description }}
+                                    </div>
+                                    <div *ngIf="variable.options && variable.options.length > 0"
+                                        class="variable-options">
+                                        <span class="options-label">Opciones:</span>
+                                        <div class="options-container">
+                                            <span *ngFor="let option of variable.options" class="option-pill">{{ option
+                                                }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Paginación -->
+                            <div class="pagination-container" *ngIf="filteredVariables.length > pageSize">
+                                <button (click)="previousPage()" [disabled]="currentPage === 1"
+                                    class="pagination-button">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+
+                                <span class="page-info">
+                                    Página {{currentPage}} de {{totalPages}}
+                                </span>
+
+                                <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+                                    class="pagination-button">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+
+                                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-select">
+                                    <option value="5">5 por página</option>
+                                    <option value="10">10 por página</option>
+                                    <option value="20">20 por página</option>
+                                    <option value="50">50 por página</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div *ngSwitchCase="'registro'" class="reg-container">

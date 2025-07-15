@@ -482,10 +482,10 @@ export class ConsolaRegistroComponent implements OnInit {
         this.selectedTab = 'consultaDatosDigitador';
         break;
       case 'configuracion':
-        console.log('Navegando a configuración');
+         ('Navegando a configuración');
         break;
       default:
-        console.log(`Destino no reconocido: ${destination}`);
+         (`Destino no reconocido: ${destination}`);
     }
   }
 

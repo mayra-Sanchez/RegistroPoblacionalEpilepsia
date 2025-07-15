@@ -161,12 +161,9 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * @returns Valor guardado o null si no existe
    */
   getSavedValue(variableId: string): any {
-    console.log('Buscando valor para:', variableId, 'InitialData:', this.initialData); // <-- Añade esto
-
     if (this.initialData && this.initialData.length > 0) {
       const initialVar = this.initialData.find((v: any) => v.id === variableId);
       if (initialVar) {
-        console.log('Valor encontrado en initialData:', initialVar.valor); // <-- Añade esto
         return initialVar.valor;
       }
     }
@@ -177,7 +174,6 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
         const parsedData = JSON.parse(savedData);
         const savedVar = parsedData.find((v: any) => v.id === variableId);
         if (savedVar) {
-          console.log('Valor encontrado en localStorage:', savedVar.valor); // <-- Añade esto
           return savedVar.valor;
         }
       } catch (e) {
@@ -185,8 +181,7 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       }
     }
 
-    console.log('No se encontró valor para:', variableId); // <-- Añade esto
-    return null;
+    
   }
 
   /**
@@ -267,7 +262,6 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
    * Aplica los filtros de búsqueda y tipo a las variables
    */
   applyFilters(): void {
-    console.log('Aplicando filtros. Término:', this.searchTerm, 'Tipo:', this.activeTypeFilter);
     let filtered = this.variablesClinicas.controls as FormGroup[];
 
     // Filtra por término de búsqueda

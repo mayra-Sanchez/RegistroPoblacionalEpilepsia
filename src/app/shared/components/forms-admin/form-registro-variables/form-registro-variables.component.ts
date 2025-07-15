@@ -30,11 +30,14 @@ export class FormRegistroVariablesComponent implements OnInit {
    * Evento emitido cuando se crea una nueva variable
    */
   @Output() variableCreada = new EventEmitter<void>();
+  @Output() cancelar = new EventEmitter<void>();
 
   /**
    * Formulario reactivo para el registro de variables
    */
   form: FormGroup;
+
+  mostrarCamposFaltantes: boolean = false;
 
   /**
    * Listado de capas de investigación disponibles
@@ -44,7 +47,14 @@ export class FormRegistroVariablesComponent implements OnInit {
   /**
    * Tipos de variables disponibles
    */
-  tipos = ['Entero', 'Real', 'Cadena', 'Fecha', 'Lógico'];
+  tipos = [
+    { valor: 'Entero', descripcion: 'Ej: 1, 2, 3' },
+    { valor: 'Real', descripcion: 'Ej: 1.5, 2.75, 3.14' },
+    { valor: 'Cadena', descripcion: 'Ej: texto como "Juan", "Azul"' },
+    { valor: 'Fecha', descripcion: 'Ej: 2023-04-01' },
+    { valor: 'Lógico', descripcion: 'Ej: Verdadero o Falso' }
+  ];
+
 
   /**
    * Constructor del componente
@@ -61,6 +71,7 @@ export class FormRegistroVariablesComponent implements OnInit {
       type: ['', Validators.required],
       researchLayerId: ['', Validators.required],
       hasOptions: [false],
+      selectionType: ['unica'],
       options: this.fb.array([])
     });
   }
@@ -109,8 +120,10 @@ export class FormRegistroVariablesComponent implements OnInit {
   onHasOptionsChange() {
     if (!this.form.value.hasOptions) {
       this.options.clear();
+      this.form.get('selectionType')?.setValue('unica');
     }
   }
+
 
   /**
    * Crea una nueva variable
@@ -118,24 +131,38 @@ export class FormRegistroVariablesComponent implements OnInit {
    */
   crearVariable() {
     if (this.form.invalid) {
+      const errores = this.getErroresFormulario();
+      const mensaje = errores.length > 0
+        ? `<ul style="text-align: left;">${errores.map(e => `<li>• ${e}</li>`).join('')}</ul>`
+        : 'Complete todos los campos correctamente.';
+
       Swal.fire({
-        title: 'Formulario inválido',
-        text: 'Complete todos los campos correctamente.',
+        title: 'Formulario incompleto',
+        html: `
+        <p>Faltan los siguientes campos por completar:</p>
+        ${mensaje}
+      `,
         icon: 'warning',
-        confirmButtonText: 'Aceptar'
+        confirmButtonText: 'Aceptar',
+        customClass: {
+          popup: 'swal2-border'
+        }
       });
       return;
     }
-  
+
+
     const formValue = this.form.value;
     const variableData = {
       variableName: formValue.variableName,
       description: formValue.description,
       type: formValue.type,
       researchLayerId: formValue.researchLayerId,
-      options: formValue.hasOptions ? this.options.value : []
+      options: formValue.hasOptions ? this.options.value : [],
+      selectionType: formValue.hasOptions ? formValue.selectionType : null
     };
-  
+
+
     if (formValue.hasOptions && variableData.options.length === 0) {
       Swal.fire({
         title: 'Error',
@@ -145,7 +172,7 @@ export class FormRegistroVariablesComponent implements OnInit {
       });
       return;
     }
-  
+
     Swal.fire({
       title: '¿Confirmar registro?',
       text: '¿Estás seguro de registrar esta variable?',
@@ -191,15 +218,43 @@ export class FormRegistroVariablesComponent implements OnInit {
     });
   }
 
+  onCancel() {
+    Swal.fire({
+      title: '¿Cancelar registro?',
+      text: '¿Estás seguro de que deseas cancelar el registro?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'Continuar editando'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.cancelar.emit();
+      }
+    });
+  }
+
   /**
    * Muestra mensaje de error
    * @param error Error recibido
    */
-  private mostrarError(error: any) {
+  private mostrarError(error: any): void {
     console.error('Error al crear la variable:', error);
+
+    let mensaje = 'Hubo un problema inesperado al registrar la variable.';
+
+    if (error?.error?.message) {
+      mensaje = error.error.message;
+    } else if (error?.error?.errors && Array.isArray(error.error.errors)) {
+      mensaje = error.error.errors
+        .map((e: any) => e.msg || e.message || 'Error desconocido')
+        .join('\n');
+    } else if (error?.message) {
+      mensaje = error.message;
+    }
+
     Swal.fire({
-      title: 'Error',
-      text: 'Hubo un problema al registrar la variable.',
+      title: 'Error al registrar',
+      text: mensaje,
       icon: 'error',
       confirmButtonText: 'Aceptar'
     });
@@ -222,4 +277,37 @@ export class FormRegistroVariablesComponent implements OnInit {
     const control = this.form.get(campo);
     return control ? control.invalid && control.touched : false;
   }
+
+  getErroresFormulario(): string[] {
+    const errores: string[] = [];
+
+    if (this.form.get('variableName')?.invalid) {
+      errores.push('Nombre');
+    }
+    if (this.form.get('description')?.invalid) {
+      errores.push('Descripción');
+    }
+    if (this.form.get('type')?.invalid) {
+      errores.push('Tipo');
+    }
+    if (this.form.get('researchLayerId')?.invalid) {
+      errores.push('Capa');
+    }
+    if (this.form.value.hasOptions && this.options.length === 0) {
+      errores.push('Opciones');
+    }
+
+    return errores;
+  }
+
+
+  getErroresTooltip(): string | null {
+    if (!this.form.invalid) return null;
+
+    const errores = this.getErroresFormulario();
+    return errores.length
+      ? 'Faltan: ' + errores.join(', ')
+      : 'Formulario incompleto';
+  }
+
 }

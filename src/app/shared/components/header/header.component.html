@@ -23,18 +23,24 @@
 
     <!-- Si el usuario está autenticado, mostrar el usuario y ajustes -->
     <div class="user-info" *ngIf="isLoggedIn">
-      <i [class]="userIcon"></i>
-      <button class="username-button">{{ username }}</button>
+      <button class="username-button" (click)="openEditUserModal()" title="Editar perfil">
+        <i class="fa fa-user-edit"></i> {{ fullName }}
+      </button>
+
 
       <button class="settings-button" (click)="toggleSettingsMenu()">
         <i class="fa fa-cog"></i>
       </button>
 
       <div class="menu-dropdown" *ngIf="isSettingsMenuVisible">
-        <button (click)="openEditUserModal()">Editar perfil</button>
-        <button (click)="openModal('manual')">Manual</button>
-        <button (click)="logout()">Cerrar sesión</button>
+        <button (click)="openModal('manual')">
+          <i class="fa fa-book"></i> Manual
+        </button>
+        <button (click)="logout()">
+          <i class="fa fa-sign-out-alt"></i> Cerrar sesión
+        </button>
       </div>
+
     </div>
   </div>
 </div>

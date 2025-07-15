@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { AuthService } from 'src/app/services/auth.service';
+import { Observable } from 'rxjs';
 
 /**
  * Interfaz para el tipo Registro que representa un item en el historial de actividad
@@ -116,6 +117,15 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * Nombre de usuario del administrador actual
    */
   username: string = '';
+
+  /**
+   * Datos para filtrado
+   */
+  estadoSeleccionado: string = '';
+  usuariosDataOriginal: any[] = [];
+  capaSeleccionada: string = '';
+  variablesDataOriginal: any[] = [];
+
 
   /* -------------------- Estados de UI -------------------- */
 
@@ -230,24 +240,16 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * Configuración de columnas para tabla de usuarios
    */
   usuariosColumns = [
-    { field: 'nombre', header: 'Nombre' },
-    { field: 'apellido', header: 'Apellido' },
-    { field: 'email', header: 'Correo Electrónico' },
-    { field: 'usuario', header: 'Usuario' },
-    {
-      field: 'capa',
-      header: 'Capa de Investigación',
-      formatter: (value: string, row: any) => this.getCapaNombreById(row.capaRawValue)
-    },
-    {
-      field: 'rolDisplay',
-      header: 'Rol'
-    },
+    { field: 'nombre', header: 'NOMBRE' },
+    { field: 'apellido', header: 'APELLIDO' },
+    { field: 'email', header: 'CORREO ELECTRÓNICO' },
+    { field: 'usuario', header: 'USUARIO' },
+    { field: 'capa', header: 'CAPA DE INVESTIGACIÓN' },
+    { field: 'rolDisplay', header: 'ROL' },
     {
       field: 'enabled',
-      header: 'Estado',
-      formatter: (value: boolean) => value ? 'Habilitado' : 'Deshabilitado',
-      type: 'boolean'
+      header: 'ESTADO',
+      formatter: (value: boolean) => value ? 'ACTIVO' : 'INACTIVO'
     }
   ];
 
@@ -317,6 +319,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.cargarUltimosRegistros();
     this.username = this.authService.getUsername();
     this.loadVariablesData();
+    this.obtenerUsuarios();
 
     this.consolaService.getDataUpdatedListener().pipe(
       takeUntil(this.destroy$)
@@ -378,6 +381,29 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
+  obtenerUsuarios() {
+    this.consolaService.getAllUsuarios().subscribe({
+      next: (usuarios) => {
+        this.usuariosDataOriginal = usuarios;
+        this.usuariosData = [...usuarios];
+        console.log('[Usuarios] Usuarios cargados:', usuarios);
+      },
+      error: (err) => {
+        console.error('Error al obtener usuarios', err);
+      }
+    });
+  }
+
+  filtrarUsuariosPorEstado() {
+    if (!this.estadoSeleccionado) {
+      this.usuariosData = [...this.usuariosDataOriginal];
+      return;
+    }
+
+    const esActivo = this.estadoSeleccionado === 'activo';
+    this.usuariosData = this.usuariosDataOriginal.filter(user => user.enabled === esActivo);
+  }
+
   /**
    * Carga los datos de capas desde el servicio
    */
@@ -413,12 +439,19 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    */
   loadVariablesData(): void {
     this.isLoading = true;
+
     this.consolaService.getAllVariables().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
-        this.variablesData = data.map(variable => ({
-          ...variable,
-          capaNombre: this.getCapaNombreByIdVariables(variable.researchLayerId)
-        }));
+        const variables = data.map(variable => {
+          return {
+            ...variable,
+            capaNombre: this.getCapaNombreByIdVariables(variable.researchLayerId)
+          };
+        });
+
+        this.variablesData = variables;
+        this.variablesDataOriginal = [...variables]; // 👈 Copia para filtros
+
         this.updateDashboard();
         this.cdr.detectChanges();
       },
@@ -431,6 +464,17 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
+  filtrarVariablesPorCapa() {
+    if (!this.capaSeleccionada) {
+      this.variablesData = [...this.variablesDataOriginal];
+    } else {
+      this.variablesData = this.variablesDataOriginal.filter(
+        variable => variable.researchLayerId === this.capaSeleccionada
+      );
+    }
+  }
+
+
   /**
    * Carga los datos de usuarios desde el servicio
    */
@@ -438,7 +482,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.consolaService.getAllUsuarios().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
-        this.usuariosData = data.map(user => {
+        const usuariosProcesados = data.map(user => {
           const attrs = user.attributes || {};
           const capaValue = attrs.researchLayerId?.[0];
           const roles = attrs.role || [];
@@ -458,9 +502,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             rol: mainRole,
             rolDisplay: this.transformarString(mainRole),
             passwordActual: user.password,
-            enabled: this.transformarString(user.enabled)
+            enabled: user.enabled,
+            estado: this.transformarString(user.enabled)
           };
         });
+
+        this.usuariosData = usuariosProcesados;
+        this.usuariosDataOriginal = [...usuariosProcesados]; // 👈 ¡Esto es clave!
         this.updateDashboard();
         this.cdr.detectChanges();
       },
@@ -874,7 +922,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   toggleUserStatus(user: any): void {
     const userId = user.id;
     const isEnabled = user.enabled;
-    const action = isEnabled ? 'deshabilitar' : 'habilitar';
+    const action = isEnabled ? 'Deshabilitado' : 'Habilitado';
 
     Swal.fire({
       title: `¿Estás seguro de ${action} este usuario?`,
@@ -895,11 +943,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           next: () => {
             Swal.fire(
               '¡Éxito!',
-              `El usuario ha sido ${action}do correctamente.`,
+              `El usuario ha sido ${action} correctamente.`,
               'success'
             );
             user.enabled = !isEnabled;
-            this.loadUsuariosData();
+            this.usuariosData = [...this.usuariosData];
           },
           error: (error) => {
             console.error(`Error al ${action} usuario:`, error);
@@ -1065,15 +1113,27 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   }
 
   /* -------------------- Métodos de eliminación -------------------- */
+  obtenerTipoElemento(): string {
+    switch (this.selectedTab) {
+      case 'gestionUsuarios': return 'usuario';
+      case 'gestionVariables': return 'variable';
+      case 'gestionCapas': return 'capa de investigación';
+      default: return 'elemento';
+    }
+  }
 
-  /**
-   * Maneja la eliminación de un elemento
-   * @param row Fila a eliminar
-   */
-  handleDelete(row: any): void {
+  obtenerNombreElemento(row: any): string {
+    return row.username || row.variableName || row.nombreCapa || 'sin nombre';
+  }
+
+  mostrarSwalConfirmacion(row: any, advertenciaHtml: string, onConfirm: () => void): void {
     Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta acción no se puede deshacer',
+      title: `¿Eliminar ${this.obtenerTipoElemento()}?`,
+      html: `
+      <p>¿Deseas eliminar <strong>${this.obtenerNombreElemento(row)}</strong>?</p>
+      ${advertenciaHtml}
+      <p class="text-danger">Esta acción no se puede deshacer.</p>
+    `,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -1082,35 +1142,145 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        const id = String(row.id);
-        let eliminarObservable;
-
-        switch (this.selectedTab) {
-          case 'gestionUsuarios':
-            eliminarObservable = this.consolaService.eliminarUsuario(id);
-            break;
-          case 'gestionVariables':
-            eliminarObservable = this.consolaService.eliminarVariable(id);
-            break;
-          case 'gestionCapas':
-            eliminarObservable = this.consolaService.eliminarCapa(id);
-            break;
-          default:
-            console.error('Pestaña desconocida');
-            return;
-        }
-        eliminarObservable.subscribe({
-          next: () => {
-            Swal.fire('¡Eliminado!', 'El elemento ha sido eliminado con éxito.', 'success');
-          },
-          error: (error) => {
-            console.error('Error al eliminar:', error);
-            Swal.fire('Error', 'Hubo un problema al eliminar el elemento.', 'error');
-          }
-        });
+        onConfirm();
       }
     });
   }
+
+
+  /**
+   * Maneja la eliminación de un elemento
+   * @param row Fila a eliminar
+   */
+  handleDelete(row: any): void {
+    const id = String(row.id);
+    let eliminarObservable: Observable<any>;
+    let titulo = '¿Eliminar elemento?';
+    const nombre = row.nombre || row.nombreCapa || row.variableName || 'este elemento';
+    const advertencias: string[] = [];
+
+    const ejecutarEliminacion = () => {
+      Swal.fire({
+        title: titulo,
+        html: `
+        <p>¿Confirma que desea eliminar <strong>${nombre}</strong>?</p>
+        ${advertencias.length > 0 ? `
+          <div style="text-align:left; max-height:250px; overflow:auto;">
+            <strong>Advertencias:</strong>
+            <ul>${advertencias.map(a => `<li>⚠️ ${a}</li>`).join('')}</ul>
+          </div>` : ''}
+        <p style="margin-top:10px;">Esta acción no se puede deshacer.</p>
+      `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (result.isConfirmed && eliminarObservable) {
+          eliminarObservable.subscribe({
+            next: () => {
+              Swal.fire('¡Eliminado!', 'El elemento ha sido eliminado con éxito.', 'success');
+            },
+            error: (error) => {
+              console.error('Error al eliminar:', error);
+              Swal.fire('Error', 'Hubo un problema al eliminar el elemento.', 'error');
+            }
+          });
+        }
+      });
+    };
+
+    // Casos por pestaña
+    switch (this.selectedTab) {
+      case 'gestionUsuarios':
+        eliminarObservable = this.consolaService.eliminarUsuario(id);
+        titulo = '¿Eliminar usuario?';
+        break;
+
+      case 'gestionVariables':
+        eliminarObservable = this.consolaService.eliminarVariable(id);
+        titulo = '¿Eliminar variable?';
+
+        this.consolaService.getVariableById(id).subscribe({
+          next: (variable) => {
+            const capa = variable?.researchLayer?.layerName || 'una capa';
+            advertencias.push(`Está asociada a la capa "${capa}".`);
+            ejecutarEliminacion();
+          },
+          error: () => {
+            advertencias.push('No se pudo verificar la capa asociada.');
+            ejecutarEliminacion();
+          }
+        });
+        return;
+
+      case 'gestionCapas':
+        eliminarObservable = this.consolaService.eliminarCapa(id);
+        titulo = '¿Eliminar capa?';
+
+        // Buscar variables asociadas
+        this.consolaService.getAllVariables().subscribe({
+          next: (vars) => {
+            const asociadas = vars.filter(v => v.researchLayerId === id);
+            if (asociadas.length > 0) {
+              const nombresVars = asociadas.map(v => v.variableName).join(', ');
+              advertencias.push(`Variables asociadas: ${nombresVars}`);
+            }
+
+            // Buscar usuarios asignados
+            this.consolaService.getAllUsuarios().subscribe({
+              next: (users) => {
+                const usuariosConCapa = users.filter(u => u.researchLayer === id);
+                if (usuariosConCapa.length > 0) {
+                  const nombresUsuarios = usuariosConCapa.map(u => u.email || u.username).join(', ');
+                  advertencias.push(`Usuarios asignados: ${nombresUsuarios}`);
+                }
+
+                ejecutarEliminacion();
+              },
+              error: () => {
+                advertencias.push('No se pudo verificar los usuarios asignados.');
+                ejecutarEliminacion();
+              }
+            });
+          },
+          error: () => {
+            advertencias.push('No se pudo verificar las variables asociadas.');
+            ejecutarEliminacion();
+          }
+        });
+        return;
+
+      default:
+        console.error('Pestaña desconocida');
+        return;
+    }
+
+    // Ejecutar si no hay llamadas asíncronas
+    ejecutarEliminacion();
+  }
+
+
+  mostrarExito(): void {
+    Swal.fire('¡Eliminado!', 'El elemento ha sido eliminado con éxito.', 'success');
+  }
+
+  mostrarError(error: any): void {
+    console.error('Error al eliminar:', error);
+    let mensaje = 'Hubo un error inesperado.';
+
+    if (error?.error?.message) {
+      mensaje = error.error.message;
+    } else if (typeof error?.error === 'string') {
+      mensaje = error.error;
+    }
+
+    Swal.fire('Error', mensaje, 'error');
+  }
+
+
 
   /* -------------------- Métodos de creación -------------------- */
 
@@ -1137,4 +1307,75 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.selectedTab = 'gestionCapas';
     this.isCreatingCapa = true;
   }
+
+  // Método para manejar cuando se crea un usuario exitosamente
+  onUsuarioCreado() {
+    this.volverAGestionUsuarios();
+    this.loadUsuariosData(); // Recargar la lista de usuarios
+    this.updateDashboard(); // Actualizar métricas
+  }
+
+  // Método para volver a la vista principal
+  volverAGestionUsuarios() {
+    this.isCreatingUser = false;
+    this.isEditingUser = false;
+    this.isEditingUserModal = false;
+  }
+
+  onVariableCreado() {
+    this.volverAGestionVariables();
+    this.loadVariablesData(); // Recargar la lista de usuarios
+    this.updateDashboard(); // Actualizar métricas
+  }
+
+  // Método para volver a la vista principal
+  volverAGestionVariables() {
+    this.isCreatingVar = false;
+    this.isEditingCapa = false;
+  }
+
+  onCapaCreado() {
+    this.volverAGestionCapa();
+    this.loadCapasData(); // Recargar la lista de usuarios
+    this.updateDashboard(); // Actualizar métricas
+  }
+
+  // Método para volver a la vista principal
+  volverAGestionCapa() {
+    this.isCreatingCapa = false;
+    this.isEditingCapa = false;
+  }
+
+  exportarUsuarios() {
+    // Lógica de exportación de usuarios
+    const csv = this.convertToCSV(this.usuariosData);
+    this.downloadCSV(csv, 'usuarios.csv');
+  }
+
+  exportarVariables() {
+    const csv = this.convertToCSV(this.variablesData);
+    this.downloadCSV(csv, 'variables.csv');
+  }
+
+  exportarCapas() {
+    const csv = this.convertToCSV(this.capasData);
+    this.downloadCSV(csv, 'capas.csv');
+  }
+
+  // Utilidades
+  private convertToCSV(data: any[]): string {
+    if (!data || data.length === 0) return '';
+    const headers = Object.keys(data[0]);
+    const csvRows = data.map(row => headers.map(field => `"${row[field] ?? ''}"`).join(','));
+    return [headers.join(','), ...csvRows].join('\r\n');
+  }
+
+  private downloadCSV(csv: string, filename: string): void {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', filename);
+    link.click();
+  }
+
 }

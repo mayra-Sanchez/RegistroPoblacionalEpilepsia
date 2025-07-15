@@ -10,143 +10,152 @@
             <div class="modal-body">
                 <ng-container [ngSwitch]="editType">
                     <!-- Edición para Usuarios -->
-                    <form *ngSwitchCase="'usuario'" (ngSubmit)="guardarCambios()">
+                    <form *ngSwitchCase="'usuario'" [formGroup]="editForm" (ngSubmit)="guardarCambios()">
                         <div class="form-group">
                             <label>Nombre</label>
-                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.nombre" name="nombre"
-                                required>
+                            <input type="text" class="form-control" formControlName="nombre" readonly>
                         </div>
+
                         <div class="form-group">
                             <label>Apellido</label>
-                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.apellido" name="apellido"
-                                required>
+                            <input type="text" class="form-control" formControlName="apellido" readonly>
                         </div>
+
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" class="form-control" [(ngModel)]="itemToEdit.email" name="email"
-                                required>
+                            <input type="email" class="form-control" formControlName="email" required>
                         </div>
+
                         <div class="form-group">
                             <label>Usuario</label>
-                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.usuario" name="usuario"
-                                required>
+                            <input type="text" class="form-control" formControlName="usuario" readonly>
                         </div>
+
                         <div class="form-group">
                             <label>Tipo de Documento</label>
-                            <select class="form-control" [(ngModel)]="itemToEdit.tipoDocumento" name="tipoDocumento"
-                                required>
+                            <select class="form-control" formControlName="tipoDocumento">
                                 <option value="CC">Cédula de Ciudadanía</option>
                                 <option value="TI">Tarjeta de Identidad</option>
                                 <option value="CE">Cédula de Extranjería</option>
                                 <option value="PA">Pasaporte</option>
                             </select>
                         </div>
+
                         <div class="form-group">
                             <label>Documento</label>
-                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.documento" name="documento"
-                                required>
+                            <input type="text" class="form-control" formControlName="documento" readonly>
                         </div>
+
                         <div class="form-group">
                             <label>Fecha de Nacimiento</label>
-                            <input type="date" class="form-control" [(ngModel)]="itemToEdit.fechaNacimiento"
-                                name="fechaNacimiento">
+                            <input type="date" class="form-control" formControlName="fechaNacimiento" readonly>
                         </div>
+
                         <div class="form-group">
                             <label>Capa de Investigación</label>
-                            <select class="form-control" [(ngModel)]="itemToEdit.capaRawValue" name="capa" required>
-                                <option *ngFor="let capa of capas" [ngValue]="capa.id">{{capa.nombreCapa}}</option>
+                            <select class="form-control" formControlName="capaRawValue" required>
+                                <option *ngFor="let capa of capas" [value]="capa.id">{{ capa.nombreCapa }}</option>
                             </select>
                         </div>
 
-                        <!-- Select de Rol -->
                         <div class="form-group">
                             <label>Rol</label>
-                            <select class="form-control" [(ngModel)]="itemToEdit.role" name="role" required>
+                            <select class="form-control" formControlName="role" required
+                                (change)="confirmarCambioRol()">
                                 <option value="Admin">Administrador</option>
                                 <option value="Doctor">Doctor</option>
                                 <option value="Researcher">Investigador</option>
                                 <option value="SuperAdmin">Super administrador</option>
                             </select>
                         </div>
+
                         <div class="form-group">
                             <label>Contraseña</label>
                             <div class="input-group">
                                 <input [type]="showPassword ? 'text' : 'password'" class="form-control"
-                                    [(ngModel)]="itemToEdit.password" name="password">
+                                    formControlName="password">
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button"
                                         (click)="showPassword = !showPassword">
                                         <i class="fa"
-                                            [ngClass]="{'fa-eye': !showPassword, 'fa-eye-slash': showPassword}"></i>
+                                            [ngClass]="{ 'fa-eye': !showPassword, 'fa-eye-slash': showPassword }"></i>
                                     </button>
                                 </div>
                             </div>
-                            <small class="form-text text-muted">Dejar en blanco para mantener la contraseña
-                                actual</small>
+                            <small class="form-text text-muted">
+                                Dejar en blanco para mantener la contraseña actual
+                            </small>
                         </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                         </div>
                     </form>
 
+
                     <!-- Edición para Variables -->
-                    <form *ngSwitchCase="'variable'" (ngSubmit)="guardarCambios()">
+                    <form *ngSwitchCase="'variable'" [formGroup]="editForm" (ngSubmit)="guardarCambios()">
                         <div class="form-group">
                             <label>Nombre de la Variable</label>
-                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.variableName"
-                                name="variableName" required>
+                            <input type="text" class="form-control" formControlName="variableName" required>
                         </div>
+
                         <div class="form-group">
                             <label>Descripción</label>
-                            <textarea class="form-control" [(ngModel)]="itemToEdit.description"
-                                name="description"></textarea>
+                            <textarea class="form-control" formControlName="description"></textarea>
                         </div>
+
                         <div class="form-group">
                             <label>Tipo de Variable</label>
-                            <select class="form-control" [(ngModel)]="itemToEdit.type" name="type" required>
-                                <option value="Entero">Entero</option>
-                                <option value="Real">Real</option>
-                                <option value="Cadena">Cadena</option>
-                                <option value="Fecha">Fecha</option>
-                                <option value="Lógico">Lógico</option>
+                            <select class="form-control" formControlName="type" required>
+                                <option value="Entero" title="Ej: 1, 2, 3">Entero</option>
+                                <option value="Real" title="Ej: 1.5, 2.75, 3.14">Real</option>
+                                <option value="Cadena" title="Ej: texto como 'Juan', 'Azul'">Cadena</option>
+                                <option value="Fecha" title="Ej: 2023-04-01">Fecha</option>
+                                <option value="Lógico" title="Ej: Verdadero o Falso">Lógico</option>
                             </select>
                         </div>
+
+
                         <div class="form-group">
                             <label>Capa de Investigación</label>
-                            <select class="form-control" [(ngModel)]="itemToEdit.researchLayerId" name="researchLayerId"
-                                required>
-                                <option *ngFor="let capa of capas" [value]="capa.id">{{capa.nombreCapa}}</option>
+                            <select class="form-control" formControlName="researchLayerId" required>
+                                <option *ngFor="let capa of capas" [value]="capa.id">{{ capa.nombreCapa }}</option>
                             </select>
                         </div>
+
                         <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="tieneOpciones"
-                                [(ngModel)]="tieneOpciones" name="tieneOpciones" (change)="onTieneOpcionesChange()">
-                            <label class="form-check-label" for="tieneOpciones">Esta variable tiene opciones
-                                predefinidas</label>
+                            <input type="checkbox" class="form-check-input" id="tieneOpciones" [checked]="tieneOpciones"
+                                (change)="onTieneOpcionesChange($event)">
+                            <label class="form-check-label" for="tieneOpciones">
+                                Esta variable tiene opciones predefinidas
+                            </label>
                         </div>
-                        <div *ngIf="tieneOpciones" class="form-group">
+
+                        <div *ngIf="tieneOpciones" class="form-group" formArrayName="options">
                             <label>Opciones</label>
-                            <div *ngFor="let option of itemToEdit.options; let i = index" class="input-group mb-2">
-                                <input type="text" class="form-control" [(ngModel)]="itemToEdit.options[i]"
-                                    [name]="'option-' + i">
+                            <div *ngFor="let control of opcionesArray.controls; let i = index; trackBy: trackByIndex"
+                                class="input-group mb-2">
+                                <input class="form-control" [formControlName]="i" />
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-danger" type="button" (click)="eliminarOpcion(i)">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </div>
                             </div>
+
                             <button type="button" class="btn btn-sm btn-outline-primary" (click)="agregarOpcion()">
                                 <i class="fa fa-plus"></i> Agregar Opción
                             </button>
                         </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                         </div>
                     </form>
 
-                    <!-- Edición para Capas -->
                     <!-- Edición para Capas -->
                     <form *ngSwitchCase="'capa'" (ngSubmit)="guardarCambios()">
                         <div class="form-group">

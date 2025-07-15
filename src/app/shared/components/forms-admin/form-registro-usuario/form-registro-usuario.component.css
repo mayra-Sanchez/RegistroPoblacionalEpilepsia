@@ -149,9 +149,11 @@
 /* ========== FORM FOOTER ========== */
 .form-footer {
   margin-top: 1.5rem;
-  text-align: center;
   padding-top: 1rem;
   border-top: 1px solid #e0e6ed;
+  display: flex;
+  justify-content: space-between; /* Separa los botones a los extremos */
+  align-items: center; /* Centra verticalmente */
 }
 
 /* ========== SUBMIT BUTTON ========== */

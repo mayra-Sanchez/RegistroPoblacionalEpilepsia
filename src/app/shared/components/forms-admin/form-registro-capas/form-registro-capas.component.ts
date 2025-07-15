@@ -1,57 +1,44 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+/**
+ * Componente para el registro de nuevas capas en la aplicación.
+ * 
+ * Este componente proporciona un formulario reactivo con validaciones para registrar
+ * nuevas capas, incluyendo información del jefe de capa. Maneja el envío de datos,
+ * validaciones, confirmaciones y retroalimentación al usuario.
+ */
+import { Component, OnInit, OnDestroy, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConsolaAdministradorService } from 'src/app/services/consola-administrador.service';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
-/**
- * Componente para el registro de capas de investigación
- * 
- * @remarks
- * Este componente proporciona un formulario completo para registrar nuevas capas de investigación,
- * incluyendo validaciones, confirmación mediante diálogos y manejo de errores. Implementa:
- * - Formularios reactivos con validación en tiempo real
- * - Confirmación de acciones con SweetAlert2
- * - Manejo adecuado de suscripciones para prevenir memory leaks
- * - Retroalimentación visual para el usuario
- * 
- * @example
- * ```html
- * <!-- Uso básico del componente -->
- * <app-form-registro-capas></app-form-registro-capas>
- * ```
- */
 @Component({
   selector: 'app-form-registro-capas',
   templateUrl: './form-registro-capas.component.html',
   styleUrls: ['./form-registro-capas.component.css']
 })
 export class FormRegistroCapasComponent implements OnInit, OnDestroy {
+
   /**
    * Formulario reactivo para el registro de capas
-   * @type {FormGroup}
-   * @property {FormControl} layerName - Nombre de la capa (requerido, mínimo 3 caracteres)
-   * @property {FormControl} description - Descripción de la capa (requerido, mínimo 5 caracteres)
-   * @property {FormGroup} layerBoss - Grupo de controles para el jefe de capa
-   * @property {FormControl} layerBoss.id - ID del jefe (valor por defecto: 1)
-   * @property {FormControl} layerBoss.name - Nombre del jefe (requerido, mínimo 3 caracteres)
-   * @property {FormControl} layerBoss.identificationNumber - Número de identificación (requerido, mínimo 5 caracteres)
    */
   form!: FormGroup;
 
   /**
-   * Suscripción al servicio de registro de capas
-   * @private
-   * @type {Subscription}
+   * EventEmitter para notificar cuando se cancela el registro
+   */
+  @Output() cancelar = new EventEmitter<void>();
+
+  /**
+   * Suscripción para manejar la llamada al servicio de registro
    */
   private capasSubscription: Subscription = Subscription.EMPTY;
 
   /**
    * Constructor del componente
-   * @param {FormBuilder} fb - Servicio para construir formularios reactivos
-   * @param {ConsolaAdministradorService} consolaAdministradorService - Servicio para operaciones administrativas
-   * @param {MatDialog} dialog - Servicio para manejar diálogos modales
+   * @param fb Servicio FormBuilder para crear formularios reactivos
+   * @param consolaAdministradorService Servicio para interactuar con la API de administración
+   * @param dialog Servicio para manejar diálogos modales (aunque no se usa directamente en este componente)
    */
   constructor(
     private fb: FormBuilder,
@@ -60,26 +47,32 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   ) { }
 
   /**
-   * Inicialización del componente
-   * @remarks
-   * Configura el formulario con sus controles y validaciones correspondientes
+   * Inicializa el componente creando el formulario con sus controles y validaciones
    */
   ngOnInit(): void {
     this.form = this.fb.group({
+      // Nombre de la capa con validación de requerido y mínimo 3 caracteres
       layerName: ['', [Validators.required, Validators.minLength(3)]],
+
+      // Descripción de la capa con validación de requerido y mínimo 5 caracteres
       description: ['', [Validators.required, Validators.minLength(5)]],
+
+      // Grupo anidado para la información del jefe de capa
       layerBoss: this.fb.group({
+        // ID con valor por defecto 1
         id: [1],
+
+        // Nombre del jefe con validación de requerido y mínimo 3 caracteres
         name: ['', [Validators.required, Validators.minLength(3)]],
+
+        // Número de identificación con validación de requerido y mínimo 5 caracteres
         identificationNumber: ['', [Validators.required, Validators.minLength(5)]],
       }),
     });
   }
 
   /**
-   * Limpieza del componente
-   * @remarks
-   * Cancela la suscripción activa para prevenir memory leaks
+   * Limpia las suscripciones al destruir el componente para evitar memory leaks
    */
   ngOnDestroy(): void {
     if (this.capasSubscription) {
@@ -88,16 +81,13 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja el registro de una nueva capa de investigación
-   * @remarks
-   * Realiza las siguientes acciones:
-   * 1. Valida el formulario
-   * 2. Muestra diálogo de confirmación
-   * 3. Envía los datos al servidor
-   * 4. Maneja la respuesta/errores
-   * 5. Proporciona retroalimentación al usuario
+   * Método para registrar una nueva capa
+   * 
+   * Valida el formulario y, si es válido, muestra confirmación antes de proceder con el registro.
+   * Si el formulario es inválido, marca todos los controles como touched y muestra alerta.
    */
   registrarCapa(): void {
+    // Validar si el formulario es inválido
     if (this.form.invalid) {
       Swal.fire({
         title: 'Formulario inválido',
@@ -109,6 +99,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Preparar los datos del formulario, recortando espacios en blanco
     const capaData = {
       layerName: this.form.value.layerName?.trim(),
       description: this.form.value.description?.trim(),
@@ -119,6 +110,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       },
     };
 
+    // Mostrar diálogo de confirmación antes de registrar
     Swal.fire({
       title: '¿Confirmar registro?',
       text: '¿Estás seguro de registrar esta capa?',
@@ -136,9 +128,8 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Procesa el registro de la capa con el servidor
-   * @private
-   * @param {Object} capaData - Datos de la capa a registrar
+   * Procesa el registro de la capa llamando al servicio correspondiente
+   * @param capaData Objeto con los datos de la capa a registrar
    */
   private procesarRegistro(capaData: any): void {
     this.capasSubscription = this.consolaAdministradorService.registrarCapa(capaData).subscribe({
@@ -148,8 +139,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Muestra mensaje de éxito en el registro
-   * @private
+   * Muestra alerta de éxito cuando el registro es exitoso
    */
   private mostrarExito(): void {
     Swal.fire({
@@ -172,29 +162,49 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Muestra mensaje de error personalizado
-   * @private
-   * @param {any} error - Objeto de error recibido del servidor
+   * Maneja la acción de cancelar el registro
+   * Muestra confirmación antes de emitir el evento de cancelación
+   */
+  onCancel() {
+    Swal.fire({
+      title: '¿Cancelar registro?',
+      text: '¿Estás seguro de que deseas cancelar el registro?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'Continuar editando'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.cancelar.emit();
+      }
+    });
+  }
+
+  /**
+   * Muestra alerta de error personalizada según el tipo de error recibido
+   * @param error Objeto de error recibido del servicio
    */
   private mostrarError(error: any): void {
-    let errorMessage = 'Ocurrió un problema al registrar la capa.';
+    console.error('Error al registrar capa:', error);
 
-    if (error.error && typeof error.error === 'string') {
-      if (error.error.includes('ya existe')) {
-        errorMessage = 'El nombre de la capa ya existe. Por favor, elija otro.';
-      } else if (error.error.includes('demasiado largo')) {
-        errorMessage = 'Algunos campos exceden la longitud máxima permitida.';
-      } else if (error.error.includes('inválido')) {
-        errorMessage = 'Datos proporcionados no son válidos.';
-      }
+    let mensaje = 'Hubo un problema inesperado al registrar la capa.';
+
+    if (error?.error?.message) {
+      mensaje = error.error.message;
+    } else if (error?.error?.errors && Array.isArray(error.error.errors)) {
+      mensaje = error.error.errors
+        .map((e: any) => e.msg || e.message || 'Error desconocido')
+        .join('\n');
+    } else if (error?.message) {
+      mensaje = error.message;
     }
 
     Swal.fire({
-      title: 'Error',
-      text: errorMessage,
+      title: 'Error al registrar',
+      text: mensaje,
       icon: 'error',
-      confirmButtonText: 'Aceptar',
-      confirmButtonColor: '#d33'
+      confirmButtonText: 'Aceptar'
     });
   }
+
 }

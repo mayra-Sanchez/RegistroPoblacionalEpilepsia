@@ -14,13 +14,13 @@
             El Registro Poblacional de Epilepsia (RPE) es una herramienta diseñada para recopilar, organizar y analizar
             datos relacionados con pacientes diagnosticados con epilepsia. Su objetivo es facilitar la investigación,
             mejorar el tratamiento y brindar información valiosa para la toma de decisiones en el ámbito de la salud
-            pública
+            pública.
           </p>
         </div>
       </div>
 
       <!-- Card: Instituciones -->
-      <div class="card" (click)="openModal('institucionesModal')">
+      <div class="card" (click)="animateCardClick($event); openModal('institucionesModal')">
         <div class="card-header">
           <i class="fas fa-university icon"></i>
           <h2>Instituciones</h2>
@@ -28,14 +28,16 @@
         <div class="card-body">
           <p>
             Colaboramos con diversas instituciones de salud e investigación para mejorar la calidad de vida de los
-            pacientes con epilepsia
+            pacientes con epilepsia.
           </p>
-          <p class="text-footer">Ver más...</p>
+          <div class="click-hint">
+            <i class="fas fa-hand-pointer"></i> Haz clic para explorar
+          </div>
         </div>
       </div>
 
       <!-- Card: Grupo Humano -->
-      <div class="card" (click)="openModal('grupoHumanoModal')">
+      <div class="card" (click)="animateCardClick($event); openModal('grupoHumanoModal')">
         <div class="card-header">
           <i class="fas fa-users icon"></i>
           <h2>Grupo Humano</h2>
@@ -43,9 +45,11 @@
         <div class="card-body">
           <p>
             Conoce al equipo detrás del RPE. Nuestro grupo humano está comprometido con la excelencia y la innovación en
-            el tratamiento de la epilepsia
+            el tratamiento de la epilepsia.
           </p>
-          <p class="text-footer">Ver más...</p>
+          <div class="click-hint">
+            <i class="fas fa-hand-pointer"></i> Haz clic para conocer al equipo
+          </div>
         </div>
       </div>
     </div>
@@ -59,17 +63,19 @@
           </div>
           <div class="text-right-sistema">
             <h2 class="card-title-sistema">¿Qué es un sistema de información?</h2>
-            <p class="card-description-sistema">Un sistema de información es un conjunto ordenado de personas, procesos
+            <p class="card-description-sistema">Un sistema de información es un conjunto ordenado de personas,
+              procesos
               y herramientas cuyo fin es administrar datos e información, de manera que puedan ser recuperados y
-              procesados fácil y rápidamente</p>
+              procesados fácil y rápidamente.</p>
             <p class="card-description-sistema">Todo sistema de información se compone de una serie de recursos
               interconectados y en interacción, bien organizados y dispuestos del modo más conveniente en relación con
               un propósito informativo determinado, que puede ser recabar información personal, procesar estadísticas,
-              organizar archivos, entre otros</p>
+              organizar archivos, entre otros.</p>
             <p class="card-description-sistema">Los sistemas de información pueden presentar diferencias, pero
-              generalmente recolectan y clasifican datos, que son procesados por personas y/o con recursos informáticos,
+              generalmente recolectan y clasifican datos, que son procesados por personas y/o con recursos
+              informáticos,
               para que sean fáciles de comprender y recuperar. Así, esta información queda almacenada para ser
-              consultada de manera sencilla o para ser divulgada cuando sea necesario</p>
+              consultada de manera sencilla o para ser divulgada cuando sea necesario.</p>
           </div>
         </div>
       </div>
@@ -162,13 +168,13 @@
     <div class="modal-content">
       <span class="close" (click)="closeModal('institucionesModal')">×</span>
       <h2>Instituciones Colaboradoras</h2>
-      <p>Trabajamos en conjunto con las siguientes instituciones y laboratorios:</p>
+      <p class="modal-subtitle">Haz clic en una institución para ver más detalles</p>
 
       <div class="instituciones-container">
-        <div class="institucion" *ngFor="let institucion of instituciones" (click)="openInstitucionModal(institucion)">
+       <div class="institucion" data-cta="Ver detalles" *ngFor="let institucion of instituciones" (click)="openInstitucionModal(institucion)">
           <img [src]="institucion.imagen" [alt]="institucion.nombre" class="institucion-img">
           <h3 class="institucion-nombre">{{institucion.nombre}}</h3>
-          <p class="institucion-descripcion">{{institucion.descripcionCorta}}</p>
+          <p class="institucion-descripcion">{{institucion.tipo}}</p>
         </div>
       </div>
     </div>
@@ -222,37 +228,38 @@
     </div>
   </div>
 
-  <!-- Modal para Grupo Humano -->
+  <!-- Modal Grupo Humano -->
   <div id="grupoHumanoModal" class="modal">
     <div class="modal-content">
       <span class="close" (click)="closeModal('grupoHumanoModal')">×</span>
-      <h2>Grupo Humano</h2>
-      <p>Para conocer más al detalle a las personas del grupo humano, dale clic a su nombre</p>
-      <!-- Contenedor de personas -->
+      <h2>Nuestro Equipo</h2>
+      <p class="modal-subtitle">Conoce a los miembros de nuestro equipo</p>
+
       <div class="personas-container">
-        <!-- Persona 1: Director -->
-        <div class="persona" (click)="openPersonaModal('patricia')">
-          <img src="../../assets/directores_estudiantes/paty.png" alt="Director 1" class="persona-img" />
+        <div class="persona" data-cta="Ver perfil" (click)="openPersonaModal('patricia')">
+          <img src="../../assets/directores_estudiantes/paty.png" alt="Maria Patricia Trujillo Uribe"
+            class="persona-img">
           <h3 class="persona-nombre">Maria Patricia Trujillo Uribe</h3>
           <p class="persona-rol">Directora</p>
+          <span class="persona-cta">Ver perfil</span>
         </div>
 
         <!-- Persona 2: Director -->
-        <div class="persona" (click)="openPersonaModal('deisy')">
+        <div class="persona" data-cta="Ver perfil" (click)="openPersonaModal('deisy')">
           <img src="../../assets/directores_estudiantes/deisy.jpg" alt="Director 2" class="persona-img" />
           <h3 class="persona-nombre">Deisy Chaves Sánchez</h3>
           <p class="persona-rol">Directora</p>
         </div>
 
         <!-- Persona 3: Director -->
-        <div class="persona" (click)="openPersonaModal('jhon')">
+        <div class="persona" data-cta="Ver perfil" (click)="openPersonaModal('jhon')">
           <img src="../../assets/directores_estudiantes/jhonma.jpg" alt="Director 3" class="persona-img" />
           <h3 class="persona-nombre">Jhon Mauro Gómez Benitez</h3>
           <p class="persona-rol">Director</p>
         </div>
 
         <!-- Persona 4: Director -->
-        <div class="persona" (click)="openPersonaModal('alejandro')">
+        <div class="persona" data-cta="Ver perfil" (click)="openPersonaModal('alejandro')">
           <img src="../../assets/directores_estudiantes/Alejandro_Herrera_Trujillo.png" alt="Director 4"
             class="persona-img" />
           <h3 class="persona-nombre">Alejandro Herrera Trujillo</h3>
@@ -261,21 +268,21 @@
       </div>
       <div class="personas-container-centrado">
         <!-- Persona 5: Director -->
-        <div class="persona" (click)="openPersonaModal('juan')">
+        <div class="persona" data-cta="Ver perfil" (click)="openPersonaModal('juan')">
           <img src="../../assets/directores_estudiantes/Rivas.jpg" alt="Director 5" class="persona-img" />
           <h3 class="persona-nombre">Juan Carlos Rivas Nieto</h3>
           <p class="persona-rol">Director</p>
         </div>
 
         <!-- Persona 6: Estudiante -->
-        <div class="persona" (click)="openPersonaModal('mayra')">
+        <div class="persona" data-cta="Ver perfil" (click)="openPersonaModal('mayra')">
           <img src="../../assets/directores_estudiantes/may.jpg" alt="Estudiante 1" class="persona-img" />
           <h3 class="persona-nombre">Mayra Alejandra Sánchez Salinas</h3>
           <p class="persona-rol">Estudiante</p>
         </div>
 
         <!-- Persona 7: Estudiante -->
-        <div class="persona" (click)="openPersonaModal('laura')">
+        <div class="persona" data-cta="Ver perfil" (click)="openPersonaModal('laura')">
           <img src="../../assets/directores_estudiantes/laura.jpg" alt="Estudiante 2" class="persona-img" />
           <h3 class="persona-nombre">Laura Daniela Jaimes Cardenas</h3>
           <p class="persona-rol">Estudiante</p>
@@ -538,7 +545,8 @@
           </div>
           <h2>Solicitud Enviada Exitosamente</h2>
           <p>Hemos recibido tu solicitud de registro correctamente.</p>
-          <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez procesada.
+          <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez
+            procesada.
           </p>
           <button class="close-btn" (click)="closeModal('registrationModal')">Cerrar</button>
         </div>
@@ -623,7 +631,8 @@
           </div>
           <h2>Solicitud Enviada Exitosamente</h2>
           <p>Hemos recibido tu solicitud de registro de capa de investigación correctamente.</p>
-          <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez procesada.
+          <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez
+            procesada.
           </p>
           <button class="close-btn" (click)="closeModal('researchLayerModal')">Cerrar</button>
         </div>
@@ -641,7 +650,7 @@
 
         <form [formGroup]="variableForm" (ngSubmit)="submitVariable()" *ngIf="!isSending; else sendingTemplate">
           <div class="form-group">
-            <label for="researchLayerId">ID de la Capa de Investigación*</label>
+            <label for="researchLayerId">Nombre de la Capa de Investigación*</label>
             <input type="text" id="researchLayerId" formControlName="researchLayerId"
               placeholder="Ingrese el ID de la capa">
             <div *ngIf="variableForm.get('researchLayerId')?.invalid && variableForm.get('researchLayerId')?.touched"
@@ -720,7 +729,8 @@
           </div>
           <h2>Solicitud Enviada Exitosamente</h2>
           <p>Hemos recibido tu solicitud de registro de variable correctamente.</p>
-          <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez procesada.
+          <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez
+            procesada.
           </p>
           <button class="close-btn" (click)="closeModal('variableModal')">Cerrar</button>
         </div>

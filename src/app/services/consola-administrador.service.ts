@@ -1,106 +1,35 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, throwError, Subject } from 'rxjs';
+import { Observable, throwError, Subject, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from 'src/app/services/auth.service';
-import { BehaviorSubject } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 
-/**
- * Servicio para la consola de administración
- * 
- * Este servicio proporciona métodos para interactuar con la API backend para:
- * - Gestión de usuarios (CRUD completo)
- * - Administración de variables de investigación
- * - Control de capas de investigación
- * - Manejo de registros de capas
- * 
- * Además, implementa un sistema de notificación para actualizaciones de datos.
- */
 @Injectable({
   providedIn: 'root'
 })
 export class ConsolaAdministradorService {
 
-  /* -------------------- Configuración de endpoints -------------------- */
-
-  /**
-   * URL base de la API
-   */
   private readonly API_URL = 'http://localhost:8080';
-
-  /**
-   * Endpoint para gestión de capas de investigación
-   */
   private readonly API_LAYERS = `${this.API_URL}/api/v1/ResearchLayer`;
-
-  /**
-   * Endpoint para gestión de usuarios
-   */
   private readonly API_USERS = `${this.API_URL}/api/v1/users`;
-
-  /**
-   * Endpoint para gestión de variables
-   */
   private readonly API_VARIABLES = `${this.API_URL}/api/v1/Variable`;
 
-  /* -------------------- Subjects para notificaciones -------------------- */
-
-  /**
-   * Subject para notificaciones generales de actualización
-   */
   private dataUpdated = new Subject<void>();
-
-  /**
-   * BehaviorSubject para notificaciones específicas de capas
-   */
   private capaUpdated = new BehaviorSubject<void>(undefined);
-
-  /**
-   * BehaviorSubject para notificaciones específicas de variables
-   */
   private varUpdated = new BehaviorSubject<void>(undefined);
-
-  /**
-   * BehaviorSubject para notificaciones específicas de usuarios
-   */
   private userUpdated = new BehaviorSubject<void>(undefined);
 
-  /**
-   * Observable para suscripción a actualizaciones de capas
-   */
   capaUpdated$ = this.capaUpdated.asObservable();
-
-  /**
-   * Observable para suscripción a actualizaciones de variables
-   */
   varUpdated$ = this.varUpdated.asObservable();
-
-  /**
-   * Observable para suscripción a actualizaciones de usuarios
-   */
   userUpdated$ = this.userUpdated.asObservable();
 
-  /**
-   * Constructor del servicio
-   * @param http Cliente HTTP de Angular
-   * @param authService Servicio de autenticación
-   */
   constructor(private http: HttpClient, private authService: AuthService) { }
 
-  /* -------------------- Métodos de notificación -------------------- */
-
-  /**
-   * Obtiene un observable para escuchar actualizaciones de datos
-   * @returns Observable de notificaciones
-   */
   getDataUpdatedListener(): Observable<void> {
     return this.dataUpdated.asObservable();
   }
 
-  /**
-   * Notifica a todos los suscriptores que los datos han sido actualizados
-   */
   public notifyDataUpdated(): void {
     this.dataUpdated.next();
     this.capaUpdated.next();
@@ -108,13 +37,6 @@ export class ConsolaAdministradorService {
     this.userUpdated.next();
   }
 
-  /* -------------------- Métodos de utilidad -------------------- */
-
-  /**
-   * Genera las cabeceras HTTP con el token de autenticación
-   * @returns HttpHeaders configuradas
-   * @throws Error si no hay token disponible
-   */
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     if (!token) {
@@ -122,7 +44,6 @@ export class ConsolaAdministradorService {
       this.authService.logout();
       throw new Error('Sesión expirada');
     }
-
     return new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
@@ -130,38 +51,30 @@ export class ConsolaAdministradorService {
     });
   }
 
-  /**
-   * Maneja una solicitud HTTP genérica con registro y manejo de errores
-   * @param obs Observable de la solicitud
-   * @param successMsg Mensaje a registrar en éxito
-   * @returns Observable de la respuesta
-   */
-  private handleRequest<T>(obs: Observable<T>, successMsg: string): Observable<T> {
-    return obs.pipe(
-      tap(response => console.log(successMsg, response)),
-      catchError(error => {
-        console.error('❌ Error en la petición:', error);
-        return throwError(() => new Error(error.error?.message || 'Ocurrió un error en la solicitud.'));
-      })
-    );
+  private handleHttpError(operation: string = 'Operación'): (error: any) => Observable<never> {
+    return (error: any): Observable<never> => {
+      let errorMsg = `${operation} fallida.`;
+      if (error.error?.message) {
+        errorMsg += ` ${error.error.message}`;
+      } else if (typeof error.error === 'string') {
+        errorMsg += ` ${error.error}`;
+      } else if (error.message) {
+        errorMsg += ` ${error.message}`;
+      } else {
+        errorMsg += ' Error inesperado.';
+      }
+      console.error(`❌ ${operation}:`, error);
+      return throwError(() => new Error(errorMsg));
+    };
   }
 
-  /**
-   * Verifica si el usuario actual tiene rol de administrador
-   * @returns boolean indicando si es admin
-   */
   private isAdmin(): boolean {
     const token = localStorage.getItem('kc_token');
     if (!token) return false;
-
     try {
       const decoded: any = jwtDecode(token);
-      // Roles de cliente específico
       const clientRoles = decoded.resource_access?.['registers-users-api-rest']?.roles || [];
-      // Roles de realm (globales)
       const realmRoles = decoded.realm_access?.roles || [];
-
-      // Verifica ambos tipos de roles
       return clientRoles.includes('Admin_client_role') ||
         clientRoles.includes('SuperAdmin_client_role') ||
         realmRoles.includes('SuperAdmin');
@@ -171,166 +84,83 @@ export class ConsolaAdministradorService {
     }
   }
 
-  /* -------------------- Métodos para Capas de Investigación -------------------- */
-
-  /**
-   * Obtiene todas las capas de investigación
-   * @returns Observable con la lista de capas
-   */
   getAllLayers(): Observable<any[]> {
     if (!this.authService.isLoggedIn()) {
       return throwError(() => new Error('Usuario no autenticado'));
     }
-
-    const headers = this.getAuthHeaders();
-
-    return this.http.get<any[]>(`${this.API_LAYERS}/GetAll`, { headers }).pipe(
-      catchError(error => {
-        if (error.status === 403) {
-          console.error('Acceso denegado - Verifica los roles del usuario');
-          this.authService.logout(); // <-- Siempre llama a logout en error 403
-        }
-        return throwError(() => error);
-      })
-    );
+    return this.http.get<any[]>(`${this.API_LAYERS}/GetAll`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleHttpError('Carga de capas')));
   }
 
-  /**
-   * Obtiene una capa por su ID
-   * @param id ID de la capa
-   * @returns Observable con los datos de la capa
-   */
   getLayerById(id: string): Observable<any> {
-    return this.handleRequest(
-      this.http.get<any>(`${this.API_LAYERS}`, {
-        headers: this.getAuthHeaders(),
-        params: new HttpParams().set('id', id)
-      }),
-      `📌 Capa obtenida (ID: ${id})`
+    return this.http.get<any>(`${this.API_LAYERS}`, {
+      headers: this.getAuthHeaders(),
+      params: new HttpParams().set('id', id)
+    }).pipe(
+      catchError(this.handleHttpError('Consulta de capa por ID'))
     );
   }
 
-  /**
-   * Registra una nueva capa de investigación
-   * @param capaData Datos de la nueva capa
-   * @returns Observable con la respuesta
-   */
+
   registrarCapa(capaData: any): Observable<any> {
-    const headers = this.getAuthHeaders();
-
-    return this.handleRequest(
-      this.http.post<any>(this.API_LAYERS, capaData, { headers }),
-      '✅ Capa registrada'
-    ).pipe(
-      tap(() => this.notifyDataUpdated())
-    );
+    return this.http.post<any>(this.API_LAYERS, capaData, { headers: this.getAuthHeaders() })
+      .pipe(
+        tap(() => this.notifyDataUpdated()),
+        catchError(this.handleHttpError('Registro de capa'))
+      );
   }
 
-  /**
-   * Actualiza una capa existente
-   * @param id ID de la capa a actualizar
-   * @param capaData Nuevos datos de la capa
-   * @returns Observable con la respuesta
-   */
   actualizarCapa(id: string, capaData: any): Observable<any> {
     if (!this.isAdmin()) {
-      console.error('⛔ Acceso denegado: solo administradores pueden actualizar capas');
       return throwError(() => new Error('Acceso denegado'));
     }
-
-    const url = `${this.API_LAYERS}?researchLayerId=${id}`;
-    return this.http.put(url, capaData, { headers: this.getAuthHeaders() }).pipe(
-      tap(() => this.notifyDataUpdated()),
-      catchError(error => {
-        console.error('Error al actualizar capa:', error);
-        return throwError(() => error);
-      })
-    );
+    return this.http.put(`${this.API_LAYERS}?researchLayerId=${id}`, capaData, { headers: this.getAuthHeaders() })
+      .pipe(
+        tap(() => this.notifyDataUpdated()),
+        catchError(this.handleHttpError('Actualización de capa'))
+      );
   }
 
-  /**
-   * Elimina una capa
-   * @param capaId ID de la capa a eliminar
-   * @returns Observable con la respuesta
-   */
   eliminarCapa(capaId: string): Observable<any> {
-    const url = `${this.API_LAYERS}?researchLayerId=${capaId}`;
-    return this.http.delete<any>(url).pipe(
-      tap(() => {
-        console.log(`Capa eliminada (ID: ${capaId})`);
-        this.notifyDataUpdated();
-      }),
-      catchError((error) => {
-        console.error('Error al eliminar la capa:', error);
-        return throwError(() => new Error('No se pudo eliminar la capa.'));
-      })
+    return this.http.delete<any>(`${this.API_LAYERS}?researchLayerId=${capaId}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(() => this.notifyDataUpdated()),
+      catchError(this.handleHttpError('Eliminación de capa'))
     );
   }
 
-  /* -------------------- Métodos para Usuarios -------------------- */
-
-  /**
-   * Obtiene todos los usuarios (solo para administradores)
-   * @returns Observable con la lista de usuarios
-   */
   getAllUsuarios(): Observable<any[]> {
     if (!this.isAdmin()) {
-      console.error('⛔ Acceso denegado: solo los administradores pueden obtener la lista de usuarios.');
-      return throwError(() => new Error('⛔ Acceso denegado.'));
+      return throwError(() => new Error('Acceso denegado'));
     }
-    return this.handleRequest(
-      this.http.get<any[]>(`${this.API_USERS}/GetAll`, { headers: this.getAuthHeaders() }),
-      '👥 Usuarios obtenidos'
-    );
+    return this.http.get<any[]>(`${this.API_USERS}/GetAll`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleHttpError('Carga de usuarios')));
   }
 
-  /**
-   * Crea un nuevo usuario (solo para administradores)
-   * @param usuario Datos del nuevo usuario
-   * @returns Observable con la respuesta
-   */
   crearUsuario(usuario: any): Observable<any> {
     if (!this.isAdmin()) {
-      console.error('⛔ Acceso denegado: solo los administradores pueden crear usuarios.');
-      return throwError(() => new Error('⛔ Acceso denegado.'));
+      return throwError(() => new Error('Acceso denegado'));
     }
-    return this.handleRequest(
-      this.http.post<any>(`${this.API_USERS}/create`, usuario, { headers: this.getAuthHeaders() }),
-      '✅ Usuario creado'
-    ).pipe(
-      tap(() => this.notifyDataUpdated())
-    );
+    return this.http.post<any>(`${this.API_USERS}/create`, usuario, { headers: this.getAuthHeaders() })
+      .pipe(
+        tap(() => this.notifyDataUpdated()),
+        catchError(this.handleHttpError('Creación de usuario'))
+      );
   }
 
-  /**
-   * Actualiza un usuario existente (solo para administradores)
-   * @param userId ID del usuario a actualizar
-   * @param usuario Nuevos datos del usuario
-   * @returns Observable con la respuesta
-   */
   updateUsuario(userId: string, usuario: any): Observable<any> {
     const url = `${this.API_USERS}/update?userId=${userId}`;
-
-    // Función para formatear la fecha
     const formatDate = (dateStr: string): string => {
       if (!dateStr) return '';
-
-      // Si ya está en formato YYYY-MM-DD, retornar directamente
-      if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        return dateStr;
-      }
-
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
       try {
         const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return '';
-
         const year = date.getFullYear();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const day = date.getDate().toString().padStart(2, '0');
-
         return `${year}-${month}-${day}`;
       } catch (error) {
-        console.error('Error formateando fecha:', error);
         return '';
       }
     };
@@ -348,139 +178,74 @@ export class ConsolaAdministradorService {
       role: usuario.role
     };
 
-    console.log('Payload enviado:', payload); // Para debugging
-
     return this.http.put<any>(url, payload, { headers: this.getAuthHeaders() }).pipe(
-      tap(updatedUser => {
-        console.log('Usuario actualizado:', updatedUser);
-        this.notifyDataUpdated();
-      }),
-      catchError(error => {
-        console.error('Error al actualizar usuario:', error);
-        return throwError(() => error);
-      })
+      tap(() => this.notifyDataUpdated()),
+      catchError(this.handleHttpError('Actualización de usuario'))
     );
   }
-  /**
-   * Elimina un usuario (solo para administradores)
-   * @param userId ID del usuario a eliminar
-   * @returns Observable con la respuesta
-   */
+
   eliminarUsuario(userId: string): Observable<any> {
     if (!this.isAdmin()) {
-      console.error('⛔ Acceso denegado: solo los administradores pueden eliminar usuarios.');
-      return throwError(() => new Error('⛔ Acceso denegado.'));
+      return throwError(() => new Error('Acceso denegado'));
     }
-    return this.handleRequest(
-      this.http.delete<any>(`${this.API_USERS}/delete`, {
-        headers: this.getAuthHeaders(),
-        params: new HttpParams().set('userId', userId)
-      }),
-      `🗑️ Usuario eliminado (ID: ${userId})`
-    ).pipe(
-      tap(() => this.notifyDataUpdated())
+    return this.http.delete<any>(`${this.API_USERS}/delete`, {
+      headers: this.getAuthHeaders(),
+      params: new HttpParams().set('userId', userId)
+    }).pipe(
+      tap(() => this.notifyDataUpdated()),
+      catchError(this.handleHttpError('Eliminación de usuario'))
     );
   }
 
-  /**
-   * Habilita un usuario
-   * @param userId ID del usuario a habilitar
-   * @returns Observable con la respuesta
-   */
   enableUser(userId: string): Observable<any> {
     if (!this.isAdmin()) {
-      return throwError(() => new Error('Acceso denegado: solo administradores pueden habilitar usuarios'));
+      return throwError(() => new Error('Acceso denegado'));
     }
-
     return this.http.post(`${this.API_USERS}/enabledUser`, null, {
       headers: this.getAuthHeaders(),
       params: new HttpParams().set('userId', userId)
     }).pipe(
-      tap(() => {
-        console.log(`Usuario ${userId} habilitado`);
-        this.notifyDataUpdated();
-      }),
-      catchError(error => {
-        console.error('Error al habilitar usuario:', error);
-        return throwError(() => error);
-      })
+      tap(() => this.notifyDataUpdated()),
+      catchError(this.handleHttpError('Habilitar usuario'))
     );
   }
 
-  /**
-   * Deshabilita un usuario
-   * @param userId ID del usuario a deshabilitar
-   * @returns Observable con la respuesta
-   */
   disableUser(userId: string): Observable<any> {
     if (!this.isAdmin()) {
-      return throwError(() => new Error('Acceso denegado: solo administradores pueden deshabilitar usuarios'));
+      return throwError(() => new Error('Acceso denegado'));
     }
-
     return this.http.post(`${this.API_USERS}/disableUser`, null, {
       headers: this.getAuthHeaders(),
       params: new HttpParams().set('userId', userId)
     }).pipe(
-      tap(() => {
-        console.log(`Usuario ${userId} deshabilitado`);
-        this.notifyDataUpdated();
-      }),
-      catchError(error => {
-        console.error('Error al deshabilitar usuario:', error);
-        return throwError(() => error);
-      })
+      tap(() => this.notifyDataUpdated()),
+      catchError(this.handleHttpError('Deshabilitar usuario'))
     );
   }
 
-  /* -------------------- Métodos para Variables -------------------- */
-
-  /**
-   * Obtiene todas las variables
-   * @returns Observable con la lista de variables
-   */
   getAllVariables(): Observable<any[]> {
-    return this.handleRequest(
-      this.http.get<any[]>(`${this.API_VARIABLES}/GetAll`, { headers: this.getAuthHeaders() }),
-      '📊 Variables obtenidas'
-    );
+    return this.http.get<any[]>(`${this.API_VARIABLES}/GetAll`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleHttpError('Carga de variables')));
   }
 
-  /**
-   * Crea una nueva variable
-   * @param variable Datos de la nueva variable
-   * @returns Observable con la respuesta
-   */
   crearVariable(variable: any): Observable<any> {
-    return this.handleRequest(
-      this.http.post<any>(this.API_VARIABLES, variable, { headers: this.getAuthHeaders() }),
-      '✅ Variable creada'
-    ).pipe(
-      tap(() => this.notifyDataUpdated())
-    );
+    return this.http.post<any>(this.API_VARIABLES, variable, { headers: this.getAuthHeaders() })
+      .pipe(
+        tap(() => this.notifyDataUpdated()),
+        catchError(this.handleHttpError('Creación de variable'))
+      );
   }
 
-  /**
-   * Elimina una variable existente
-   * @param variableId ID de la variable a eliminar
-   * @returns Observable con la respuesta
-   */
   eliminarVariable(variableId: string): Observable<any> {
-    return this.handleRequest(
-      this.http.delete<any>(this.API_VARIABLES, {
-        headers: this.getAuthHeaders(),
-        params: new HttpParams().set('variableId', variableId)
-      }),
-      `🗑️ Variable eliminada (ID: ${variableId})`
-    ).pipe(
-      tap(() => this.notifyDataUpdated())
+    return this.http.delete<any>(this.API_VARIABLES, {
+      headers: this.getAuthHeaders(),
+      params: new HttpParams().set('variableId', variableId)
+    }).pipe(
+      tap(() => this.notifyDataUpdated()),
+      catchError(this.handleHttpError('Eliminación de variable'))
     );
   }
 
-  /**
-   * Actualiza una variable existente
-   * @param variable Datos actualizados de la variable
-   * @returns Observable con la respuesta
-   */
   actualizarVariable(variable: any): Observable<any> {
     const variableData = {
       variableName: variable.variableName,
@@ -489,27 +254,44 @@ export class ConsolaAdministradorService {
       type: variable.type,
       options: variable.options || []
     };
-
-    const url = `${this.API_VARIABLES}?variableId=${variable.id}`;
-    return this.http.put<any>(url, variableData, { headers: this.getAuthHeaders() }).pipe(
+    return this.http.put<any>(`${this.API_VARIABLES}?variableId=${variable.id}`, variableData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       tap(() => this.notifyDataUpdated()),
-      catchError(error => {
-        console.error('Error al actualizar la variable:', error);
-        return throwError(() => new Error('No se pudo actualizar la variable.'));
-      })
+      catchError(this.handleHttpError('Actualización de variable'))
     );
   }
 
-  /* -------------------- Métodos para Registros de Capas -------------------- */
+  obtenerVariablesPorCapa(capaId: string): Observable<any[]> {
+    if (!capaId || capaId.trim() === '') {
+      console.error('❌ ID de capa inválido:', capaId);
+      return throwError(() => new Error('ID de capa no válido'));
+    }
 
-  /**
-   * Obtiene registros de capas con paginación
-   * @param page Número de página (default: 0)
-   * @param size Tamaño de página (default: 10)
-   * @param sort Campo para ordenar (default: 'registerDate')
-   * @param sortDirection Dirección de ordenamiento (default: 'DESC')
-   * @returns Observable con los registros paginados
-   */
+    const url = `${this.API_VARIABLES}/ResearchLayerId`;
+    const params = new HttpParams().set('researchLayerId', capaId);
+
+    console.log('🔎 Obteniendo variables para capa:', capaId);
+
+    return this.http.get<any[]>(url, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleHttpError('Carga de variables por capa'))
+    );
+  }
+
+  getVariableById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.API_VARIABLES}`, {
+      headers: this.getAuthHeaders(),
+      params: new HttpParams().set('id', id)
+    }).pipe(
+      catchError(this.handleHttpError('Consulta de variable por ID'))
+    );
+  }
+
+
+
   getRegistrosCapas(page: number = 0, size: number = 10, sort: string = 'registerDate', sortDirection: string = 'DESC') {
     const params = new HttpParams()
       .set('page', page.toString())
@@ -517,30 +299,13 @@ export class ConsolaAdministradorService {
       .set('sort', sort)
       .set('sortDirection', sortDirection);
 
-    console.log('Solicitando a:', `${this.API_URL}/api/v1/registers`);
-    console.log('Con parámetros:', params.toString());
-
     return this.http.get<any>(`${this.API_URL}/api/v1/registers`, { params })
-      .pipe(
-        tap(response => console.log('Respuesta recibida:', response)),
-        catchError(error => {
-          console.error('Error completo:', error);
-          if (error.error) {
-            console.error('Cuerpo del error:', error.error);
-          }
-          return throwError(() => new Error('Error al cargar registros'));
-        })
-      );
+      .pipe(catchError(this.handleHttpError('Carga de registros de capas')));
   }
 
-  /**
-   * Elimina un registro de capa
-   * @param registerId ID del registro a eliminar
-   * @returns Observable con la respuesta
-   */
   deleteRegistroCapa(registerId: string): Observable<any> {
     return this.http.delete(`${this.API_URL}/api/v1/registers`, {
       params: new HttpParams().set('registerId', registerId)
-    });
+    }).pipe(catchError(this.handleHttpError('Eliminación de registro de capa')));
   }
 }

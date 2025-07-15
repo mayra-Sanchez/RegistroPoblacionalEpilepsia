@@ -136,11 +136,9 @@ export class AuthService {
   private storeUserRoles(token: string) {
     try {
       const decoded: any = jwtDecode(token);
-      console.log('🔓 Token decodificado:', decoded);
 
       // Extraer los roles específicos del cliente "registers-users-api-rest"
       const roles = decoded.resource_access?.["registers-users-api-rest"]?.roles || [];
-      console.log('🎭 Roles extraídos:', roles);
 
       localStorage.setItem('userRoles', JSON.stringify(roles));
     } catch (error) {
@@ -219,7 +217,7 @@ export class AuthService {
           throw new Error('Respuesta inválida del servidor');
         }
 
-        console.log('🔄 Token refrescado con éxito');
+         ('🔄 Token refrescado con éxito');
         localStorage.setItem('kc_token', response.access_token);
 
         if (response.refresh_token) {
@@ -301,7 +299,6 @@ export class AuthService {
 
     try {
       const decoded: any = jwtDecode(token);
-      console.log('Decoded token:', decoded); 
 
       return decoded.identificationNumber ||
         decoded.identification_number ||

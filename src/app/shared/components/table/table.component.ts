@@ -1,11 +1,11 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.css']
 })
-export class TableComponent {
+export class TableComponent implements OnChanges {
   @Input() data: any[] = [];
   @Input() columns: { field: string; header: string }[] = [];
   @Input() itemsPerPageOptions: number[] = [5, 10, 20];
@@ -15,7 +15,6 @@ export class TableComponent {
   @Output() onDelete = new EventEmitter<any>();
   @Output() onToggleStatus = new EventEmitter<any>();
 
-
   itemsPerPage = this.itemsPerPageOptions[0];
   currentPage = 1;
   searchQuery = '';
@@ -24,6 +23,14 @@ export class TableComponent {
   filteredData: any[] = [];
   paginatedData: any[] = [];
   totalPages: number = 1;
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['data']) {
+      this.filteredData = [...this.data];
+      this.currentPage = 1; // Resetear a la primera página
+      this.updatePagination();
+    }
+  }
 
   ngOnInit() {
     this.filteredData = [...this.data];

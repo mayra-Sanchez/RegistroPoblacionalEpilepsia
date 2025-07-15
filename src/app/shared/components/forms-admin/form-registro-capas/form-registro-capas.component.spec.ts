@@ -72,10 +72,10 @@ describe('FormRegistroCapasComponent', () => {
       fixture.detectChanges();
 
       // Debug: Log form errors
-      console.log('layerName errors:', component.form.get('layerName')?.errors);
-      console.log('description errors:', component.form.get('description')?.errors);
-      console.log('layerBoss.name errors:', component.form.get('layerBoss.name')?.errors);
-      console.log('layerBoss.identificationNumber errors:', component.form.get('layerBoss.identificationNumber')?.errors);
+       ('layerName errors:', component.form.get('layerName')?.errors);
+       ('description errors:', component.form.get('description')?.errors);
+       ('layerBoss.name errors:', component.form.get('layerBoss.name')?.errors);
+       ('layerBoss.identificationNumber errors:', component.form.get('layerBoss.identificationNumber')?.errors);
 
       expect(component.form.get('layerName')?.hasError('required')).toBeTrue();
       expect(component.form.get('layerName')?.hasError('minlength')).toBeFalse(); // minlength not triggered for null

@@ -130,14 +130,6 @@ export class ConsolaInvestigadorService {
   ): Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }> {
     const headers = this.getAuthHeaders();
 
-    console.log('Realizando petición para obtener registros por capa:', {
-      researchLayerId,
-      page,
-      size,
-      sort,
-      sortDirection
-    });
-
     const params = new HttpParams()
       .set('researchLayerId', researchLayerId)
       .set('page', page.toString())
@@ -174,7 +166,6 @@ export class ConsolaInvestigadorService {
       tap((capa) => {
         // Guardar la capa completa o solo su ID/nombre, según lo que necesites
         localStorage.setItem('capaInvestigacion', JSON.stringify(capa));
-        console.log('✅ Capa guardada en localStorage:', capa);
       }),
       catchError(error => {
         if (error.status === 403) {

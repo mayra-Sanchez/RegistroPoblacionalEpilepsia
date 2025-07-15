@@ -89,13 +89,13 @@ describe('FormRegistroUsuarioComponent', () => {
       });
 
       const username = component.generarUsername('Juan', 'Pérez', '1990-05-15');
-      console.log('Generated username:', username); // Debug
+       ('Generated username:', username); // Debug
       expect(username).toMatch(/^jperez90\d{3}$/);
     });
 
     it('debería generar username sin caracteres especiales', () => {
       const username = component.generarUsername('María', 'González-Ñúñez', '1985-12-31');
-      console.log('Generated username:', username); // Debug
+       ('Generated username:', username); // Debug
       expect(username).toMatch(/^mgonzaleznunez85\d{3}$/);
     });
 
@@ -107,7 +107,7 @@ describe('FormRegistroUsuarioComponent', () => {
       });
 
       const username = component.usuarioForm.get('username')?.value;
-      console.log('Generated username:', username); // Debug
+       ('Generated username:', username); // Debug
       expect(username).toMatch(/^alopez95\d{3}$/);
     });
   });

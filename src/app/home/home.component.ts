@@ -9,7 +9,6 @@ interface Institucion {
   nombre: string;
   tipo: string;
   imagen: string;
-  descripcionCorta: string;
   descripcionCompleta: string;
   direccion: string;
   telefono: string;
@@ -110,7 +109,6 @@ export class HomeComponent implements AfterViewInit {
       nombre: 'Hospital Universitario Psiquiátrico del Valle',
       tipo: 'Hospital Público',
       imagen: '../../assets/img/hupdv.jpg',
-      descripcionCorta: 'Especializado en trastornos mentales y neurológicos...',
       descripcionCompleta: 'El Hospital Universitario Psiquiátrico del Valle se especializa en el tratamiento de trastornos mentales y neurológicos, incluyendo epilepsia, con un enfoque en atención integral y apoyo a la investigación clínica.',
       direccion: 'Calle 10 # 10-28, Cali, Valle del Cauca',
       telefono: '+57 602 524 0000',
@@ -122,7 +120,6 @@ export class HomeComponent implements AfterViewInit {
       nombre: 'Hospital Universitario del Valle (HUV)',
       tipo: 'Hospital Público',
       imagen: '../../assets/img/huv.png',
-      descripcionCorta: 'Referente en atención médica e investigación clínica...',
       descripcionCompleta: 'El Hospital Universitario del Valle es un referente en atención médica e investigación clínica en el suroccidente colombiano, especializado en enfermedades complejas como la epilepsia.',
       direccion: 'Cra. 36 # 5B-08, Cali, Valle del Cauca',
       telefono: '+57 602 518 5600',
@@ -134,7 +131,6 @@ export class HomeComponent implements AfterViewInit {
       nombre: 'Clínica Imbanaco',
       tipo: 'Clínica Privada',
       imagen: '../../assets/img/clinica-imbanaco-logo.jpg',
-      descripcionCorta: 'Institución de alta complejidad...',
       descripcionCompleta: 'Clínica Imbanaco es una institución de alta complejidad reconocida por su innovación médica y tratamiento de enfermedades neurológicas, incluyendo la epilepsia.',
       direccion: 'Cra. 38A # 5A-100, Cali, Valle del Cauca',
       telefono: '+57 602 682 1000',
@@ -146,7 +142,6 @@ export class HomeComponent implements AfterViewInit {
       nombre: 'Universidad del Valle',
       tipo: 'Universidad Pública',
       imagen: '../../assets/logo_uv.png',
-      descripcionCorta: 'Institución educativa prestigiosa...',
       descripcionCompleta: 'La Universidad del Valle es una de las instituciones educativas más prestigiosas de Colombia, con contribuciones significativas a la investigación en salud y tecnología.',
       direccion: 'Ciudad Universitaria Meléndez, Calle 13 # 100-00, Cali',
       telefono: '+57 602 321 2100',
@@ -158,7 +153,6 @@ export class HomeComponent implements AfterViewInit {
       nombre: 'Laboratorio Multimedia y Visión por Computador (MVC)',
       tipo: 'Laboratorio de Investigación',
       imagen: '../../assets/img/Multimedia-y-visión.png',
-      descripcionCorta: 'Centro líder en tecnologías innovadoras...',
       descripcionCompleta: 'El Laboratorio Multimedia y Visión por Computador de la Universidad del Valle lidera proyectos en procesamiento de señales médicas y sistemas de apoyo al diagnóstico.',
       direccion: 'Edificio B13, Ciudad Universitaria Meléndez, Cali',
       telefono: '+57 602 321 2100',
@@ -703,4 +697,10 @@ closeModal(modalId: string): void {
     };
     return roles[role] || role;
   }
+
+  animateCardClick(event: MouseEvent) {
+  const card = event.currentTarget as HTMLElement;
+  card.classList.add('clicked');
+  setTimeout(() => card.classList.remove('clicked'), 300);
+}
 }

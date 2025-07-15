@@ -1,5 +1,5 @@
 <nav class="navbar">
-  <ul class="navbar-links" >
+  <ul class="navbar-links">
     <li (click)="selectTab('inicio')" [class.selected]="selectedTab === 'inicio'">
       <a class="text">Inicio</a>
     </li>
@@ -8,6 +8,11 @@
     </li>
     <li (click)="selectTab('contacto')" [class.selected]="selectedTab === 'contacto'">
       <a class="text">Contacto</a>
+    </li>
+
+    <!-- Mostrar solo si está logueado -->
+    <li *ngIf="isLoggedIn" class="dashboard-link">
+      <a class="text" (click)="volverAlDashboard()">🏠 Volver al Dashboard</a>
     </li>
   </ul>
 </nav>

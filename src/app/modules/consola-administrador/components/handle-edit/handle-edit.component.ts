@@ -1,88 +1,131 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import Swal from 'sweetalert2';
-
-/**
- * Componente para edición de elementos
- * 
- * Este componente proporciona una interfaz para editar:
- * - Usuarios
- * - Variables de investigación
- * - Capas de investigación
- * 
- * Maneja la lógica de edición y emite eventos para guardar cambios o cerrar el modal.
- */
 @Component({
   selector: 'app-handle-edit',
   templateUrl: './handle-edit.component.html',
   styleUrls: ['./handle-edit.component.css']
 })
-export class HandleEditComponent {
+export class HandleEditComponent implements OnInit {
 
-  /* -------------------- Inputs y Outputs -------------------- */
-
-  /**
-   * Elemento a editar
-   */
   @Input() itemToEdit: any;
-
-  /**
-   * Tipo de elemento a editar
-   * Valores posibles: 'usuario', 'variable', 'capa'
-   */
   @Input() editType: string = '';
-
-  /**
-   * Lista de capas disponibles para asignación
-   */
   @Input() capas: any[] = [];
-
-  /**
-   * Evento emitido al guardar cambios
-   */
   @Output() saveChanges = new EventEmitter<any>();
-
-  /**
-   * Evento emitido al cerrar el modal
-   */
   @Output() closeModal = new EventEmitter<void>();
 
-  /* -------------------- Propiedades del componente -------------------- */
-
-  /**
-   * Indica si una variable tiene opciones configurables
-   */
+  editForm!: FormGroup;
   tieneOpciones: boolean = false;
-
-  /**
-   * Controla la visibilidad del campo de contraseña
-   */
   showPassword: boolean = false;
+  private rolOriginal: string = '';
 
-  /* -------------------- Métodos del ciclo de vida -------------------- */
+  constructor(private fb: FormBuilder) { }
 
-  /**
-   * Inicialización del componente
-   * - Configura estado inicial para variables con opciones
-   * - Asigna capa por defecto si no está definida
-   */
-  ngOnInit() {
-    // Configuración para variables
-    if (this.editType === 'variable') {
-      this.tieneOpciones = this.itemToEdit.options && this.itemToEdit.options.length > 0;
-    }
+  ngOnInit(): void {
+    if (!this.itemToEdit) return;
 
-    // Asignación de capa por defecto
-    if (!this.itemToEdit.capaRawValue && this.capas.length > 0) {
-      this.itemToEdit.capaRawValue = this.capas[0].id;
+    switch (this.editType) {
+      case 'usuario':
+        this.rolOriginal = this.itemToEdit.role;
+        this.editForm = this.fb.group({
+          nombre: [this.itemToEdit.nombre, Validators.required],
+          apellido: [this.itemToEdit.apellido, Validators.required],
+          email: [this.itemToEdit.email, [Validators.required, Validators.email]],
+          usuario: [this.itemToEdit.usuario, Validators.required],
+          tipoDocumento: [{ value: this.itemToEdit.tipoDocumento, disabled: true }, Validators.required],
+          documento: [this.itemToEdit.documento, Validators.required],
+          fechaNacimiento: [this.itemToEdit.fechaNacimiento || ''],
+          capaRawValue: [this.itemToEdit.capaRawValue || this.capas[0]?.id],
+          role: [this.itemToEdit.role, Validators.required],
+          password: ['']
+        });
+        break;
+
+      case 'variable':
+        this.tieneOpciones = Array.isArray(this.itemToEdit.options) && this.itemToEdit.options.length > 0;
+        this.editForm = this.fb.group({
+          variableName: [this.itemToEdit.variableName, Validators.required],
+          description: [this.itemToEdit.description],
+          type: [this.itemToEdit.type, Validators.required],
+          researchLayerId: [this.itemToEdit.researchLayerId || this.capas[0]?.id, Validators.required],
+          options: this.fb.array(
+            this.tieneOpciones
+              ? this.itemToEdit.options.map((opt: string) => this.fb.control(opt))
+              : []
+          )
+        });
+        break;
+
+      case 'capa':
+        this.editForm = this.fb.group({
+          layerName: [this.itemToEdit.layerName, Validators.required],
+          description: [this.itemToEdit.description],
+          jefeNombre: [this.itemToEdit.layerBoss?.name || ''],
+          jefeDocumento: [this.itemToEdit.layerBoss?.identificationNumber || '']
+        });
+        break;
     }
   }
 
-  /* -------------------- Métodos de UI -------------------- */
+  get opcionesArray(): FormArray {
+    return this.editForm.get('options') as FormArray;
+  }
 
-  /**
-   * Obtiene el icono correspondiente al tipo de edición
-   * @returns Clase del icono FontAwesome
-   */
+  agregarOpcion(): void {
+    this.opcionesArray.push(this.fb.control(''));
+  }
+
+  eliminarOpcion(index: number): void {
+    this.opcionesArray.removeAt(index);
+  }
+
+  onTieneOpcionesChange(event: Event): void {
+    this.tieneOpciones = (event.target as HTMLInputElement).checked;
+    if (this.tieneOpciones) {
+      if (this.opcionesArray.length === 0) {
+        this.opcionesArray.push(this.fb.control(''));
+      }
+    } else {
+      this.editForm.setControl('options', this.fb.array([]));
+    }
+  }
+
+  confirmarCambioRol(): void {
+    const nuevoRol = this.editForm.get('role')?.value;
+    if (nuevoRol !== this.rolOriginal) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Cambio de rol',
+        text: 'Estás a punto de cambiar el rol de este usuario. ¿Estás segura?',
+        confirmButtonText: 'Sí, continuar',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (!result.isConfirmed) {
+          this.editForm.patchValue({ role: this.rolOriginal });
+        }
+      });
+    }
+  }
+
+  guardarCambios(): void {
+    if (this.editForm.invalid) return;
+
+    const formValue = this.editForm.value;
+
+    // Asegurar que los datos sean consistentes con itemToEdit
+    if (this.editType === 'variable') {
+      formValue.tieneOpciones = this.tieneOpciones;
+      formValue.options = this.opcionesArray.value;
+    }
+
+    this.saveChanges.emit({ ...this.itemToEdit, ...formValue });
+  }
+
+  cerrarModal(): void {
+    this.closeModal.emit();
+  }
+
   getEditTypeIcon(): string {
     switch (this.editType) {
       case 'usuario': return 'fa-user-edit';
@@ -92,56 +135,7 @@ export class HandleEditComponent {
     }
   }
 
-  /**
-   * Maneja el cambio en el estado de 'tieneOpciones' para variables
-   */
-  onTieneOpcionesChange() {
-    if (!this.tieneOpciones) {
-      this.itemToEdit.options = [];
-    } else if (!this.itemToEdit.options || this.itemToEdit.options.length === 0) {
-      this.itemToEdit.options = [''];
-    }
-  }
-
-  /**
-   * Agrega una nueva opción vacía a la lista de opciones
-   */
-  agregarOpcion() {
-    this.itemToEdit.options.push('');
-  }
-
-  /**
-   * Elimina una opción de la lista por índice
-   * @param index Índice de la opción a eliminar
-   */
-  eliminarOpcion(index: number) {
-    this.itemToEdit.options.splice(index, 1);
-  }
-
-  /**
-   * Emite el evento para guardar los cambios realizados
-   */
-  guardarCambios() {
-    if (this.editType === 'variable') {
-      this.itemToEdit.tieneOpciones = this.tieneOpciones;
-    }
-    this.saveChanges.emit(this.itemToEdit);
-  }
-
-  /**
-   * Emite el evento para cerrar el modal
-   */
-  cerrarModal() {
-    this.closeModal.emit();
-  }
-
-  /**
-   * Función trackBy para optimizar el rendering de listas
-   * @param index Índice del elemento
-   * @param item Elemento de la lista
-   * @returns Identificador único para el elemento
-   */
-  trackByIndex(index: number, item: any) {
+  trackByIndex(index: number): number {
     return index;
   }
 }

@@ -1,48 +1,30 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { Register, Variable } from '../interfaces';
 import { finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
-/**
- * Componente modal para editar registros de pacientes.
- * Permite la edición de información básica del paciente, variables de investigación,
- * información del cuidador y profesional de la salud.
- */
+
 @Component({
   selector: 'app-edit-registro-modal',
   templateUrl: './edit-registro-modal.component.html',
   styleUrls: ['./edit-registro-modal.component.css']
 })
 export class EditRegistroModalComponent {
-  /** Registro a editar, recibido como input desde el componente padre */
   @Input() registro: Register | null = null;
-
-  /** Función para cerrar el modal, proporcionada por el componente padre */
   @Output() close = new EventEmitter<void>();
-
-  /** EventEmitter para notificar cuando se ha actualizado un registro */
   @Output() registroActualizado = new EventEmitter<Register>();
-
-  /** EventEmitter para notificar cuando se guardan los cambios */
   @Output() saveChanges = new EventEmitter<Register>();
 
   // Estados del componente
-  isLoading = false;              // Indica si se está realizando una operación asíncrona
-  errorMessage: string | null = null;    // Mensaje de error a mostrar
-  successMessage: string | null = null;  // Mensaje de éxito a mostrar
-  activeTab: string = 'paciente'; // Pestaña activa en la interfaz
+  isLoading = false;
+  isUpdating = false;
+  formSubmitted = false;
+  errorMessage: string | null = null;
+  successMessage: string | null = null;
+  activeTab: string = 'paciente';
 
-  closeModal() {
-    this.close.emit();
-  }
-
-  onSave() {
-    if (this.registro) {
-      this.saveChanges.emit(this.registro);
-    }
-  }
-
-  // Opciones para los selectores del formulario
+  // Opciones para selectores
   tiposIdentificacion = [
     { value: 'cc', label: 'Cédula de Ciudadanía' },
     { value: 'ti', label: 'Tarjeta de Identidad' },
@@ -82,20 +64,25 @@ export class EditRegistroModalComponent {
 
   estadosCrisis = ['Activa', 'Remisión', 'Estable', 'Crítica', 'Recuperado'];
 
-  constructor(private registroService: ConsolaRegistroService) { }
+  constructor(
+    private registroService: ConsolaRegistroService,
+    private authService: AuthService
+  ) { }
 
-  /**
-   * Cambia la pestaña activa en la interfaz
-   * @param tab - Nombre de la pestaña a activar ('paciente', 'variables', etc.)
-   */
+  closeModal() {
+    this.close.emit();
+  }
+
+  onSave() {
+    if (this.registro) {
+      this.saveChanges.emit(this.registro);
+    }
+  }
+
   changeTab(tab: string) {
     this.activeTab = tab;
   }
 
-  /**
-   * Maneja el envío del formulario de edición
-   * Valida los datos, prepara el payload y realiza la llamada al servicio
-   */
   onSubmit() {
     if (!this.registro || !this.registro.registerId) {
       this.showErrorAlert('Datos del registro no válidos');
@@ -106,16 +93,14 @@ export class EditRegistroModalComponent {
     this.errorMessage = null;
     this.successMessage = null;
 
-    // Calcula la edad si hay fecha de nacimiento
+    // Calcular edad si hay fecha de nacimiento
     if (this.registro.patientBasicInfo?.birthDate) {
       this.registro.patientBasicInfo.age = this.calculateAge(this.registro.patientBasicInfo.birthDate);
     }
 
-    // Prepara y limpia los datos para el envío
-    const updateData = this.removeEmptyFields(this.prepareUpdateData());
-    console.log('Enviando payload:', JSON.stringify(updateData, null, 2));
+    // Prepara los datos para el envío
+    const updateData = this.prepareUpdateData();
 
-    // Llama al servicio para actualizar el registro
     this.registroService.actualizarRegistro(this.registro.registerId, updateData)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
@@ -126,16 +111,45 @@ export class EditRegistroModalComponent {
         },
         error: (err) => {
           console.error('Error completo:', err);
-          console.error('Detalles del error:', err.error);
-          const errorMsg = this.getErrorMessage(err);
+          let errorMsg = 'Error al actualizar el registro';
+
+          if (err.message.includes('Sesión expirada')) {
+            errorMsg = err.message;
+            // Forzar logout después de mostrar el mensaje
+            setTimeout(() => this.authService.logout(), 3000);
+          } else if (err.error) {
+            errorMsg = err.error.message || JSON.stringify(err.error);
+          } else {
+            errorMsg = err.message || errorMsg;
+          }
+
           this.showErrorAlert(errorMsg);
         }
       });
   }
-  /**
-   * Muestra una alerta de éxito con SweetAlert
-   * @param message - Mensaje a mostrar
-   */
+
+  private isFormValid(): boolean {
+    if (!this.registro) return false;
+
+    if (!this.registro.patientBasicInfo?.name ||
+      !this.registro.patientIdentificationType ||
+      !this.registro.patientIdentificationNumber) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private resetFormState(): void {
+    this.registro = null;
+    this.isLoading = false;
+    this.isUpdating = false;
+    this.formSubmitted = false;
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.activeTab = 'paciente';
+  }
+
   private showSuccessAlert(message: string): void {
     Swal.fire({
       title: 'Éxito!',
@@ -147,10 +161,6 @@ export class EditRegistroModalComponent {
     });
   }
 
-  /**
-   * Muestra una alerta de error con SweetAlert
-   * @param message - Mensaje a mostrar
-   */
   private showErrorAlert(message: string): void {
     Swal.fire({
       title: 'Error!',
@@ -160,11 +170,6 @@ export class EditRegistroModalComponent {
     });
   }
 
-  /**
-   * Genera un mensaje de error legible a partir del objeto de error
-   * @param err - Objeto de error recibido
-   * @returns Mensaje de error formateado
-   */
   private getErrorMessage(err: any): string {
     if (err.error?.errors) {
       return Object.values(err.error.errors).join(', ');
@@ -178,10 +183,6 @@ export class EditRegistroModalComponent {
     return 'Error desconocido al actualizar el registro';
   }
 
-  /**
-   * Prepara los datos para la actualización, estructurándolos según lo esperado por el API
-   * @returns Objeto con los datos preparados para el envío
-   */
   private prepareUpdateData(): any {
     if (!this.registro) return null;
 
@@ -229,24 +230,13 @@ export class EditRegistroModalComponent {
     return this.cleanPayload(payload);
   }
 
-  /**
-   * Verifica si hay datos válidos del cuidador
-   * @param caregiver - Objeto con los datos del cuidador
-   * @returns true si hay al menos un campo con datos válidos
-   */
   private hasCaregiverData(caregiver: any): boolean {
     if (!caregiver) return false;
-
     return Object.values(caregiver).some(
       (val: any) => val !== null && val !== undefined && val !== ''
     );
   }
 
-  /**
-   * Limpia el payload eliminando campos vacíos, nulos o undefined
-   * @param obj - Objeto a limpiar
-   * @returns Objeto limpio sin campos vacíos
-   */
   private cleanPayload(obj: any): any {
     if (obj === null || typeof obj !== 'object') {
       return obj;
@@ -256,11 +246,10 @@ export class EditRegistroModalComponent {
       return obj.map(item => this.cleanPayload(item));
     }
 
-    const cleaned: { [key: string]: any } = {}; // Firma de índice explícita
+    const cleaned: { [key: string]: any } = {};
     for (const [key, value] of Object.entries(obj)) {
       if (value !== null && value !== undefined && value !== '') {
         const cleanedValue = typeof value === 'object' ? this.cleanPayload(value) : value;
-
         if (typeof cleanedValue !== 'object' ||
           (Array.isArray(cleanedValue) && cleanedValue.length > 0) ||
           (Object.keys(cleanedValue).length > 0)) {
@@ -271,10 +260,6 @@ export class EditRegistroModalComponent {
     return cleaned;
   }
 
-  /**
-   * Prepara el array de variables para el envío al API
-   * @returns Array de variables formateadas
-   */
   private prepareVariablesArray(): any[] {
     if (!this.registro?.variablesRegister) return [];
 
@@ -286,12 +271,6 @@ export class EditRegistroModalComponent {
     }));
   }
 
-  /**
-   * Parsea el valor de una variable según su tipo
-   * @param value - Valor a parsear
-   * @param type - Tipo de la variable (number, boolean, string)
-   * @returns Valor parseado al tipo correspondiente
-   */
   private parseVariableValue(value: any, type: string): any {
     if (value === null || value === undefined) return '';
     if (type === 'number') return Number(value) || 0;
@@ -299,11 +278,6 @@ export class EditRegistroModalComponent {
     return String(value);
   }
 
-  /**
-   * Elimina campos vacíos, nulos o undefined de un objeto
-   * @param obj - Objeto a limpiar
-   * @returns Objeto sin campos vacíos
-   */
   private removeEmptyFields(obj: any): any {
     if (obj === null || typeof obj !== 'object') {
       return obj;
@@ -320,42 +294,30 @@ export class EditRegistroModalComponent {
     );
   }
 
-  /**
-   * Formatea una fecha para el API (formato DD-MM-YYYY)
-   * @param dateValue - Fecha a formatear (puede ser string o Date)
-   * @returns Fecha formateada o null si no es válida
-   */
   private formatDateForAPI(dateValue: any): string | null {
     if (!dateValue) return null;
-    
+
     if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
       return dateValue;
     }
-  
+
     if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
       const [day, month, year] = dateValue.split('-');
       return `${year}-${month}-${day}`;
     }
 
-    // Handle Date objects
-    const date = new Date(dateValue);
-    if (isNaN(date.getTime())) {
-      console.error('Fecha inválida:', dateValue);
-      return null;
+    try {
+      const date = new Date(dateValue);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+    } catch (e) {
+      console.error('Formato de fecha no reconocido:', dateValue);
     }
 
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
+    return null;
   }
 
-  /**
-   * Calcula la edad a partir de una fecha de nacimiento
-   * @param birthDate - Fecha de nacimiento
-   * @returns Edad calculada
-   */
   public calculateAge(birthDate: string | null): number {
     if (!birthDate) return 0;
     const birth = new Date(birthDate);
@@ -368,22 +330,23 @@ export class EditRegistroModalComponent {
     return age;
   }
 
-  /**
-   * Actualiza el valor de una variable en el registro
-   * @param variable - Variable a actualizar
-   * @param event - Evento del input con el nuevo valor
-   */
   updateVariableValue(variable: Variable, event: any) {
     if (!this.registro) return;
+
     const index = this.registro.variablesRegister.findIndex(v => v.id === variable.id);
     if (index !== -1) {
-      this.registro.variablesRegister[index].value = event.target.value;
+      let newValue = event.target.value;
+
+      if (variable.type === 'number') {
+        newValue = Number(newValue) || 0;
+      } else if (variable.type === 'boolean') {
+        newValue = Boolean(newValue);
+      }
+
+      this.registro.variablesRegister[index].value = newValue;
     }
   }
 
-  /**
-   * Prepara la fecha para el input type = "date"(YYYY - MM - DD)
-    */
   prepareDateForInput(dateString: string | null | undefined): string {
     if (!dateString) return '';
 
@@ -402,9 +365,6 @@ export class EditRegistroModalComponent {
     return '';
   }
 
-  /**
-   * Convierte al formato de almacenamiento (DD-MM-YYYY)
-   */
   convertToStorageFormat(dateString: string): string {
     if (!dateString) return '';
 

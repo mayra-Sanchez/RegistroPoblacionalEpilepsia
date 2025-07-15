@@ -452,3 +452,61 @@ button.btn-secondary:hover {
     font-size: 0.8rem; /* Tamaño pequeño */
   }
 }
+
+/* Botón de acción general */
+.action-button {
+  padding: 10px 15px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Específicos */
+.create-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.create-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.export-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.export-button:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
+.action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.estado-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto; /* Empuja a la derecha */
+}
+
+.estado-filter select {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+

@@ -33,7 +33,9 @@
         </thead>
         <tbody>
             <tr *ngFor="let row of paginatedData">
-                <td *ngFor="let col of columns">{{ row[col.field] }}</td>
+                <td *ngFor="let col of columns">
+                    {{ getCellValue(row, col) }}
+                </td>
                 <td>
                     <div class="actions">
                         <button class="action-btn view" (click)="view(row)">

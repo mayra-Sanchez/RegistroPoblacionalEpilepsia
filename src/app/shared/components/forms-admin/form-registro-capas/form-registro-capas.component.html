@@ -1,7 +1,17 @@
 <div class="form-container">
   <div class="form-header">
     <h2><i class="fas fa-layer-group"></i> Registro de Capa de Investigación</h2>
-    <p>Complete los campos para registrar una nueva capa de investigación</p>
+    <p>Complete los campos para registrar una nueva capa de investigación.</p>
+
+    <!-- Explicación de qué es una capa -->
+    <div class="info-box">
+      <i class="fas fa-info-circle"></i>
+      <small>
+        Una <strong>capa</strong> representa una unidad organizativa dentro del sistema para gestionar registros y datos
+        de estudios de investigación. Por ejemplo: "Capa de investigación de epilepsia en ancianos", "Capa de
+        investigación de epilepsia en niños menores a 10 años", etc.
+      </small>
+    </div>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="registrarCapa()" class="elegant-form">
@@ -17,7 +27,8 @@
     <!-- Descripción -->
     <div class="form-group">
       <label for="description"><i class="fas fa-align-left"></i> Descripción</label>
-      <textarea id="description" formControlName="description" placeholder="Descripción detallada de la capa"></textarea>
+      <textarea id="description" formControlName="description"
+        placeholder="Descripción detallada de la capa"></textarea>
       <div *ngIf="form.get('description')?.invalid && form.get('description')?.touched" class="error-message">
         <small><i class="fas fa-exclamation-circle"></i> La descripción es obligatoria (mínimo 5 caracteres)</small>
       </div>
@@ -25,7 +36,7 @@
 
     <!-- Jefe de Capa -->
     <div class="section-header">
-      <h3><i class="fas fa-user-tie"></i> Información del Jefe de Capa</h3>
+      <h3><i class="fas fa-user-tie"></i> Información del jefe de esta capa de investigación</h3>
     </div>
 
     <div formGroupName="layerBoss" class="boss-info">
@@ -42,10 +53,11 @@
       <div class="form-group">
         <label for="identificationNumber"><i class="fas fa-id-card"></i> Número de identificación</label>
         <input type="hidden" formControlName="id" />
-        <input type="text" id="identificationNumber" formControlName="identificationNumber" 
-               placeholder="Ej: 123456789" />
-        <div *ngIf="form.get('layerBoss.identificationNumber')?.invalid && form.get('layerBoss.identificationNumber')?.touched" 
-             class="error-message">
+        <input type="text" id="identificationNumber" formControlName="identificationNumber"
+          placeholder="Ej: 123456789" />
+        <div
+          *ngIf="form.get('layerBoss.identificationNumber')?.invalid && form.get('layerBoss.identificationNumber')?.touched"
+          class="error-message">
           <small><i class="fas fa-exclamation-circle"></i> El número es obligatorio (mínimo 5 caracteres)</small>
         </div>
       </div>
@@ -53,6 +65,9 @@
 
     <!-- Botón de envío -->
     <div class="form-footer">
+      <button type="button" class="submit-button" (click)="onCancel()">
+        Cancelar
+      </button>
       <button type="submit" class="submit-button" [disabled]="form.invalid">
         <i class="fas fa-save"></i> Registrar Capa
       </button>

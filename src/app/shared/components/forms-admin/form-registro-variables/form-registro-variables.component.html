@@ -5,6 +5,7 @@
   </div>
 
   <form [formGroup]="form" (ngSubmit)="crearVariable()" class="uniform-form">
+
     <!-- Nombre de la variable -->
     <div class="form-group uniform">
       <label for="variableName"><i class="fas fa-tag"></i> Nombre de la variable</label>
@@ -18,7 +19,8 @@
     <!-- Descripción -->
     <div class="form-group uniform">
       <label for="description"><i class="fas fa-align-left"></i> Descripción</label>
-      <textarea id="description" formControlName="description" placeholder="Descripción detallada de la variable"></textarea>
+      <textarea id="description" formControlName="description"
+        placeholder="Descripción detallada de la variable"></textarea>
       <div *ngIf="campoEsValido('description')" class="error-messages">
         <small *ngIf="form.get('description')?.hasError('required')">La descripción es obligatoria</small>
         <small *ngIf="form.get('description')?.hasError('minlength')">Mínimo 5 caracteres</small>
@@ -30,8 +32,15 @@
       <label for="type"><i class="fas fa-list-alt"></i> Tipo de variable</label>
       <select id="type" formControlName="type">
         <option value="" disabled selected>Seleccione tipo...</option>
-        <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
+        <option *ngFor="let tipo of tipos" [value]="tipo.valor" [title]="tipo.descripcion">
+          {{ tipo.valor }}
+        </option>
       </select>
+      <ul class="text-muted small mt-2">
+        <li *ngFor="let tipo of tipos">
+          <strong>{{ tipo.valor }}:</strong> {{ tipo.descripcion }}
+        </li>
+      </ul>
       <div *ngIf="campoEsValido('type')" class="error-messages">
         <small *ngIf="form.get('type')?.hasError('required')">El tipo es obligatorio</small>
       </div>
@@ -57,10 +66,47 @@
       </label>
     </div>
 
+    <!-- Nota aclaratoria sobre opciones -->
+    <div class="info-box" *ngIf="form.get('hasOptions')?.value">
+      <h4><i class="fas fa-info-circle"></i> ¿Para qué sirven las opciones?</h4>
+      <p>
+        Al marcar <strong>"¿Tiene opciones?"</strong> puedes definir una lista de valores que los usuarios podrán
+        seleccionar
+        cuando usen esta variable. Por ejemplo, una variable llamada <em>"Color favorito"</em> puede tener opciones
+        como:
+        <strong>Rojo, Azul, Verde</strong>.
+      </p>
+      <p>
+        <strong>¿Se puede escoger más de una opción?</strong><br>
+        Este formulario solo define las opciones disponibles. Si los usuarios podrán seleccionar una o varias opciones,
+        dependerá de cómo se use esta variable en los formularios de captura posteriores.
+      </p>
+    </div>
+
+    <!-- Tipo de selección -->
+    <div *ngIf="form.value.hasOptions" class="form-group uniform">
+      <label><i class="fas fa-sliders-h"></i> Tipo de respuesta</label>
+      <div class="selection-type-toggle">
+        <label [class.active]="form.get('selectionType')?.value === 'unica'">
+          <input type="radio" formControlName="selectionType" value="unica" />
+          <i class="far fa-dot-circle"></i>
+          <span>Una sola respuesta</span>
+        </label>
+
+        <label [class.active]="form.get('selectionType')?.value === 'multiple'">
+          <input type="radio" formControlName="selectionType" value="multiple" />
+          <i class="far fa-check-square"></i>
+          <span>Varias respuestas</span>
+        </label>
+      </div>
+    </div>
+
+
+
     <!-- Opciones dinámicas -->
     <div *ngIf="form.value.hasOptions" formArrayName="options" class="options-container">
       <label class="options-label"><i class="fas fa-list-ul"></i> Opciones:</label>
-      
+
       <div *ngFor="let opcion of options.controls; let i = index" class="option-item">
         <div class="input-with-button">
           <input type="text" [formControlName]="i" placeholder="Nombre de opción" required />
@@ -77,9 +123,23 @@
 
     <!-- Botón de envío -->
     <div class="form-footer">
-      <button type="submit" class="submit-button" [disabled]="form.invalid">
+      <button type="button" class="submit-button" (click)="onCancel()">
+        Cancelar
+      </button>
+      <button type="submit" class="submit-button" [disabled]="form.invalid" [attr.title]="getErroresTooltip()">
         <i class="fas fa-save"></i> Crear Variable
       </button>
+
+      <div *ngIf="mostrarCamposFaltantes && form.invalid" class="tooltip-error">
+        <strong>Campos incompletos:</strong>
+        <ul>
+          <li *ngIf="form.get('variableName')?.invalid">• Nombre de la variable</li>
+          <li *ngIf="form.get('description')?.invalid">• Descripción</li>
+          <li *ngIf="form.get('type')?.invalid">• Tipo de variable</li>
+          <li *ngIf="form.get('researchLayerId')?.invalid">• Capa de investigación</li>
+          <li *ngIf="form.value.hasOptions && options.length === 0">• Al menos una opción</li>
+        </ul>
+      </div>
     </div>
   </form>
 </div>

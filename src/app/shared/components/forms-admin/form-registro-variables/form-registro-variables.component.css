@@ -228,10 +228,12 @@
 
 /* ========== FORM FOOTER ========== */
 .form-footer {
-  margin-top: 2rem;
-  text-align: center;
-  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
   border-top: 1px solid #e0e6ed;
+  display: flex;
+  justify-content: space-between; /* Separa los botones a los extremos */
+  align-items: center; /* Centra verticalmente */
 }
 
 .submit-button {
@@ -298,4 +300,84 @@ select {
   background-size: 12px;
   padding-right: 2.5rem !important;
   cursor: pointer;
+}
+
+.tooltip-error {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+.info-box {
+  background-color: #e8f4fd;
+  border-left: 4px solid #007bff;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  color: #333;
+}
+
+.info-box h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #0056b3;
+}
+
+.info-box p {
+  margin: 4px 0;
+}
+
+.selection-type-toggle {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.selection-type-toggle label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #dce3ea;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f8fafc;
+  flex: 1 1 200px;
+  transition: all 0.25s ease;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #2c3e50;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.selection-type-toggle label:hover {
+  background-color: #eef6fc;
+  border-color: #3498db;
+}
+
+.selection-type-toggle label i {
+  font-size: 1.5rem;
+  color: #7f8c8d;
+  transition: color 0.3s ease;
+}
+
+.selection-type-toggle label.active {
+  border-color: #3498db;
+  background-color: #e6f2fd;
+  color: #0f5ead;
+}
+
+.selection-type-toggle label.active i {
+  color: #3498db;
+}
+
+.selection-type-toggle input[type="radio"] {
+  display: none;
 }

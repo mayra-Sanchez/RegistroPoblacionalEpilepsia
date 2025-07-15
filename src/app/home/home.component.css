@@ -1479,3 +1479,158 @@ textarea:focus {
     margin-bottom: 15px;
   }
 }
+
+/* ============================================= */
+/* ============ ESTILOS PARA PESTAÑAS ========== */
+/* ============================================= */
+
+.contentHome {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  padding: 60px 30px;
+  min-height: calc(100vh - 120px);
+}
+
+/* Estilo para las cards principales */
+.card, .card1 {
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  text-align: center;
+  flex: 1 1 calc(33.333% - 40px);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.card:hover, .card1:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  background-color: #f8f9fa;
+}
+
+.card-header .icon {
+  font-size: 50px;
+  color: #4a90e2;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.card:hover .card-header .icon {
+  transform: scale(1.1);
+  color: #2ecc71;
+}
+
+/* Fondo para la sección de sistema */
+.card-sistema {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+}
+
+/* Fondo para la sección de contacto */
+.contact-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+}
+
+/* ============================================= */
+/* ============ INDICADORES DE CLIC ============ */
+/* ============================================= */
+
+.click-hint {
+  margin-top: 15px;
+  padding: 8px 12px;
+  background-color: rgba(74, 144, 226, 0.1);
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4a90e2;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.card:hover .click-hint {
+  background-color: rgba(74, 144, 226, 0.2);
+  transform: translateX(5px);
+}
+
+/* Animación de pulso para las cards clickeables */
+.card {
+  animation: pulse 2s infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  100% {
+    box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+  }
+}
+
+/* Eliminar animación después del primer hover */
+.card:hover {
+  animation: none;
+}
+
+.card.clicked {
+  transform: scale(0.95);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.modal-subtitle {
+  text-align: center;
+  color: #4a90e2; /* Color principal azul */
+  margin-bottom: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  position: relative;
+  padding: 10px 20px;
+  background-color: rgba(74, 144, 226, 0.1); /* Fondo azul muy suave */
+  border-radius: 30px;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+  animation: pulseAttention 2s infinite;
+}
+
+.modal-subtitle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #4a90e2, #2ecc71); /* Degradado consistente */
+  border-radius: 3px;
+}
+
+/* Animación de pulso para llamar atención */
+@keyframes pulseAttention {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+  }
+}
+
+/* Para móviles */
+@media (max-width: 768px) {
+  .modal-subtitle {
+    font-size: 14px;
+    padding: 8px 15px;
+    margin-left: 15px;
+    margin-right: 15px;
+    display: block;
+  }
+}

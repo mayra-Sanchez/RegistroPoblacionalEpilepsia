@@ -123,12 +123,29 @@
 
     <!-- Gestión de Usuarios -->
     <div *ngIf="selectedTab === 'gestionUsuarios'">
+      <!-- Vista principal de gestión de usuarios -->
       <div *ngIf="!isCreatingUser && !isEditingUser">
         <div class="action-bar">
-          <button class="btn btn-primary create-button" (click)="crearNuevoUsuario()">
-            Crear nuevo usuario
+          <button class="action-button create-button" (click)="crearNuevoUsuario()">
+            <mat-icon>add</mat-icon> Crear nuevo usuario
           </button>
+
+          <button class="action-button export-button" (click)="exportarUsuarios()">
+            <mat-icon>download</mat-icon> Exportar usuarios
+          </button>
+
+          <!-- Filtro de estado -->
+          <div class="estado-filter">
+            <label for="estadoFiltro">Estado:</label>
+            <select id="estadoFiltro" [(ngModel)]="estadoSeleccionado" (change)="filtrarUsuariosPorEstado()">
+              <option value="">Todos</option>
+              <option value="activo">Activos</option>
+              <option value="inactivo">Inactivos</option>
+            </select>
+          </div>
+
         </div>
+
         <app-table [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
           [showStatusAction]="true" (onView)="handleViewUser($event, 'usuario')"
           (onEdit)="handleEdit($event, 'usuario')" (onDelete)="handleDelete($event)"
@@ -136,9 +153,10 @@
         </app-table>
       </div>
 
-      <!-- Formulario de Creación de Usuario -->
-      <div *ngIf="isCreatingUser" class="contentAdmin2">
-        <app-form-registro-usuario (closeForm)="isCreatingUser = false"></app-form-registro-usuario>
+      <!-- Formulario de creación de usuario -->
+      <div *ngIf="isCreatingUser">
+        <app-form-registro-usuario (usuarioCreada)="onUsuarioCreado()" (cancelar)="volverAGestionUsuarios()">
+        </app-form-registro-usuario>
       </div>
     </div>
 
@@ -146,9 +164,21 @@
     <div *ngIf="selectedTab === 'gestionVariables'">
       <div *ngIf="!isCreatingVar && !isEditingVar">
         <div class="action-bar">
-          <button class="btn btn-primary create-button" (click)="crearNuevaVariable()">
-            Crear nueva variable
+          <button class="action-button create-button" (click)="crearNuevaVariable()">
+            <mat-icon>add</mat-icon> Crear nueva variable
           </button>
+          <button class="action-button export-button" (click)="exportarVariables()">
+            <mat-icon>download</mat-icon> Exportar variables
+          </button>
+          <div class="estado-filter">
+            <label for="capaFiltro">Capa de investigación:</label>
+            <select id="capaFiltro" [(ngModel)]="capaSeleccionada" (change)="filtrarVariablesPorCapa()">
+              <option value="">Todas</option>
+              <option *ngFor="let capa of capasData" [value]="capa.id">
+                {{ capa.nombreCapa }}
+              </option>
+            </select>
+          </div>
         </div>
         <app-table [data]="variablesData" [columns]="variablesColumns" [itemsPerPageOptions]="[5, 10, 20]"
           [showStatusAction]="false" (onView)="handleView($event, 'variable')" (onEdit)="handleEdit($event, 'variable')"
@@ -156,7 +186,8 @@
         </app-table>
       </div>
       <div *ngIf="isCreatingVar" class="contentAdmin2">
-        <app-form-registro-variables (closeForm)="isCreatingVar = false"></app-form-registro-variables>
+        <app-form-registro-variables (usuarioCreada)="onVariableCreado()" (cancelar)="volverAGestionVariables()">
+        </app-form-registro-variables>
       </div>
     </div>
 
@@ -164,8 +195,11 @@
     <div *ngIf="selectedTab === 'gestionCapas'">
       <div *ngIf="!isCreatingCapa && !isEditingCapa">
         <div class="action-bar">
-          <button class="btn btn-primary create-button" (click)="crearNuevaCapa()">
-            Crear nueva capa
+          <button class="action-button create-button" (click)="crearNuevaCapa()">
+            <mat-icon>add</mat-icon>Crear nueva capa
+          </button>
+          <button class="action-button export-button" (click)="exportarCapas()">
+            <mat-icon>download</mat-icon> Exportar capas
           </button>
         </div>
         <app-table [data]="capasData" [columns]="capasColumns" [itemsPerPageOptions]="[5, 10, 20]"
@@ -174,23 +208,19 @@
         </app-table>
       </div>
       <div *ngIf="isCreatingCapa" class="contentAdmin2">
-        <app-form-registro-capas (closeForm)="isCreatingCapa = false"></app-form-registro-capas>
+        <app-form-registro-capas (usuarioCreada)="onCapaCreado()" (cancelar)="volverAGestionCapa()">
+        </app-form-registro-capas>
       </div>
-
     </div>
+
 
     <!-- Gestión de Registros de Capas (solo para SuperAdmin) -->
     <div *ngIf="selectedTab === 'gestionRegistrosCapas'">
       <div class="action-bar">
       </div>
-    
-      <app-data-table
-        [data]="registrosCapasData" 
-        [columns]="registrosCapasColumns" 
-        [itemsPerPageOptions]="[5, 10, 20]"
-        [totalRecords]="totalRegistrosCapas" 
-        [loading]="loadingRegistrosCapas" 
-        (onView)="handleViewRegistro($event)"
+
+      <app-data-table [data]="registrosCapasData" [columns]="registrosCapasColumns" [itemsPerPageOptions]="[5, 10, 20]"
+        [totalRecords]="totalRegistrosCapas" [loading]="loadingRegistrosCapas" (onView)="handleViewRegistro($event)"
         (onDelete)="handleDeleteRegistro($event)">
       </app-data-table>
     </div>

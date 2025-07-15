@@ -1,21 +1,15 @@
+/**
+ * Componente para el registro de nuevos usuarios en la aplicación.
+ * 
+ * Este componente proporciona un formulario reactivo con validaciones para registrar
+ * nuevos usuarios, incluyendo información personal, credenciales y asignación de roles.
+ * Maneja la generación automática de username, validaciones y comunicación con el backend.
+ */
 import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { ConsolaAdministradorService } from 'src/app/services/consola-administrador.service';
 import Swal from 'sweetalert2';
 
-/**
- * Componente para el registro de nuevos usuarios
- * 
- * @remarks
- * Este componente proporciona un formulario completo para el registro de usuarios,
- * incluyendo validación, generación automática de username y confirmación mediante SweetAlert2.
- * Se integra con el servicio `ConsolaAdministradorService` para enviar los datos al backend.
- * 
- * @example
- * ```html
- * <app-form-registro-usuario (usuarioCreada)="actualizarListaUsuarios()"></app-form-registro-usuario>
- * ```
- */
 @Component({
   selector: 'app-form-registro-usuario',
   templateUrl: './form-registro-usuario.component.html',
@@ -23,31 +17,58 @@ import Swal from 'sweetalert2';
 })
 export class FormRegistroUsuarioComponent implements OnInit {
   /**
-   * EventEmitter que notifica al componente padre cuando se crea un usuario exitosamente
+   * EventEmitter para notificar cuando se crea un usuario exitosamente
    */
   @Output() usuarioCreada = new EventEmitter<void>();
 
   /**
-   * FormGroup que contiene todos los controles del formulario de registro
+   * EventEmitter para notificar cuando se cancela el registro
+   */
+  @Output() cancelar = new EventEmitter<void>();
+
+  /**
+   * Formulario reactivo para el registro de usuarios
    */
   usuarioForm: FormGroup;
 
   /**
-   * Lista de capas de investigación disponibles para asignar al usuario
+   * Lista de capas disponibles para asignar al usuario
    */
   capas: any[] = [];
 
   /**
-   * Controla la visibilidad del campo de contraseña
+   * Control para mostrar/ocultar la contraseña
    */
   showPassword: boolean = false;
 
   /**
-   * Constructor del componente
-   * @param consolaAdministradorService Servicio para interactuar con la API de administración
+   * Roles disponibles para asignar a los usuarios con sus descripciones
    */
+  roles = [
+    {
+      valor: 'Admin',
+      label: 'Administrador',
+      descripcion: 'Administrador: puede gestionar usuarios, capas y variables.'
+    },
+    {
+      valor: 'Researcher',
+      label: 'Investigador',
+      descripcion: 'Investigador: puede investigar datos clínicos de una capa.'
+    },
+    {
+      valor: 'Doctor',
+      label: 'Personal de salud',
+      descripcion: 'Personal de salud: puede registrar pacientes y ver reportes.'
+    },
+    {
+      valor: 'SuperAdmin',
+      label: 'Super administrador',
+      descripcion: 'SuperAdmin: administración completa del sistema.'
+    }
+  ];
+
   constructor(private consolaAdministradorService: ConsolaAdministradorService) {
-    // Inicialización del formulario con validaciones
+    // Inicialización del formulario con controles y validaciones
     this.usuarioForm = new FormGroup({
       nombre: new FormControl('', [Validators.required]),
       apellido: new FormControl('', [Validators.required]),
@@ -61,7 +82,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
       password: new FormControl('', [Validators.required, Validators.minLength(6)])
     });
 
-    // Suscripciones para generar el username automáticamente
+    // Suscripciones para generar el username automáticamente cuando cambian los campos relevantes
     this.usuarioForm.get('nombre')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
     this.usuarioForm.get('apellido')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
     this.usuarioForm.get('fechaNacimiento')?.valueChanges.subscribe(() => this.generateUsernameIfPossible());
@@ -69,7 +90,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
 
   /**
    * Método del ciclo de vida OnInit
-   * Obtiene las capas de investigación al inicializar el componente
+   * Obtiene las capas disponibles al inicializar el componente
    */
   ngOnInit(): void {
     this.obtenerCapas();
@@ -83,8 +104,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
   }
 
   /**
-   * Genera un username automáticamente si se tienen los datos necesarios
-   * @private
+   * Genera un username automáticamente si los campos requeridos están completos
    */
   private generateUsernameIfPossible(): void {
     const nombre = this.usuarioForm.get('nombre')?.value;
@@ -98,17 +118,11 @@ export class FormRegistroUsuarioComponent implements OnInit {
   }
 
   /**
-   * Obtiene las capas de investigación desde el backend
-   * 
-   * @remarks
-   * Realiza una llamada al servicio `ConsolaAdministradorService` para obtener
-   * la lista de capas disponibles y las almacena en la propiedad `capas`.
-   * Muestra alertas en caso de éxito o error usando SweetAlert2.
+   * Obtiene las capas disponibles desde el servicio
    */
   obtenerCapas() {
     this.consolaAdministradorService.getAllLayers().subscribe(
       (capas) => {
-        console.log('Capas recibidas:', capas);
         this.capas = capas.map(capa => ({
           id: capa.id,
           nombreCapa: capa.layerName || capa.nombreCapa
@@ -127,26 +141,20 @@ export class FormRegistroUsuarioComponent implements OnInit {
   }
 
   /**
-   * Genera un nombre de usuario único basado en los datos personales
-   * 
-   * @param nombre - Primer nombre del usuario
-   * @param apellido - Apellido del usuario
-   * @param fechaNacimiento - Fecha de nacimiento en formato string
-   * @returns Username generado con el formato: primera letra del nombre + apellido + 2 dígitos del año + número aleatorio
-   * 
-   * @example
-   * ```typescript
-   * generarUsername('Juan', 'Pérez', '1990-05-15');
-   * // Retorna: jperez90742
-   * ```
+   * Genera un username basado en el nombre, apellido y fecha de nacimiento
+   * @param nombre Nombre del usuario
+   * @param apellido Apellido del usuario
+   * @param fechaNacimiento Fecha de nacimiento del usuario
+   * @returns Username generado automáticamente
    */
   generarUsername(nombre: string, apellido: string, fechaNacimiento: string): string {
+    // Normaliza el texto eliminando acentos y caracteres especiales
     const normalize = (str: string) =>
       str
-        .normalize('NFD') // Decompose accented characters (e.g., á → a + combining mark)
-        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (e.g., á → a, ñ → n)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
-        .replace(/[^a-z0-9]/g, ''); // Remove non-alphanumeric characters (e.g., -)
+        .replace(/[^a-z0-9]/g, '');
 
     const nombreLimpiado = normalize(nombre.trim());
     const apellidoLimpiado = normalize(apellido.trim());
@@ -158,13 +166,9 @@ export class FormRegistroUsuarioComponent implements OnInit {
 
   /**
    * Maneja el envío del formulario de registro
-   * 
-   * @remarks
-   * Valida el formulario, muestra una confirmación con SweetAlert2 y, si es confirmado,
-   * envía los datos al backend mediante el servicio `ConsolaAdministradorService`.
-   * Emite el evento `usuarioCreada` y resetea el formulario en caso de éxito.
    */
   onRegister() {
+    // Validar si el formulario es inválido
     if (this.usuarioForm.invalid) {
       Swal.fire({
         title: 'Formulario inválido',
@@ -175,14 +179,17 @@ export class FormRegistroUsuarioComponent implements OnInit {
       return;
     }
 
+    // Generar username final con los datos actuales
     const username = this.generarUsername(
       this.usuarioForm.value.nombre,
       this.usuarioForm.value.apellido,
       this.usuarioForm.value.fechaNacimiento
     );
 
+    // Actualizar el valor del username en el formulario
     this.usuarioForm.patchValue({ username });
 
+    // Preparar los datos para enviar al servicio
     const usuarioData = {
       firstName: this.usuarioForm.value.nombre,
       lastName: this.usuarioForm.value.apellido,
@@ -196,6 +203,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
       role: this.usuarioForm.value.rol
     };
 
+    // Mostrar confirmación antes de registrar
     Swal.fire({
       title: '¿Registrar usuario?',
       text: '¿Estás seguro de registrar este usuario?',
@@ -205,21 +213,40 @@ export class FormRegistroUsuarioComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
+        // Llamar al servicio para registrar el usuario
         this.consolaAdministradorService.crearUsuario(usuarioData).subscribe(
           () => {
+            // Mostrar mensaje de éxito
             Swal.fire({
               title: '¡Registro exitoso! 🎉',
               text: 'El usuario ha sido registrado correctamente.',
               icon: 'success',
               confirmButtonText: 'Aceptar'
             });
+            // Resetear formulario y emitir evento
             this.usuarioForm.reset();
             this.usuarioCreada.emit();
           },
-          () => {
+          (error) => {
+            console.error('Error al registrar usuario:', error);
+
+            // Procesar diferentes tipos de errores para mostrar mensajes adecuados
+            let mensaje = 'Hubo un problema inesperado al registrar el usuario.';
+
+            if (error?.error?.message) {
+              mensaje = error.error.message;
+            } else if (error?.error?.errors && Array.isArray(error.error.errors)) {
+              mensaje = error.error.errors
+                .map((e: any) => e.msg || e.message || 'Error desconocido')
+                .join('\n');
+            } else if (error?.message) {
+              mensaje = error.message;
+            }
+
+            // Mostrar mensaje de error
             Swal.fire({
-              title: 'Error',
-              text: 'Hubo un problema al registrar el usuario.',
+              title: 'Error al registrar',
+              text: mensaje,
               icon: 'error',
               confirmButtonText: 'Aceptar'
             });
@@ -230,10 +257,27 @@ export class FormRegistroUsuarioComponent implements OnInit {
   }
 
   /**
+   * Maneja la acción de cancelar el registro
+   */
+  onCancel() {
+    Swal.fire({
+      title: '¿Cancelar registro?',
+      text: '¿Estás seguro de que deseas cancelar el registro?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'Continuar editando'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.cancelar.emit();
+      }
+    });
+  }
+
+  /**
    * Verifica si un campo del formulario es inválido y ha sido tocado
-   * 
-   * @param campo - Nombre del campo a validar
-   * @returns `true` si el campo es inválido y ha sido tocado, `false` en caso contrario
+   * @param campo Nombre del campo a validar
+   * @returns true si el campo es inválido y ha sido tocado, false en caso contrario
    */
   campoEsValido(campo: string): boolean {
     const control = this.usuarioForm.get(campo);
