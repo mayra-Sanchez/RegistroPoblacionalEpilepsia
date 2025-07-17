@@ -114,11 +114,12 @@
           <span>Ver todos</span>
         </button>
       </div>
-    
+
       <div *ngIf="modoBusqueda === 'profesional'" class="search-info">
-        <i class="fas fa-info-circle"></i> Mostrando registros del profesional: <strong>{{ profesionalBuscado }}</strong>
+        <i class="fas fa-info-circle"></i> Mostrando registros del profesional: <strong>{{ profesionalBuscado
+          }}</strong>
       </div>
-      <div *if="modoBusqueda === 'paciente'" class="search-info">
+      <div *ngIf="modoBusqueda === 'paciente'" class="search-info">
         <i class="fas fa-info-circle"></i> Mostrando registros del paciente: <strong>{{ pacienteBuscado }}</strong>
       </div>
     </div>
@@ -133,7 +134,7 @@
 
     <!-- La tabla que ya tenías -->
     <div *ngIf="selectedTab === 'listadoPacientes'">
-      <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[5, 10, 20]"
+      <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[10, 20, 30]"
         [totalRecords]="totalElements" [loading]="loadingRegistros" (onPageChange)="onPageChange($event)"
         (onView)="handleView($event)" (onEdit)="handleEdit($event)">
       </app-table-ver-usuarios>

@@ -989,7 +989,16 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * Guarda los cambios en una variable
    * @param variableEditada Variable con los cambios
    */
+  /**
+   * Guarda los cambios en una variable
+   * @param variableEditada Variable con los cambios
+   */
   guardarEdicionVariable(variableEditada: any): void {
+    if (!variableEditada?.id) {
+      Swal.fire('Error', 'Falta el ID de la variable.', 'error');
+      return;
+    }
+
     const variablePayload = {
       id: variableEditada.id,
       variableName: variableEditada.variableName,
@@ -998,14 +1007,29 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       type: variableEditada.type,
       options: variableEditada.tieneOpciones ? variableEditada.options.filter((opt: string) => opt.trim() !== '') : []
     };
-    this.consolaService.actualizarVariable(variablePayload).subscribe({
-      next: () => {
-        console.log('Variable actualizada correctamente.');
-        this.isEditingVar = false;
-        this.loadVariablesData();
-      },
-      error: (error) => {
-        console.error('Error al actualizar la variable:', error);
+
+    Swal.fire({
+      title: '¿Guardar cambios?',
+      text: 'Se actualizará la información de la variable',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, actualizar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.consolaService.actualizarVariable(variablePayload).subscribe({
+          next: () => {
+            Swal.fire('Éxito', 'Variable actualizada correctamente', 'success');
+            this.isEditingVar = false;
+            this.loadVariablesData();
+          },
+          error: (error) => {
+            console.error('Error al actualizar la variable:', error);
+            Swal.fire('Error', 'No se pudo actualizar la variable', 'error');
+          }
+        });
       }
     });
   }
@@ -1031,14 +1055,27 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       }
     };
 
-    this.consolaService.actualizarCapa(capaData.id, capaData).subscribe({
-      next: () => {
-        Swal.fire('Éxito', 'Capa actualizada correctamente', 'success');
-        this.cerrarModal(true);
-      },
-      error: (error) => {
-        console.error('Error al actualizar capa:', error);
-        Swal.fire('Error', 'No se pudo actualizar la capa', 'error');
+    Swal.fire({
+      title: '¿Guardar cambios?',
+      text: 'Se actualizará la información de la capa',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, actualizar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.consolaService.actualizarCapa(capaData.id, capaData).subscribe({
+          next: () => {
+            Swal.fire('Éxito', 'Capa actualizada correctamente', 'success');
+            this.cerrarModal(true);
+          },
+          error: (error) => {
+            console.error('Error al actualizar capa:', error);
+            Swal.fire('Error', 'No se pudo actualizar la capa', 'error');
+          }
+        });
       }
     });
   }
@@ -1205,9 +1242,23 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
         this.consolaService.getVariableById(id).subscribe({
           next: (variable) => {
-            const capa = variable?.researchLayer?.layerName || 'una capa';
-            advertencias.push(`Está asociada a la capa "${capa}".`);
-            ejecutarEliminacion();
+            if (variable?.researchLayerId) {
+              // Si tenemos el ID de la capa, buscamos sus detalles
+              this.consolaService.getLayerById(variable.researchLayerId).subscribe({
+                next: (capa) => {
+                  const nombreCapa = capa?.layerName || 'una capa';
+                  advertencias.push(`Está asociada a la capa "${nombreCapa}".`);
+                  ejecutarEliminacion();
+                },
+                error: () => {
+                  advertencias.push('Está asociada a una capa (no se pudo obtener el nombre).');
+                  ejecutarEliminacion();
+                }
+              });
+            } else {
+              advertencias.push('No está asociada a ninguna capa.');
+              ejecutarEliminacion();
+            }
           },
           error: () => {
             advertencias.push('No se pudo verificar la capa asociada.');

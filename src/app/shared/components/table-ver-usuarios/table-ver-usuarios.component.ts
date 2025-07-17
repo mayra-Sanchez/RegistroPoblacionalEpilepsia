@@ -14,7 +14,7 @@ interface PageEvent {
 export class TableVerUsuariosComponent implements OnChanges {
   @Input() data: any[] = [];
   @Input() columns: { field: string; header: string }[] = [];
-  @Input() itemsPerPageOptions: number[] = [5, 10, 20];
+  @Input() itemsPerPageOptions: number[] = [10, 20, 30];
   @Input() totalRecords: number = 0;
   @Input() loading: boolean = false;
 
@@ -26,11 +26,22 @@ export class TableVerUsuariosComponent implements OnChanges {
   currentPage = 1;
   searchQuery = '';
 
-  constructor(private ngZone: NgZone) {}
-  
+  constructor(private ngZone: NgZone) { }
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes['itemsPerPageOptions'] && this.itemsPerPageOptions?.length) {
       this.itemsPerPage = this.itemsPerPageOptions[0];
+    }
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalRecords / this.itemsPerPage);
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.emitPageChange();
     }
   }
 
@@ -41,10 +52,6 @@ export class TableVerUsuariosComponent implements OnChanges {
     }
   }
 
-  nextPage() {
-    this.currentPage++;
-    this.emitPageChange();
-  }
 
   private emitPageChange() {
     this.onPageChange.emit({
@@ -69,7 +76,7 @@ export class TableVerUsuariosComponent implements OnChanges {
       this.onView.emit(row);
     });
   }
-  
+
   edit(row: any): void {
     this.ngZone.run(() => {
       this.onEdit.emit(row);

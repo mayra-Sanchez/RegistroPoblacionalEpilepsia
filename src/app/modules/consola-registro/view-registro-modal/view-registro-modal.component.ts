@@ -174,4 +174,28 @@ export class ViewRegistroModalComponent {
   }
 
   //#endregion
+
+  /**
+ * Formatea inteligentemente el valor de una variable:
+ * - Si es una fecha, intenta formatearla como fecha legible.
+ * - Si está vacío o null, retorna "No especificado"
+ */
+  formatVariableValue(nombre: string, valor: any, tipo?: string): string {
+    if (!valor || valor === '') return 'No especificado';
+
+    const nombreNormalizado = nombre.toLowerCase();
+    const esFechaPorNombre = nombreNormalizado.includes('fecha');
+    const esFechaPorTipo = tipo === 'date';
+
+    if (esFechaPorNombre || esFechaPorTipo) {
+      try {
+        const fechaFormateada = this.datePipe.transform(valor, 'dd/MM/yyyy');
+        return fechaFormateada || valor;
+      } catch {
+        return valor;
+      }
+    }
+
+    return valor;
+  }
 }

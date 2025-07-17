@@ -174,7 +174,7 @@ export class FormRegistroPacienteComponent implements OnInit {
   /**
    * Arma el cuerpo del request con todos los datos del formulario.
    */
-  public  buildRequestBody(): any {
+  public buildRequestBody(): any {
     return {
       variables: this.clinicalData.map(item => ({
         id: item.id || this.generateUUID(),
@@ -241,12 +241,30 @@ export class FormRegistroPacienteComponent implements OnInit {
    */
   private convertValue(value: any, type: string): any {
     switch (type) {
-      case 'number': return Number(value);
-      case 'boolean': return Boolean(value);
-      case 'string': return String(value);
-      default: return value;
+      case 'number':
+        return Number(value);
+      case 'boolean':
+        return value === 'true' || value === true;
+      case 'string':
+        return String(value);
+      case 'date':
+        if (!value) return null;
+
+        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          return value; // ya está en formato correcto
+        }
+
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0]; // YYYY-MM-DD
+        }
+
+        return null;
+      default:
+        return value;
     }
   }
+
 
   /**
    * Calcula la edad a partir de una fecha de nacimiento.
@@ -324,7 +342,7 @@ export class FormRegistroPacienteComponent implements OnInit {
   /**
    * Reinicia el formulario al estado inicial.
    */
-  public  resetForm(): void {
+  public resetForm(): void {
     this.pasoActual = 1;
     this.pacienteData = {};
     this.clinicalData = [];

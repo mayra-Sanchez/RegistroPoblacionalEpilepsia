@@ -7,7 +7,7 @@
         &times;
       </button>
     </div>
-    
+
     <!-- Cuerpo -->
     <div class="modal-body">
       <div *ngIf="registro">
@@ -21,7 +21,7 @@
                 {{ getLabel(tiposIdentificacion, registro.patientIdentificationType) }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Número de Documento:</span>
               <div class="info-value">
@@ -30,7 +30,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Sección Datos Básicos -->
         <div class="info-section">
           <h4 class="section-title">Datos Básicos del Paciente</h4>
@@ -41,14 +41,14 @@
                 {{ registro.patientBasicInfo.name || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Género:</span>
               <div class="info-value">
                 {{ getLabel(generos, registro.patientBasicInfo.sex) || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Edad:</span>
               <div class="info-value">
@@ -57,7 +57,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Sección Contacto -->
         <div class="info-section">
           <h4 class="section-title">Información de Contacto</h4>
@@ -68,21 +68,21 @@
                 {{ registro.patientBasicInfo.email || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Teléfono:</span>
               <div class="info-value">
                 {{ registro.patientBasicInfo.phoneNumber || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Ciudad Actual:</span>
               <div class="info-value">
                 {{ registro.patientBasicInfo.currentCity || 'No especificada' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Ciudad de Origen:</span>
               <div class="info-value">
@@ -91,7 +91,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Sección Socioeconómica -->
         <div class="info-section">
           <h4 class="section-title">Datos Socioeconómicos</h4>
@@ -102,14 +102,14 @@
                 {{ getLabel(nivelesEducacion, registro.patientBasicInfo.educationLevel) || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Estado Civil:</span>
               <div class="info-value">
                 {{ getLabel(estadosCiviles, registro.patientBasicInfo.maritalStatus) || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Nivel Económico:</span>
               <div class="info-value">
@@ -118,7 +118,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Sección Estado Clínico -->
         <div class="info-section">
           <h4 class="section-title">Estado Clínico</h4>
@@ -126,10 +126,10 @@
             <div class="info-item">
               <span class="info-label">Fecha Primera Crisis:</span>
               <div class="info-value">
-                {{ registro.patientBasicInfo.firstCrisisDate  }}
+                {{ registro.patientBasicInfo.firstCrisisDate }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Estado de Crisis:</span>
               <div class="info-value">
@@ -138,7 +138,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Sección Cuidador -->
         <div class="info-section" *ngIf="registro.caregiver && hasCaregiverData(registro.caregiver)">
           <h4 class="section-title">Información del Cuidador</h4>
@@ -149,35 +149,35 @@
                 {{ registro.caregiver.name || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Tipo de Documento:</span>
               <div class="info-value">
                 {{ getLabel(tiposIdentificacion, registro.caregiver.identificationType) || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Número de Documento:</span>
               <div class="info-value">
                 {{ registro.caregiver.identificationNumber || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Edad:</span>
               <div class="info-value">
                 {{ registro.caregiver.age || 'No especificada' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Nivel Educativo:</span>
               <div class="info-value">
                 {{ getLabel(nivelesEducacion, registro.caregiver.educationLevel) || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Ocupación:</span>
               <div class="info-value">
@@ -186,7 +186,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Sección Profesional de Salud -->
         <div class="info-section" *ngIf="registro.healthProfessional">
           <h4 class="section-title">Profesional de Salud</h4>
@@ -197,7 +197,7 @@
                 {{ registro.healthProfessional.name || 'No especificado' }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">Número de Documento:</span>
               <div class="info-value">
@@ -206,20 +206,21 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Sección Variables de Investigación -->
         <div class="info-section" *ngIf="registro.variablesRegister && registro.variablesRegister.length > 0">
           <h4 class="section-title">Variables de Investigación</h4>
-          <div class="variables-grid">
-            <div class="variable-item" *ngFor="let variable of registro.variablesRegister">
-              <span class="variable-label">{{ variable.variableName }}:</span>
-              <div class="variable-value">
-                {{ variable.value || 'No especificado' }}
+          <div class="info-grid">
+            <div class="info-item" *ngFor="let variable of registro.variablesRegister">
+              <span class="info-label">{{ variable.variableName }}:</span>
+              <div class="info-value">
+                {{ formatVariableValue(variable.variableName, variable.value, variable.type) }}
               </div>
             </div>
           </div>
         </div>
-        
+
+
         <!-- Sección Metadatos -->
         <div class="info-section">
           <h4 class="section-title">Metadatos del Registro</h4>
@@ -230,7 +231,7 @@
                 {{ registro.registerDate }}
               </div>
             </div>
-            
+
             <div class="info-item">
               <span class="info-label">ID del Registro:</span>
               <div class="info-value">
@@ -241,7 +242,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Pie -->
     <div class="modal-footer">
       <button class="btn-close" (click)="closeModal()">

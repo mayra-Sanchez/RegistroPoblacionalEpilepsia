@@ -8,12 +8,8 @@
     </div>
 
     <div class="search-bar">
-        <input
-          type="text"
-          [(ngModel)]="searchQuery"
-          placeholder="Buscar"
-          (keyup.enter)="onPageChange.emit({page: 0, size: itemsPerPage, query: searchQuery})"
-        />
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar"
+            (keyup.enter)="onPageChange.emit({page: 0, size: itemsPerPage, query: searchQuery})" />
         <i class="fa fa-search"></i>
     </div>
 </div>
@@ -50,6 +46,6 @@
 
 <div class="pagination-controls">
     <button (click)="prevPage()" [disabled]="currentPage === 1 || loading">Anterior</button>
-    <span>Página {{ currentPage }} (Total: {{ totalRecords }} registros)</span>
+    <span>Página {{ currentPage }} de {{ totalPages }} (Total: {{ totalRecords }} registros)</span>
     <button (click)="nextPage()" [disabled]="loading">Siguiente</button>
 </div>

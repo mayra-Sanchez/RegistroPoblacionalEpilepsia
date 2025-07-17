@@ -67,11 +67,10 @@ export class FormRegistroVariablesComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       variableName: ['', [Validators.required, Validators.minLength(3)]],
-      description: ['', [Validators.required, Validators.minLength(5)]],
+      description: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
       type: ['', Validators.required],
       researchLayerId: ['', Validators.required],
       hasOptions: [false],
-      selectionType: ['unica'],
       options: this.fb.array([])
     });
   }
@@ -102,8 +101,39 @@ export class FormRegistroVariablesComponent implements OnInit {
    * Agrega una nueva opción al formulario
    */
   agregarOpcion() {
-    this.options.push(this.fb.control('', Validators.required));
+    const nuevaOpcion = ''; // Por defecto está vacía al agregar
+    const opcionesActuales = this.options.controls.map((ctrl) =>
+      (ctrl.value || '').trim().toLowerCase()
+    );
+
+    if (opcionesActuales.includes(nuevaOpcion)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Opción duplicada',
+        text: 'Ya existe una opción con el mismo nombre.',
+        confirmButtonText: 'Aceptar'
+      });
+      return;
+    }
+
+    this.options.push(this.fb.control('', [Validators.required, this.validarDuplicadoOpciones()]));
   }
+
+  private validarDuplicadoOpciones() {
+    return (control: any) => {
+      const valor = (control.value || '').trim().toLowerCase();
+      const existentes = this.options.controls
+        .map((ctrl) => (ctrl.value || '').trim().toLowerCase());
+
+      const repetidos = existentes.filter(v => v === valor).length;
+      if (repetidos > 1) {
+        return { duplicado: true };
+      }
+      return null;
+    };
+  }
+
+
 
   /**
    * Elimina una opción del formulario
@@ -120,7 +150,6 @@ export class FormRegistroVariablesComponent implements OnInit {
   onHasOptionsChange() {
     if (!this.form.value.hasOptions) {
       this.options.clear();
-      this.form.get('selectionType')?.setValue('unica');
     }
   }
 
@@ -151,18 +180,17 @@ export class FormRegistroVariablesComponent implements OnInit {
       return;
     }
 
-
     const formValue = this.form.value;
     const variableData = {
-      variableName: formValue.variableName,
-      description: formValue.description,
+      variableName: formValue.variableName.trim(),
+      description: formValue.description.trim(),
       type: formValue.type,
       researchLayerId: formValue.researchLayerId,
       options: formValue.hasOptions ? this.options.value : [],
       selectionType: formValue.hasOptions ? formValue.selectionType : null
     };
 
-
+    // Validación: si tiene opciones, al menos una debe existir
     if (formValue.hasOptions && variableData.options.length === 0) {
       Swal.fire({
         title: 'Error',
@@ -183,7 +211,7 @@ export class FormRegistroVariablesComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.variableService.crearVariable(variableData).subscribe({
-          next: (response) => {
+          next: () => {
             this.mostrarExito();
             this.limpiarFormulario();
             this.variableCreada.emit();
@@ -195,6 +223,7 @@ export class FormRegistroVariablesComponent implements OnInit {
       }
     });
   }
+
 
   /**
    * Muestra mensaje de éxito

@@ -18,6 +18,7 @@ interface Variable {
   createdAt: string;
   updatedAt: string;
   required?: boolean;
+  allowMultiple?: boolean; // <- Añade esta propiedad
 }
 
 @Component({
@@ -181,7 +182,44 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       }
     }
 
-    
+
+  }
+
+  setSelectionMode(variableGroup: FormGroup, mode: 'single' | 'multiple'): void {
+    variableGroup.get('selectionMode')?.setValue(mode);
+    // Resetear el valor al cambiar el modo
+    variableGroup.get('valor')?.setValue(null);
+    this.onInputChange(variableGroup);
+  }
+
+  // Verifica si una opción está seleccionada en modo múltiple
+  isOptionSelected(variableGroup: FormGroup, option: string): boolean {
+    const currentValue = variableGroup.get('valor')?.value;
+    return Array.isArray(currentValue) && currentValue.includes(option);
+  }
+
+  trackByOption(index: number, option: string): string {
+    return option; // Usar el valor de la opción como identificador único
+  }
+
+  // Maneja cambios en selección múltiple
+  onMultiSelectChange(variableGroup: FormGroup, option: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    const currentValue = [...(variableGroup.get('valor')?.value || [])]; // Crear copia del array
+
+    if (isChecked) {
+      if (!currentValue.includes(option)) {
+        currentValue.push(option);
+      }
+    } else {
+      const index = currentValue.indexOf(option);
+      if (index > -1) {
+        currentValue.splice(index, 1);
+      }
+    }
+
+    variableGroup.get('valor')?.setValue(currentValue.length > 0 ? currentValue : null);
+    this.onInputChange(variableGroup);
   }
 
   /**
@@ -215,11 +253,12 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       id: [variable.id],
       variableName: [variable.variableName],
       description: [variable.description],
-      type: [displayType], // Usar el tipo de visualización
+      type: [displayType],
       hasOptions: [options.length > 0],
       options: [options],
       required: [variable.required || false],
-      valor: [null, validators]
+      valor: [null, validators],
+      selectionMode: ['single'] // Valor inicial: 'single' (una opción)
     });
   }
 
@@ -372,16 +411,22 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.form.valid && this.allRequiredFieldsFilled()) {
       this.saveToLocalStorage();
-      // Prepara los datos para enviar al componente padre
-      const currentValues = this.variablesClinicas.controls.map(control => ({
-        id: control.get('id')?.value,
-        value: control.get('valor')?.value,
-        type: this.mapToBackendType(control.get('type')?.value),
-        researchLayerId: this.researchLayerId
-      }));
-      this.next.emit(currentValues); // Emite los valores
+      const currentValues = this.variablesClinicas.controls.map(control => {
+        // Convertir arrays a strings unidos por comas si es necesario
+        const value = Array.isArray(control.get('valor')?.value)
+          ? control.get('valor')?.value.join(',')
+          : control.get('valor')?.value;
+
+        return {
+          id: control.get('id')?.value,
+          value: value,
+          type: this.mapToBackendType(control.get('type')?.value),
+          researchLayerId: this.researchLayerId
+        };
+      });
+      this.next.emit(currentValues);
     } else {
-      this.form.markAllAsTouched(); // Marca todos los controles como tocados
+      this.form.markAllAsTouched();
       this.errorMessage = 'Por favor complete todos los campos requeridos';
     }
   }
@@ -410,7 +455,9 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
       'Decimal': 'number',
       'Texto': 'string',
       'Booleano': 'boolean',
-      'Fecha': 'date'
+      'Fecha': 'date',
+      'Opciones': 'string',
+      'OpcionesMúltiples': 'string[]' // <- Nuevo tipo para múltiples opciones
     };
     return typeMap[frontendType] || 'string';
   }

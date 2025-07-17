@@ -52,10 +52,11 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.form = this.fb.group({
       // Nombre de la capa con validación de requerido y mínimo 3 caracteres
-      layerName: ['', [Validators.required, Validators.minLength(3)]],
+      layerName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
 
       // Descripción de la capa con validación de requerido y mínimo 5 caracteres
-      description: ['', [Validators.required, Validators.minLength(5)]],
+      description: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
+
 
       // Grupo anidado para la información del jefe de capa
       layerBoss: this.fb.group({
@@ -63,10 +64,20 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
         id: [1],
 
         // Nombre del jefe con validación de requerido y mínimo 3 caracteres
-        name: ['', [Validators.required, Validators.minLength(3)]],
+        name: ['', [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.pattern(/^[a-zA-ZÀ-ÿ\s]+$/)
+        ]],
+
 
         // Número de identificación con validación de requerido y mínimo 5 caracteres
-        identificationNumber: ['', [Validators.required, Validators.minLength(5)]],
+        identificationNumber: ['', [
+          Validators.required,
+          Validators.minLength(5),
+          Validators.pattern(/^[0-9]+$/)
+        ]],
+
       }),
     });
   }

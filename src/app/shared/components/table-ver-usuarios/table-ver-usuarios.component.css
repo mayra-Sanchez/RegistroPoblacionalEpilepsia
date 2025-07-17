@@ -1,245 +1,211 @@
-/* 
- * Estilos para un sistema de controles de tabla con funcionalidades completas:
- * - Filtrado
- * - Ordenamiento
- * - Paginación
- * - Búsqueda
- * - Diseño responsive
- */
-
-/* ==================== CONTROLES SUPERIORES ==================== */
-
-/**
- * Contenedor principal que agrupa todos los controles superiores de la tabla
- * - Diseño flexible que se adapta a diferentes tamaños de pantalla
- * - Espaciado y márgenes para separación visual
- */
+/* ===============================================
+   CONTROLES SUPERIORES DE TABLA (Filtro, Orden, Búsqueda)
+   =============================================== */
 .table-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 1.25rem;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 20px;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/**
- * Controles individuales (items por página, ordenamiento, búsqueda)
- * - Diseño en línea con elementos alineados verticalmente
- * - Espaciado consistente entre elementos
- */
-.items-per-page, 
-.sort-options, 
+.items-per-page,
+.sort-options,
 .search-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
 }
 
-/* Estilos para etiquetas de los controles */
 .table-controls label {
   font-weight: 600;
-  font-size: 0.9rem;
-  color: #34495e;
-  white-space: nowrap; /* Evita que el texto se divida en varias líneas */
+  font-size: 0.875rem;
+  color: #334155;
+  white-space: nowrap;
 }
 
-/* ==================== ELEMENTOS DE FORMULARIO ==================== */
-
-/**
- * Estilos personalizados para elementos select
- * - Apariencia limpia y moderna
- * - Efectos de focus para mejor usabilidad
- */
+/* ===============================================
+   SELECTS (Items por página, orden)
+   =============================================== */
 .table-controls select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  background-color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px; /* Ancho mínimo para mejor legibilidad */
+  transition: all 0.2s ease;
+  min-width: 120px;
 }
 
 .table-controls select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
-/* ==================== BARRA DE BÚSQUEDA ==================== */
-
-/**
- * Barra de búsqueda con icono integrado
- * - Diseño flexible que ocupa el espacio disponible
- * - Posicionamiento relativo para el icono de búsqueda
- */
+/* ===============================================
+   BARRA DE BÚSQUEDA
+   =============================================== */
 .search-bar {
   position: relative;
   flex-grow: 1;
-  max-width: 300px; /* Ancho máximo para evitar que crezca demasiado */
+  max-width: 400px;
 }
 
 .search-bar input {
   width: 100%;
-  padding: 8px 35px 8px 15px; /* Espacio para el icono a la derecha */
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
 }
 
 .search-bar input:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
-/* Icono de búsqueda posicionado absolutamente dentro del input */
 .search-bar i {
   position: absolute;
-  right: 12px;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #7f8c8d;
+  color: #94a3b8;
   font-size: 0.9rem;
+  pointer-events: none;
 }
 
-/* ==================== CONTENEDOR Y ESTILOS DE TABLA ==================== */
-
-/**
- * Contenedor de la tabla con scroll horizontal para dispositivos pequeños
- * - Sombra sutil para efecto de elevación
- * - Bordes redondeados para coincidir con el diseño general
- */
+/* ===============================================
+   TABLA Y CONTENEDOR
+   =============================================== */
 .table-container {
   width: 100%;
   overflow-x: auto;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background-color: #ffffff;
 }
 
-/* Estilos base de la tabla */
 table {
   width: 100%;
   border-collapse: collapse;
   background-color: #fff;
 }
 
-/* Cabecera de la tabla con color distintivo */
 thead {
   background-color: #2D9FEF;
   color: white;
 }
 
-/* Celdas de la tabla */
 th, td {
-  padding: 12px 15px;
+  padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 th {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-/* Efecto hover para filas */
 tbody tr:hover {
-  background-color: #f5f9fd;
+  background-color: #f8fafc;
 }
 
-/* ==================== BOTONES DE ACCIÓN ==================== */
-
-/**
- * Contenedor para botones de acción (ver, editar, eliminar)
- * - Alineados a la derecha de la celda
- * - Espaciado consistente entre botones
- */
+/* ===============================================
+   BOTONES DE ACCIÓN
+   =============================================== */
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
-/* Estilo base para botones de acción */
 .action-btn {
-  width: 32px;
-  height: 32px;
+  width: 2rem;
+  height: 2rem;
   border: none;
-  border-radius: 50%; /* Forma circular */
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .action-btn i {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
-/* Variantes de botones de acción */
+/* Botón Ver */
 .action-btn.view {
-  background-color: #e8f4fc;
-  color: #3498db;
+  background-color: #e0f2fe;
+  color: #3b82f6;
 }
 
 .action-btn.view:hover {
-  background-color: #d4e9fa;
+  background-color: #bae6fd;
 }
 
+/* Botón Editar */
 .action-btn.edit {
-  background-color: #fff8e6;
-  color: #f39c12;
+  background-color: #fff7ed;
+  color: #f59e0b;
 }
 
 .action-btn.edit:hover {
-  background-color: #fff2d4;
+  background-color: #ffedd5;
 }
 
+/* Botón Eliminar */
 .action-btn.delete {
-  background-color: #fdecea;
-  color: #e74c3c;
+  background-color: #fee2e2;
+  color: #ef4444;
 }
 
 .action-btn.delete:hover {
-  background-color: #fadbd8;
+  background-color: #fecaca;
 }
 
-/* ==================== CONTROLES DE PAGINACIÓN ==================== */
-
-/**
- * Controles de paginación en la parte inferior de la tabla
- * - Centrado horizontalmente
- * - Estilos para botones de navegación
- */
+/* ===============================================
+   CONTROLES DE PAGINACIÓN
+   =============================================== */
 .pagination-controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 15px;
-  margin-top: 20px;
-  padding: 15px;
-  border-radius: 8px;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
 }
 
 .pagination-controls button {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  background-color: white;
+  color: #334155;
 }
 
 .pagination-controls button:hover:not(:disabled) {
-  background-color: #3498db;
+  background-color: #3b82f6;
   color: white;
-  border-color: #3498db;
+  border-color: #3b82f6;
 }
 
 .pagination-controls button:disabled {
@@ -248,61 +214,63 @@ tbody tr:hover {
 }
 
 .pagination-controls span {
-  font-size: 0.9rem;
-  color: #7f8c8d;
+  font-size: 0.875rem;
+  color: #64748b;
 }
 
-/* ==================== MEDIA QUERIES (RESPONSIVE) ==================== */
-
-/**
- * Estilos para tablets y dispositivos medianos (hasta 768px)
- */
+/* ===============================================
+   RESPONSIVE
+   =============================================== */
 @media (max-width: 768px) {
   .table-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 15px;
+    gap: 1rem;
+    padding: 1rem;
   }
-  
-  .items-per-page, 
-  .sort-options, 
+
+  .items-per-page,
+  .sort-options,
   .search-bar {
     width: 100%;
   }
-  
-  .search-bar {
-    max-width: 100%;
-  }
-  
+
   th, td {
-    padding: 10px 12px;
+    padding: 0.625rem 0.75rem;
     font-size: 0.85rem;
   }
-  
-  .actions {
-    gap: 5px;
-  }
-  
+
   .action-btn {
-    width: 28px;
-    height: 28px;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .actions {
+    justify-content: center;
+    gap: 0.4rem;
   }
 }
 
-/**
- * Estilos para móviles (hasta 480px)
- */
 @media (max-width: 480px) {
   .pagination-controls {
     flex-direction: column;
-    gap: 10px;
+    gap: 0.75rem;
   }
-  
+
   .table-controls {
-    padding: 10px;
+    padding: 0.75rem;
   }
-  
+
   th, td {
-    padding: 8px 10px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .pagination-controls button {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .pagination-controls span {
+    font-size: 0.8125rem;
   }
 }

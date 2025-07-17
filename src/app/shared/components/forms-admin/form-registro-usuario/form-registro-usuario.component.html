@@ -5,7 +5,8 @@
   </div>
 
   <form [formGroup]="usuarioForm" (ngSubmit)="onRegister()" class="uniform-form">
-    <!-- Primera fila - 4 campos -->
+
+    <!-- Fila 1 -->
     <div class="form-row">
       <div class="form-group uniform">
         <label for="nombre"><i class="fas fa-user"></i> Nombre</label>
@@ -38,7 +39,7 @@
       </div>
     </div>
 
-    <!-- Segunda fila - 4 campos -->
+    <!-- Fila 2 -->
     <div class="form-row">
       <div class="form-group uniform">
         <label for="birthdate"><i class="fas fa-calendar-alt"></i> Fecha de nacimiento</label>
@@ -56,7 +57,6 @@
         </select>
         <div *ngIf="campoEsValido('rol')" class="error-message">Requerido</div>
       </div>
-
 
       <div class="form-group uniform">
         <label for="capaInvestigacion"><i class="fas fa-layer-group"></i> Capa</label>
@@ -76,11 +76,14 @@
       </div>
     </div>
 
-    <!-- Tercera fila - 2 campos -->
+    <!-- Fila 3 -->
     <div class="form-row">
       <div class="form-group uniform">
         <label for="username"><i class="fas fa-at"></i> Username</label>
-        <input type="text" id="username" formControlName="username" [attr.disabled]="true" />
+        <input type="text" id="username" formControlName="username" readonly />
+        <div *ngIf="usuarioForm.get('username')?.errors?.['duplicado']" class="error-message">
+          El nombre de usuario ya está en uso.
+        </div>
       </div>
 
       <div class="form-group uniform">
@@ -95,14 +98,26 @@
       </div>
     </div>
 
-    <!-- Botón de envío -->
-    <div class="form-footer">
-      <button type="button" class="submit-button" (click)="onCancel()">
-        Cancelar
-      </button>
-      <button type="submit" class="submit-button" [disabled]="usuarioForm.invalid">
-        Registrar
-      </button>
+    <!-- Sugerencias de Username -->
+    <div class="form-row" *ngIf="sugerenciasUsername?.length">
+      <div class="form-group uniform full-width">
+        <label><i class="fas fa-lightbulb"></i> Sugerencias de nombre de usuario</label>
+        <div class="username-suggestions">
+          <label *ngFor="let sugerencia of sugerenciasUsername" class="username-card">
+            <input type="radio" name="usernameSuggestion" [value]="sugerencia"
+              (change)="usuarioForm.get('username')?.setValue(sugerencia)"
+              [checked]="usuarioForm.get('username')?.value === sugerencia" />
+            <span>{{ sugerencia }}</span>
+          </label>
+        </div>
+      </div>
     </div>
+
+    <!-- Footer -->
+    <div class="form-footer">
+      <button type="button" class="submit-button" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="submit-button" [disabled]="usuarioForm.invalid">Registrar</button>
+    </div>
+
   </form>
 </div>

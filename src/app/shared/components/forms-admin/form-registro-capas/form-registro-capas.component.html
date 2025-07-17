@@ -16,11 +16,24 @@
 
   <form [formGroup]="form" (ngSubmit)="registrarCapa()" class="elegant-form">
     <!-- Nombre de la Capa -->
+    <!-- Nombre de la Capa -->
     <div class="form-group">
       <label for="layerName"><i class="fas fa-tag"></i> Nombre de la capa</label>
       <input type="text" id="layerName" formControlName="layerName" placeholder="Ej: Capa de Investigación Clínica" />
-      <div *ngIf="form.get('layerName')?.invalid && form.get('layerName')?.touched" class="error-message">
-        <small><i class="fas fa-exclamation-circle"></i> El nombre es obligatorio (mínimo 3 caracteres)</small>
+
+      <!-- Ayuda siempre visible -->
+      <div class="hint-message">
+        <small><i class="fas fa-info-circle"></i> Mínimo 3 y máximo 100 caracteres</small>
+      </div>
+
+      <!-- Error dinámico -->
+      <div *ngIf="form.get('layerName')?.touched && form.get('layerName')?.invalid" class="error-message">
+        <small *ngIf="form.get('layerName')?.errors?.['required']"><i class="fas fa-exclamation-circle"></i> El nombre
+          es obligatorio</small>
+        <small *ngIf="form.get('layerName')?.errors?.['minlength']"><i class="fas fa-exclamation-circle"></i> Mínimo 3
+          caracteres</small>
+        <small *ngIf="form.get('layerName')?.errors?.['maxlength']"><i class="fas fa-exclamation-circle"></i> Máximo 100
+          caracteres</small>
       </div>
     </div>
 
@@ -29,39 +42,62 @@
       <label for="description"><i class="fas fa-align-left"></i> Descripción</label>
       <textarea id="description" formControlName="description"
         placeholder="Descripción detallada de la capa"></textarea>
-      <div *ngIf="form.get('description')?.invalid && form.get('description')?.touched" class="error-message">
-        <small><i class="fas fa-exclamation-circle"></i> La descripción es obligatoria (mínimo 5 caracteres)</small>
+
+      <div class="hint-message">
+        <small><i class="fas fa-info-circle"></i> Mínimo 5 y máximo 500 caracteres</small>
+      </div>
+
+      <div *ngIf="form.get('description')?.touched && form.get('description')?.invalid" class="error-message">
+        <small *ngIf="form.get('description')?.errors?.['required']"><i class="fas fa-exclamation-circle"></i> La
+          descripción es obligatoria</small>
+        <small *ngIf="form.get('description')?.errors?.['minlength']"><i class="fas fa-exclamation-circle"></i> Mínimo 5
+          caracteres</small>
+        <small *ngIf="form.get('description')?.errors?.['maxlength']"><i class="fas fa-exclamation-circle"></i> Máximo
+          500 caracteres</small>
       </div>
     </div>
 
-    <!-- Jefe de Capa -->
-    <div class="section-header">
-      <h3><i class="fas fa-user-tie"></i> Información del jefe de esta capa de investigación</h3>
-    </div>
+    <!-- Nombre del jefe de capa -->
+    <div class="form-group">
+      <label for="bossName"><i class="fas fa-user"></i> Nombre completo del jefe</label>
+      <input type="text" id="bossName" formControlName="name" placeholder="Ej: Juan Pérez González" />
 
-    <div formGroupName="layerBoss" class="boss-info">
-      <!-- Nombre del Jefe -->
-      <div class="form-group">
-        <label for="bossName"><i class="fas fa-user"></i> Nombre completo</label>
-        <input type="text" id="bossName" formControlName="name" placeholder="Ej: Juan Pérez González" />
-        <div *ngIf="form.get('layerBoss.name')?.invalid && form.get('layerBoss.name')?.touched" class="error-message">
-          <small><i class="fas fa-exclamation-circle"></i> El nombre es obligatorio (mínimo 3 caracteres)</small>
-        </div>
+      <div class="hint-message">
+        <small><i class="fas fa-info-circle"></i> Solo letras y espacios. Mínimo 3 caracteres</small>
       </div>
 
-      <!-- Identificación del Jefe -->
-      <div class="form-group">
-        <label for="identificationNumber"><i class="fas fa-id-card"></i> Número de identificación</label>
-        <input type="hidden" formControlName="id" />
-        <input type="text" id="identificationNumber" formControlName="identificationNumber"
-          placeholder="Ej: 123456789" />
-        <div
-          *ngIf="form.get('layerBoss.identificationNumber')?.invalid && form.get('layerBoss.identificationNumber')?.touched"
-          class="error-message">
-          <small><i class="fas fa-exclamation-circle"></i> El número es obligatorio (mínimo 5 caracteres)</small>
-        </div>
+      <div *ngIf="form.get('layerBoss.name')?.touched && form.get('layerBoss.name')?.invalid" class="error-message">
+        <small *ngIf="form.get('layerBoss.name')?.errors?.['required']"><i class="fas fa-exclamation-circle"></i> El
+          nombre es obligatorio</small>
+        <small *ngIf="form.get('layerBoss.name')?.errors?.['minlength']"><i class="fas fa-exclamation-circle"></i>
+          Mínimo 3 caracteres</small>
+        <small *ngIf="form.get('layerBoss.name')?.errors?.['pattern']"><i class="fas fa-exclamation-circle"></i> Solo se
+          permiten letras y espacios</small>
       </div>
     </div>
+
+    <!-- Número de identificación -->
+    <div class="form-group">
+      <label for="identificationNumber"><i class="fas fa-id-card"></i> Número de identificación</label>
+      <input type="hidden" formControlName="id" />
+      <input type="text" id="identificationNumber" formControlName="identificationNumber" placeholder="Ej: 123456789" />
+
+      <div class="hint-message">
+        <small><i class="fas fa-info-circle"></i> Solo dígitos numéricos. Mínimo 5 caracteres</small>
+      </div>
+
+      <div
+        *ngIf="form.get('layerBoss.identificationNumber')?.touched && form.get('layerBoss.identificationNumber')?.invalid"
+        class="error-message">
+        <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['required']"><i
+            class="fas fa-exclamation-circle"></i> Este campo es obligatorio</small>
+        <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['minlength']"><i
+            class="fas fa-exclamation-circle"></i> Mínimo 5 dígitos</small>
+        <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['pattern']"><i
+            class="fas fa-exclamation-circle"></i> Solo se permiten números</small>
+      </div>
+    </div>
+
 
     <!-- Botón de envío -->
     <div class="form-footer">

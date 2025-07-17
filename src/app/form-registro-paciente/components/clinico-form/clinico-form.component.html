@@ -54,14 +54,40 @@
 
       <div class="variable-control">
         <ng-container [ngSwitch]="variableGroup.get('type')?.value">
-          <!-- Options selector (for any type with options) -->
-          <select *ngSwitchCase="'Opciones'" formControlName="valor" [required]="variableGroup.get('required')?.value"
-            (change)="onInputChange(variableGroup)">
-            <option [ngValue]="null" disabled>Seleccione...</option>
-            <option *ngFor="let option of variableGroup.get('options')?.value" [ngValue]="option">
-              {{option}}
-            </option>
-          </select>
+          <!-- Selector de modo (solo para variables con opciones) -->
+          <div *ngSwitchCase="'Opciones'" class="selection-mode-container">
+            <div class="mode-selector">
+              <button (click)="setSelectionMode(variableGroup, 'single')"
+                [class.active]="variableGroup.get('selectionMode')?.value === 'single'">
+                Una opción
+              </button>
+              <button (click)="setSelectionMode(variableGroup, 'multiple')"
+                [class.active]="variableGroup.get('selectionMode')?.value === 'multiple'">
+                Varias opciones
+              </button>
+            </div>
+
+            <!-- Selector simple -->
+            <select *ngIf="variableGroup.get('selectionMode')?.value === 'single'" formControlName="valor"
+              [required]="variableGroup.get('required')?.value" (change)="onInputChange(variableGroup)">
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              <option *ngFor="let option of variableGroup.get('options')?.value" [ngValue]="option">
+                {{option}}
+              </option>
+            </select>
+
+            <!-- Selector múltiple -->
+            <div *ngIf="variableGroup.get('selectionMode')?.value === 'multiple'" class="options-container">
+              <div *ngFor="let option of variableGroup.get('options')?.value; trackBy: trackByOption"
+                class="option-item">
+                <label>
+                  <input type="checkbox" [checked]="isOptionSelected(variableGroup, option)"
+                    (change)="onMultiSelectChange(variableGroup, option, $event)">
+                  {{option}}
+                </label>
+              </div>
+            </div>
+          </div>
 
           <!-- Boolean selector (only for Lógico without options) -->
           <select *ngSwitchCase="'Booleano'" formControlName="valor" [required]="variableGroup.get('required')?.value"

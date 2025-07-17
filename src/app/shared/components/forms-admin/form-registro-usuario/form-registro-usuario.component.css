@@ -264,3 +264,81 @@ select {
     justify-content: center;
   }
 }
+
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3498db;
+  outline-offset: 2px;
+}
+
+input[disabled],
+select[disabled] {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+  color: #6c757d;
+}
+
+input.ng-invalid.ng-touched,
+select.ng-invalid.ng-touched {
+  border-color: #e74c3c;
+  background-color: #fff5f5;
+}
+
+.form-group.uniform select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237f8c8d'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  padding-right: 2rem !important;
+  cursor: pointer;
+}
+
+
+/* ========== USERNAME SUGGESTIONS ========== */
+.username-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.username-card {
+  display: flex;
+  align-items: center;
+  background-color: #f1f5f9;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.username-card input[type="radio"] {
+  display: none;
+}
+
+.username-card span {
+  color: #2c3e50;
+}
+
+.username-card:hover {
+  background-color: #e0f0ff;
+  border-color: #3498db;
+}
+
+.username-card input[type="radio"]:checked + span {
+  color: #3498db;
+  font-weight: 600;
+}
+
+.username-card input[type="radio"]:checked ~ span::after {
+  content: '✓';
+  margin-left: 0.5rem;
+  color: #3498db;
+  font-weight: bold;
+  font-size: 0.9rem;
+}

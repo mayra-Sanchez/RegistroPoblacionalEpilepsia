@@ -332,52 +332,14 @@ select {
   margin: 4px 0;
 }
 
-.selection-type-toggle {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  flex-wrap: wrap;
+.info-rules {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 4px;
 }
 
-.selection-type-toggle label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border: 1px solid #dce3ea;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  background-color: #f8fafc;
-  flex: 1 1 200px;
-  transition: all 0.25s ease;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #2c3e50;
-  gap: 0.5rem;
-  position: relative;
-}
-
-.selection-type-toggle label:hover {
-  background-color: #eef6fc;
-  border-color: #3498db;
-}
-
-.selection-type-toggle label i {
-  font-size: 1.5rem;
-  color: #7f8c8d;
-  transition: color 0.3s ease;
-}
-
-.selection-type-toggle label.active {
-  border-color: #3498db;
-  background-color: #e6f2fd;
-  color: #0f5ead;
-}
-
-.selection-type-toggle label.active i {
-  color: #3498db;
-}
-
-.selection-type-toggle input[type="radio"] {
-  display: none;
+.error-messages {
+  color: #d32f2f;
+  font-size: 0.8rem;
+  margin-top: 2px;
 }

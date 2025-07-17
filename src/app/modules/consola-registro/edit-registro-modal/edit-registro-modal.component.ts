@@ -273,10 +273,25 @@ export class EditRegistroModalComponent {
 
   private parseVariableValue(value: any, type: string): any {
     if (value === null || value === undefined) return '';
+
+    if (type === 'date') {
+      // Si ya es string, lo dejamos así
+      if (typeof value === 'string') return value;
+
+      // Si es un Date válido
+      if (value instanceof Date && !isNaN(value.getTime())) {
+        return value.toISOString().split('T')[0]; // formato YYYY-MM-DD
+      }
+
+      return '';
+    }
+
     if (type === 'number') return Number(value) || 0;
     if (type === 'boolean') return Boolean(value);
+
     return String(value);
   }
+
 
   private removeEmptyFields(obj: any): any {
     if (obj === null || typeof obj !== 'object') {
@@ -374,4 +389,29 @@ export class EditRegistroModalComponent {
     }
     return dateString;
   }
+
+  parseDateIfNeeded(value: any, variableName: string): Date | string {
+    if (!value) return 'No especificado';
+
+    const nombreNormalizado = variableName.toLowerCase();
+    const esFecha = nombreNormalizado.includes('fecha');
+
+    if (esFecha && typeof value === 'string') {
+      const parsedDate = new Date(value);
+      if (!isNaN(parsedDate.getTime())) return parsedDate;
+    }
+
+    return value;
+  }
+
+  formatDate(value: any): string | null {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return null;
+
+  // Devuelve en formato 'yyyy-MM-dd'
+  return date.toISOString().split('T')[0];
+}
+
 }
