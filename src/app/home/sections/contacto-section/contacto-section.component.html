@@ -1,0 +1,792 @@
+<div class="contact-container">
+    <div class="contact-wrapper">
+        <!-- Card de Instrucciones -->
+        <div class="contact-card instruction-card">
+            <div class="card-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <h2>Registro en el Sistema</h2>
+            <p>Para registrarse en nuestra plataforma, por favor seleccione una opción:</p>
+
+            <div class="registration-options">
+                <button class="register-btn" (click)="openRegistrationModal()">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Solicitar Registro de Usuario</span>
+                    <small>Complete sus datos personales y de acceso</small>
+                </button>
+
+                <button class="register-btn" (click)="openLayerRegistrationModal()">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Solicitar Registro de Capa</span>
+                    <small>Cree una nueva área de investigación</small>
+                </button>
+
+                <button class="register-btn" (click)="openVariableRegistrationModal()">
+                    <i class="fas fa-list-alt"></i>
+                    <span>Solicitar Registro de Variable</span>
+                    <small>Defina nuevas variables para su investigación</small>
+                </button>
+
+                <button class="register-btn" (click)="openPasswordChangeModal()">
+                    <i class="fas fa-key"></i>
+                    <span>Solicitar Cambio de Contraseña</span>
+                    <small>Actualice sus credenciales de acceso</small>
+                </button>
+            </div>
+
+            <div class="note-box">
+                <i class="fas fa-info-circle"></i>
+                <p>Por seguridad, todos los registros son verificados manualmente por nuestro equipo. El proceso de
+                    aprobación puede tardar hasta 48 horas.</p>
+            </div>
+        </div>
+
+        <!-- Card de Información de Contacto -->
+        <div class="contact-card info-card">
+            <div class="card-icon">
+                <i class="fas fa-envelope-open-text"></i>
+            </div>
+            <h2>Contacto Directo</h2>
+
+            <div class="contact-method">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                    <h3>Oficina Principal</h3>
+                    <p>Calle 13 # 100-00<br>Cali, Valle Del Cauca</p>
+                    <p>Edificio B13 - Laboratorio MVC</p>
+                </div>
+            </div>
+
+            <div class="contact-method">
+                <i class="fas fa-phone-alt"></i>
+                <div>
+                    <h3>Teléfonos</h3>
+                    <div class="phone-numbers">
+                        <a href="tel:+573026929375">+57 302 6929375</a>
+                        <br />
+                        <a href="tel:+573053934905">+57 305 3934905</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-method">
+                <div class="contact-icon">
+                    <i class="fas fa-at" aria-hidden="true"></i>
+                </div>
+                <div class="contact-details">
+                    <h3 class="contact-title">Correos Electrónicos</h3>
+                    <div class="email-contacts">
+                        <a href="mailto:soporte.registroepilepsia@gmail.com" class="email-link"
+                            aria-label="Enviar correo electrónico a soporte">
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
+                            <span class="email-address">soporte.registroepilepsia&#64;gmail.com</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-method">
+                <i class="fas fa-business-time"></i>
+                <div>
+                    <h3>Horario de Atención</h3>
+                    <div class="schedule">
+                        <p><strong>Lunes a Viernes:</strong> 8:00 - 18:00 hrs</p>
+                        <p><strong>Sábados:</strong> 9:30 - 11:30 hrs</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="social-media">
+                <h3>Síguenos en redes</h3>
+                <div class="social-icons">
+                    <a href="https://www.linkedin.com/in/registro-de-epilepsia-341b0936a/" target="_blank"
+                        rel="noopener noreferrer" title="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Registro de Usuario -->
+<div id="registrationModal" class="modal" role="dialog" aria-labelledby="registrationModalTitle" aria-hidden="true">
+    <div class="modal-content registration-modal">
+        <button type="button" class="close" aria-label="Cerrar" (click)="closeModal('registrationModal')">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <ng-container *ngIf="!showSuccessMessage; else successTemplate">
+            <div class="form-header">
+                <h2 id="registrationModalTitle"><i class="fas fa-user-plus"></i> Registro de Usuario</h2>
+                <p>Complete todos los campos para registrar un nuevo usuario</p>
+            </div>
+
+            <form [formGroup]="registrationForm" (ngSubmit)="submitRegistration()"
+                *ngIf="!isSending; else sendingTemplate" novalidate class="uniform-form">
+                <!-- Fila 1 -->
+                <div class="form-row">
+                    <div class="form-group uniform">
+                        <label for="nombre"><i class="fas fa-user"></i> Nombre*</label>
+                        <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: Juan">
+                        <div *ngIf="registrationForm.get('nombre')?.invalid && registrationForm.get('nombre')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Nombre es requerido
+                        </div>
+                    </div>
+
+                    <div class="form-group uniform">
+                        <label for="apellido"><i class="fas fa-user"></i> Apellido*</label>
+                        <input type="text" id="apellido" formControlName="apellido" placeholder="Ej: Pérez">
+                        <div *ngIf="registrationForm.get('apellido')?.invalid && registrationForm.get('apellido')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Apellido es requerido
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fila 2 -->
+                <div class="form-row">
+                    <div class="form-group uniform">
+                        <label for="tipoDocumento"><i class="fas fa-id-card"></i> Tipo de documento*</label>
+                        <select id="tipoDocumento" formControlName="tipoDocumento">
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option value="CC">Cédula de Ciudadanía</option>
+                            <option value="TI">Tarjeta de Identidad</option>
+                            <option value="CE">Cédula de Extranjería</option>
+                            <option value="PA">Pasaporte</option>
+                        </select>
+                        <div *ngIf="registrationForm.get('tipoDocumento')?.invalid && registrationForm.get('tipoDocumento')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Tipo de documento es requerido
+                        </div>
+                    </div>
+
+                    <div class="form-group uniform">
+                        <label for="numeroDocumento"><i class="fas fa-id-badge"></i> Número de documento*</label>
+                        <input type="text" id="numeroDocumento" formControlName="numeroDocumento"
+                            placeholder="123456789">
+                        <div *ngIf="registrationForm.get('numeroDocumento')?.invalid && registrationForm.get('numeroDocumento')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Número inválido
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fila 3 -->
+                <div class="form-row">
+                    <div class="form-group uniform">
+                        <label for="fechaNacimiento"><i class="fas fa-calendar-alt"></i> Fecha de nacimiento*</label>
+                        <input type="date" id="fechaNacimiento" formControlName="fechaNacimiento">
+                        <div *ngIf="registrationForm.get('fechaNacimiento')?.invalid && registrationForm.get('fechaNacimiento')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Fecha requerida
+                        </div>
+                    </div>
+
+                    <div class="form-group uniform">
+                        <label for="rol"><i class="fas fa-user-tag"></i> Rol*</label>
+                        <select id="rol" formControlName="rol">
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option value="investigador">Investigador</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="administrador">Administrador</option>
+                        </select>
+                        <div *ngIf="registrationForm.get('rol')?.invalid && registrationForm.get('rol')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Rol es requerido
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fila 4 -->
+                <div class="form-row">
+                    <div class="form-group uniform">
+                        <label for="capaInvestigacion"><i class="fas fa-layer-group"></i> Capa de investigación*</label>
+                        <input type="text" id="capaInvestigacion" formControlName="capaInvestigacion"
+                            placeholder="Ingrese el nombre de la capa">
+                        <div *ngIf="registrationForm.get('capaInvestigacion')?.invalid && registrationForm.get('capaInvestigacion')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Capa de investigación es requerida
+                        </div>
+                    </div>
+
+                    <div class="form-group uniform">
+                        <label for="email"><i class="fas fa-envelope"></i> Email*</label>
+                        <input type="email" id="email" formControlName="email" placeholder="usuario@mail.com">
+                        <div *ngIf="registrationForm.get('email')?.invalid && registrationForm.get('email')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Email inválido
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fila 5 -->
+                <div class="form-row">
+                    <div class="form-group uniform">
+                        <label for="password"><i class="fas fa-lock"></i> Contraseña*</label>
+                        <div class="password-container">
+                            <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
+                                placeholder="Mín. 6 caracteres">
+                            <i class="fas fa-eye toggle-password" (click)="togglePasswordVisibility()"
+                                [class.fa-eye-slash]="showPassword"></i>
+                        </div>
+                        <div *ngIf="registrationForm.get('password')?.invalid && registrationForm.get('password')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Mín. 6 caracteres
+                        </div>
+                    </div>
+
+                    <div class="form-group uniform">
+                        <label for="responsable"><i class="fas fa-user-check"></i> Responsable*</label>
+                        <input type="text" id="responsable" formControlName="responsable"
+                            placeholder="Persona que autoriza su registro">
+                        <div *ngIf="registrationForm.get('responsable')?.invalid && registrationForm.get('responsable')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> Responsable es requerido
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sugerencias de Username -->
+                <div class="form-row" *ngIf="sugerenciasUsername?.length">
+                    <div class="form-group uniform full-width">
+                        <label><i class="fas fa-lightbulb"></i> Sugerencias de nombre de usuario</label>
+                        <div class="username-suggestions">
+                            <label *ngFor="let sugerencia of sugerenciasUsername" class="username-card">
+                                <input type="radio" name="usernameSuggestion" [value]="sugerencia"
+                                    (change)="registrationForm.get('username')?.setValue(sugerencia)"
+                                    [checked]="registrationForm.get('username')?.value === sugerencia">
+                                <span>{{ sugerencia }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="form-footer">
+                    <button type="button" class="submit-button cancel" (click)="closeModal('registrationModal')">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="submit-button" [disabled]="registrationForm.invalid">
+                        <i class="fas fa-save"></i> Registrar Usuario
+                    </button>
+                </div>
+            </form>
+        </ng-container>
+
+        <ng-template #sendingTemplate>
+            <div class="sending-container">
+                <div class="spinner"></div>
+                <h3>Enviando solicitud de registro...</h3>
+                <p>Por favor espere un momento.</p>
+            </div>
+        </ng-template>
+
+        <ng-template #successTemplate>
+            <div class="success-container">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Solicitud Enviada Exitosamente</h2>
+                <p>Hemos recibido tu solicitud de registro correctamente.</p>
+                <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez
+                    procesada.</p>
+                <button class="submit-button" (click)="closeModal('registrationModal')">
+                    <i class="fas fa-check"></i> Cerrar
+                </button>
+            </div>
+        </ng-template>
+    </div>
+</div>
+
+<!-- Modal para Registro de Capa de Investigación -->
+<div id="researchLayerModal" class="modal">
+    <div class="modal-content registration-modal">
+        <button type="button" class="close" aria-label="Cerrar" (click)="closeModal('researchLayerModal')">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <ng-container *ngIf="!showLayerSuccessMessage; else layerSuccessTemplate">
+            <div class="form-header">
+                <h2><i class="fas fa-layer-group"></i> Registro de Capa de Investigación</h2>
+                <p>Complete los campos para registrar una nueva capa de investigación.</p>
+
+                <!-- Explicación de qué es una capa -->
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <small>
+                        Una <strong>capa</strong> representa una unidad organizativa dentro del sistema para gestionar
+                        registros y datos
+                        de estudios de investigación. Por ejemplo: "Capa de investigación de epilepsia en ancianos",
+                        "Capa de
+                        investigación de epilepsia en niños menores a 10 años", etc.
+                    </small>
+                </div>
+            </div>
+
+            <form [formGroup]="researchLayerForm" (ngSubmit)="submitResearchLayer()"
+                *ngIf="!isSending; else sendingTemplate" class="elegant-form">
+                <!-- Nombre de la Capa -->
+                <div class="form-group">
+                    <label for="layerName"><i class="fas fa-tag"></i> Nombre de la capa*</label>
+                    <input type="text" id="layerName" formControlName="layerName"
+                        placeholder="Ej: Capa de Investigación Clínica">
+
+                    <!-- Ayuda siempre visible -->
+                    <div class="hint-message">
+                        <i class="fas fa-info-circle"></i> Mínimo 3 y máximo 100 caracteres
+                    </div>
+
+                    <!-- Error dinámico -->
+                    <div *ngIf="researchLayerForm.get('layerName')?.touched && researchLayerForm.get('layerName')?.invalid"
+                        class="error-message">
+                        <small *ngIf="researchLayerForm.get('layerName')?.errors?.['required']"><i
+                                class="fas fa-exclamation-circle"></i> El nombre es obligatorio</small>
+                        <small *ngIf="researchLayerForm.get('layerName')?.errors?.['minlength']"><i
+                                class="fas fa-exclamation-circle"></i> Mínimo 3 caracteres</small>
+                        <small *ngIf="researchLayerForm.get('layerName')?.errors?.['maxlength']"><i
+                                class="fas fa-exclamation-circle"></i> Máximo 100 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <div class="form-group">
+                    <label for="description"><i class="fas fa-align-left"></i> Descripción*</label>
+                    <textarea id="description" formControlName="description"
+                        placeholder="Descripción detallada de la capa"></textarea>
+
+                    <div class="hint-message">
+                        <i class="fas fa-info-circle"></i> Mínimo 5 y máximo 500 caracteres
+                    </div>
+
+                    <div *ngIf="researchLayerForm.get('description')?.touched && researchLayerForm.get('description')?.invalid"
+                        class="error-message">
+                        <small *ngIf="researchLayerForm.get('description')?.errors?.['required']"><i
+                                class="fas fa-exclamation-circle"></i> La descripción es obligatoria</small>
+                        <small *ngIf="researchLayerForm.get('description')?.errors?.['minlength']"><i
+                                class="fas fa-exclamation-circle"></i> Mínimo 5 caracteres</small>
+                        <small *ngIf="researchLayerForm.get('description')?.errors?.['maxlength']"><i
+                                class="fas fa-exclamation-circle"></i> Máximo 500 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Nombre del jefe de capa -->
+                <div class="form-group">
+                    <label for="bossName"><i class="fas fa-user"></i> Nombre completo del jefe*</label>
+                    <input type="text" id="bossName" formControlName="bossName" placeholder="Ej: Juan Pérez González">
+
+                    <div class="hint-message">
+                        <i class="fas fa-info-circle"></i> Solo letras y espacios. Mínimo 3 caracteres
+                    </div>
+
+                    <div *ngIf="researchLayerForm.get('bossName')?.touched && researchLayerForm.get('bossName')?.invalid"
+                        class="error-message">
+                        <small *ngIf="researchLayerForm.get('bossName')?.errors?.['required']"><i
+                                class="fas fa-exclamation-circle"></i> El nombre es obligatorio</small>
+                        <small *ngIf="researchLayerForm.get('bossName')?.errors?.['minlength']"><i
+                                class="fas fa-exclamation-circle"></i> Mínimo 3 caracteres</small>
+                        <small *ngIf="researchLayerForm.get('bossName')?.errors?.['pattern']"><i
+                                class="fas fa-exclamation-circle"></i> Solo se permiten letras y espacios</small>
+                    </div>
+                </div>
+
+                <!-- Número de identificación -->
+                <div class="form-group">
+                    <label for="identificationNumber"><i class="fas fa-id-card"></i> Número de identificación*</label>
+                    <input type="text" id="identificationNumber" formControlName="identificationNumber"
+                        placeholder="Ej: 123456789">
+
+                    <div class="hint-message">
+                        <i class="fas fa-info-circle"></i> Solo dígitos numéricos. Mínimo 5 caracteres
+                    </div>
+
+                    <div *ngIf="researchLayerForm.get('identificationNumber')?.touched && researchLayerForm.get('identificationNumber')?.invalid"
+                        class="error-message">
+                        <small *ngIf="researchLayerForm.get('identificationNumber')?.errors?.['required']"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</small>
+                        <small *ngIf="researchLayerForm.get('identificationNumber')?.errors?.['minlength']"><i
+                                class="fas fa-exclamation-circle"></i> Mínimo 5 dígitos</small>
+                        <small *ngIf="researchLayerForm.get('identificationNumber')?.errors?.['pattern']"><i
+                                class="fas fa-exclamation-circle"></i> Solo se permiten números</small>
+                    </div>
+                </div>
+
+                <!-- Email del jefe -->
+                <div class="form-group">
+                    <label for="bossEmail"><i class="fas fa-envelope"></i> Correo electrónico*</label>
+                    <input type="email" id="bossEmail" formControlName="bossEmail" placeholder="jefe@institucion.com">
+
+                    <div *ngIf="researchLayerForm.get('bossEmail')?.touched && researchLayerForm.get('bossEmail')?.invalid"
+                        class="error-message">
+                        <small *ngIf="researchLayerForm.get('bossEmail')?.errors?.['required']"><i
+                                class="fas fa-exclamation-circle"></i> El email es obligatorio</small>
+                        <small *ngIf="researchLayerForm.get('bossEmail')?.errors?.['email']"><i
+                                class="fas fa-exclamation-circle"></i> Email inválido</small>
+                    </div>
+                </div>
+
+                <!-- Botón de envío -->
+                <div class="form-footer">
+                    <button type="button" class="submit-button cancel" (click)="closeModal('researchLayerModal')">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="submit-button" [disabled]="researchLayerForm.invalid">
+                        <i class="fas fa-save"></i> Registrar Capa
+                    </button>
+                </div>
+            </form>
+        </ng-container>
+
+        <ng-template #layerSuccessTemplate>
+            <div class="success-container">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Solicitud Enviada Exitosamente</h2>
+                <p>Hemos recibido tu solicitud de registro de capa de investigación correctamente.</p>
+                <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez
+                    procesada.</p>
+                <button class="submit-button" (click)="closeModal('researchLayerModal')">
+                    <i class="fas fa-check"></i> Cerrar
+                </button>
+            </div>
+        </ng-template>
+    </div>
+</div>
+
+<!-- Modal para Registro de Variable -->
+<div id="variableModal" class="modal">
+    <div class="modal-content registration-modal">
+        <button type="button" class="close" aria-label="Cerrar" (click)="closeModal('variableModal')">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <ng-container *ngIf="!showVariableSuccessMessage; else variableSuccessTemplate">
+            <div class="form-header">
+                <h2><i class="fas fa-plus-circle"></i> Crear Variable</h2>
+                <p>Complete los campos para crear una nueva variable.</p>
+            </div>
+
+            <form [formGroup]="variableForm" (ngSubmit)="submitVariable()" *ngIf="!isSending; else sendingTemplate"
+                class="uniform-form">
+                <!-- Nombre de la variable -->
+                <div class="form-group uniform">
+                    <label for="variableName"><i class="fas fa-tag"></i> Nombre de la variable*</label>
+                    <input type="text" id="variableName" formControlName="variableName" placeholder="Ej: Temperatura">
+                    <div class="info-rules">
+                        <i class="fas fa-info-circle"></i> Obligatorio • Mínimo 3 caracteres
+                    </div>
+                    <div *ngIf="variableForm.get('variableName')?.touched && variableForm.get('variableName')?.invalid"
+                        class="error-message">
+                        <small *ngIf="variableForm.get('variableName')?.hasError('required')"><i
+                                class="fas fa-exclamation-circle"></i> El nombre es obligatorio</small>
+                        <small *ngIf="variableForm.get('variableName')?.hasError('minlength')"><i
+                                class="fas fa-exclamation-circle"></i> Mínimo 3 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <div class="form-group uniform">
+                    <label for="description"><i class="fas fa-align-left"></i> Descripción*</label>
+                    <textarea id="description" formControlName="description"
+                        placeholder="Máximo 200 caracteres"></textarea>
+                    <div class="info-rules">
+                        <i class="fas fa-info-circle"></i> Obligatoria • Mínimo 5 caracteres • Máximo 200 caracteres
+                    </div>
+                    <div *ngIf="variableForm.get('description')?.touched && variableForm.get('description')?.invalid"
+                        class="error-message">
+                        <small *ngIf="variableForm.get('description')?.hasError('required')"><i
+                                class="fas fa-exclamation-circle"></i> La descripción es obligatoria</small>
+                        <small *ngIf="variableForm.get('description')?.hasError('minlength')"><i
+                                class="fas fa-exclamation-circle"></i> Mínimo 5 caracteres</small>
+                        <small *ngIf="variableForm.get('description')?.hasError('maxlength')"><i
+                                class="fas fa-exclamation-circle"></i> Máximo 200 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Tipo de variable -->
+                <div class="form-group uniform">
+                    <label for="type"><i class="fas fa-list-alt"></i> Tipo de variable*</label>
+                    <select id="type" formControlName="type">
+                        <option value="" disabled selected>Seleccione tipo...</option>
+                        <option *ngFor="let tipo of tipos" [value]="tipo.valor" [title]="tipo.descripcion">
+                            {{ tipo.valor }}
+                        </option>
+                    </select>
+                    <div class="info-rules">
+                        <i class="fas fa-info-circle"></i> Obligatorio
+                    </div>
+                    <ul class="type-descriptions">
+                        <li *ngFor="let tipo of tipos">
+                            <strong>{{ tipo.valor }}:</strong> {{ tipo.descripcion }}
+                        </li>
+                    </ul>
+                    <div *ngIf="variableForm.get('type')?.touched && variableForm.get('type')?.invalid"
+                        class="error-message">
+                        <small *ngIf="variableForm.get('type')?.hasError('required')"><i
+                                class="fas fa-exclamation-circle"></i> El tipo es obligatorio</small>
+                    </div>
+                </div>
+
+                <!-- Capa de investigación -->
+                <div class="form-row">
+                    <div class="form-group uniform">
+                        <label for="researchLayerId"><i class="fas fa-layer-group"></i> ID de Capa*</label>
+                        <input type="text" id="researchLayerId" formControlName="researchLayerId"
+                            placeholder="Ingrese el ID de la capa">
+                        <div *ngIf="variableForm.get('researchLayerId')?.invalid && variableForm.get('researchLayerId')?.touched"
+                            class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> ID de capa es requerido
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checkbox de opciones -->
+                <div class="form-group uniform checkbox-group">
+                    <label>
+                        <input type="checkbox" id="hasOptions" formControlName="hasOptions"
+                            (change)="onHasOptionsChange()">
+                        <span><i class="fas fa-check-circle"></i> ¿Tiene opciones?</span>
+                    </label>
+                </div>
+
+                <!-- Información sobre opciones -->
+                <div class="info-box" *ngIf="variableForm.get('hasOptions')?.value">
+                    <h4><i class="fas fa-info-circle"></i> ¿Para qué sirven las opciones?</h4>
+                    <p>
+                        Puedes definir una lista de valores que los usuarios podrán seleccionar al usar esta variable.
+                        Por ejemplo: <em>Rojo, Azul, Verde</em>.
+                    </p>
+                    <p><strong>Importante:</strong> No se permiten opciones duplicadas.</p>
+                </div>
+
+                <!-- Opciones dinámicas -->
+                <div *ngIf="variableForm.value.hasOptions" formArrayName="options" class="options-container">
+                    <label class="options-label"><i class="fas fa-list-ul"></i> Opciones:</label>
+
+                    <div *ngFor="let opcion of options.controls; let i = index" class="option-item">
+                        <div class="input-with-button">
+                            <input type="text" [formControlName]="i" placeholder="Nombre de opción" required>
+                            <button type="button" class="btn-icon" (click)="eliminarOpcion(i)" title="Eliminar opción">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div *ngIf="opcion.errors?.['required'] || opcion.errors?.['duplicado']" class="error-message">
+                            <small *ngIf="opcion.errors?.['required']"><i class="fas fa-exclamation-circle"></i> La
+                                opción es obligatoria</small>
+                            <small *ngIf="opcion.errors?.['duplicado']"><i class="fas fa-exclamation-circle"></i> Esta
+                                opción está duplicada</small>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-add" (click)="agregarOpcion()">
+                        <i class="fas fa-plus"></i> Agregar opción
+                    </button>
+                </div>
+
+                <!-- Checkbox de habilitación -->
+                <div class="form-group uniform checkbox-group">
+                    <label>
+                        <input type="checkbox" id="isEnabled" formControlName="isEnabled">
+                        <span><i class="fas fa-power-off"></i> Habilitar variable inmediatamente</span>
+                    </label>
+                </div>
+
+                <!-- Botones -->
+                <div class="form-footer">
+                    <button type="button" class="submit-button cancel" (click)="onCancel()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="submit-button"
+                        [disabled]="variableForm.invalid || (variableForm.value.hasOptions && options.length === 0)"
+                        [attr.title]="getErroresTooltip()">
+                        <i class="fas fa-save"></i> Crear Variable
+                    </button>
+                </div>
+            </form>
+        </ng-container>
+
+        <ng-template #variableSuccessTemplate>
+            <div class="success-container">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Solicitud Enviada Exitosamente</h2>
+                <p>Hemos recibido tu solicitud de registro de variable correctamente.</p>
+                <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez
+                    procesada.</p>
+                <button class="submit-button" (click)="closeModal('variableModal')">
+                    <i class="fas fa-check"></i> Cerrar
+                </button>
+            </div>
+        </ng-template>
+    </div>
+</div>
+
+<!-- Modal para Solicitud de Cambio de Contraseña -->
+<div id="passwordChangeModal" class="modal">
+    <div class="modal-content registration-modal">
+        <button type="button" class="close" aria-label="Cerrar" (click)="closeModal('passwordChangeModal')">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <ng-container *ngIf="!showPasswordChangeSuccess; else passwordChangeSuccessTemplate">
+            <div class="form-header">
+                <h2><i class="fas fa-key"></i> Solicitud de Cambio de Contraseña</h2>
+                <p>Complete el formulario para solicitar un cambio de contraseña.</p>
+            </div>
+
+            <form [formGroup]="passwordChangeForm" (ngSubmit)="submitPasswordChange()"
+                *ngIf="!isSending; else sendingTemplate" class="uniform-form">
+
+                <!-- Email -->
+                <div class="form-group uniform">
+                    <label for="email"><i class="fas fa-envelope"></i> Correo electrónico registrado*</label>
+                    <input type="email" id="email" formControlName="email" placeholder="usuario@mail.com">
+                    <div *ngIf="passwordChangeForm.get('email')?.touched && passwordChangeForm.get('email')?.invalid"
+                        class="error-message">
+                        <small *ngIf="passwordChangeForm.get('email')?.errors?.['required']">
+                            <i class="fas fa-exclamation-circle"></i> Email es requerido
+                        </small>
+                        <small *ngIf="passwordChangeForm.get('email')?.errors?.['email']">
+                            <i class="fas fa-exclamation-circle"></i> Email inválido
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Número de identificación -->
+                <div class="form-group uniform">
+                    <label for="identificationNumber"><i class="fas fa-id-card"></i> Número de identificación*</label>
+                    <input type="text" id="identificationNumber" formControlName="identificationNumber"
+                        placeholder="Ej: 123456789">
+                    <div *ngIf="passwordChangeForm.get('identificationNumber')?.touched && passwordChangeForm.get('identificationNumber')?.invalid"
+                        class="error-message">
+                        <small *ngIf="passwordChangeForm.get('identificationNumber')?.errors?.['required']">
+                            <i class="fas fa-exclamation-circle"></i> Número de identificación es requerido
+                        </small>
+                        <small *ngIf="passwordChangeForm.get('identificationNumber')?.errors?.['pattern']">
+                            <i class="fas fa-exclamation-circle"></i> Solo se permiten números
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Rol -->
+                <div class="form-group uniform">
+                    <label for="role"><i class="fas fa-user-tag"></i> Rol en el sistema*</label>
+                    <select id="role" formControlName="role">
+                        <option value="" disabled selected>Seleccione su rol...</option>
+                        <option value="investigador">Investigador</option>
+                        <option value="doctor">Doctor</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
+                    <div *ngIf="passwordChangeForm.get('role')?.touched && passwordChangeForm.get('role')?.invalid"
+                        class="error-message">
+                        <small *ngIf="passwordChangeForm.get('role')?.errors?.['required']">
+                            <i class="fas fa-exclamation-circle"></i> Rol es requerido
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Nueva contraseña -->
+                <div class="form-group uniform">
+                    <label for="newPassword"><i class="fas fa-lock"></i> Nueva contraseña*</label>
+                    <div class="password-container">
+                        <input [type]="showNewPassword ? 'text' : 'password'" id="newPassword"
+                            formControlName="newPassword" placeholder="Mín. 8 caracteres">
+                        <i class="fas fa-eye toggle-password" (click)="toggleNewPasswordVisibility()"
+                            [class.fa-eye-slash]="showNewPassword"></i>
+                    </div>
+                    <div *ngIf="passwordChangeForm.get('newPassword')?.touched && passwordChangeForm.get('newPassword')?.invalid"
+                        class="error-message">
+                        <small *ngIf="passwordChangeForm.get('newPassword')?.errors?.['required']">
+                            <i class="fas fa-exclamation-circle"></i> Contraseña es requerida
+                        </small>
+                        <small *ngIf="passwordChangeForm.get('newPassword')?.errors?.['minlength']">
+                            <i class="fas fa-exclamation-circle"></i> Mínimo 8 caracteres
+                        </small>
+                        <small *ngIf="passwordChangeForm.get('newPassword')?.errors?.['pattern']">
+                            <i class="fas fa-exclamation-circle"></i> Debe incluir mayúsculas, minúsculas y números
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Confirmar nueva contraseña -->
+                <div class="form-group uniform">
+                    <label for="confirmPassword"><i class="fas fa-lock"></i> Confirmar nueva contraseña*</label>
+                    <div class="password-container">
+                        <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirmPassword"
+                            formControlName="confirmPassword" placeholder="Repita la nueva contraseña">
+                        <i class="fas fa-eye toggle-password" (click)="toggleConfirmPasswordVisibility()"
+                            [class.fa-eye-slash]="showConfirmPassword"></i>
+                    </div>
+                    <div *ngIf="passwordChangeForm.get('confirmPassword')?.touched && passwordChangeForm.get('confirmPassword')?.invalid"
+                        class="error-message">
+                        <small *ngIf="passwordChangeForm.get('confirmPassword')?.errors?.['required']">
+                            <i class="fas fa-exclamation-circle"></i> Confirmación es requerida
+                        </small>
+                        <small *ngIf="passwordChangeForm.get('confirmPassword')?.errors?.['passwordMismatch']">
+                            <i class="fas fa-exclamation-circle"></i> Las contraseñas no coinciden
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Motivo del cambio -->
+                <div class="form-group uniform">
+                    <label for="reason"><i class="fas fa-comment-alt"></i> Motivo del cambio*</label>
+                    <select id="reason" formControlName="reason">
+                        <option value="" disabled selected>Seleccione el motivo...</option>
+                        <option value="olvido">Olvidé mi contraseña</option>
+                        <option value="seguridad">Motivos de seguridad</option>
+                        <option value="primera_vez">Primer acceso al sistema</option>
+                        <option value="otro">Otro motivo</option>
+                    </select>
+                    <div *ngIf="passwordChangeForm.get('reason')?.touched && passwordChangeForm.get('reason')?.invalid"
+                        class="error-message">
+                        <small *ngIf="passwordChangeForm.get('reason')?.errors?.['required']">
+                            <i class="fas fa-exclamation-circle"></i> Motivo es requerido
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Otro motivo (solo visible si se selecciona "Otro motivo") -->
+                <div class="form-group uniform" *ngIf="passwordChangeForm.get('reason')?.value === 'otro'">
+                    <label for="otherReason"><i class="fas fa-pen"></i> Especifique el motivo*</label>
+                    <textarea id="otherReason" formControlName="otherReason"
+                        placeholder="Describa brevemente el motivo del cambio"></textarea>
+                    <div *ngIf="passwordChangeForm.get('otherReason')?.touched && passwordChangeForm.get('otherReason')?.invalid"
+                        class="error-message">
+                        <small *ngIf="passwordChangeForm.get('otherReason')?.errors?.['required']">
+                            <i class="fas fa-exclamation-circle"></i> Debe especificar el motivo
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="form-footer">
+                    <button type="button" class="submit-button cancel" (click)="closeModal('passwordChangeModal')">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="submit-button" [disabled]="passwordChangeForm.invalid">
+                        <i class="fas fa-paper-plane"></i> Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </ng-container>
+
+        <ng-template #passwordChangeSuccessTemplate>
+            <div class="success-container">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Solicitud Enviada Exitosamente</h2>
+                <p>Hemos recibido tu solicitud de cambio de contraseña correctamente.</p>
+                <p>El equipo administrativo revisará tu información y te notificará por correo electrónico una vez
+                    procesada.</p>
+                <button class="submit-button" (click)="closeModal('passwordChangeModal')">
+                    <i class="fas fa-check"></i> Cerrar
+                </button>
+            </div>
+        </ng-template>
+    </div>
+</div>

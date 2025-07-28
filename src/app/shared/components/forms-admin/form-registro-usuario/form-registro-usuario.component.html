@@ -5,119 +5,127 @@
   </div>
 
   <form [formGroup]="usuarioForm" (ngSubmit)="onRegister()" class="uniform-form">
+    <!-- Sección 1: Información personal -->
+    <fieldset class="form-section">
+      <legend>Información personal</legend>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="nombre"><i class="fas fa-user"></i> Nombre</label>
+          <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: Juan" />
+          <div *ngIf="campoEsValido('nombre')" class="error-message">Requerido</div>
+        </div>
 
-    <!-- Fila 1 -->
-    <div class="form-row">
-      <div class="form-group uniform">
-        <label for="nombre"><i class="fas fa-user"></i> Nombre</label>
-        <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: Juan" />
-        <div *ngIf="campoEsValido('nombre')" class="error-message">Requerido</div>
-      </div>
+        <div class="form-group">
+          <label for="apellido"><i class="fas fa-user"></i> Apellido</label>
+          <input type="text" id="apellido" formControlName="apellido" placeholder="Ej: Pérez" />
+          <div *ngIf="campoEsValido('apellido')" class="error-message">Requerido</div>
+        </div>
 
-      <div class="form-group uniform">
-        <label for="apellido"><i class="fas fa-user"></i> Apellido</label>
-        <input type="text" id="apellido" formControlName="apellido" placeholder="Ej: Pérez" />
-        <div *ngIf="campoEsValido('apellido')" class="error-message">Requerido</div>
-      </div>
+        <div class="form-group">
+          <label for="tipoDocumento"><i class="fas fa-id-card"></i> Tipo de documento</label>
+          <select id="tipoDocumento" formControlName="tipoDocumento">
+            <option value="" disabled selected>Seleccione...</option>
+            <option value="CC">Cédula de Ciudadanía</option>
+            <option value="TI">Tarjeta de Identidad</option>
+            <option value="CE">Cédula de Extranjería</option>
+            <option value="PA">Pasaporte</option>
+          </select>
+          <div *ngIf="campoEsValido('tipoDocumento')" class="error-message">Requerido</div>
+        </div>
 
-      <div class="form-group uniform">
-        <label for="tipoDocumento"><i class="fas fa-id-card"></i> Tipo de documento</label>
-        <select id="tipoDocumento" formControlName="tipoDocumento">
-          <option value="" disabled selected>Seleccione...</option>
-          <option value="CC">Cédula de Ciudadanía</option>
-          <option value="TI">Tarjeta de Identidad</option>
-          <option value="CE">Cédula de Extranjería</option>
-          <option value="PA">Pasaporte</option>
-        </select>
-        <div *ngIf="campoEsValido('tipoDocumento')" class="error-message">Requerido</div>
-      </div>
+        <div class="form-group">
+          <label for="numeroDocumento"><i class="fas fa-id-badge"></i> Número de documento</label>
+          <input type="text" id="numeroDocumento" formControlName="numeroDocumento" placeholder="123456789" />
+          <div *ngIf="campoEsValido('numeroDocumento')" class="error-message">Número inválido</div>
+        </div>
 
-      <div class="form-group uniform">
-        <label for="numeroDocumento"><i class="fas fa-id-badge"></i> Número de documento</label>
-        <input type="text" id="numeroDocumento" formControlName="numeroDocumento" placeholder="123456789" />
-        <div *ngIf="campoEsValido('numeroDocumento')" class="error-message">Número inválido</div>
-      </div>
-    </div>
-
-    <!-- Fila 2 -->
-    <div class="form-row">
-      <div class="form-group uniform">
-        <label for="birthdate"><i class="fas fa-calendar-alt"></i> Fecha de nacimiento</label>
-        <input type="date" id="birthdate" formControlName="fechaNacimiento" />
-        <div *ngIf="campoEsValido('fechaNacimiento')" class="error-message">Requerida</div>
-      </div>
-
-      <div class="form-group uniform">
-        <label for="rol"><i class="fas fa-user-tag"></i> Rol</label>
-        <select id="rol" formControlName="rol">
-          <option value="" disabled selected>Seleccione...</option>
-          <option *ngFor="let rol of roles" [value]="rol.valor" [attr.title]="rol.descripcion">
-            {{ rol.label }}
-          </option>
-        </select>
-        <div *ngIf="campoEsValido('rol')" class="error-message">Requerido</div>
-      </div>
-
-      <div class="form-group uniform">
-        <label for="capaInvestigacion"><i class="fas fa-layer-group"></i> Capa</label>
-        <select id="capaInvestigacion" formControlName="capaInvestigacion">
-          <option value="" disabled selected>Seleccione...</option>
-          <option *ngFor="let capa of capas" [value]="capa.id">
-            {{ capa.nombreCapa || capa.layerName }}
-          </option>
-        </select>
-        <div *ngIf="campoEsValido('capaInvestigacion')" class="error-message">Requerida</div>
-      </div>
-
-      <div class="form-group uniform">
-        <label for="email"><i class="fas fa-envelope"></i> Email</label>
-        <input type="email" id="email" formControlName="email" placeholder="usuario@mail.com" />
-        <div *ngIf="campoEsValido('email')" class="error-message">Email inválido</div>
-      </div>
-    </div>
-
-    <!-- Fila 3 -->
-    <div class="form-row">
-      <div class="form-group uniform">
-        <label for="username"><i class="fas fa-at"></i> Username</label>
-        <input type="text" id="username" formControlName="username" readonly />
-        <div *ngIf="usuarioForm.get('username')?.errors?.['duplicado']" class="error-message">
-          El nombre de usuario ya está en uso.
+        <div class="form-group">
+          <label for="birthdate"><i class="fas fa-calendar-alt"></i> Fecha de nacimiento</label>
+          <input type="date" id="birthdate" formControlName="fechaNacimiento" />
+          <div *ngIf="campoEsValido('fechaNacimiento')" class="error-message">Requerida</div>
         </div>
       </div>
+    </fieldset>
 
-      <div class="form-group uniform">
-        <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
-        <div class="password-container">
-          <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
-            placeholder="Mín. 6 chars" />
-          <i class="fas fa-eye toggle-password" (click)="togglePasswordVisibility()"
-            [class.fa-eye-slash]="showPassword"></i>
+    <!-- Sección 2: Credenciales -->
+    <fieldset class="form-section">
+      <legend>Credenciales de acceso</legend>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="email"><i class="fas fa-envelope"></i> Email</label>
+          <input type="email" id="email" formControlName="email" placeholder="usuario@mail.com" />
+          <div *ngIf="campoEsValido('email')" class="error-message">Email inválido</div>
         </div>
-        <div *ngIf="campoEsValido('password')" class="error-message">Mín. 6 caracteres</div>
+
+        <div class="form-group">
+          <label for="username"><i class="fas fa-at"></i> Username</label>
+          <input type="text" id="username" formControlName="username" readonly />
+          <div *ngIf="usuarioForm.get('username')?.errors?.['duplicado']" class="error-message">
+            El nombre de usuario ya está en uso.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
+          <div class="password-container">
+            <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
+              placeholder="Mín. 6 chars" />
+            <i class="fas fa-eye toggle-password" (click)="togglePasswordVisibility()"
+              [class.fa-eye-slash]="showPassword"></i>
+          </div>
+          <div *ngIf="campoEsValido('password')" class="error-message">Mín. 6 caracteres</div>
+        </div>
       </div>
-    </div>
+    </fieldset>
+
+    <!-- Sección 3: Configuración de acceso -->
+    <fieldset class="form-section">
+      <legend>Configuración de acceso</legend>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="rol"><i class="fas fa-user-tag"></i> Rol</label>
+          <select id="rol" formControlName="rol">
+            <option value="" disabled selected>Seleccione...</option>
+            <option *ngFor="let rol of roles" [value]="rol.valor" [attr.title]="rol.descripcion">
+              {{ rol.label }}
+            </option>
+          </select>
+          <div *ngIf="campoEsValido('rol')" class="error-message">Requerido</div>
+        </div>
+
+        <div class="form-group">
+          <label>Capas</label>
+          <div class="checkbox-list">
+            <label class="checkbox-option" *ngFor="let capa of capas">
+              <input type="checkbox" [value]="capa.id" (change)="onToggleCapaSeleccionada(capa.id)"
+                [checked]="usuarioForm.get('capaInvestigacion')?.value.includes(capa.id)" />
+              <span>{{ capa.nombreCapa || capa.layerName }}</span>
+            </label>
+          </div>
+          <div *ngIf="campoEsValido('capaInvestigacion')" class="error-message">
+            Debe seleccionar al menos una capa
+          </div>
+        </div>
+      </div>
+    </fieldset>
 
     <!-- Sugerencias de Username -->
-    <div class="form-row" *ngIf="sugerenciasUsername?.length">
-      <div class="form-group uniform full-width">
-        <label><i class="fas fa-lightbulb"></i> Sugerencias de nombre de usuario</label>
-        <div class="username-suggestions">
-          <label *ngFor="let sugerencia of sugerenciasUsername" class="username-card">
-            <input type="radio" name="usernameSuggestion" [value]="sugerencia"
-              (change)="usuarioForm.get('username')?.setValue(sugerencia)"
-              [checked]="usuarioForm.get('username')?.value === sugerencia" />
-            <span>{{ sugerencia }}</span>
-          </label>
-        </div>
+    <div *ngIf="sugerenciasUsername?.length" class="form-section">
+      <h3><i class="fas fa-lightbulb"></i> Sugerencias de nombre de usuario</h3>
+      <div class="username-suggestions">
+        <label *ngFor="let sugerencia of sugerenciasUsername" class="username-card">
+          <input type="radio" name="usernameSuggestion" [value]="sugerencia"
+            (change)="usuarioForm.get('username')?.setValue(sugerencia)"
+            [checked]="usuarioForm.get('username')?.value === sugerencia" />
+          <span>{{ sugerencia }}</span>
+        </label>
       </div>
     </div>
 
-    <!-- Footer -->
+    <!-- Botones -->
     <div class="form-footer">
-      <button type="button" class="submit-button" (click)="onCancel()">Cancelar</button>
-      <button type="submit" class="submit-button" [disabled]="usuarioForm.invalid">Registrar</button>
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="usuarioForm.invalid">Registrar</button>
     </div>
-
   </form>
 </div>

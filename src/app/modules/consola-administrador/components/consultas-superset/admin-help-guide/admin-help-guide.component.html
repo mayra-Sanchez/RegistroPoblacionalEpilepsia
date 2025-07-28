@@ -1,0 +1,27 @@
+<!-- Botón para mostrar/ocultar la ayuda -->
+<button mat-stroked-button color="accent" (click)="toggleHelp()">
+  <mat-icon>help_outline</mat-icon>
+  {{ showHelp ? 'Ocultar ayuda' : '¿Necesitas ayuda?' }}
+</button>
+
+<!-- Contenedor de ayuda con ngIf -->
+<div *ngIf="showHelp" class="help-container mat-elevation-z3">
+  <div class="help-header">
+    <h2>
+      <mat-icon class="step-icon" color="accent">info</mat-icon>
+      {{ steps[currentStep].title }}
+    </h2>
+    <span class="step-counter">{{ currentStep + 1 }} / {{ steps.length }}</span>
+  </div>
+
+  <p class="help-content">{{ steps[currentStep].content }}</p>
+
+  <div class="help-nav">
+    <button mat-raised-button color="primary" (click)="prevStep()" [disabled]="currentStep === 0">
+      <mat-icon>arrow_back</mat-icon> Anterior
+    </button>
+    <button mat-raised-button color="primary" (click)="nextStep()" [disabled]="currentStep === steps.length - 1">
+      Siguiente <mat-icon>arrow_forward</mat-icon>
+    </button>
+  </div>
+</div>

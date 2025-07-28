@@ -359,3 +359,30 @@ textarea.form-control {
 .custom-alert-danger i {
   color: #dc3545; /* Rojo fuerte */
 }
+
+/* handle-edit.component.css */
+.capas-selection {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.form-check {
+    margin-bottom: 5px;
+}
+
+.form-check-input {
+    margin-right: 8px;
+}
+
+.text-muted.small {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}

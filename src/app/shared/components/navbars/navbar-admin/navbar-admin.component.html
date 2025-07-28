@@ -13,7 +13,9 @@
     <li (click)="selectTab('gestionCapas')" [class.selected]="selectedTab === 'gestionCapas'">
       <a class="text">Gestión de capas de investigación</a>
     </li>
-    
+        <li (click)="selectTab('gestionSuperset')" [class.selected]="selectedTab === 'gestionSuperset'">
+      <a class="text">Gestión de apache superset</a>
+    </li>
     <!-- Tab only for SuperAdmin -->
     <li *ngIf="isSuperAdmin" 
         (click)="selectTab('gestionRegistrosCapas')" 

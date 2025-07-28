@@ -18,6 +18,7 @@ export class HandleEditComponent implements OnInit {
   tieneOpciones: boolean = false;
   showPassword: boolean = false;
   private rolOriginal: string = '';
+  selectedCapas: string[] = [];
 
   constructor(private fb: FormBuilder) { }
 
@@ -27,6 +28,14 @@ export class HandleEditComponent implements OnInit {
     switch (this.editType) {
       case 'usuario':
         this.rolOriginal = this.itemToEdit.role;
+
+        // Inicializar las capas seleccionadas
+        this.selectedCapas = Array.isArray(this.itemToEdit.capaRawValue)
+          ? [...this.itemToEdit.capaRawValue]
+          : this.itemToEdit.capaRawValue
+            ? [this.itemToEdit.capaRawValue]
+            : [];
+
         this.editForm = this.fb.group({
           nombre: [this.itemToEdit.nombre, Validators.required],
           apellido: [this.itemToEdit.apellido, Validators.required],
@@ -35,9 +44,14 @@ export class HandleEditComponent implements OnInit {
           tipoDocumento: [{ value: this.itemToEdit.tipoDocumento, disabled: true }, Validators.required],
           documento: [this.itemToEdit.documento, Validators.required],
           fechaNacimiento: [this.itemToEdit.fechaNacimiento || ''],
-          capaRawValue: [this.itemToEdit.capaRawValue || this.capas[0]?.id],
+          capas: [this.selectedCapas], // Usar el array de capas seleccionadas
           role: [this.itemToEdit.role, Validators.required],
-          password: ['']
+          password: [''],
+          lastPasswordUpdate: [
+            this.itemToEdit.lastPasswordUpdate ||
+            this.itemToEdit.attributes?.lastPasswordUpdate?.[0] ||
+            'No registada'
+          ]
         });
         break;
 
@@ -113,6 +127,11 @@ export class HandleEditComponent implements OnInit {
 
     const formValue = this.editForm.value;
 
+    // Para usuarios, asegurar que capas sea un array
+    if (this.editType === 'usuario') {
+      formValue.capaRawValue = this.selectedCapas;
+    }
+
     // Asegurar que los datos sean consistentes con itemToEdit
     if (this.editType === 'variable') {
       formValue.tieneOpciones = this.tieneOpciones;
@@ -137,5 +156,36 @@ export class HandleEditComponent implements OnInit {
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  // Método para manejar la selección/deselección de capas
+  toggleCapaSelection(capaId: string): void {
+    const index = this.selectedCapas.indexOf(capaId);
+    if (index === -1) {
+      this.selectedCapas.push(capaId);
+    } else {
+      this.selectedCapas.splice(index, 1);
+    }
+    this.editForm.patchValue({ capas: this.selectedCapas });
+  }
+
+  // Verificar si una capa está seleccionada
+  isCapaSelected(capaId: string): boolean {
+    // Verificar si la capa está en el array de capas seleccionadas
+    return this.selectedCapas.includes(capaId);
+  }
+
+  private formatLastPasswordUpdate(dateString: string): string {
+    if (!dateString) return 'No registrada';
+
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('es-ES'); // Formato español
+      // O para más control:
+      // return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    } catch (e) {
+      console.error('Error formateando fecha:', e);
+      return dateString; // Devuelve el valor original si no se puede parsear
+    }
   }
 }

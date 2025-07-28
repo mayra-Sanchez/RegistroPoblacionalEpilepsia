@@ -33,7 +33,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
       fechaNacimiento: new FormControl('', [Validators.required]),
       rol: new FormControl('', [Validators.required]),
       username: new FormControl('', [Validators.required]),
-      capaInvestigacion: new FormControl('', [Validators.required]),
+      capaInvestigacion: new FormControl([], [Validators.required]),
       email: new FormControl('', [Validators.required, Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(6)])
     });
@@ -204,8 +204,13 @@ export class FormRegistroUsuarioComponent implements OnInit {
 
   campoEsValido(campo: string): boolean {
     const control = this.usuarioForm.get(campo);
-    return control ? control.invalid && control.touched : false;
+    if (!control) return false;
+    if (campo === 'capaInvestigacion') {
+      return (Array.isArray(control.value) && control.value.length === 0) || control.invalid && control.touched;
+    }
+    return control.invalid && control.touched;
   }
+
 
   /**
    * Permite al usuario seleccionar manualmente un username de las sugerencias
@@ -213,4 +218,22 @@ export class FormRegistroUsuarioComponent implements OnInit {
   seleccionarUsername(sugerencia: string) {
     this.usuarioForm.get('username')?.setValue(sugerencia);
   }
+
+  onToggleCapaSeleccionada(capaId: string): void {
+    const control = this.usuarioForm.get('capaInvestigacion');
+    if (!control) return;
+
+    const valores = control.value || [];
+    const index = valores.indexOf(capaId);
+
+    if (index === -1) {
+      control.setValue([...valores, capaId]);
+    } else {
+      const nuevosValores = valores.filter((id: string) => id !== capaId);
+      control.setValue(nuevosValores);
+    }
+
+    control.markAsTouched(); // para validar en tiempo real
+  }
+
 }

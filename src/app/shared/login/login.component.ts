@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from 'src/app/services/auth.service';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
+import Swal from 'sweetalert2';
 
 /**
  * Componente de inicio de sesión y recuperación de contraseña
@@ -56,7 +57,7 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
   /**
    * Inicializa los formularios al cargar el componente
@@ -87,10 +88,20 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(email, password).subscribe({
       next: (response) => {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Inicio de sesión exitoso!',
+          text: 'Redirigiendo a tu panel...',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+
         const roles = this.getCombinedRoles();
         this.redirectUser(roles);
         this.loginSuccess.emit();
       },
+
       error: (error) => {
         this.errorMessage = '❌ Credenciales incorrectas. Inténtalo de nuevo.';
         this.loading = false;
@@ -164,8 +175,8 @@ export class LoginComponent implements OnInit {
    * @private
    */
   private redirectUser(allRoles: string[]) {
-    const isSuperAdmin = allRoles.includes('SuperAdmin_client_role') || 
-                        allRoles.includes('SuperAdmin');
+    const isSuperAdmin = allRoles.includes('SuperAdmin_client_role') ||
+      allRoles.includes('SuperAdmin');
 
     if (isSuperAdmin || allRoles.includes('Admin_client_role')) {
       this.router.navigate(['/administrador']);

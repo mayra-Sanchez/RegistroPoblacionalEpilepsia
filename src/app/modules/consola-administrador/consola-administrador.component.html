@@ -224,6 +224,10 @@
         (onDelete)="handleDeleteRegistro($event)">
       </app-data-table>
     </div>
+
+    <div *ngIf="selectedTab === 'gestionSuperset'">
+      <app-consultas-superset></app-consultas-superset>
+    </div>
   </div>
 </div>
 

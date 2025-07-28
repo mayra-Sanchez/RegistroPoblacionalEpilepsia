@@ -4,12 +4,12 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
-
+import { environment } from '../environments/environment';
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private backendUrl = 'http://localhost:8080/api/v1';
+  private backendUrl = environment.backendUrl;
   private API_USERS_URL = `${this.backendUrl}/users`;
   private authStatus = new BehaviorSubject<boolean>(this.isLoggedIn());
   private userProfile = new BehaviorSubject<any>(null);
@@ -28,7 +28,7 @@ export class AuthService {
 
     this.tokenRefreshInterval = setInterval(() => {
       this.refreshToken().subscribe({
-        error: () => this.stopTokenRefresh() 
+        error: () => this.stopTokenRefresh()
       });
     }, this.refreshTimeMs);
   }
@@ -105,8 +105,21 @@ export class AuthService {
           this.authStatus.next(true);
           this.storeUserRoles(response.access_token);
           this.startTokenRefresh(); // Inicia el refresco automático
+
+          const email = this.getUserEmail(); // 👈🏼 obtener el email del token
+          if (email) {
+            this.obtenerUsuarioAutenticado(email).subscribe({
+              next: (usuario) => {
+                console.log('✅ Usuario autenticado desde backend:', usuario[0]); // 👈🏼 este es el dato real
+              },
+              error: (err) => {
+                console.error('❌ Error obteniendo usuario:', err);
+              }
+            });
+          }
         }
       }),
+
       catchError(error => {
         console.error('❌ Error en el login:', error);
         throw error;
@@ -217,7 +230,7 @@ export class AuthService {
           throw new Error('Respuesta inválida del servidor');
         }
 
-         ('🔄 Token refrescado con éxito');
+        ('🔄 Token refrescado con éxito');
         localStorage.setItem('kc_token', response.access_token);
 
         if (response.refresh_token) {
@@ -415,6 +428,7 @@ export class AuthService {
     this.authStatus.next(true);
     this.userProfile.next(this.getUserData());
   }
+
 
   updateUser(userId: string, userData: any): Observable<any> {
     const token = this.getToken();

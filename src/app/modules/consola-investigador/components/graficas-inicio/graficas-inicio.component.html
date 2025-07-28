@@ -1,17 +1,10 @@
 <div class="research-dashboard">
-  <!-- Header con modo claro/oscuro -->
   <header class="dashboard-header">
     <div class="header-container">
       <div class="header-brand">
         <mat-icon class="brand-icon">science</mat-icon>
         <h1 class="dashboard-title">Análisis de investigación</h1>
       </div>
-      
-      <!-- <div class="header-actions">
-        <button mat-icon-button class="theme-toggle" (click)="toggleTheme()" aria-label="Cambiar tema">
-          <mat-icon>brightness_6</mat-icon>
-        </button>
-      </div> -->
     </div>
     
     <div class="current-layer" *ngIf="currentResearchLayer?.layerName">
@@ -25,6 +18,32 @@
       </div>
     </div>
   </header>
+
+  <!-- Layer selector section -->
+  <!-- Layer selector section -->
+<section class="layer-selector-section" *ngIf="availableLayers.length > 0 && !researchLayerId">
+  <div class="layer-selector-container">
+    <mat-form-field appearance="outline" floatLabel="always">
+      <mat-label>Capa de investigación</mat-label>
+      <mat-select [(value)]="selectedLayerId" (selectionChange)="selectLayer($event.value)">
+        <mat-option *ngFor="let layer of availableLayers" [value]="layer.id">
+          <div class="layer-option">
+            <span class="layer-name">{{ layer.layerName }}</span>
+            <span class="layer-boss" *ngIf="layer.layerBoss?.name">
+              (Jefe: {{ layer.layerBoss.name }})
+            </span>
+          </div>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    
+    <button mat-icon-button matTooltip="Recargar datos de la capa" 
+            (click)="loadResearchLayerDetails(selectedLayerId!)"
+            [disabled]="!selectedLayerId">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+</section>
 
   <!-- Estado de carga con skeleton -->
   <ng-container *ngIf="loading">
@@ -62,8 +81,8 @@
     <!-- Tarjetas métricas -->
     <section class="metrics-section">
       <div class="metrics-grid">
-        <div *ngFor="let card of summaryCards" class="metric-card" [class.trend-up]="card.trend === 'up'" 
-             [class.trend-down]="card.trend === 'down'">
+        <div *ngFor="let card of summaryCards" class="metric-card" [class.trend-up]="card.trend === 'up'"
+          [class.trend-down]="card.trend === 'down'">
           <div class="metric-icon">
             <mat-icon [style.background]="getCardColor(card.trend)">{{card.icon}}</mat-icon>
           </div>
@@ -72,7 +91,8 @@
             <span class="metric-value">{{card.value | number}}</span>
           </div>
           <div class="metric-trend">
-            <mat-icon>{{card.trend === 'up' ? 'trending_up' : card.trend === 'down' ? 'trending_down' : 'remove'}}</mat-icon>
+            <mat-icon>{{card.trend === 'up' ? 'trending_up' : card.trend === 'down' ? 'trending_down' :
+              'remove'}}</mat-icon>
             <span>{{card.change}}%</span>
           </div>
         </div>
@@ -92,8 +112,7 @@
             <mat-icon>arrow_drop_down</mat-icon>
           </button>
           <mat-menu #timeMenu="matMenu">
-            <button mat-menu-item *ngFor="let range of timeRanges" 
-                    (click)="onTimeRangeChange(range.value)">
+            <button mat-menu-item *ngFor="let range of timeRanges" (click)="onTimeRangeChange(range.value)">
               {{ range.label }}
             </button>
           </mat-menu>
@@ -122,8 +141,8 @@
             </mat-menu>
           </div>
           <div class="chart-wrapper">
-            <canvas #chartCanvas1 baseChart [data]="chartData1" [type]="chartType1" 
-                    [options]="chartType1 === 'bar' ? barChartOptions : pieChartOptions"></canvas>
+            <canvas #chartCanvas1 baseChart [data]="chartData1" [type]="chartType1"
+              [options]="chartType1 === 'bar' ? barChartOptions : pieChartOptions"></canvas>
           </div>
         </div>
 
@@ -148,8 +167,8 @@
             </mat-menu>
           </div>
           <div class="chart-wrapper">
-            <canvas #chartCanvas2 baseChart [data]="chartData2" [type]="chartType2" 
-                    [options]="chartType2 === 'pie' ? pieChartOptions : barChartOptions"></canvas>
+            <canvas #chartCanvas2 baseChart [data]="chartData2" [type]="chartType2"
+              [options]="chartType2 === 'pie' ? pieChartOptions : barChartOptions"></canvas>
           </div>
         </div>
       </div>

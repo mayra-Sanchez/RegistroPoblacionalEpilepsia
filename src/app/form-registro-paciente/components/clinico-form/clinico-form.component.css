@@ -19,7 +19,6 @@
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 /* ====================== */
@@ -137,7 +136,8 @@
  * - Diseño consistente para feedback al usuario
  * - Animación de spinner para carga
  */
-.loading-state, .error-state {
+.loading-state,
+.error-state {
   padding: 1.5rem;
   text-align: center;
   border-radius: 8px;
@@ -164,8 +164,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ====================== */
@@ -241,11 +246,13 @@
 }
 
 .variable-header .fa-check-circle {
-  color: #38a169; /* Validación exitosa */
+  color: #38a169;
+  /* Validación exitosa */
 }
 
 .variable-header .fa-exclamation-circle {
-  color: #e53e3e; /* Error de validación */
+  color: #e53e3e;
+  /* Error de validación */
 }
 
 /* Indicador de campo obligatorio */
@@ -451,15 +458,15 @@
     padding: 1.5rem;
     margin: 1rem;
   }
-  
+
   .variables-grid-container {
     grid-template-columns: 1fr;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
     justify-content: center;
@@ -473,24 +480,24 @@
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .badge {
     margin-left: 0;
   }
-  
+
   /* Scroll horizontal para filtros */
   .type-filters {
     overflow-x: auto;
     padding-bottom: 8px;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .type-filters::-webkit-scrollbar {
     height: 4px;
   }
-  
+
   .type-filters::-webkit-scrollbar-thumb {
-    background-color: rgba(0,0,0,0.1);
+    background-color: rgba(0, 0, 0, 0.1);
     border-radius: 2px;
   }
 }

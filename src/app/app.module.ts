@@ -18,6 +18,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { EditarUsuarioComponent } from './shared/components/header/componenets/editar-usuario/editar-usuario.component';
 import { SafePipe } from './pipes/safe.pipe';
+import { InicioSectionComponent } from './home/sections/inicio-section/inicio-section.component';
+import { SistemaSectionComponent } from './home/sections/sistema-section/sistema-section.component';
+import { ContactoSectionComponent } from './home/sections/contacto-section/contacto-section.component';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -28,7 +32,10 @@ import { SafePipe } from './pipes/safe.pipe';
     ManualComponent,
     LoginComponent,
     EditarUsuarioComponent,
-    SafePipe
+    SafePipe,
+    InicioSectionComponent,
+    SistemaSectionComponent,
+    ContactoSectionComponent,
   ],
   imports: [
     BrowserModule,

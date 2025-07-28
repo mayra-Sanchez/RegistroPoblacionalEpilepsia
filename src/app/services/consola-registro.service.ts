@@ -5,16 +5,18 @@ import { Observable, throwError, Subject } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
 import { AuthService } from 'src/app/services/auth.service';
 import { ResearchLayer, Variable, Register } from '../modules/consola-registro/interfaces';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConsolaRegistroService {
   //#region Constantes de URL
-  private readonly API_URL = 'http://localhost:8080/api/v1/registers';
-  private readonly API_USERS_URL = 'http://localhost:8080/api/v1/users';
-  private readonly API_VARIABLE_URL = 'http://localhost:8080/api/v1/Variable';
-  private readonly API_RESEARCH_LAYER_URL = 'http://localhost:8080/api/v1/ResearchLayer';
+  private readonly API_REGISTERS = `${environment.backendUrl}${environment.endpoints.registers}`;
+  private readonly API_USERS = `${environment.backendUrl}${environment.endpoints.users}`;
+  private readonly API_LAYERS = `${environment.backendUrl}${environment.endpoints.researchLayer}`;
+  private readonly API_VARIABLES = `${environment.backendUrl}${environment.endpoints.variables}`;
+
   //#endregion
 
   //#region Subjects y Observables
@@ -78,7 +80,7 @@ export class ConsolaRegistroService {
 
       const params = new HttpParams().set('email', email);
 
-      return this.http.get<any>(`${this.API_USERS_URL}`, { headers, params }).pipe(
+      return this.http.get<any>(`${this.API_USERS}`, { headers, params }).pipe(
         catchError(error => this.handleHttpError(error, 'Failed to fetch user'))
       );
     } catch (error) {
@@ -101,7 +103,7 @@ export class ConsolaRegistroService {
       const headers = this.getAuthHeaders();
       const params = new HttpParams().set('userEmail', userEmail);
 
-      return this.http.post(this.API_URL, registerData, { headers, params }).pipe(
+      return this.http.post(this.API_REGISTERS, registerData, { headers, params }).pipe(
         tap(() => console.log('Register created successfully')),
         catchError(error => this.handleHttpError(error, 'Failed to create register'))
       );
@@ -123,7 +125,7 @@ export class ConsolaRegistroService {
         .set('sort', sort)
         .set('sortDirection', sortDirection);
 
-      return this.http.get<any>(`${this.API_URL}/all`, { params }).pipe(
+      return this.http.get<any>(`${this.API_REGISTERS}/all`, { params }).pipe(
         catchError(error => this.handleHttpError(error, 'Failed to fetch registers'))
       );
     } catch (error) {
@@ -151,7 +153,7 @@ export class ConsolaRegistroService {
         .set('sort', sort)
         .set('sortDirection', sortDirection);
 
-      return this.http.get<any>(`${this.API_URL}/allByHealtProfessional`, { headers, params }).pipe(
+      return this.http.get<any>(`${this.API_REGISTERS}/allByHealtProfessional`, { headers, params }).pipe(
         catchError(error => this.handleHttpError(error, 'Failed to fetch registers by professional'))
       );
     } catch (error) {
@@ -179,7 +181,7 @@ export class ConsolaRegistroService {
         .set('sort', sort)
         .set('sortDirection', sortDirection);
 
-      return this.http.get<any>(`${this.API_URL}/allByPatient`, { headers, params }).pipe(
+      return this.http.get<any>(`${this.API_REGISTERS}/allByPatient`, { headers, params }).pipe(
         catchError(error => this.handleHttpError(error, 'Failed to fetch registers by patient'))
       );
     } catch (error) {
@@ -194,6 +196,7 @@ export class ConsolaRegistroService {
     sort: string = 'registerDate',
     sortDirection: string = 'DESC'
   ): Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }> {
+    // Validate input
     if (!researchLayerId) {
       return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
     }
@@ -207,9 +210,28 @@ export class ConsolaRegistroService {
         .set('sort', sort)
         .set('sortDirection', sortDirection);
 
-      return this.http.get<any>(`${this.API_URL}/allByResearchLayer`, { headers, params }).pipe(
-        tap(response => console.log('Server response:', response)),
-        catchError(error => this.handleHttpError(error, 'Failed to fetch registers by research layer'))
+      return this.http.get<any>(`${this.API_REGISTERS}/allByResearchLayer`, { headers, params }).pipe(
+        tap(response => console.log('API Response:', response)),
+        map(response => {
+          if (!response) {
+            throw this.createError('Empty response from server', 'EMPTY_RESPONSE');
+          }
+          return {
+            registers: response.registers || [],
+            currentPage: response.currentPage || 0,
+            totalPages: response.totalPages || 0,
+            totalElements: response.totalElements || 0
+          };
+        }),
+        catchError(error => {
+          console.error('Detailed API Error:', {
+            url: error.url,
+            status: error.status,
+            error: error.error,
+            message: error.message
+          });
+          return this.handleHttpError(error, 'Failed to fetch registers by research layer');
+        })
       );
     } catch (error) {
       return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
@@ -257,7 +279,7 @@ export class ConsolaRegistroService {
         .set('registerId', registerId)
         .set('userEmail', userEmail);
 
-      return this.http.put(this.API_URL, formattedData, { headers, params }).pipe(
+      return this.http.put(this.API_REGISTERS, formattedData, { headers, params }).pipe(
         tap(() => {
           this.notifyDataChanged();
         }),
@@ -281,7 +303,7 @@ export class ConsolaRegistroService {
   obtenerTodasLasCapas(): Observable<ResearchLayer[]> {
     try {
       const headers = this.getAuthHeaders();
-      return this.http.get<ResearchLayer[]>(`${this.API_RESEARCH_LAYER_URL}/GetAll`, { headers }).pipe(
+      return this.http.get<ResearchLayer[]>(`${this.API_LAYERS}/GetAll`, { headers }).pipe(
         tap(response => console.log('All layers fetched:', response)),
         catchError(error => this.handleHttpError(error, 'Failed to fetch all research layers'))
       );
@@ -343,7 +365,7 @@ export class ConsolaRegistroService {
       const headers = this.getAuthHeaders();
       const params = new HttpParams().set('id', id);
 
-      return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, { headers, params }).pipe(
+      return this.http.get<ResearchLayer>(this.API_LAYERS, { headers, params }).pipe(
         tap((capa: ResearchLayer) => {
           try {
             localStorage.setItem('capaInvestigacion', JSON.stringify(capa));
@@ -369,7 +391,7 @@ export class ConsolaRegistroService {
       const headers = this.getAuthHeaders();
       const params = new HttpParams().set('researchLayerId', researchLayerId);
 
-      return this.http.get<Variable[]>(`${this.API_VARIABLE_URL}/ResearchLayerId`, { headers, params }).pipe(
+      return this.http.get<Variable[]>(`${this.API_VARIABLES}/ResearchLayerId`, { headers, params }).pipe(
         catchError(error => this.handleHttpError(error, 'Failed to fetch variables for layer'))
       );
     } catch (error) {
@@ -382,12 +404,12 @@ export class ConsolaRegistroService {
 
   private validateRegisterData(data: any): void {
     if (!data.patient) {
-        throw new Error('Patient data is required');
+      throw new Error('Patient data is required');
     }
     if (!data.variablesRegister) {
-        data.variablesRegister = [];
+      data.variablesRegister = [];
     }
-}
+  }
 
   private formatRegisterData(data: any): any {
     try {
@@ -410,7 +432,7 @@ export class ConsolaRegistroService {
     }
   }
 
-private formatDateToBackend(dateString: string | null | undefined): string | null {
+  private formatDateToBackend(dateString: string | null | undefined): string | null {
     if (!dateString) return null;
 
     try {
@@ -440,7 +462,7 @@ private formatDateToBackend(dateString: string | null | undefined): string | nul
       const headers = this.getAuthHeaders();
       const params = new HttpParams().set('id', id);
 
-      return this.http.get<ResearchLayer>(this.API_RESEARCH_LAYER_URL, { headers, params }).pipe(
+      return this.http.get<ResearchLayer>(this.API_LAYERS, { headers, params }).pipe(
         tap(response => console.log('Layer details fetched:', response)),
         catchError(error => {
           if (error.status === 404) {

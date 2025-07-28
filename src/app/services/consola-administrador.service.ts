@@ -4,16 +4,17 @@ import { Observable, throwError, Subject, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from 'src/app/services/auth.service';
 import { jwtDecode } from 'jwt-decode';
-
+import { environment } from '../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
 export class ConsolaAdministradorService {
 
-  private readonly API_URL = 'http://localhost:8080';
-  private readonly API_LAYERS = `${this.API_URL}/api/v1/ResearchLayer`;
-  private readonly API_USERS = `${this.API_URL}/api/v1/users`;
-  private readonly API_VARIABLES = `${this.API_URL}/api/v1/Variable`;
+  private readonly API_LAYERS = `${environment.backendUrl}${environment.endpoints.researchLayer}`;
+  private readonly API_USERS = `${environment.backendUrl}${environment.endpoints.users}`;
+  private readonly API_VARIABLES = `${environment.backendUrl}${environment.endpoints.variables}`;
+  private readonly API_REGISTERS = `${environment.backendUrl}${environment.endpoints.registers}`;
+
 
   private dataUpdated = new Subject<void>();
   private capaUpdated = new BehaviorSubject<void>(undefined);
@@ -69,12 +70,13 @@ export class ConsolaAdministradorService {
   }
 
   private isAdmin(): boolean {
-    const token = localStorage.getItem('kc_token');
+    const token = this.authService.getToken();
     if (!token) return false;
     try {
       const decoded: any = jwtDecode(token);
       const clientRoles = decoded.resource_access?.['registers-users-api-rest']?.roles || [];
       const realmRoles = decoded.realm_access?.roles || [];
+
       return clientRoles.includes('Admin_client_role') ||
         clientRoles.includes('SuperAdmin_client_role') ||
         realmRoles.includes('SuperAdmin');
@@ -83,6 +85,7 @@ export class ConsolaAdministradorService {
       return false;
     }
   }
+
 
   getAllLayers(): Observable<any[]> {
     if (!this.authService.isLoggedIn()) {
@@ -271,8 +274,6 @@ export class ConsolaAdministradorService {
     const url = `${this.API_VARIABLES}/ResearchLayerId`;
     const params = new HttpParams().set('researchLayerId', capaId);
 
-    console.log('🔎 Obteniendo variables para capa:', capaId);
-
     return this.http.get<any[]>(url, {
       headers: this.getAuthHeaders(),
       params
@@ -299,12 +300,12 @@ export class ConsolaAdministradorService {
       .set('sort', sort)
       .set('sortDirection', sortDirection);
 
-    return this.http.get<any>(`${this.API_URL}/api/v1/registers`, { params })
+    return this.http.get<any>(this.API_REGISTERS, { params })
       .pipe(catchError(this.handleHttpError('Carga de registros de capas')));
   }
 
   deleteRegistroCapa(registerId: string): Observable<any> {
-    return this.http.delete(`${this.API_URL}/api/v1/registers`, {
+    return this.http.delete(this.API_REGISTERS, {
       params: new HttpParams().set('registerId', registerId)
     }).pipe(catchError(this.handleHttpError('Eliminación de registro de capa')));
   }

@@ -4,7 +4,7 @@ import { Observable, throwError, Subject } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
 import { AuthService } from 'src/app/services/auth.service';
 import { Register, ResearchLayer } from '../modules/consola-registro/interfaces';
-
+import { environment } from '../environments/environment';
 /**
  * Servicio para manejar operaciones relacionadas con registros médicos
  * 
@@ -26,13 +26,13 @@ export class ConsolaInvestigadorService {
    * URL base para operaciones con registros
    * @type {string}
    */
-  private readonly API_URL = 'http://localhost:8080/api/v1/registers';
+  private readonly API_URL = `${environment.backendUrl}${environment.endpoints.registers}`;
 
   /**
  * URL base para operaciones con capas de investigación
  * @type {string}
  */
-  private readonly API_RESEARCH_LAYER_URL = 'http://localhost:8080/api/v1/ResearchLayer';
+private readonly API_RESEARCH_LAYER_URL = `${environment.backendUrl}${environment.endpoints.researchLayer}`;
 
   /**
    * Subject para notificar actualizaciones de datos

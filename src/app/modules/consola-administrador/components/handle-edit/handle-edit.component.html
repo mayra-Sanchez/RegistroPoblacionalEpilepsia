@@ -52,10 +52,19 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Capa de Investigación</label>
-                            <select class="form-control" formControlName="capaRawValue" required>
-                                <option *ngFor="let capa of capas" [value]="capa.id">{{ capa.nombreCapa }}</option>
-                            </select>
+                            <label>Capas de Investigación</label>
+                            <div class="capas-selection">
+                                <div *ngFor="let capa of capas" class="form-check">
+                                    <input type="checkbox" class="form-check-input" [id]="'capa-' + capa.id"
+                                        [checked]="isCapaSelected(capa.id)" (change)="toggleCapaSelection(capa.id)">
+                                    <label class="form-check-label" [for]="'capa-' + capa.id">
+                                        {{ capa.nombreCapa }}
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">
+                                Seleccione todas las capas a las que pertenece el usuario
+                            </small>
                         </div>
 
                         <div class="form-group">
@@ -85,6 +94,9 @@
                             <small class="form-text text-muted">
                                 Dejar en blanco para mantener la contraseña actual
                             </small>
+                            <div class="text-muted small mt-1">
+                                Última actualización: {{ editForm.get('lastPasswordUpdate')?.value || 'No registrada' }}
+                            </div>
                         </div>
 
                         <div class="modal-footer">

@@ -16,6 +16,7 @@ interface Registro {
   tipo: string;
   data: any;
   fechaCreacion: number;
+  capas?: string[];
 }
 
 /**
@@ -267,9 +268,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * Configuración de columnas para tabla de capas
    */
   capasColumns = [
-    { field: 'nombreCapa', header: 'Nombre' },
+    { field: 'id', header: 'ID' },
+    { field: 'nombreCapa', header: 'Nombre de la Capa' },
     { field: 'descripcion', header: 'Descripción' },
-    { field: 'jefeCapaNombre', header: 'Jefe de capa' }
+    { field: 'jefeCapaNombre', header: 'Jefe de Capa' },
+    { field: 'jefeIdentificacion', header: 'Identificación del Jefe' },
   ];
 
   /**
@@ -484,9 +487,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       next: (data: any[]) => {
         const usuariosProcesados = data.map(user => {
           const attrs = user.attributes || {};
-          const capaValue = attrs.researchLayerId?.[0];
+          const capaValues = attrs.researchLayerId || []; // Ahora es un array
           const roles = attrs.role || [];
           const mainRole = roles[0] || 'No especificado';
+
+          // Obtener nombres de todas las capas
+          const nombresCapas = capaValues.map((capaId: string) =>
+            this.getCapaNombreByIdVariables(capaId)
+          ).filter(Boolean); // Filtrar valores nulos/undefined
 
           return {
             id: user.id,
@@ -497,18 +505,21 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             tipoDocumento: attrs.identificationType ? attrs.identificationType[0] : 'No especificado',
             documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
             fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
-            capa: this.getCapaNombreByIdVariables(capaValue),
-            capaRawValue: capaValue,
+            capa: nombresCapas.join(', '), // Mostrar todas las capas separadas por coma
+            capas: nombresCapas, // Guardar como array para posible uso futuro
+            capaRawValue: capaValues, // Guardar los IDs originales
             rol: mainRole,
             rolDisplay: this.transformarString(mainRole),
             passwordActual: user.password,
             enabled: user.enabled,
-            estado: this.transformarString(user.enabled)
+            estado: this.transformarString(user.enabled),
+            lastPasswordUpdate: attrs.lastPasswordUpdate ? attrs.lastPasswordUpdate[0] : 'No registrada',
+            attributes: attrs,
           };
         });
 
         this.usuariosData = usuariosProcesados;
-        this.usuariosDataOriginal = [...usuariosProcesados]; // 👈 ¡Esto es clave!
+        this.usuariosDataOriginal = [...usuariosProcesados];
         this.updateDashboard();
         this.cdr.detectChanges();
       },
@@ -637,8 +648,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     a.download = `usuarios_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-
-    console.log('✅ Archivo CSV generado con éxito.');
   }
 
   /**
@@ -692,7 +701,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * @param event Registro a visualizar
    */
   handleViewRegistro(event: any): void {
-    console.log('Ver registro:', event);
     this.viewedItem = event;
     this.viewType = 'registro';
     this.isViewing = true;
@@ -764,9 +772,26 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * @param id ID de la capa
    * @returns Nombre de la capa o mensaje predeterminado
    */
-  getCapaNombreByIdVariables(id: number): string {
-    const capa = this.capas?.find(c => c.id === id);
-    return capa ? capa.nombreCapa : 'Capa no encontrada';
+  getCapaNombreByIdVariables(id: string | number): string {
+    // Convertir a string para comparación consistente
+    const idStr = String(id);
+
+    // Buscar en capasData primero
+    const capa = this.capasData?.find(c =>
+      String(c.id) === idStr ||
+      String(c._id) === idStr
+    );
+
+    // Si no se encuentra en capasData, buscar en capas
+    if (!capa) {
+      const capaAlternativa = this.capas?.find(c =>
+        String(c.id) === idStr ||
+        String(c._id) === idStr
+      );
+      return capaAlternativa ? capaAlternativa.nombreCapa || 'Capa sin nombre' : 'Capa no encontrada';
+    }
+
+    return capa.nombreCapa || 'Capa sin nombre';
   }
 
   /**
@@ -840,7 +865,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     if (tipo === 'usuario') {
       this.viewedItem = {
         ...event.detalles,
-        researchLayerId: event.detalles.capaRawValue || event.detalles.researchLayerId,
+        researchLayerId: event.detalles.capaRawValue || event.detalles.researchLayerId || [],
         role: event.detalles.rol || event.detalles.role,
         nombre: event.detalles.nombre || event.nombre,
         apellido: event.detalles.apellido || '',
@@ -848,7 +873,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         usuario: event.detalles.username || '',
         tipoDocumento: event.detalles.tipoDocumento || '',
         documento: event.detalles.documento || '',
-        fechaNacimiento: event.detalles.fechaNacimiento || ''
+        fechaNacimiento: event.detalles.fechaNacimiento || '',
+        attributes: event.detalles.attributes || event.attributes || {} // Make sure attributes are passed
       };
     } else {
       this.viewedItem = event;
@@ -876,6 +902,18 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         rawRole = row.rol.split(', ')[0];
       }
 
+      // Asegurar que capaRawValue sea un array
+      const capaRawValue = Array.isArray(row.capaRawValue)
+        ? row.capaRawValue
+        : row.capaRawValue
+          ? [row.capaRawValue]
+          : [];
+
+      // Obtener lastPasswordUpdate correctamente
+      const lastUpdate = row.attributes?.lastPasswordUpdate?.[0] ||
+        row.lastPasswordUpdate ||
+        'No registrada';
+
       this.userToEdit = {
         id: row.id,
         nombre: row.nombre || row.firstName,
@@ -885,9 +923,12 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         tipoDocumento: row.tipoDocumento || row.identificationType,
         documento: row.documento || row.identificationNumber,
         fechaNacimiento: row.fechaNacimiento || row.birthDate,
-        researchLayerId: row.capaRawValue || row.capa,
-        role: rawRole,
-        password: row.passwordActual || ''
+        capaRawValue: Array.isArray(row.capaRawValue) ? row.capaRawValue :
+          (row.capaRawValue ? [row.capaRawValue] : []),
+        role: row.rol || row.attributes?.role?.[0],
+        password: row.passwordActual || '',
+        lastPasswordUpdate: lastUpdate,  // <-- Aquí está el cambio clave
+        attributes: row.attributes || {} // Pasamos todos los atributos
       };
     } else if (tipo === 'capa') {
       this.capaToEdit = {
@@ -1100,7 +1141,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       birthDate: usuarioEditado.fechaNacimiento,
       researchLayer: usuarioEditado.capaRawValue || usuarioEditado.researchLayerId,
       role: usuarioEditado.role,
-      password: usuarioEditado.password || ''
+      password: usuarioEditado.password || '',
+      // Añade esto para actualizar la fecha cuando se cambia la contraseña
+      ...(usuarioEditado.password && {
+        attributes: {
+          lastPasswordUpdate: [new Date().toISOString()]
+        }
+      })
     };
 
     Swal.fire({
@@ -1119,6 +1166,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             Swal.fire('Éxito', 'Usuario actualizado con éxito.', 'success');
             this.isEditingUserModal = false;
 
+            // Actualiza la fecha de última modificación localmente
+            if (usuarioEditado.password) {
+              usuarioEditado.lastPasswordUpdate = new Date().toISOString();
+            }
+
             const index = this.usuariosData.findIndex(u => u.id === usuarioEditado.id);
             if (index !== -1) {
               this.usuariosData[index] = {
@@ -1132,7 +1184,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
                 fechaNacimiento: updatedUser.birthDate || usuarioEditado.fechaNacimiento,
                 capaRawValue: updatedUser.researchLayer || usuarioEditado.capaRawValue,
                 rol: updatedUser.role || usuarioEditado.role,
-                rolDisplay: this.transformarString(updatedUser.role || usuarioEditado.role)
+                rolDisplay: this.transformarString(updatedUser.role || usuarioEditado.role),
+                lastPasswordUpdate: updatedUser.attributes?.lastPasswordUpdate?.[0] || usuarioEditado.lastPasswordUpdate,
               };
 
               this.usuariosData = [...this.usuariosData];

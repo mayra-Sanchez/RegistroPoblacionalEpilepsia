@@ -1,6 +1,6 @@
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ConsolaAdministradorRoutingModule } from './consola-administrador-routing.module';
 import { ConsolaAdministradorComponent } from './consola-administrador.component';
 import { NavbarAdminComponent } from '../../shared/components/navbars/navbar-admin/navbar-admin.component';
@@ -18,7 +18,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { HandleViewComponent } from './components/handle-view/handle-view.component';
 import { HandleEditComponent } from './components/handle-edit/handle-edit.component';
 import { DataTableComponent } from './components/data-table/data-table.component';
-
+import { ConsultasSupersetComponent } from './components/consultas-superset/consultas-superset.component';
+import { AdminHelpGuideComponent } from './components/consultas-superset/admin-help-guide/admin-help-guide.component';
 @NgModule({
   declarations: [
     ConsolaAdministradorComponent,
@@ -30,6 +31,8 @@ import { DataTableComponent } from './components/data-table/data-table.component
     HandleViewComponent,
     HandleEditComponent,
     DataTableComponent,
+    ConsultasSupersetComponent,
+    AdminHelpGuideComponent
   ],
   imports: [
     CommonModule,
@@ -41,9 +44,11 @@ import { DataTableComponent } from './components/data-table/data-table.component
     HttpClientModule,
     ReactiveFormsModule,
     MatIconModule,
+    MatProgressSpinnerModule,
   ],
   exports: [
     TableComponent,
-  ]
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AdminModule { }

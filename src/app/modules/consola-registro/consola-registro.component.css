@@ -26,7 +26,101 @@
   justify-content: flex-start; 
   width: 100%;             
   padding: 0;
-  font-family: 'Montserrat', sans-serif;
+}
+
+/* ==================== Enhanced Layer Selector ==================== */
+.layer-selector-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.layer-selector {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.layer-selector label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.layer-selector label mat-icon {
+  margin-right: 8px;
+  font-size: 20px;
+  color: #3498db;
+}
+
+.layer-selector select {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #d1d3e2;
+  background-color: white;
+  font-size: 0.95rem;
+  min-width: 250px;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+}
+
+.layer-selector select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.layer-info {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.layer-info mat-icon {
+  font-size: 18px;
+}
+
+/* Modern dropdown alternative */
+.layer-selector-modern {
+  position: relative;
+  min-width: 250px;
+}
+
+.layer-selector-modern select {
+  width: 100%;
+  padding: 12px 40px 12px 15px;
+  border-radius: 8px;
+  border: 1px solid #d1d3e2;
+  background-color: white;
+  font-size: 0.95rem;
+  appearance: none;
+  cursor: pointer;
+}
+
+.layer-selector-modern::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 
 .contentDigitador {
@@ -73,7 +167,6 @@ h1, h2, h3 {
 
 /* ==================== 3. Dashboard Principal ==================== */
 .digitador-dashboard {
-  font-family: 'Montserrat', sans-serif;
   color: #333;
   margin: 0 auto;
 }

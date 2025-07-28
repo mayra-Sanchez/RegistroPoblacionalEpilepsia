@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy, TemplateRef } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef, OnDestroy, TemplateRef } from '@angular/core';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -111,7 +111,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
   // Estado del componente
   isDarkMode = false;
   allRegisters: Register[] = [];
-  
+
   // Datos para gráficos
   chartData1: ChartConfiguration['data'] = { labels: [], datasets: [] };
   chartData2: ChartConfiguration['data'] = { labels: [], datasets: [] };
@@ -210,7 +210,12 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
   currentResearchLayer: ResearchLayer | null = null;
   loading = false;
   errorMessage = '';
-  
+
+  availableLayers: ResearchLayer[] = [];
+  selectedLayerId: string | null = null;
+
+  @Input() researchLayerId: string | null = null;
+
   // Instancias de gráficos y sujeto para manejo de suscripciones
   private chart1: Chart | null = null;
   private chart2: Chart | null = null;
@@ -229,7 +234,14 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
    * Método del ciclo de vida: Inicialización del componente
    */
   ngOnInit(): void {
-    this.loadCurrentResearchLayer();
+    if (this.researchLayerId) {
+      // Si viene un ID específico, cargar directamente esa capa
+      this.selectedLayerId = this.researchLayerId;
+      this.loadResearchLayerDetails(this.researchLayerId);
+    } else {
+      // Cargar las capas disponibles para el usuario
+      this.loadAvailableLayers();
+    }
   }
 
   /**
@@ -292,11 +304,65 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
       });
   }
 
+  private async loadAvailableLayers(): Promise<void> {
+    try {
+      this.loading = true;
+      this.errorMessage = '';
+
+      // 1. Obtener el usuario actual
+      const email = this.authService.getUserEmail();
+      if (!email) throw new Error('No se pudo obtener el email del usuario');
+
+      const users = await this.registerService.obtenerUsuarioAutenticado(email).toPromise();
+      if (!users?.[0]) throw new Error('Datos de usuario no encontrados');
+
+      // 2. Obtener IDs de capas de investigación del usuario
+      const layerIds = users[0].attributes?.researchLayerId || [];
+      if (layerIds.length === 0) throw new Error('El usuario no tiene capas de investigación asignadas');
+
+      // 3. Cargar detalles de cada capa
+      const layers = await Promise.all(
+        layerIds.map((id: string) => this.registerService.obtenerCapaPorId(id).toPromise())
+      );
+      this.availableLayers = layers.filter(l => l !== null) as ResearchLayer[];
+
+      // 4. Determinar capa inicial (guardada en localStorage o primera disponible)
+      const savedLayerId = localStorage.getItem('selectedResearchLayerId');
+      const initialLayerId = savedLayerId && this.availableLayers.some(l => l.id === savedLayerId)
+        ? savedLayerId
+        : this.availableLayers[0].id;
+
+      // 5. Seleccionar la capa inicial
+      this.selectLayer(initialLayerId);
+    } catch (error) {
+      console.error('Error al cargar capas disponibles:', error);
+      this.handleError('Error al cargar las capas de investigación disponibles');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  selectLayer(layerId: string): void {
+    if (!layerId) return;
+
+    this.selectedLayerId = layerId;
+    localStorage.setItem('selectedResearchLayerId', layerId);
+
+    // Actualizar la capa actual y cargar sus datos
+    this.currentResearchLayer = this.availableLayers.find(l => l.id === layerId) || null;
+
+    if (this.currentResearchLayer) {
+      this.loadInitialData();
+    } else {
+      this.loadResearchLayerDetails(layerId);
+    }
+  }
+
   /**
    * Carga los detalles de la capa de investigación
    * @param layerId ID de la capa de investigación
    */
-  private loadResearchLayerDetails(layerId: string): void {
+  loadResearchLayerDetails(layerId: string): void {
     this.registerService.obtenerCapaPorId(layerId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -402,7 +468,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
    * @returns Objeto con conteos agrupados por valores mapeados
    */
   private groupByDimensionWithMapping(
-    registers: Register[], 
+    registers: Register[],
     dimension: ChartDimension,
     valueMap: Record<string, string>
   ): Record<string, number> {
@@ -420,13 +486,13 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
    */
   private updateSummaryCards(registers: Register[]): void {
     const totalPatients = registers.length;
-    
+
     // Contar crisis activas
     const withCrisis = registers.filter(r => {
       const status = r.patientBasicInfo?.crisisStatus?.toLowerCase();
       return status === 'activa' || status === 'active';
     }).length;
-    
+
     const withCaregiver = registers.filter(r => r.caregiver).length;
 
     // Calcular pacientes del mes actual
@@ -714,7 +780,7 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
    */
   filterDataByDateRange(): void {
     let filteredRegisters = [...this.allRegisters];
-    
+
     if (this.selectedTimeRange !== 'all') {
       if (this.selectedTimeRange === 'custom') {
         if (this.customRangeStart && this.customRangeEnd) {
@@ -727,14 +793,14 @@ export class GraficasInicioComponent implements OnInit, OnDestroy {
         const days = parseInt(this.selectedTimeRange, 10);
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - days);
-        
+
         filteredRegisters = filteredRegisters.filter(register => {
           const registerDate = new Date(register.registerDate);
           return registerDate >= cutoffDate;
         });
       }
     }
-    
+
     this.prepareDashboardData(filteredRegisters);
   }
 }

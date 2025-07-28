@@ -213,6 +213,9 @@ export class ConsolaRegistroComponent implements OnInit {
     { field: 'registradoPor', header: 'Registrado por' }
   ];
 
+  selectedLayerId: string | null = null;
+  availableLayers: ResearchLayer[] = [];
+
   //#endregion
 
   //#region Constructor
@@ -247,14 +250,29 @@ export class ConsolaRegistroComponent implements OnInit {
   async ngOnInit() {
     try {
       await this.loadUserData();
-      await this.loadCapaInvestigacion();
+      await this.loadAvailableLayers();
+
+      // Try to get last selected layer from storage
+      const savedLayerId = localStorage.getItem('selectedLayerId');
+
+      // If user has available layers
+      if (this.availableLayers.length > 0) {
+        // Use saved layer if available and valid, otherwise use first available
+        const initialLayerId = savedLayerId && this.availableLayers.some(l => l.id === savedLayerId)
+          ? savedLayerId
+          : this.availableLayers[0].id;
+
+        await this.loadCapaInvestigacion(initialLayerId);
+      } else {
+        await this.loadCapaInvestigacion(); // Try with default logic
+      }
+
       this.loadRegistros();
       this.refreshData();
     } catch (error) {
       this.handleError('Error al inicializar componente');
     }
   }
-
   //#endregion
 
   //#region Propiedades Computadas
@@ -326,18 +344,25 @@ export class ConsolaRegistroComponent implements OnInit {
    * Carga la capa de investigación asignada al usuario
    * @returns {Promise<void>} Promesa que se resuelve cuando se completó la carga
    */
-  loadCapaInvestigacion(): Promise<void> {
+  loadCapaInvestigacion(researchLayerId?: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const researchLayerId = this.userData?.attributes?.researchLayerId?.[0];
-
+      // If no layer ID provided, try to get one
       if (!researchLayerId) {
-        console.warn('No se encontró ID de capa en userData');
-        this.isLoading = false;
-        this.setDefaultCapaValues();
-        reject('No hay ID de capa');
-        return;
+        // Try to get from user's available layers
+        if (this.userData?.attributes?.researchLayerId?.length) {
+          researchLayerId = this.userData.attributes.researchLayerId[0];
+        }
+        // If still no ID, reject
+        if (!researchLayerId) {
+          console.warn('No se encontró ID de capa en userData');
+          this.isLoading = false;
+          this.setDefaultCapaValues();
+          reject('No hay ID de capa');
+          return;
+        }
       }
 
+      this.isLoading = true;
       this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({
         next: (capa) => {
           if (!capa?.id) {
@@ -347,6 +372,7 @@ export class ConsolaRegistroComponent implements OnInit {
           }
 
           this.currentResearchLayer = capa;
+          this.selectedLayerId = capa.id; // Track the currently selected layer
           this.updateDatosCapa(capa);
           this.loadVariablesDeCapa(capa.id);
           this.isLoading = false;
@@ -389,39 +415,117 @@ export class ConsolaRegistroComponent implements OnInit {
    * @param {number} [size=10] Tamaño de la página
    * @param {string} [query=''] Término de búsqueda (opcional)
    */
-  loadRegistros(page: number = 0, size: number = 10, query: string = '') {
-    if (!this.currentResearchLayer?.id) {
-      console.warn('No hay capa de investigación asignada - Intentando cargar...');
-
-      this.loadCapaInvestigacion().then(() => {
-        if (this.currentResearchLayer?.id) {
-          this.loadRegistros(page, size, query);
-        } else {
-          this.resetRegistros();
-          this.showErrorAlert('No se pudo asignar una capa de investigación');
-        }
-      }).catch(err => {
-        this.resetRegistros();
-        console.error('Error al cargar capa:', err);
-      });
-
+  loadRegistros(page: number = 0, size: number = 10): void {
+    if (!this.selectedLayerId) {
+      console.warn('No research layer selected');
       return;
     }
 
     this.loadingRegistros = true;
 
     this.consolaService.obtenerRegistrosPorCapa(
-      this.currentResearchLayer.id,
+      this.selectedLayerId,
       page,
       size
     ).subscribe({
       next: (response) => this.procesarRespuestaRegistros(response),
-      error: (err: any) => {
-        console.error('Error al cargar registros:', err);
+      error: (err) => {
+        console.error('Detailed component error:', {
+          status: err.status,
+          message: err.message,
+          error: err.error
+        });
+
         this.resetRegistros();
-        this.showErrorAlert('Error al cargar registros. Por favor intente nuevamente.');
+
+        if (err.status === 500) {
+          this.showErrorAlert('El servidor encontró un error. Por favor contacte al administrador.');
+        } else {
+          this.showErrorAlert('Error al cargar registros. Por favor intente nuevamente.');
+        }
+      },
+      complete: () => {
+        this.loadingRegistros = false;
       }
     });
+  }
+
+  onLayerChange(event: Event): void {
+    const selectElement = event.target as HTMLSelectElement;
+    const layerId = selectElement.value;
+
+    if (!layerId) return;
+
+    // Save selection to localStorage
+    localStorage.setItem('selectedLayerId', layerId);
+
+    // Load the new layer
+    this.loadCapaInvestigacion(layerId).then(() => {
+      // Refresh dependent data
+      this.loadRegistros();
+      this.refreshData();
+
+      // Show success message
+      const selectedLayer = this.availableLayers.find(l => l.id === layerId);
+      if (selectedLayer) {
+        Swal.fire({
+          title: 'Capa cambiada',
+          text: `Ahora estás trabajando en: ${selectedLayer.layerName}`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    }).catch(error => {
+      console.error('Error changing layer:', error);
+      this.handleError('Error al cambiar de capa de investigación');
+    });
+  }
+
+  /**
+   * Loads all available research layers for the current user
+   */
+  loadAvailableLayers(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const layerIds = this.userData?.attributes?.researchLayerId;
+
+      if (!layerIds || layerIds.length === 0) {
+        this.availableLayers = [];
+        resolve();
+        return;
+      }
+
+      // Load all layers in parallel
+      const layerRequests = layerIds.map(id =>
+        this.consolaService.obtenerCapaPorId(id).toPromise()
+      );
+
+      Promise.all(layerRequests)
+        .then(layers => {
+          this.availableLayers = layers.filter(l => l?.id) as ResearchLayer[];
+          resolve();
+        })
+        .catch(err => {
+          console.error('Error loading available layers:', err);
+          reject(err);
+        });
+    });
+  }
+
+  // New method to load initial layer
+  async loadInitialLayer(): Promise<void> {
+    // Try to get last selected layer from localStorage
+    const savedLayerId = localStorage.getItem('selectedLayerId');
+
+    if (savedLayerId && this.availableLayers.some(l => l.id === savedLayerId)) {
+      this.selectedLayerId = savedLayerId;
+    } else if (this.availableLayers.length > 0) {
+      this.selectedLayerId = this.availableLayers[0].id;
+    }
+
+    if (this.selectedLayerId) {
+      await this.loadCapaInvestigacion(this.selectedLayerId);
+    }
   }
 
   /**
@@ -482,10 +586,10 @@ export class ConsolaRegistroComponent implements OnInit {
         this.selectedTab = 'consultaDatosDigitador';
         break;
       case 'configuracion':
-         ('Navegando a configuración');
+        ('Navegando a configuración');
         break;
       default:
-         (`Destino no reconocido: ${destination}`);
+        (`Destino no reconocido: ${destination}`);
     }
   }
 

@@ -11,15 +11,12 @@ import { ConsolaAdministradorService } from '../../../../services/consola-admini
 })
 export class HandleViewComponent implements OnInit, OnChanges {
 
-  /* -------------------- Inputs y Outputs -------------------- */
-
   @Input() viewedItem: any;
   @Input() viewType: string = '';
   @Output() closeModal = new EventEmitter<void>();
 
-  /* -------------------- Propiedades del componente -------------------- */
-
   capas: any[] = [];
+  capaMap: { [key: string]: string } = {};
   variablesAsociadas: any[] = [];
   filteredVariables: any[] = [];
   paginatedVariables: any[] = [];
@@ -66,13 +63,12 @@ export class HandleViewComponent implements OnInit, OnChanges {
 
   constructor(private consolaService: ConsolaAdministradorService) { }
 
-  /* -------------------- Ciclo de Vida -------------------- */
-
   ngOnInit(): void {
     this.cargarCapas();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    console.log('ViewedItem recibido:', this.viewedItem); // <-- Depuración
     if (changes['viewedItem'] && this.viewType === 'capa') {
       const capaId = this.viewedItem?.id || this.viewedItem?.capaId || this.viewedItem?.researchLayerId;
       if (capaId) {
@@ -101,7 +97,7 @@ export class HandleViewComponent implements OnInit, OnChanges {
       this.filteredVariables = [...this.variablesAsociadas];
     } else {
       const term = this.searchTerm.toLowerCase();
-      this.filteredVariables = this.variablesAsociadas.filter(variable => 
+      this.filteredVariables = this.variablesAsociadas.filter(variable =>
         variable.variableName.toLowerCase().includes(term) ||
         (variable.description && variable.description.toLowerCase().includes(term)) ||
         variable.type.toLowerCase().includes(term)
@@ -135,26 +131,51 @@ export class HandleViewComponent implements OnInit, OnChanges {
     this.currentPage = 1;
     this.updatePagination();
   }
-  
-
-  /* -------------------- Carga de Datos -------------------- */
 
   cargarCapas(): void {
     this.consolaService.getAllLayers().subscribe({
       next: (data) => {
-        this.capas = data.map(capa => ({
-          id: capa.id,
-          nombreCapa: capa.layerName
-        }));
+        this.capas = data.map(capa => ({ id: capa.id, nombreCapa: capa.layerName }));
+        this.capaMap = this.capas.reduce((map, capa) => {
+          map[capa.id] = capa.nombreCapa;
+          return map;
+        }, {});
+        console.log('Mapa de capas cargado:', this.capaMap); // <-- Depuración
       },
       error: (err) => console.error('Error al cargar capas:', err)
     });
   }
 
-  /* -------------------- Utilidades -------------------- */
+  getNombreCapas(capas: string[] | string): string[] {
+    if (!Array.isArray(capas)) {
+      capas = [capas];
+    }
+    return capas
+      .map(id => this.capaMap[id] || 'Capa no encontrada')
+      .filter(nombre => nombre !== 'Capa no encontrada');
+  }
+
+  getNombreCapa(id: string): string {
+    if (!id) return 'Sin asignar';
+    return this.capaMap[id] || `Capa (ID: ${id}) no encontrada`;
+  }
 
   cerrarModal(): void {
     this.closeModal.emit();
+  }
+
+  getCapaIds(): string[] {
+    // Primero intenta obtener de attributes.researchLayerId
+    if (this.viewedItem?.attributes?.researchLayerId) {
+      return Array.isArray(this.viewedItem.attributes.researchLayerId)
+        ? this.viewedItem.attributes.researchLayerId
+        : [this.viewedItem.attributes.researchLayerId];
+    }
+
+    // Luego intenta otras propiedades comunes
+    const raw = this.viewedItem?.researchLayerId || this.viewedItem?.capaRawValue;
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : [raw];
   }
 
   getTipoDocumento(tipo: string): string {
@@ -165,12 +186,6 @@ export class HandleViewComponent implements OnInit, OnChanges {
       'PA': 'Pasaporte'
     };
     return tipos[tipo] || tipo;
-  }
-
-  getNombreCapa(id: string): string {
-    if (!id) return 'Sin asignar';
-    const capa = this.capas.find(c => c.id === id);
-    return capa ? capa.nombreCapa : 'Capa no encontrada';
   }
 
   getRolFormateado(rol: string): string {
@@ -204,5 +219,9 @@ export class HandleViewComponent implements OnInit, OnChanges {
       caregiver.educationLevel ||
       caregiver.occupation
     );
+  }
+
+  public esArray(valor: any): boolean {
+    return Array.isArray(valor);
   }
 }

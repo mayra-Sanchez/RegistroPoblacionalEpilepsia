@@ -220,3 +220,50 @@
 .dark-mode .skeleton-chart {
   background: #444;
 }
+
+/* Layer selector styles */
+.layer-selector-section {
+  padding: 0 20px;
+  margin-bottom: 20px;
+}
+
+.layer-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(245, 245, 245, 0.7);
+  padding: 15px 20px;
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.layer-selector-container mat-form-field {
+  flex: 1;
+  min-width: 300px;
+}
+
+.layer-option {
+  display: flex;
+  flex-direction: column;
+}
+
+.layer-name {
+  font-weight: 500;
+}
+
+.layer-boss {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* Dark mode support */
+.dark-mode .layer-selector-container {
+  background: rgba(30, 30, 30, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .layer-boss {
+  color: #aaa;
+}
