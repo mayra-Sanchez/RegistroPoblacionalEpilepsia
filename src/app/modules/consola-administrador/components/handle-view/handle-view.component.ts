@@ -68,7 +68,6 @@ export class HandleViewComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('ViewedItem recibido:', this.viewedItem); // <-- Depuración
     if (changes['viewedItem'] && this.viewType === 'capa') {
       const capaId = this.viewedItem?.id || this.viewedItem?.capaId || this.viewedItem?.researchLayerId;
       if (capaId) {
@@ -140,7 +139,6 @@ export class HandleViewComponent implements OnInit, OnChanges {
           map[capa.id] = capa.nombreCapa;
           return map;
         }, {});
-        console.log('Mapa de capas cargado:', this.capaMap); // <-- Depuración
       },
       error: (err) => console.error('Error al cargar capas:', err)
     });

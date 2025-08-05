@@ -160,56 +160,52 @@ export class EditRegistroModalComponent {
   }
 
 
-private prepareUpdateData(): any {
-  if (!this.registro) return null;
+  private prepareUpdateData(): any {
+    if (!this.registro) return null;
 
-  return {
-    variables: this.registro.variablesRegister?.map(v => ({
-      id: v.variableId,
-      variableName: v.variableName,
-      value: v.value,
-      type: v.type,
-      researchLayerId: v.researchLayerId,
-      researchLayerName: v.researchLayerName
-    })) || [],
-    patientIdentificationNumber: this.registro.patientIdentificationNumber,
-    patientIdentificationType: this.registro.patientIdentificationType,
-    patient: {
-      name: this.registro.patientBasicInfo?.name,
-      sex: this.registro.patientBasicInfo?.sex,
-      birthDate: this.formatDateForAPI(this.registro.patientBasicInfo?.birthDate),
-      age: this.registro.patientBasicInfo?.age,
-      email: this.registro.patientBasicInfo?.email,
-      phoneNumber: this.registro.patientBasicInfo?.phoneNumber,
-      deathDate: this.formatDateForAPI(this.registro.patientBasicInfo?.deathDate),
-      economicStatus: this.registro.patientBasicInfo?.economicStatus,
-      educationLevel: this.registro.patientBasicInfo?.educationLevel,
-      maritalStatus: this.registro.patientBasicInfo?.maritalStatus,
-      hometown: this.registro.patientBasicInfo?.hometown,
-      currentCity: this.registro.patientBasicInfo?.currentCity,
-      firstCrisisDate: this.formatDateForAPI(this.registro.patientBasicInfo?.firstCrisisDate),
-      crisisStatus: this.registro.patientBasicInfo?.crisisStatus
-    },
-    ...(this.registro.caregiver && {
-      caregiver: {
-        name: this.registro.caregiver.name,
-        identificationType: this.registro.caregiver.identificationType,
-        identificationNumber: this.registro.caregiver.identificationNumber,
-        age: this.registro.caregiver.age,
-        educationLevel: this.registro.caregiver.educationLevel,
-        occupation: this.registro.caregiver.occupation
+    const payload: any = {
+      variables: this.prepareVariablesArray(),
+      patientIdentificationNumber: this.registro.patientIdentificationNumber,
+      patientIdentificationType: this.registro.patientIdentificationType,
+      patient: {
+        name: this.registro.patientBasicInfo?.name || '',
+        sex: this.registro.patientBasicInfo?.sex || '',
+        birthDate: this.formatDateForAPI(this.registro.patientBasicInfo?.birthDate),
+        age: this.registro.patientBasicInfo?.age || 0,
+        email: this.registro.patientBasicInfo?.email || '',
+        phoneNumber: this.registro.patientBasicInfo?.phoneNumber || '',
+        deathDate: this.formatDateForAPI(this.registro.patientBasicInfo?.deathDate),
+        economicStatus: this.registro.patientBasicInfo?.economicStatus || '',
+        educationLevel: this.registro.patientBasicInfo?.educationLevel || '',
+        maritalStatus: this.registro.patientBasicInfo?.maritalStatus || '',
+        hometown: this.registro.patientBasicInfo?.hometown || '',
+        currentCity: this.registro.patientBasicInfo?.currentCity || '',
+        firstCrisisDate: this.formatDateForAPI(this.registro.patientBasicInfo?.firstCrisisDate),
+        crisisStatus: this.registro.patientBasicInfo?.crisisStatus || ''
       }
-    }),
-    ...(this.registro.healthProfessional && {
-      healthProfessional: {
-        id: this.registro.healthProfessional.id,
-        name: this.registro.healthProfessional.name,
-        identificationNumber: this.registro.healthProfessional.identificationNumber
-      }
-    })
-  };
-}
+    };
 
+    if (this.registro.caregiver && this.hasCaregiverData(this.registro.caregiver)) {
+      payload.caregiver = {
+        name: this.registro.caregiver.name || '',
+        identificationType: this.registro.caregiver.identificationType || '',
+        identificationNumber: this.registro.caregiver.identificationNumber || 0,
+        age: this.registro.caregiver.age || 0,
+        educationLevel: this.registro.caregiver.educationLevel || '',
+        occupation: this.registro.caregiver.occupation || ''
+      };
+    }
+
+    if (this.registro.healthProfessional) {
+      payload.healthProfessional = {
+        id: this.registro.healthProfessional.id || '',
+        name: this.registro.healthProfessional.name || '',
+        identificationNumber: this.registro.healthProfessional.identificationNumber || 0
+      };
+    }
+
+    return this.cleanPayload(payload);
+  }
 
   private hasCaregiverData(caregiver: any): boolean {
     if (!caregiver) return false;

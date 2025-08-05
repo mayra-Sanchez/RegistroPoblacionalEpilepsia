@@ -113,43 +113,6 @@ export class LoginComponent implements OnInit {
   }
 
   /**
-   * Solicita el restablecimiento de contraseña
-   * 
-   * @remarks
-   * Envía un correo con enlace de recuperación al email proporcionado.
-   */
-  requestPasswordReset() {
-    if (this.resetPasswordForm.invalid) return;
-
-    this.loading = true;
-    const email = this.resetPasswordForm.get('email')?.value;
-
-    this.authService.requestPasswordReset(email).subscribe({
-      next: () => {
-        this.successMessage = `✅ Se ha enviado un enlace de recuperación a ${email}. Por favor, revisa tu correo.`;
-        this.errorMessage = '';
-        this.showResetPasswordForm = false;
-      },
-      error: (error) => {
-        this.errorMessage = '❌ Error al solicitar el restablecimiento de contraseña. Verifica tu correo electrónico.';
-        this.successMessage = '';
-      },
-      complete: () => {
-        this.loading = false;
-      }
-    });
-  }
-
-  /**
-   * Alterna la visualización del formulario de recuperación de contraseña
-   */
-  toggleResetPasswordForm() {
-    this.showResetPasswordForm = !this.showResetPasswordForm;
-    this.errorMessage = '';
-    this.successMessage = '';
-  }
-
-  /**
    * Obtiene los roles combinados del usuario desde el token JWT
    * @returns Array de strings con los roles del usuario
    * @private
@@ -164,7 +127,6 @@ export class LoginComponent implements OnInit {
       const realmRoles = decoded.realm_access?.roles || [];
       return [...clientRoles, ...realmRoles];
     } catch (error) {
-      console.error('Error decoding token:', error);
       return [];
     }
   }

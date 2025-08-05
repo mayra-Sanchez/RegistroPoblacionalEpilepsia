@@ -286,3 +286,78 @@
         max-width: 90%;
     }
 }
+
+/* ====================== */
+/*    MEJORAS DE BÚSQUEDA */
+/* ====================== */
+
+.search-container {
+    position: relative;
+    display: flex;
+}
+
+.search-container input.search-loading {
+    padding-right: 120px;
+    background-color: #f8f9fa;
+}
+
+.search-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    padding: 0 1rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.search-btn:hover:not(:disabled) {
+    background-color: #2980b9;
+}
+
+.search-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.search-btn .fas {
+    color: white;
+    font-size: 1rem;
+}
+
+.info-message {
+    color: #3498db;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.info-message.error-message {
+    color: #e74c3c;
+}
+
+.info-message .fas {
+    font-size: 0.9rem;
+}
+
+.info-message .fa-check-circle {
+    color: #2ecc71;
+}
+
+.info-message .fa-info-circle {
+    color: #3498db;
+}
+
+.info-message .fa-exclamation-circle {
+    color: #e74c3c;
+}

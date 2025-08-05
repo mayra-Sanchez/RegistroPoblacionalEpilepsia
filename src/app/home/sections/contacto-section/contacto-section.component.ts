@@ -223,7 +223,6 @@ export class ContactoSectionComponent implements OnInit {
         this.showSuccessMessage = true;
         this.registrationForm.reset();
       } catch (error) {
-        console.error('Error submitting registration:', error);
         alert('Error al enviar la solicitud de registro. Intenta de nuevo.');
       } finally {
         this.isSending = false;
@@ -242,7 +241,6 @@ export class ContactoSectionComponent implements OnInit {
         this.showLayerSuccessMessage = true;
         this.researchLayerForm.reset();
       } catch (error) {
-        console.error('Error submitting research layer:', error);
         alert('Error al enviar la solicitud de capa. Intenta de nuevo.');
       } finally {
         this.isSending = false;
@@ -261,7 +259,6 @@ export class ContactoSectionComponent implements OnInit {
         this.showVariableSuccessMessage = true;
         this.variableForm.reset();
       } catch (error) {
-        console.error('Error submitting variable:', error);
         alert('Error al enviar la solicitud de variable. Intenta de nuevo.');
       } finally {
         this.isSending = false;
@@ -542,7 +539,6 @@ export class ContactoSectionComponent implements OnInit {
         await this.sendPasswordChangeEmail(pdfBlob);
         this.showPasswordChangeSuccess = true;
       } catch (error) {
-        console.error('Error submitting password change:', error);
         alert('Error al enviar la solicitud de cambio de contraseña. Intenta de nuevo.');
       } finally {
         this.isSending = false;

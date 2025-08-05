@@ -51,7 +51,7 @@ export class AuthInterceptor implements HttpInterceptor {
           return next.handle(this.addToken(req, response.access_token));
         }),
         catchError(error => {
-          console.error('❌ No se pudo refrescar el token, cerrando sesión.');
+
           this.isRefreshing = false;
           this.authService.logout();
           return throwError(() => error);

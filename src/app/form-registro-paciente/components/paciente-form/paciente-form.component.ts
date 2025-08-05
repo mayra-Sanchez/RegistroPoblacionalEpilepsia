@@ -1,5 +1,10 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidatorFn } from '@angular/forms';
+import { Register } from 'src/app/modules/consola-registro/interfaces';
+import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
+import Swal from 'sweetalert2';
+import { switchMap, throwError, catchError } from 'rxjs';
+import { parseToIsoDate } from 'src/app/utils/date-utils';
 
 /**
  * Interfaz para definir la estructura del formulario del paciente
@@ -24,13 +29,23 @@ export interface PacienteFormData {
 }
 
 /**
+ * Interfaz para mensajes de búsqueda
+ */
+interface SearchMessage {
+  type: 'info' | 'success' | 'error';
+  text: string;
+}
+
+/**
  * Validador personalizado para evitar fechas futuras
  * 
  * @returns ValidatorFn
  */
 function noFutureDateValidator(): ValidatorFn {
   return (control: AbstractControl): { [key: string]: any } | null => {
-    const date = new Date(control.value);
+    if (!control.value) return null;
+
+    const date = new Date(control.value); // Formato yyyy-MM-dd
     return date > new Date() ? { futureDate: true } : null;
   };
 }
@@ -57,17 +72,62 @@ export class PacienteFormComponent {
   @Output() next = new EventEmitter<PacienteFormData>();
 
   /**
+   * ID de la capa de investigación para validar pacientes duplicados
+   */
+  @Input() researchLayerId: string = '';
+
+  /**
    * Opciones predefinidas para el estado de crisis del paciente
    */
   estadosCrisis = ['Activa', 'Remisión', 'Estable', 'Crítica', 'Recuperado'];
+
+  /**
+   * Mensaje de estado para la búsqueda de pacientes
+   */
+  searchMessage: SearchMessage | null = null;
+
+  /**
+   * Temporizador para el debounce de búsqueda
+   */
+  private searchDebounceTimer: any;
 
   /**
    * Grupo de formulario reactivo
    */
   form: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  /**
+   * Indica si se está realizando una búsqueda
+   */
+  isSearching = false;
+
+  /**
+   * Indica si el paciente tiene cuidador
+   */
+  tieneCuidador: boolean = false;
+
+  /**
+   * Datos del cuidador si existe
+   */
+  cuidadorData: any = null;
+
+  /**
+   * Datos clínicos del paciente
+   */
+  clinicalData: any = null;
+
+  /**
+   * Constructor del componente
+   * 
+   * @param fb Servicio FormBuilder para crear formularios reactivos
+   * @param consolaService Servicio para interactuar con la consola de registro
+   */
+  constructor(
+    private fb: FormBuilder,
+    private consolaService: ConsolaRegistroService
+  ) {
     this.form = this.createForm();
+    this.setupIdentificationNumberListener();
   }
 
   /**
@@ -97,43 +157,157 @@ export class PacienteFormComponent {
   }
 
   /**
-   * Formatea una fecha a 'dd-mm-yyyy'
-   * 
-   * @param dateValue - Fecha en cualquier formato compatible con Date
-   * @returns string formateado o vacío
+   * Configura el listener para cambios en el número de identificación
    */
-private formatDate(dateValue: any): string {
-  if (!dateValue) return '';
-  
-  if (dateValue instanceof Date) {
-    if (isNaN(dateValue.getTime())) return '';
-    const day = dateValue.getDate().toString().padStart(2, '0');
-    const month = (dateValue.getMonth() + 1).toString().padStart(2, '0');
-    const year = dateValue.getFullYear();
-    return `${day}-${month}-${year}`;
+  private setupIdentificationNumberListener(): void {
+    this.form.get('identificationNumber')?.valueChanges.subscribe(value => {
+      if (value && value.length >= 6) {
+        this.searchPatient(value);
+      }
+    });
   }
-
-  if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-    const [year, month, day] = dateValue.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // month is 0-based in JS
-    if (isNaN(date.getTime())) return '';
-    return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
-  }
-  return '';
-}
 
   /**
-   * Prepara y formatea los datos del formulario para ser emitidos
-   * 
-   * @param formValue - Valor original del formulario
-   * @returns Objeto formateado
+   * Dispara manualmente la búsqueda de un paciente
    */
-  private prepareFormData(formValue: any): PacienteFormData {
-    const preparedData = { ...formValue };
-    preparedData.birthDate = this.formatDate(formValue.birthDate);
-    preparedData.deathDate = this.formatDate(formValue.deathDate);
-    preparedData.firstCrisisDate = this.formatDate(formValue.firstCrisisDate);
-    return preparedData;
+  triggerSearch(): void {
+    const identificationNumber = this.form.get('identificationNumber')?.value;
+    if (!identificationNumber || identificationNumber.length < 6) {
+      this.searchMessage = {
+        type: 'error',
+        text: 'El número de documento debe tener al menos 6 dígitos'
+      };
+      return;
+    }
+
+    this.searchPatient(identificationNumber);
+  }
+
+  /**
+   * Busca un paciente por número de identificación
+   * 
+   * @param identificationNumber Número de identificación del paciente a buscar
+   */
+  searchPatient(identificationNumber: string): void {
+    this.isSearching = true;
+    this.searchMessage = null;
+
+    // Clear previous debounce timer
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+
+    this.searchDebounceTimer = setTimeout(() => {
+      if (!this.researchLayerId) {
+        this.isSearching = false;
+        this.searchMessage = {
+          type: 'error',
+          text: 'No se ha especificado la capa de investigación'
+        };
+        return;
+      }
+
+      this.consolaService.obtenerRegistrosPorCapa(this.researchLayerId).pipe(
+        switchMap((response: { registers: Register[] }) => {
+          const existsInCurrentLayer = response.registers?.some(register =>
+            register.patientIdentificationNumber === Number(identificationNumber)
+          );
+
+          if (existsInCurrentLayer) {
+            return throwError(() => new Error('PATIENT_EXISTS_IN_LAYER'));
+          }
+
+          return this.consolaService.obtenerRegistrosPorPaciente(Number(identificationNumber));
+        }),
+        catchError(error => {
+          if (error.status === 404 || (error.error && error.error.message === 'No registers found')) {
+            return this.consolaService.obtenerRegistrosPorPaciente(Number(identificationNumber));
+          }
+          return throwError(() => error);
+        })
+      ).subscribe({
+        next: (response: { registers: Register[] }) => {
+          this.isSearching = false;
+
+          if (response.registers && response.registers.length > 0) {
+            this.searchMessage = {
+              type: 'success',
+              text: 'Paciente encontrado en el sistema. Datos cargados automáticamente.'
+            };
+            this.loadPatientData(response.registers[0]);
+          } else {
+            this.searchMessage = {
+              type: 'info',
+              text: 'Paciente no encontrado. Puede continuar con el registro.'
+            };
+          }
+        },
+        error: (error) => {
+          this.isSearching = false;
+
+          if (error.message === 'PATIENT_EXISTS_IN_LAYER') {
+            this.searchMessage = {
+              type: 'error',
+              text: 'Este paciente ya está registrado en la capa actual'
+            };
+            this.form.get('identificationNumber')?.reset();
+          } else {
+            this.searchMessage = {
+              type: 'error',
+              text: error.error?.message || 'Error al buscar el paciente'
+            };
+          }
+        }
+      });
+    }, 500); // Debounce de 500ms
+  }
+
+  /**
+   * Carga los datos de un paciente encontrado en el formulario
+   * 
+   * @param register Registro del paciente encontrado
+   */
+  private loadPatientData(register: Register): void {
+    const patientData = register.patientBasicInfo;
+    const caregiverData = register.caregiver;
+    const hasCaregiver = !!caregiverData || (patientData as any).hasCaregiver || false;
+
+    this.form.patchValue({
+      name: patientData.name,
+      identificationType: register.patientIdentificationType,
+      identificationNumber: register.patientIdentificationNumber,
+      sex: patientData.sex,
+      birthDate: parseToIsoDate(patientData.birthDate),
+      email: patientData.email,
+      phoneNumber: patientData.phoneNumber,
+      deathDate: parseToIsoDate(patientData.deathDate),
+      economicStatus: patientData.economicStatus,
+      educationLevel: patientData.educationLevel,
+      maritalStatus: patientData.maritalStatus,
+      hometown: patientData.hometown,
+      currentCity: patientData.currentCity,
+      firstCrisisDate: parseToIsoDate(patientData.firstCrisisDate),
+      crisisStatus: patientData.crisisStatus,
+      tieneCuidador: hasCaregiver
+    });
+
+    if (caregiverData) {
+      this.cuidadorData = {
+        name: caregiverData.name,
+        identificationType: caregiverData.identificationType,
+        identificationNumber: caregiverData.identificationNumber,
+        age: caregiverData.age,
+        educationLevel: caregiverData.educationLevel,
+        occupation: caregiverData.occupation
+      };
+    }
+
+    Object.keys(patientData).forEach(key => {
+      const control = this.form.get(key);
+      if (control) {
+        control.markAsDirty();
+      }
+    });
   }
 
   /**
@@ -144,7 +318,10 @@ private formatDate(dateValue: any): string {
    */
   onSubmit(): void {
     if (this.form.valid) {
-      const formData = this.prepareFormData(this.form.value);
+      const formData = {
+        ...this.form.value,
+        cuidadorData: this.cuidadorData // Incluir los datos del cuidador
+      };
       this.next.emit(formData);
     } else {
       this.markFormGroupTouched(this.form);

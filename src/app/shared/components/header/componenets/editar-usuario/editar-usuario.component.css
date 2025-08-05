@@ -16,8 +16,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* ========== MODAL CONTENT ========== */
@@ -41,6 +46,7 @@
     transform: translateY(-20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -48,8 +54,9 @@
 }
 
 /* ========== MODAL HEADER ========== */
+/* ========== MODAL HEADER ========== */
 .modal-header {
-  padding: 1.25rem 1.5rem;
+  padding: 1.5rem 2rem;
   background: linear-gradient(135deg, #0f5ead, #11A6DA);
   color: white;
   flex-shrink: 0;
@@ -58,16 +65,27 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .modal-title {
   margin: 0;
   color: white;
-  font-size: 1.3rem;
-  font-weight: 500;
+  font-size: 1.4rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+}
+
+.modal-title .title {
+  font-size: 1.4rem;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.modal-title i.fa {
+  font-size: 1.6rem;
 }
 
 .modal-close {
@@ -329,7 +347,7 @@ select.form-control {
     align-items: flex-start;
     padding: 0;
   }
-  
+
   .modal-content {
     max-height: 100vh;
     height: 100vh;
@@ -338,34 +356,34 @@ select.form-control {
     margin: 0;
     border-radius: 0;
   }
-  
+
   .modal-header {
     border-radius: 0;
     padding: 1rem;
   }
-  
+
   .modal-body {
     padding: 1rem;
     max-height: none;
   }
-  
+
   form {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .modal-footer {
     flex-wrap: wrap;
     justify-content: center;
     padding: 0.75rem;
   }
-  
+
   .btn {
     flex: 1;
     min-width: 120px;
     padding: 0.75rem;
   }
-  
+
   .modal-title {
     font-size: 1.1rem;
   }
@@ -375,20 +393,20 @@ select.form-control {
   .modal-header {
     padding: 0.75rem;
   }
-  
+
   .modal-title {
     font-size: 1rem;
   }
-  
+
   .btn {
     padding: 0.6rem;
     font-size: 0.8rem;
   }
-  
+
   .form-control {
     padding: 0.6rem 0.8rem;
   }
-  
+
   .options-container {
     padding: 1rem;
   }

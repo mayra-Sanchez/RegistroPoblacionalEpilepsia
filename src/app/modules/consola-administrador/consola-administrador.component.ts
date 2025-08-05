@@ -389,7 +389,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       next: (usuarios) => {
         this.usuariosDataOriginal = usuarios;
         this.usuariosData = [...usuarios];
-        console.log('[Usuarios] Usuarios cargados:', usuarios);
       },
       error: (err) => {
         console.error('Error al obtener usuarios', err);

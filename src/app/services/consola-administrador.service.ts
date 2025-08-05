@@ -5,32 +5,59 @@ import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from 'src/app/services/auth.service';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../environments/environment';
+
+/**
+ * Servicio para la consola de administración que proporciona funcionalidades para:
+ * - Gestión de capas de investigación
+ * - Administración de usuarios
+ * - Manejo de variables
+ * - Operaciones con registros
+ * 
+ * Este servicio se comunica con el backend a través de API REST y maneja:
+ * - Autenticación y autorización
+ * - Notificaciones de actualización de datos
+ * - Manejo centralizado de errores
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class ConsolaAdministradorService {
 
+  // URLs de los endpoints API
   private readonly API_LAYERS = `${environment.backendUrl}${environment.endpoints.researchLayer}`;
   private readonly API_USERS = `${environment.backendUrl}${environment.endpoints.users}`;
   private readonly API_VARIABLES = `${environment.backendUrl}${environment.endpoints.variables}`;
   private readonly API_REGISTERS = `${environment.backendUrl}${environment.endpoints.registers}`;
 
-
+  // Subjects para notificar actualizaciones
   private dataUpdated = new Subject<void>();
   private capaUpdated = new BehaviorSubject<void>(undefined);
   private varUpdated = new BehaviorSubject<void>(undefined);
   private userUpdated = new BehaviorSubject<void>(undefined);
 
+  // Observables públicos para suscribirse a actualizaciones
   capaUpdated$ = this.capaUpdated.asObservable();
   varUpdated$ = this.varUpdated.asObservable();
   userUpdated$ = this.userUpdated.asObservable();
 
+  /**
+   * Constructor del servicio
+   * @param http Cliente HTTP para realizar peticiones
+   * @param authService Servicio de autenticación
+   */
   constructor(private http: HttpClient, private authService: AuthService) { }
 
+  /**
+   * Obtiene un observable para escuchar actualizaciones de datos
+   * @returns Observable que emite cuando hay actualizaciones
+   */
   getDataUpdatedListener(): Observable<void> {
     return this.dataUpdated.asObservable();
   }
 
+  /**
+   * Notifica a todos los suscriptores que los datos han sido actualizados
+   */
   public notifyDataUpdated(): void {
     this.dataUpdated.next();
     this.capaUpdated.next();
@@ -38,10 +65,15 @@ export class ConsolaAdministradorService {
     this.userUpdated.next();
   }
 
+  /**
+   * Obtiene los headers de autenticación
+   * @returns HttpHeaders con el token de autenticación
+   * @throws Error si no hay token disponible
+   * @private
+   */
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     if (!token) {
-      console.error('No se encontró token JWT');
       this.authService.logout();
       throw new Error('Sesión expirada');
     }
@@ -52,6 +84,12 @@ export class ConsolaAdministradorService {
     });
   }
 
+  /**
+   * Maneja errores HTTP de forma centralizada
+   * @param operation Nombre de la operación que falló
+   * @returns Función que procesa el error
+   * @private
+   */
   private handleHttpError(operation: string = 'Operación'): (error: any) => Observable<never> {
     return (error: any): Observable<never> => {
       let errorMsg = `${operation} fallida.`;
@@ -64,11 +102,15 @@ export class ConsolaAdministradorService {
       } else {
         errorMsg += ' Error inesperado.';
       }
-      console.error(`❌ ${operation}:`, error);
       return throwError(() => new Error(errorMsg));
     };
   }
 
+  /**
+   * Verifica si el usuario actual tiene privilegios de administrador
+   * @returns true si el usuario es admin, false en caso contrario
+   * @private
+   */
   private isAdmin(): boolean {
     const token = this.authService.getToken();
     if (!token) return false;
@@ -81,12 +123,16 @@ export class ConsolaAdministradorService {
         clientRoles.includes('SuperAdmin_client_role') ||
         realmRoles.includes('SuperAdmin');
     } catch (error) {
-      console.error('Error decodificando token:', error);
       return false;
     }
   }
 
+  // ==================== MÉTODOS PARA CAPAS ====================
 
+  /**
+   * Obtiene todas las capas de investigación
+   * @returns Observable con array de capas
+   */
   getAllLayers(): Observable<any[]> {
     if (!this.authService.isLoggedIn()) {
       return throwError(() => new Error('Usuario no autenticado'));
@@ -95,6 +141,11 @@ export class ConsolaAdministradorService {
       .pipe(catchError(this.handleHttpError('Carga de capas')));
   }
 
+  /**
+   * Obtiene una capa por su ID
+   * @param id ID de la capa a buscar
+   * @returns Observable con los datos de la capa
+   */
   getLayerById(id: string): Observable<any> {
     return this.http.get<any>(`${this.API_LAYERS}`, {
       headers: this.getAuthHeaders(),
@@ -104,7 +155,11 @@ export class ConsolaAdministradorService {
     );
   }
 
-
+  /**
+   * Registra una nueva capa de investigación
+   * @param capaData Datos de la capa a registrar
+   * @returns Observable con la respuesta del servidor
+   */
   registrarCapa(capaData: any): Observable<any> {
     return this.http.post<any>(this.API_LAYERS, capaData, { headers: this.getAuthHeaders() })
       .pipe(
@@ -113,6 +168,12 @@ export class ConsolaAdministradorService {
       );
   }
 
+  /**
+   * Actualiza una capa existente
+   * @param id ID de la capa a actualizar
+   * @param capaData Nuevos datos de la capa
+   * @returns Observable con la respuesta del servidor
+   */
   actualizarCapa(id: string, capaData: any): Observable<any> {
     if (!this.isAdmin()) {
       return throwError(() => new Error('Acceso denegado'));
@@ -124,6 +185,11 @@ export class ConsolaAdministradorService {
       );
   }
 
+  /**
+   * Elimina una capa de investigación
+   * @param capaId ID de la capa a eliminar
+   * @returns Observable con la respuesta del servidor
+   */
   eliminarCapa(capaId: string): Observable<any> {
     return this.http.delete<any>(`${this.API_LAYERS}?researchLayerId=${capaId}`, {
       headers: this.getAuthHeaders()
@@ -133,6 +199,12 @@ export class ConsolaAdministradorService {
     );
   }
 
+  // ==================== MÉTODOS PARA USUARIOS ====================
+
+  /**
+   * Obtiene todos los usuarios
+   * @returns Observable con array de usuarios
+   */
   getAllUsuarios(): Observable<any[]> {
     if (!this.isAdmin()) {
       return throwError(() => new Error('Acceso denegado'));
@@ -141,6 +213,11 @@ export class ConsolaAdministradorService {
       .pipe(catchError(this.handleHttpError('Carga de usuarios')));
   }
 
+  /**
+   * Crea un nuevo usuario
+   * @param usuario Datos del usuario a crear
+   * @returns Observable con la respuesta del servidor
+   */
   crearUsuario(usuario: any): Observable<any> {
     if (!this.isAdmin()) {
       return throwError(() => new Error('Acceso denegado'));
@@ -152,6 +229,12 @@ export class ConsolaAdministradorService {
       );
   }
 
+  /**
+   * Actualiza un usuario existente
+   * @param userId ID del usuario a actualizar
+   * @param usuario Nuevos datos del usuario
+   * @returns Observable con la respuesta del servidor
+   */
   updateUsuario(userId: string, usuario: any): Observable<any> {
     const url = `${this.API_USERS}/update?userId=${userId}`;
     const formatDate = (dateStr: string): string => {
@@ -187,6 +270,11 @@ export class ConsolaAdministradorService {
     );
   }
 
+  /**
+   * Elimina un usuario
+   * @param userId ID del usuario a eliminar
+   * @returns Observable con la respuesta del servidor
+   */
   eliminarUsuario(userId: string): Observable<any> {
     if (!this.isAdmin()) {
       return throwError(() => new Error('Acceso denegado'));
@@ -200,6 +288,11 @@ export class ConsolaAdministradorService {
     );
   }
 
+  /**
+   * Habilita un usuario
+   * @param userId ID del usuario a habilitar
+   * @returns Observable con la respuesta del servidor
+   */
   enableUser(userId: string): Observable<any> {
     if (!this.isAdmin()) {
       return throwError(() => new Error('Acceso denegado'));
@@ -213,6 +306,11 @@ export class ConsolaAdministradorService {
     );
   }
 
+  /**
+   * Deshabilita un usuario
+   * @param userId ID del usuario a deshabilitar
+   * @returns Observable con la respuesta del servidor
+   */
   disableUser(userId: string): Observable<any> {
     if (!this.isAdmin()) {
       return throwError(() => new Error('Acceso denegado'));
@@ -226,11 +324,22 @@ export class ConsolaAdministradorService {
     );
   }
 
+  // ==================== MÉTODOS PARA VARIABLES ====================
+
+  /**
+   * Obtiene todas las variables
+   * @returns Observable con array de variables
+   */
   getAllVariables(): Observable<any[]> {
     return this.http.get<any[]>(`${this.API_VARIABLES}/GetAll`, { headers: this.getAuthHeaders() })
       .pipe(catchError(this.handleHttpError('Carga de variables')));
   }
 
+  /**
+   * Crea una nueva variable
+   * @param variable Datos de la variable a crear
+   * @returns Observable con la respuesta del servidor
+   */
   crearVariable(variable: any): Observable<any> {
     return this.http.post<any>(this.API_VARIABLES, variable, { headers: this.getAuthHeaders() })
       .pipe(
@@ -239,6 +348,11 @@ export class ConsolaAdministradorService {
       );
   }
 
+  /**
+   * Elimina una variable
+   * @param variableId ID de la variable a eliminar
+   * @returns Observable con la respuesta del servidor
+   */
   eliminarVariable(variableId: string): Observable<any> {
     return this.http.delete<any>(this.API_VARIABLES, {
       headers: this.getAuthHeaders(),
@@ -249,6 +363,11 @@ export class ConsolaAdministradorService {
     );
   }
 
+  /**
+   * Actualiza una variable existente
+   * @param variable Datos actualizados de la variable
+   * @returns Observable con la respuesta del servidor
+   */
   actualizarVariable(variable: any): Observable<any> {
     const variableData = {
       variableName: variable.variableName,
@@ -265,9 +384,13 @@ export class ConsolaAdministradorService {
     );
   }
 
+  /**
+   * Obtiene variables asociadas a una capa específica
+   * @param capaId ID de la capa
+   * @returns Observable con array de variables
+   */
   obtenerVariablesPorCapa(capaId: string): Observable<any[]> {
     if (!capaId || capaId.trim() === '') {
-      console.error('❌ ID de capa inválido:', capaId);
       return throwError(() => new Error('ID de capa no válido'));
     }
 
@@ -282,6 +405,11 @@ export class ConsolaAdministradorService {
     );
   }
 
+  /**
+   * Obtiene una variable por su ID
+   * @param id ID de la variable a buscar
+   * @returns Observable con los datos de la variable
+   */
   getVariableById(id: string): Observable<any> {
     return this.http.get<any>(`${this.API_VARIABLES}`, {
       headers: this.getAuthHeaders(),
@@ -291,8 +419,16 @@ export class ConsolaAdministradorService {
     );
   }
 
+  // ==================== MÉTODOS PARA REGISTROS ====================
 
-
+  /**
+   * Obtiene registros de capas con paginación y ordenamiento
+   * @param page Número de página (0-based)
+   * @param size Tamaño de página
+   * @param sort Campo para ordenar
+   * @param sortDirection Dirección de ordenamiento (ASC/DESC)
+   * @returns Observable con los registros paginados
+   */
   getRegistrosCapas(page: number = 0, size: number = 10, sort: string = 'registerDate', sortDirection: string = 'DESC') {
     const params = new HttpParams()
       .set('page', page.toString())
@@ -304,6 +440,11 @@ export class ConsolaAdministradorService {
       .pipe(catchError(this.handleHttpError('Carga de registros de capas')));
   }
 
+  /**
+   * Elimina un registro de capa
+   * @param registerId ID del registro a eliminar
+   * @returns Observable con la respuesta del servidor
+   */
   deleteRegistroCapa(registerId: string): Observable<any> {
     return this.http.delete(this.API_REGISTERS, {
       params: new HttpParams().set('registerId', registerId)

@@ -5,6 +5,18 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../environments/environment';
+
+/**
+ * Servicio de autenticación que maneja el login, logout, gestión de tokens
+ * y obtención de información del usuario.
+ * 
+ * Este servicio se encarga de:
+ * - Autenticación de usuarios (login/logout)
+ * - Gestión de tokens JWT (almacenamiento, refresco)
+ * - Obtención de información del usuario
+ * - Control de roles y permisos
+ * - Comunicación con el backend para operaciones de autenticación
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -18,9 +30,17 @@ export class AuthService {
   private tokenRefreshInterval: any; // Para manejar el intervalo de refresco
   private readonly refreshTimeMs = 13 * 60 * 1000; // 13 minutos en milisegundos
 
-
+  /**
+   * Constructor del servicio de autenticación
+   * @param http Cliente HTTP para realizar peticiones
+   * @param router Router para navegación
+   */
   constructor(private http: HttpClient, private router: Router) { }
 
+  /**
+   * Inicia el refresco automático del token cada 13 minutos
+   * @private
+   */
   private startTokenRefresh() {
     if (this.tokenRefreshInterval) {
       clearInterval(this.tokenRefreshInterval);
@@ -33,6 +53,10 @@ export class AuthService {
     }, this.refreshTimeMs);
   }
 
+  /**
+   * Detiene el refresco automático del token
+   * @private
+   */
   private stopTokenRefresh() {
     if (this.tokenRefreshInterval) {
       clearInterval(this.tokenRefreshInterval);
@@ -40,7 +64,10 @@ export class AuthService {
     }
   }
 
-  // Método para obtener la capa de investigación del usuario actual
+  /**
+   * Obtiene la capa de investigación asociada al usuario actual
+   * @returns Observable con el ID de la capa de investigación o null
+   */
   getCurrentUserResearchLayer(): Observable<string | null> {
     const email = this.getUserEmail();
     if (!email) {
@@ -70,6 +97,11 @@ export class AuthService {
     );
   }
 
+  /**
+   * Obtiene los datos del usuario autenticado desde el backend
+   * @param email Email del usuario a obtener
+   * @returns Observable con los datos del usuario
+   */
   obtenerUsuarioAutenticado(email: string): Observable<any> {
     const token = this.getToken();
 
@@ -96,6 +128,12 @@ export class AuthService {
     );
   }
 
+  /**
+   * Realiza el login del usuario
+   * @param email Email del usuario
+   * @param password Contraseña del usuario
+   * @returns Observable con la respuesta del servidor
+   */
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this.backendUrl}/auth/login`, { email, password }).pipe(
       tap((response: any) => {
@@ -106,11 +144,11 @@ export class AuthService {
           this.storeUserRoles(response.access_token);
           this.startTokenRefresh(); // Inicia el refresco automático
 
-          const email = this.getUserEmail(); // 👈🏼 obtener el email del token
+          const email = this.getUserEmail();
           if (email) {
             this.obtenerUsuarioAutenticado(email).subscribe({
               next: (usuario) => {
-                console.log('✅ Usuario autenticado desde backend:', usuario[0]); // 👈🏼 este es el dato real
+                console.log('✅ Usuario autenticado desde backend:', usuario[0]);
               },
               error: (err) => {
                 console.error('❌ Error obteniendo usuario:', err);
@@ -119,7 +157,6 @@ export class AuthService {
           }
         }
       }),
-
       catchError(error => {
         console.error('❌ Error en el login:', error);
         throw error;
@@ -127,83 +164,115 @@ export class AuthService {
     );
   }
 
-
+  /**
+   * Obtiene el nombre de usuario desde el token
+   * @returns Nombre de usuario o cadena vacía si no está disponible
+   */
   getUsername(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';
 
     try {
       const decoded: any = jwtDecode(token);
-      return decoded.preferred_username || ''; // Ajusta según la estructura de tu token
+      return decoded.preferred_username || '';
     } catch (error) {
       console.error('❌ Error al obtener el nombre de usuario:', error);
       return '';
     }
   }
 
+  /**
+   * Obtiene el rol principal del usuario
+   * @returns Rol principal del usuario o 'Usuario' por defecto
+   */
   getUserRole(): string {
     const roles = this.getStoredRoles();
-    return roles.length > 0 ? roles[0] : 'Usuario'; // Ajusta para mostrar el rol adecuado
+    return roles.length > 0 ? roles[0] : 'Usuario';
   }
 
+  /**
+   * Almacena los roles del usuario en localStorage
+   * @param token Token JWT del usuario
+   * @private
+   */
   private storeUserRoles(token: string) {
     try {
       const decoded: any = jwtDecode(token);
-
-      // Extraer los roles específicos del cliente "registers-users-api-rest"
       const roles = decoded.resource_access?.["registers-users-api-rest"]?.roles || [];
-
       localStorage.setItem('userRoles', JSON.stringify(roles));
     } catch (error) {
       console.error('❌ Error al decodificar el token:', error);
     }
   }
 
+  /**
+   * Obtiene los roles almacenados del usuario
+   * @returns Array de roles del usuario
+   */
   getStoredRoles(): string[] {
     const token = localStorage.getItem('kc_token');
     if (!token) return [];
 
     try {
-      const tokenPayload = JSON.parse(atob(token.split('.')[1])); // Decodificar el token JWT
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
       const realmRoles = tokenPayload.realm_access?.roles || [];
       const clientRoles = tokenPayload.resource_access?.['registers-users-api-rest']?.roles || [];
 
-      return [...realmRoles, ...clientRoles]; // 🔹 Combinar ambos tipos de roles
+      return [...realmRoles, ...clientRoles];
     } catch (error) {
       console.error('❌ Error al obtener roles del token:', error);
       return [];
     }
   }
 
+  /**
+   * Verifica si el usuario tiene un rol específico
+   * @param requiredRole Rol a verificar
+   * @returns true si el usuario tiene el rol, false en caso contrario
+   */
   hasRole(requiredRole: string): boolean {
     const userRoles = this.getStoredRoles();
     return userRoles.includes(requiredRole);
-
   }
 
+  /**
+   * Obtiene el token JWT del usuario
+   * @returns Token JWT o null si no está disponible
+   */
   getToken(): string | null {
     return localStorage.getItem('kc_token');
   }
 
+  /**
+   * Verifica si el usuario está autenticado
+   * @returns true si el usuario está autenticado, false en caso contrario
+   */
   isLoggedIn(): boolean {
     const token = localStorage.getItem('kc_token');
     return !!token;
   }
 
+  /**
+   * Obtiene el email del usuario desde el token
+   * @returns Email del usuario o null si no está disponible
+   */
   getUserEmail(): string | null {
     const token = localStorage.getItem('kc_token');
     if (!token) return null;
 
     try {
       const decoded: any = jwtDecode(token);
-      return decoded.email || null; // Asegúrate de que el campo "email" está presente en tu token JWT
+      return decoded.email || null;
     } catch (error) {
       console.error('❌ Error al obtener el email del token:', error);
       return null;
     }
   }
 
-
+  /**
+   * Refresca el token JWT usando el refresh token
+   * @returns Observable con la respuesta del servidor
+   */
   refreshToken(): Observable<any> {
     const refreshToken = localStorage.getItem('refresh_token');
 
@@ -217,7 +286,6 @@ export class AuthService {
       'Content-Type': 'application/json'
     });
 
-    // Usar parámetro de query como espera el backend
     const params = new HttpParams().set('refreshToken', refreshToken);
 
     return this.http.post<any>(`${this.backendUrl}/auth/refresh`, null, {
@@ -230,14 +298,13 @@ export class AuthService {
           throw new Error('Respuesta inválida del servidor');
         }
 
-        ('🔄 Token refrescado con éxito');
+        console.log('🔄 Token refrescado con éxito');
         localStorage.setItem('kc_token', response.access_token);
 
         if (response.refresh_token) {
           localStorage.setItem('refresh_token', response.refresh_token);
         }
 
-        // Reiniciar el intervalo de refresco
         this.startTokenRefresh();
       }),
       catchError(error => {
@@ -246,7 +313,7 @@ export class AuthService {
         if (error.status === 401 || error.status === 403) {
           console.warn('⚠️ Refresh token inválido o expirado');
           this.logout();
-          this.router.navigate(['/login']); // Redirigir a login
+          this.router.navigate(['/login']);
         }
 
         return throwError(() => new Error('No se pudo refrescar el token.'));
@@ -254,6 +321,10 @@ export class AuthService {
     );
   }
 
+  /**
+   * Obtiene los datos del usuario desde el token
+   * @returns Objeto con los datos del usuario o null si no está disponible
+   */
   getUserData(): any {
     const token = localStorage.getItem('kc_token');
     if (!token) return null;
@@ -261,7 +332,7 @@ export class AuthService {
     try {
       const decoded: any = jwtDecode(token);
       return {
-        id: decoded.sub || '', // Use the 'sub' claim which is the user ID in Keycloak
+        id: decoded.sub || '',
         firstName: decoded.given_name || decoded.firstName || '',
         lastName: decoded.family_name || decoded.lastName || '',
         email: decoded.email || '',
@@ -273,13 +344,16 @@ export class AuthService {
     }
   }
 
+  /**
+   * Obtiene el primer nombre del usuario
+   * @returns Primer nombre del usuario o cadena vacía si no está disponible
+   */
   getUserFirstName(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';
 
     try {
       const decoded: any = jwtDecode(token);
-      // Ajusta estos campos según la estructura de tu token JWT
       return decoded.given_name || decoded.name || decoded.preferred_username || '';
     } catch (error) {
       console.error('❌ Error al obtener el nombre del usuario:', error);
@@ -287,13 +361,16 @@ export class AuthService {
     }
   }
 
+  /**
+   * Obtiene el apellido del usuario
+   * @returns Apellido del usuario o cadena vacía si no está disponible
+   */
   getUserLastName(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';
 
     try {
       const decoded: any = jwtDecode(token);
-      // Ajusta estos campos según la estructura de tu token JWT
       return decoded.family_name || decoded.last_name || '';
     } catch (error) {
       console.error('❌ Error al obtener el apellido del usuario:', error);
@@ -301,23 +378,31 @@ export class AuthService {
     }
   }
 
+  /**
+   * Verifica si el usuario tiene alguno de los roles requeridos
+   * @param requiredRoles Array de roles a verificar
+   * @returns true si el usuario tiene al menos uno de los roles, false en caso contrario
+   */
   hasAnyRole(requiredRoles: string[]): boolean {
     const userRoles = this.getStoredRoles();
     return requiredRoles.some(role => userRoles.includes(role));
   }
 
+  /**
+   * Obtiene el número de identificación del usuario
+   * @returns Número de identificación o cadena vacía si no está disponible
+   */
   getUserIdentificationNumber(): string {
     const token = localStorage.getItem('kc_token');
     if (!token) return '';
 
     try {
       const decoded: any = jwtDecode(token);
-
       return decoded.identificationNumber ||
         decoded.identification_number ||
         decoded.documentNumber ||
         decoded.document_number ||
-        decoded.attributes?.identificationNumber?.[0] || // Keycloak style
+        decoded.attributes?.identificationNumber?.[0] ||
         '';
     } catch (error) {
       console.error('Error al obtener número de identificación:', error);
@@ -325,26 +410,35 @@ export class AuthService {
     }
   }
 
-  // Método para obtener nombre completo
+  /**
+   * Obtiene el nombre completo del usuario
+   * @returns Nombre completo del usuario o cadena vacía si no está disponible
+   */
   getUserFullName(): string {
     const firstName = this.getUserFirstName();
     const lastName = this.getUserLastName();
     return `${firstName} ${lastName}`.trim();
   }
 
+  /**
+   * Realiza el logout del usuario
+   * - Elimina los tokens del almacenamiento local
+   * - Detiene el refresco automático del token
+   * - Redirige al usuario a la página principal
+   */
   logout(): void {
     localStorage.removeItem('kc_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('userRoles');
     this.authStatus.next(false);
-    this.stopTokenRefresh(); // Detener el refresco automático
+    this.stopTokenRefresh();
     this.router.navigate(['/']);
   }
 
   /**
- * Obtiene el ID del usuario desde el token JWT
- * @returns string | null - El ID del usuario o null si no está disponible
- */
+   * Obtiene el ID del usuario desde el token
+   * @returns ID del usuario o null si no está disponible
+   */
   getUserId(): string | null {
     const token = this.getToken();
     if (!token) return null;
@@ -360,7 +454,7 @@ export class AuthService {
 
   /**
    * Actualiza los datos del usuario en el almacenamiento local
-   * @param data - Objeto con los datos a actualizar
+   * @param data Objeto con los datos a actualizar
    */
   updateUserData(data: { username?: string, role?: string, firstName?: string, lastName?: string }): void {
     const token = this.getToken();
@@ -390,8 +484,8 @@ export class AuthService {
   }
 
   /**
-   * Obtiene los datos completos del usuario desde el token
-   * @returns any - Objeto con los datos del usuario
+   * Obtiene el perfil completo del usuario
+   * @returns Observable con los datos del perfil del usuario
    */
   getUserProfile(): Observable<any> {
     const userData = this.getUserData();
@@ -419,8 +513,8 @@ export class AuthService {
   }
 
   /**
-   * Método para actualizar el token con nueva información
-   * @param newToken - Nuevo token JWT
+   * Actualiza el token JWT con nueva información
+   * @param newToken Nuevo token JWT
    */
   updateToken(newToken: string): void {
     localStorage.setItem('kc_token', newToken);
@@ -429,7 +523,12 @@ export class AuthService {
     this.userProfile.next(this.getUserData());
   }
 
-
+  /**
+   * Actualiza los datos de un usuario en el backend
+   * @param userId ID del usuario a actualizar
+   * @param userData Datos nuevos del usuario
+   * @returns Observable con la respuesta del servidor
+   */
   updateUser(userId: string, userData: any): Observable<any> {
     const token = this.getToken();
     if (!token) {
@@ -462,8 +561,9 @@ export class AuthService {
   }
 
   /**
-   * Gets user by ID
-   * @param userId The user ID to fetch
+   * Obtiene un usuario por su ID
+   * @param userId ID del usuario a obtener
+   * @returns Observable con los datos del usuario
    */
   getUserById(userId: string): Observable<any> {
     const headers = new HttpHeaders({
@@ -478,6 +578,11 @@ export class AuthService {
     );
   }
 
+  /**
+   * Obtiene un usuario por su email
+   * @param email Email del usuario a obtener
+   * @returns Observable con los datos del usuario
+   */
   obtenerUsuarioPorEmail(email: string): Observable<any> {
     const token = this.getToken();
 
@@ -500,10 +605,5 @@ export class AuthService {
         return throwError(() => new Error(error.error?.message || 'Ocurrió un error al obtener el usuario.'));
       })
     );
-  }
-
-  requestPasswordReset(email: string): Observable<any> {
-    // Ajusta esta URL según tu API
-    return this.http.post(`${this.backendUrl}/auth/forgot-password`, { email });
   }
 }

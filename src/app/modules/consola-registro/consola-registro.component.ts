@@ -67,7 +67,6 @@ export class ConsolaRegistroComponent implements OnInit {
           ? savedLayerId
           : this.availableLayers[0].id;
         this.selectedLayerId = initialLayerId;
-        console.log('ngOnInit: Selected initial layer:', initialLayerId);
         await this.loadCapaInvestigacion(initialLayerId);
         this.loadRegistros();
         this.loadVariablesDeCapa(initialLayerId);
@@ -75,7 +74,6 @@ export class ConsolaRegistroComponent implements OnInit {
       } else {
         this.selectedLayerId = '';
         this.showErrorAlert('No se encontraron capas de investigación disponibles');
-        console.warn('ngOnInit: No available layers for user');
       }
     } catch (error) {
       this.handleError('Error al inicializar componente');
@@ -117,7 +115,6 @@ export class ConsolaRegistroComponent implements OnInit {
             return;
           }
           this.userData = response[0];
-          console.log('loadUserData: User data loaded:', this.userData);
           resolve();
         },
         error: (err) => {
@@ -133,7 +130,6 @@ export class ConsolaRegistroComponent implements OnInit {
       const layerIds = this.userData?.attributes?.researchLayerId || [];
       if (!layerIds.length) {
         this.availableLayers = [];
-        console.warn('loadAvailableLayers: No research layers assigned to user');
         resolve();
         return;
       }
@@ -145,11 +141,9 @@ export class ConsolaRegistroComponent implements OnInit {
       Promise.all(layerRequests)
         .then(layers => {
           this.availableLayers = layers.filter(l => l?.id) as ResearchLayer[];
-          console.log('loadAvailableLayers: Available layers:', this.availableLayers);
           resolve();
         })
         .catch(err => {
-          console.error('loadAvailableLayers: Error loading layers:', err);
           reject(err);
         });
     });
@@ -162,7 +156,6 @@ export class ConsolaRegistroComponent implements OnInit {
         if (layerIds && layerIds.length > 0) {
           researchLayerId = layerIds[0];
         } else {
-          console.warn('loadCapaInvestigacion: No research layer ID provided and no user layers available');
           this.isLoading = false;
           this.setDefaultCapaValues();
           this.selectedLayerId = '';
@@ -199,7 +192,6 @@ export class ConsolaRegistroComponent implements OnInit {
           this.updateDatosCapa(capa);
           this.isLoading = false;
           this.cdr.detectChanges();
-          console.log('loadCapaInvestigacion: Layer loaded:', capa);
           resolve();
         },
         error: (err) => {
@@ -233,10 +225,8 @@ export class ConsolaRegistroComponent implements OnInit {
         this.variablesDeCapa = variables.filter(v => v.isEnabled);
         this.loadingVariables = false;
         this.cdr.detectChanges();
-        console.log('loadVariablesDeCapa: Variables loaded for layer:', researchLayerId, variables);
       },
       error: (err) => {
-        console.error('loadVariablesDeCapa: Error al cargar variables:', err);
         this.loadingVariables = false;
         this.mostrarErrorVariables('No se pudieron cargar las variables');
         this.cdr.detectChanges();
@@ -263,14 +253,8 @@ export class ConsolaRegistroComponent implements OnInit {
     ).subscribe({
       next: (response) => {
         this.procesarRespuestaRegistros(response);
-        console.log('loadRegistros: Registros loaded for layer:', this.selectedLayerId);
-      },
+        },
       error: (err) => {
-        console.error('loadRegistros: Detailed component error:', {
-          status: err.status,
-          message: err.message,
-          error: err.error
-        });
         this.resetRegistros();
         this.showErrorAlert('Error al cargar registros. Por favor intente nuevamente.');
       },

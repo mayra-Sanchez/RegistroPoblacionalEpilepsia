@@ -22,19 +22,40 @@
                 <option value="ce">Cédula de Extranjería</option>
                 <option value="pa">Pasaporte</option>
             </select>
-            <small *ngIf="form.get('identificationType')?.touched && form.get('identificationType')?.invalid" class="error-message">
+            <small *ngIf="form.get('identificationType')?.touched && form.get('identificationType')?.invalid"
+                class="error-message">
                 Seleccione un tipo de documento
             </small>
         </div>
 
         <div class="form-group">
             <label for="identificationNumber">Número de Documento</label>
-            <input type="text" id="identificationNumber" formControlName="identificationNumber" placeholder="Ej: 123456789">
-            <small *ngIf="form.get('identificationNumber')?.touched && form.get('identificationNumber')?.errors?.['required']" class="error-message">
+            <div class="search-container">
+                <input type="text" id="identificationNumber" formControlName="identificationNumber"
+                    placeholder="Ej: 123456789" [class.search-loading]="isSearching">
+                <button type="button" class="search-btn" (click)="triggerSearch()"
+                    [disabled]="!form.get('identificationNumber')?.valid || isSearching">
+                    <i class="fas" [ngClass]="{'fa-search': !isSearching, 'fa-spinner fa-spin': isSearching}"></i>
+                    {{ isSearching ? 'Buscando...' : 'Buscar' }}
+                </button>
+            </div>
+            <small
+                *ngIf="form.get('identificationNumber')?.touched && form.get('identificationNumber')?.errors?.['required']"
+                class="error-message">
                 Este campo es obligatorio
             </small>
-            <small *ngIf="form.get('identificationNumber')?.touched && form.get('identificationNumber')?.errors?.['pattern']" class="error-message">
+            <small
+                *ngIf="form.get('identificationNumber')?.touched && form.get('identificationNumber')?.errors?.['pattern']"
+                class="error-message">
                 Solo se permiten números
+            </small>
+            <small *ngIf="searchMessage" class="info-message" [class.error-message]="searchMessage.type === 'error'">
+                <i class="fas" [ngClass]="{
+            'fa-check-circle': searchMessage.type === 'success',
+            'fa-info-circle': searchMessage.type === 'info',
+            'fa-exclamation-circle': searchMessage.type === 'error'
+        }"></i>
+                {{ searchMessage.text }}
             </small>
         </div>
     </div>
@@ -84,10 +105,12 @@
         <div class="form-group">
             <label for="phoneNumber">Teléfono</label>
             <input type="tel" id="phoneNumber" formControlName="phoneNumber" placeholder="Ej: 3001234567">
-            <small *ngIf="form.get('phoneNumber')?.touched && form.get('phoneNumber')?.errors?.['required']" class="error-message">
+            <small *ngIf="form.get('phoneNumber')?.touched && form.get('phoneNumber')?.errors?.['required']"
+                class="error-message">
                 Este campo es obligatorio
             </small>
-            <small *ngIf="form.get('phoneNumber')?.touched && form.get('phoneNumber')?.errors?.['pattern']" class="error-message">
+            <small *ngIf="form.get('phoneNumber')?.touched && form.get('phoneNumber')?.errors?.['pattern']"
+                class="error-message">
                 Solo números permitidos
             </small>
         </div>
@@ -102,7 +125,8 @@
                 <option value="medio_alto">Medio alto</option>
                 <option value="alto">Alto</option>
             </select>
-            <small *ngIf="form.get('economicStatus')?.touched && form.get('economicStatus')?.invalid" class="error-message">
+            <small *ngIf="form.get('economicStatus')?.touched && form.get('economicStatus')?.invalid"
+                class="error-message">
                 Seleccione una opción
             </small>
         </div>
@@ -120,7 +144,8 @@
                 <option value="universitario">Universitario</option>
                 <option value="postgrado">Postgrado</option>
             </select>
-            <small *ngIf="form.get('educationLevel')?.touched && form.get('educationLevel')?.invalid" class="error-message">
+            <small *ngIf="form.get('educationLevel')?.touched && form.get('educationLevel')?.invalid"
+                class="error-message">
                 Seleccione una opción
             </small>
         </div>
@@ -135,7 +160,8 @@
                 <option value="viudo">Viudo/a</option>
                 <option value="union_libre">Unión libre</option>
             </select>
-            <small *ngIf="form.get('maritalStatus')?.touched && form.get('maritalStatus')?.invalid" class="error-message">
+            <small *ngIf="form.get('maritalStatus')?.touched && form.get('maritalStatus')?.invalid"
+                class="error-message">
                 Seleccione una opción
             </small>
         </div>
@@ -162,7 +188,8 @@
         <div class="form-group">
             <label for="firstCrisisDate">Fecha de Primera Crisis</label>
             <input type="date" id="firstCrisisDate" formControlName="firstCrisisDate">
-            <small *ngIf="form.get('firstCrisisDate')?.touched && form.get('firstCrisisDate')?.invalid" class="error-message">
+            <small *ngIf="form.get('firstCrisisDate')?.touched && form.get('firstCrisisDate')?.invalid"
+                class="error-message">
                 Ingrese una fecha válida
             </small>
         </div>
@@ -170,15 +197,15 @@
         <div class="form-group">
             <label for="crisisStatus">Estado de Crisis</label>
             <select formControlName="crisisStatus" id="crisisStatus" class="form-input">
-              <option value="" disabled selected>Seleccione el estado...</option>
-              <option *ngFor="let estado of estadosCrisis" [value]="estado">
-                {{ estado }}
-              </option>
+                <option value="" disabled selected>Seleccione el estado...</option>
+                <option *ngFor="let estado of estadosCrisis" [value]="estado">
+                    {{ estado }}
+                </option>
             </select>
             <small *ngIf="form.get('crisisStatus')?.touched && form.get('crisisStatus')?.invalid" class="error-message">
-              Seleccione un estado de crisis
+                Seleccione un estado de crisis
             </small>
-          </div>
+        </div>
     </div>
 
     <!-- Sexta fila - Checkboxes -->

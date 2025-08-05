@@ -169,7 +169,6 @@ private readonly API_RESEARCH_LAYER_URL = `${environment.backendUrl}${environmen
       }),
       catchError(error => {
         if (error.status === 403) {
-          console.error('Acceso denegado. Verifica tus permisos o la validez de tu token.');
           this.authService.logout();
         }
         return throwError(() => new Error(`No se encontró la capa con ID: ${id}`));

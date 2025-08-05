@@ -1,3 +1,10 @@
+/**
+ * Servicio para la gestión de registros médicos, capas de investigación y variables.
+ * Proporciona métodos para crear, actualizar y consultar registros médicos,
+ * así como para interactuar con capas de investigación y variables asociadas.
+ * 
+ * @Injectable Decorador que marca la clase como disponible para inyección de dependencias.
+ */
 import { Injectable } from '@angular/core';
 import { formatDate } from '@angular/common';
 import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
@@ -8,6 +15,7 @@ import { ResearchLayer, Variable, Register } from '../modules/consola-registro/i
 import { environment } from '../environments/environment';
 import { timeout } from 'rxjs/operators';
 import { Constants } from './constants';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -17,7 +25,6 @@ export class ConsolaRegistroService {
   private readonly API_USERS = `${environment.backendUrl}${environment.endpoints.users}`;
   private readonly API_LAYERS = `${environment.backendUrl}${environment.endpoints.researchLayer}`;
   private readonly API_VARIABLES = `${environment.backendUrl}${environment.endpoints.variables}`;
-
   //#endregion
 
   //#region Subjects y Observables
@@ -28,18 +35,33 @@ export class ConsolaRegistroService {
   constructor(private http: HttpClient, private authService: AuthService) { }
 
   //#region Métodos Públicos
+  /**
+   * Obtiene un Observable que emite cuando los datos han sido actualizados.
+   * @returns Observable<void>
+   */
   getDataUpdatedListener(): Observable<void> {
     return this.dataUpdated.asObservable();
   }
 
+  /**
+   * Observable que emite cuando los datos han cambiado.
+   */
   dataChanged$ = this.dataChanged.asObservable();
 
+  /**
+   * Notifica a los suscriptores que los datos han cambiado.
+   */
   notifyDataChanged() {
     this.dataChanged.next();
   }
   //#endregion
 
   //#region Métodos de Autenticación y Autorización
+  /**
+   * Obtiene los headers de autenticación con el token JWT.
+   * @returns HttpHeaders Headers con el token de autenticación.
+   * @throws Error Si no hay token disponible.
+   */
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     if (!token) {
@@ -51,6 +73,10 @@ export class ConsolaRegistroService {
     });
   }
 
+  /**
+   * Verifica si el usuario actual tiene rol de doctor.
+   * @returns boolean True si el usuario es doctor, false en caso contrario.
+   */
   private isDoctor(): boolean {
     try {
       const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
@@ -61,20 +87,24 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Obtiene el token almacenado en localStorage.
+   * @returns string | null Token JWT o null si no existe.
+   */
   getToken(): string | null {
     return localStorage.getItem('kc_token');
   }
-
   //#endregion
+
+  /**
+   * Verifica si el usuario tiene permiso para acceder a una capa específica.
+   * @param layerId ID de la capa a verificar.
+   * @returns Observable<boolean> True si tiene permiso, false en caso contrario.
+   */
   verifyLayerPermission(layerId: string): Observable<boolean> {
-    // Usar el endpoint existente de obtener capa por ID
     return this.obtenerCapaPorId(layerId).pipe(
-      map(capa => {
-        // Si puede obtener la capa, tiene permiso
-        return !!capa?.id;
-      }),
+      map(capa => !!capa?.id),
       catchError(error => {
-        // Si falla, no tiene permiso
         console.error('Error verificando permiso:', error);
         return of(false);
       }),
@@ -83,6 +113,12 @@ export class ConsolaRegistroService {
   }
 
   //#region Métodos de Usuarios
+  /**
+   * Obtiene información del usuario autenticado.
+   * @param email Email del usuario.
+   * @param headers Headers HTTP opcionales.
+   * @returns Observable<any> Información del usuario.
+   */
   obtenerUsuarioAutenticado(email: string, headers?: HttpHeaders): Observable<any> {
     const token = this.getToken();
     if (!token) {
@@ -110,8 +146,13 @@ export class ConsolaRegistroService {
   //#endregion
 
   //#region Métodos de Registros
+  /**
+   * Registra un nuevo registro médico.
+   * @param registerData Datos del registro.
+   * @param userEmail Email del usuario que realiza el registro.
+   * @returns Observable<any> Respuesta del servidor.
+   */
   registrarRegistro(registerData: any, userEmail: string): Observable<any> {
-    // Verificar primero si el usuario es doctor
     if (!this.isDoctor()) {
       return throwError(() => this.createError(
         'Solo los doctores pueden crear registros',
@@ -142,6 +183,14 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Obtiene todos los registros médicos paginados.
+   * @param page Número de página (0-based).
+   * @param size Tamaño de la página.
+   * @param sort Campo por el que ordenar.
+   * @param sortDirection Dirección de ordenación (ASC/DESC).
+   * @returns Observable<any> Lista de registros paginados.
+   */
   obtenerRegistros(
     page: number = 0,
     size: number = 10,
@@ -163,6 +212,15 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Obtiene registros médicos por profesional de la salud.
+   * @param healthProfessionalId ID del profesional de la salud.
+   * @param page Número de página (0-based).
+   * @param size Tamaño de la página.
+   * @param sort Campo por el que ordenar.
+   * @param sortDirection Dirección de ordenación (ASC/DESC).
+   * @returns Observable<any> Lista de registros paginados.
+   */
   obtenerRegistrosPorProfesional(
     healthProfessionalId: number,
     page: number = 0,
@@ -191,6 +249,15 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Obtiene registros médicos por paciente.
+   * @param patientIdentificationNumber Número de identificación del paciente.
+   * @param page Número de página (0-based).
+   * @param size Tamaño de la página.
+   * @param sort Campo por el que ordenar.
+   * @param sortDirection Dirección de ordenación (ASC/DESC).
+   * @returns Observable<any> Lista de registros paginados.
+   */
   obtenerRegistrosPorPaciente(
     patientIdentificationNumber: number,
     page: number = 0,
@@ -219,6 +286,11 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Obtiene el registro más reciente de un paciente.
+   * @param patientIdentificationNumber Número de identificación del paciente.
+   * @returns Observable<Register> Registro más reciente del paciente.
+   */
   obtenerRegistroMasRecientePorPaciente(patientIdentificationNumber: number): Observable<Register> {
     if (!patientIdentificationNumber) {
       return throwError(() => this.createError('Patient identification number is required', 'VALIDATION_ERROR'));
@@ -235,6 +307,15 @@ export class ConsolaRegistroService {
     );
   }
 
+  /**
+   * Obtiene registros médicos por capa de investigación.
+   * @param researchLayerId ID de la capa de investigación.
+   * @param page Número de página (0-based).
+   * @param size Tamaño de la página.
+   * @param sort Campo por el que ordenar.
+   * @param sortDirection Dirección de ordenación (ASC/DESC).
+   * @returns Observable con registros paginados.
+   */
   obtenerRegistrosPorCapa(
     researchLayerId: string,
     page: number = 0,
@@ -242,7 +323,6 @@ export class ConsolaRegistroService {
     sort: string = 'registerDate',
     sortDirection: string = 'DESC'
   ): Observable<{ registers: Register[], currentPage: number, totalPages: number, totalElements: number }> {
-    // Validate input
     if (!researchLayerId) {
       return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
     }
@@ -285,10 +365,11 @@ export class ConsolaRegistroService {
   }
 
   /**
-   * Actualiza un registro existente
-   * @param registerId ID del registro a actualizar
-   * @param userEmail Email del usuario que realiza la actualización
-   * @param data Datos actualizados del registro
+   * Actualiza un registro existente.
+   * @param registerId ID del registro a actualizar.
+   * @param userEmail Email del usuario que realiza la actualización.
+   * @param data Datos actualizados del registro.
+   * @returns Observable<any> Respuesta del servidor.
    */
   actualizarRegistro(registerId: string, userEmail: string, data: {
     variables: Array<{
@@ -329,8 +410,6 @@ export class ConsolaRegistroService {
       identificationNumber: number;
     };
   }): Observable<any> {
-
-    // Validaciones básicas
     if (!registerId) {
       return throwError(() => new Error('ID de registro es requerido'));
     }
@@ -354,6 +433,10 @@ export class ConsolaRegistroService {
   //#endregion
 
   //#region Métodos de Capas de Investigación
+  /**
+   * Obtiene todas las capas de investigación.
+   * @returns Observable<ResearchLayer[]> Lista de capas de investigación.
+   */
   obtenerTodasLasCapas(): Observable<ResearchLayer[]> {
     try {
       const headers = this.getAuthHeaders();
@@ -366,6 +449,11 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Busca una capa de investigación por nombre.
+   * @param nombreCapa Nombre de la capa a buscar.
+   * @returns Observable<ResearchLayer> Capa encontrada.
+   */
   buscarCapaPorNombre(nombreCapa: string): Observable<ResearchLayer> {
     if (!nombreCapa) {
       return throwError(() => this.createError('Layer name is required', 'VALIDATION_ERROR'));
@@ -391,6 +479,11 @@ export class ConsolaRegistroService {
     );
   }
 
+  /**
+   * Obtiene una capa de investigación completa con sus detalles.
+   * @param nombreCapa Nombre de la capa.
+   * @returns Observable<ResearchLayer> Capa con todos sus detalles.
+   */
   obtenerCapaCompleta(nombreCapa: string): Observable<ResearchLayer> {
     return this.buscarCapaPorNombre(nombreCapa).pipe(
       switchMap(capa => {
@@ -410,6 +503,11 @@ export class ConsolaRegistroService {
     );
   }
 
+  /**
+   * Obtiene una capa de investigación por su ID.
+   * @param id ID de la capa.
+   * @returns Observable<ResearchLayer> Capa encontrada.
+   */
   obtenerCapaPorId(id: string): Observable<ResearchLayer> {
     if (!id) {
       return throwError(() => this.createError('Layer ID is required', 'VALIDATION_ERROR'));
@@ -436,6 +534,11 @@ export class ConsolaRegistroService {
   //#endregion
 
   //#region Métodos de Variables
+  /**
+   * Obtiene variables asociadas a una capa de investigación.
+   * @param researchLayerId ID de la capa de investigación.
+   * @returns Observable<Variable[]> Lista de variables.
+   */
   obtenerVariablesPorCapa(researchLayerId: string): Observable<Variable[]> {
     if (!researchLayerId) {
       return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
@@ -455,7 +558,11 @@ export class ConsolaRegistroService {
   //#endregion
 
   //#region Métodos Privados
-
+  /**
+   * Valida los datos de un registro médico.
+   * @param data Datos del registro a validar.
+   * @throws Error Si los datos no son válidos.
+   */
   private validateRegisterData(data: any): void {
     if (!data.patient) {
       throw new Error('Patient data is required');
@@ -465,6 +572,12 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Formatea los datos de un registro para enviarlos al backend.
+   * @param data Datos del registro.
+   * @returns any Datos formateados.
+   * @throws ErrorWithCode Si hay error en el formato.
+   */
   private formatRegisterData(data: any): any {
     try {
       this.validateRegisterData(data);
@@ -486,19 +599,22 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Formatea una fecha al formato esperado por el backend.
+   * @param dateString Fecha a formatear.
+   * @returns string | null Fecha formateada o null si no hay fecha.
+   */
   private formatDateToBackend(dateString: string | null | undefined): string | null {
     if (!dateString) return null;
 
     try {
-      // Handle multiple possible date formats
-      if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) { // dd-MM-yyyy format
+      if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
         const [day, month, year] = dateString.split('-');
-        return `${year}-${month}-${day}`; // Convert to yyyy-MM-dd
-      } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) { // Already yyyy-MM-dd
+        return `${year}-${month}-${day}`;
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
         return dateString;
       }
 
-      // Fallback for Date objects or other formats
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
         throw new Error('Invalid date');
@@ -507,10 +623,15 @@ export class ConsolaRegistroService {
       return formatDate(date, 'yyyy-MM-dd', 'en-US');
     } catch (e) {
       console.error('Date formatting error:', e);
-      return dateString; // fallback
+      return dateString;
     }
   }
 
+  /**
+   * Obtiene detalles adicionales de una capa de investigación.
+   * @param id ID de la capa.
+   * @returns Observable<ResearchLayer> Detalles de la capa.
+   */
   private obtenerDetallesCapa(id: string): Observable<ResearchLayer> {
     try {
       const headers = this.getAuthHeaders();
@@ -530,6 +651,11 @@ export class ConsolaRegistroService {
     }
   }
 
+  /**
+   * Obtiene IDs de capas de investigación asociadas a un profesional de la salud.
+   * @param healthProfessionalId ID del profesional de la salud.
+   * @returns Observable<string[]> Lista de IDs de capas.
+   */
   obtenerResearchLayerIdsPorProfesional(healthProfessionalId: number): Observable<string[]> {
     if (!healthProfessionalId) {
       return throwError(() => this.createError('Health professional ID is required', 'VALIDATION_ERROR'));
@@ -560,39 +686,47 @@ export class ConsolaRegistroService {
     );
   }
 
+  /**
+   * Maneja errores HTTP de manera consistente.
+   * @param error Error HTTP.
+   * @param defaultMessage Mensaje por defecto.
+   * @returns Observable<never> Observable que emite el error.
+   */
   private handleHttpError(error: HttpErrorResponse, defaultMessage: string): Observable<never> {
     console.error('HTTP Error:', error);
 
     if (error.status === 0) {
-      // Network error
       return throwError(() => this.createError('Network error - please check your connection', 'NETWORK_ERROR', error));
     }
 
     if (error.status === 401) {
-      // Unauthorized
       return throwError(() => this.createError('Session expired - please login again', 'AUTH_ERROR', error, 401));
     }
 
     if (error.status === 403) {
-      // Forbidden
       return throwError(() => this.createError('You do not have permission for this action', 'PERMISSION_ERROR', error, 403));
     }
 
     if (error.status === 404) {
-      // Not found
       return throwError(() => this.createError('Resource not found', 'NOT_FOUND_ERROR', error, 404));
     }
 
     if (error.status >= 500) {
-      // Server error
       return throwError(() => this.createError('Server error - please try again later', 'SERVER_ERROR', error, error.status));
     }
 
-    // Business logic error from server
     const serverMessage = error.error?.message || error.message || defaultMessage;
     return throwError(() => this.createError(serverMessage, 'API_ERROR', error, error.status));
   }
 
+  /**
+   * Crea un objeto de error con código y estado adicionales.
+   * @param message Mensaje de error.
+   * @param code Código de error personalizado.
+   * @param originalError Error original (opcional).
+   * @param status Estado HTTP (opcional).
+   * @returns ErrorWithCode Error con metadatos adicionales.
+   */
   private createError(
     message: string,
     code: string,
@@ -608,6 +742,9 @@ export class ConsolaRegistroService {
   //#endregion
 }
 
+/**
+ * Interfaz que extiende Error con metadatos adicionales.
+ */
 interface ErrorWithCode extends Error {
   code: string;
   originalError?: any;

@@ -1,4 +1,3 @@
-// form-registro-paciente.component.ts
 import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { ConsolaRegistroService } from '../services/consola-registro.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -6,28 +5,61 @@ import Swal from 'sweetalert2';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ResearchLayer } from '../modules/consola-registro/interfaces';
 import { lastValueFrom } from 'rxjs';
+
+/**
+ * Componente para el formulario de registro de pacientes.
+ * Maneja el proceso de registro en múltiples pasos y la interacción con la API.
+ */
 @Component({
   selector: 'app-form-registro-paciente',
   templateUrl: './form-registro-paciente.component.html',
   styleUrls: ['./form-registro-paciente.component.css']
 })
 export class FormRegistroPacienteComponent implements OnInit, OnChanges {
+  /** ID de la capa de investigación actual (input) */
   @Input() researchLayerId: string = '';
+  
+  /** Paso actual del formulario (1-4) */
   pasoActual = 1;
+  
+  /** Indica si el paciente tiene cuidador */
   tieneCuidador = false;
+  
+  /** ID de la capa de investigación actualmente seleccionada */
   currentResearchLayerId: string = '';
+  
+  /** Indica si se está enviando datos al servidor */
   isSending = false;
+  
+  /** Datos del paciente */
   pacienteData: any = {};
+  
+  /** Datos clínicos del paciente */
   clinicalData: any[] = [];
+  
+  /** Datos del cuidador (si aplica) */
   cuidadorData: any = {};
+  
+  /** Datos del profesional de salud */
   profesionalData: any = {};
-  userResearchLayers: string[] = []; // Store user's authorized layers
+  
+  /** Lista de IDs de capas de investigación a las que tiene acceso el usuario */
+  userResearchLayers: string[] = [];
 
+  /**
+   * Constructor del componente
+   * @param consolaService Servicio para interactuar con la consola de registros
+   * @param authService Servicio de autenticación y autorización
+   */
   constructor(
     private consolaService: ConsolaRegistroService,
     private authService: AuthService
   ) { }
 
+  /**
+   * Inicialización del componente
+   * Verifica permisos y carga las capas de investigación del usuario
+   */
   async ngOnInit(): Promise<void> {
     // Verificar rol primero
     if (!this.authService.hasRole('Doctor_client_role')) {
@@ -46,13 +78,16 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     this.loadClinicalDataFromLocalStorage();
   }
 
+  /**
+   * Maneja cambios en los inputs del componente
+   * @param changes Objeto con los cambios detectados
+   */
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['researchLayerId'] && changes['researchLayerId'].currentValue) {
       const newLayerId = changes['researchLayerId'].currentValue;
 
       // Si aún no tenemos las capas del usuario, esperar a que se carguen
       if (this.userResearchLayers.length === 0) {
-        console.log('Esperando carga de capas autorizadas...');
         const checkInterval = setInterval(() => {
           if (this.userResearchLayers.length > 0) {
             clearInterval(checkInterval);
@@ -65,29 +100,33 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Maneja el cambio de capa de investigación
+   * @param newLayerId ID de la nueva capa seleccionada
+   */
   private handleLayerChange(newLayerId: string): void {
     if (this.userResearchLayers.includes(newLayerId)) {
       this.currentResearchLayerId = newLayerId;
-      console.log('Capa cambiada correctamente a:', this.currentResearchLayerId);
       this.loadClinicalDataFromLocalStorage();
       this.resetForm(false);
     } else {
-      console.warn('Usuario no tiene acceso a la capa:', newLayerId);
       if (this.userResearchLayers.length > 0) {
         this.currentResearchLayerId = this.userResearchLayers[0];
-        console.log('Cambiando a capa por defecto:', this.currentResearchLayerId);
         this.loadClinicalDataFromLocalStorage();
         this.resetForm(false);
       }
     }
   }
 
+  /**
+   * Carga las capas de investigación a las que tiene acceso el usuario
+   * @returns Promesa que se resuelve cuando se completa la carga
+   */
   private loadUserResearchLayer(): Promise<void> {
     return new Promise((resolve) => {
       const email = this.authService.getUserEmail();
       if (!email) {
         this.showErrorAlert('No se pudo obtener el email del usuario');
-        resolve();
         return;
       }
 
@@ -100,7 +139,6 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
         next: (response) => {
           if (response?.[0]?.attributes?.researchLayerId?.length) {
             this.userResearchLayers = response[0].attributes.researchLayerId;
-            console.log('Capas del usuario cargadas:', this.userResearchLayers);
             resolve();
           } else {
             this.showErrorAlert('Usuario no tiene asignada una capa de investigación');
@@ -108,7 +146,6 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
           }
         },
         error: (err) => {
-          console.error('Error al cargar usuario:', err);
           this.showErrorAlert('Error al cargar información del usuario');
           resolve();
         }
@@ -116,70 +153,9 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     });
   }
 
-  private verifyBackendPermissions(): void {
-    if (!this.userResearchLayers.length) return;
-
-    console.log('Verificando permisos en backend para capas:', this.userResearchLayers);
-
-    this.userResearchLayers.forEach((layerId: string) => {
-      this.consolaService.obtenerCapaPorId(layerId).subscribe({
-        next: (capa: ResearchLayer) => {
-          const tieneAcceso = !!capa?.id;
-          console.log(`Verificación backend capa ${layerId}:`, tieneAcceso ? 'AUTORIZADO' : 'NO AUTORIZADO');
-
-          if (!tieneAcceso) {
-            // Eliminar capa no autorizada
-            this.userResearchLayers = this.userResearchLayers.filter(id => id !== layerId);
-            console.log('Capa eliminada por falta de autorización:', layerId);
-
-            // Si era la capa actual, cambiar a la primera disponible
-            if (this.currentResearchLayerId === layerId) {
-              this.currentResearchLayerId = this.userResearchLayers[0] || '';
-              console.log('Cambiando capa actual a:', this.currentResearchLayerId);
-            }
-          }
-        },
-        error: (err: any) => {
-          console.error(`Error verificando capa ${layerId}:`, err);
-        }
-      });
-    });
-  }
-
-  private validateResearchLayerId(): void {
-    if (this.currentResearchLayerId && this.userResearchLayers.length > 0 && !this.userResearchLayers.includes(this.currentResearchLayerId)) {
-      this.showErrorAlert('La capa de investigación seleccionada no está asignada a este usuario');
-      this.currentResearchLayerId = this.userResearchLayers[0] || '';
-      console.warn('FormRegistroPacienteComponent: Invalid researchLayerId, resetting to', this.currentResearchLayerId);
-    }
-  }
-
-  private verifyResearchLayerExists(researchLayerId: string): void {
-    if (!researchLayerId) {
-      this.showErrorAlert('No se especificó una capa de investigación válida');
-      return;
-    }
-
-    this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({
-      next: (capa) => {
-        if (capa && capa.id) {
-          this.currentResearchLayerId = capa.id;
-          this.loadClinicalDataFromLocalStorage();
-        } else {
-          this.showErrorAlert('La capa de investigación no existe');
-          this.currentResearchLayerId = this.userResearchLayers[0] || '';
-        }
-      },
-      error: (err) => {
-        console.error('Error al verificar capa:', err);
-        this.showErrorAlert('Error al verificar la capa de investigación');
-        this.currentResearchLayerId = this.userResearchLayers[0] || '';
-      }
-    });
-  }
-
-
-
+  /**
+   * Carga los datos clínicos guardados en el localStorage
+   */
   private loadClinicalDataFromLocalStorage(): void {
     if (!this.currentResearchLayerId) {
       this.clinicalData = [];
@@ -189,7 +165,6 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        console.log('FormRegistroPacienteComponent: Loaded clinicalData from localStorage for layer', this.currentResearchLayerId, parsedData);
         this.clinicalData = parsedData.map((item: any) => ({
           id: item.id,
           value: item.valor,
@@ -197,7 +172,6 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
           researchLayerId: this.currentResearchLayerId
         }));
       } catch (e) {
-        console.error('FormRegistroPacienteComponent: Error parsing clinical data from localStorage:', e);
         this.clinicalData = [];
       }
     } else {
@@ -205,6 +179,11 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Mapea tipos de datos del frontend al backend
+   * @param frontendType Tipo de dato en el frontend
+   * @returns Tipo de dato correspondiente en el backend
+   */
   private mapToBackendType(frontendType: string): string {
     const typeMap: Record<string, string> = {
       'Entero': 'number',
@@ -218,27 +197,53 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     return typeMap[frontendType] || 'string';
   }
 
+  /**
+   * Maneja los datos del paciente recibidos del formulario
+   * @param data Datos del paciente
+   */
   handlePacienteData(data: any): void {
     this.pacienteData = data;
     this.tieneCuidador = Boolean(data.tieneCuidador);
+
+    // Si hay datos de cuidador, guardarlos
+    if (data.cuidadorData) {
+      this.cuidadorData = data.cuidadorData;
+    }
+
     this.siguientePaso();
   }
 
+  /**
+   * Maneja los datos clínicos recibidos del formulario
+   * @param data Datos clínicos
+   */
   handleClinicalData(data: any[]): void {
     this.clinicalData = data;
     this.siguientePaso();
   }
 
+  /**
+   * Maneja los datos del cuidador recibidos del formulario
+   * @param data Datos del cuidador
+   */
   handleCuidadorData(data: any): void {
     this.cuidadorData = data;
     this.siguientePaso();
   }
 
+  /**
+   * Maneja los datos del profesional recibidos del formulario
+   * @param data Datos del profesional
+   */
   handleProfesionalData(data: any): void {
     this.profesionalData = data;
     this.prepareAndSendData();
   }
 
+  /**
+   * Verifica el acceso del usuario a la capa de investigación actual
+   * @returns Promesa que resuelve a true si tiene acceso, false en caso contrario
+   */
   private async verifyLayerAccess(): Promise<boolean> {
     try {
       // Verificar acceso local
@@ -251,23 +256,194 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
         this.consolaService.verifyLayerPermission(this.currentResearchLayerId)
       );
     } catch (error) {
-      console.error('Error verificando capa:', error);
       return false;
     }
   }
 
+  /**
+   * Prepara y envía los datos del formulario al servidor
+   */
   private async prepareAndSendData(): Promise<void> {
     if (!await this.verifyLayerAccess()) {
       this.showErrorAlert('Sin acceso a la capa seleccionada');
       return;
     }
 
-    if (!this.validateBeforeSend()) {
+    const patientId = Number(this.pacienteData.identificationNumber);
+
+    try {
+      // Verificar si el paciente existe en ESTA capa específica
+      const registrosEnCapa = await lastValueFrom(
+        this.consolaService.obtenerRegistrosPorCapa(this.currentResearchLayerId)
+      );
+
+      const registroExistente = registrosEnCapa.registers.find(
+        register => register.patientIdentificationNumber === patientId
+      );
+
+      if (!this.validateBeforeSend()) {
+        return;
+      }
+
+      if (registroExistente) {
+        // Verificar que el ID existe antes de actualizar
+        if (!registroExistente.id) {
+          this.showErrorAlert('El registro existente no tiene un ID válido');
+          return;
+        }
+        // Si existe, preparar para actualización
+        await this.handleUpdate(registroExistente.id);
+      } else {
+        // Si no existe, crear nuevo registro
+        await this.handleCreate();
+      }
+    } catch (error) {
+      this.showErrorAlert('Error al verificar el paciente. Por favor intente nuevamente.');
+    }
+  }
+
+  /**
+   * Envía los datos al servidor
+   */
+  private sendDataToServer(): void {
+    if (!this.authService.hasRole('Doctor_client_role')) {
+      this.handlePermissionError();
       return;
     }
 
-    this.sendDataToServer();
+    const email = this.authService.getUserEmail();
+    if (!email) {
+      this.showErrorAlert('No se pudo obtener el email del usuario');
+      return;
+    }
+
+    const requestBody = this.buildRequestBody();
+
+    Swal.fire({
+      title: 'Registrando datos...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    this.isSending = true;
+
+    // Primero intentamos crear (POST)
+    this.consolaService.registrarRegistro(requestBody, email).subscribe({
+      next: (response) => this.handleSuccess(response),
+      error: (error) => {
+        if (error.status === 409) { // Conflicto - registro ya existe
+          this.handleExistingRecord(requestBody, email, error);
+        } else {
+          this.handleError(error);
+        }
+      }
+    });
   }
+
+  /**
+   * Maneja un registro existente intentando actualizarlo
+   * @param requestBody Cuerpo de la petición
+   * @param userEmail Email del usuario
+   * @param error Error recibido
+   */
+  private handleExistingRecord(requestBody: any, userEmail: string, error: any): void {
+    const patientId = Number(this.pacienteData.identificationNumber);
+
+    // First try to get registerId from error response
+    const registerId = error?.registerId || this.findExistingRegisterId(patientId);
+
+    if (!registerId) {
+      this.handleError(new Error('No se pudo obtener el ID del registro existente'));
+      return;
+    }
+
+    this.consolaService.actualizarRegistro(registerId, userEmail, requestBody).subscribe({
+      next: (response) => this.handleSuccess(response),
+      error: (error) => this.handleError(error)
+    });
+  }
+
+  /**
+   * Busca el ID de un registro existente para un paciente
+   * @param patientId ID del paciente
+   * @returns Promesa que resuelve al ID del registro o undefined si no se encuentra
+   */
+  private async findExistingRegisterId(patientId: number): Promise<string | undefined> {
+    try {
+      const registrosEnCapa = await lastValueFrom(
+        this.consolaService.obtenerRegistrosPorCapa(this.currentResearchLayerId)
+      );
+      const registroExistente = registrosEnCapa.registers.find(
+        register => register.patientIdentificationNumber === patientId
+      );
+      return registroExistente?.id;
+    } catch (error) {
+      return undefined;
+    }
+  }
+
+  /**
+   * Maneja la creación de un nuevo registro
+   */
+  private async handleCreate(): Promise<void> {
+    const userEmail = this.authService.getUserEmail();
+    if (!userEmail) {
+      this.showErrorAlert('No se pudo obtener el email del usuario');
+      return;
+    }
+
+    const requestBody = this.buildRequestBody();
+
+    try {
+      const response = await lastValueFrom(
+        this.consolaService.registrarRegistro(requestBody, userEmail)
+      );
+      this.handleSuccess(response);
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /**
+   * Maneja la actualización de un registro existente
+   * @param registerId ID del registro a actualizar
+   */
+  private async handleUpdate(registerId: string): Promise<void> {
+    const userEmail = this.authService.getUserEmail();
+    if (!userEmail) {
+      this.showErrorAlert('No se pudo obtener el email del usuario');
+      return;
+    }
+
+    const requestBody = this.buildRequestBody();
+
+    Swal.fire({
+      title: 'Actualizando datos...',
+      text: 'Este paciente ya existe en la capa, actualizando información',
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonText: 'Actualizar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isSending = true;
+        Swal.fire({
+          title: 'Actualizando...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        this.consolaService.actualizarRegistro(registerId, userEmail, requestBody).subscribe({
+          next: (response) => this.handleSuccess(response),
+          error: (error) => this.handleError(error)
+        });
+      }
+    });
+  }
+
+  /**
+   * Avanza al siguiente paso del formulario
+   */
   siguientePaso(): void {
     if (this.pasoActual === 2 && !this.tieneCuidador) {
       this.pasoActual = 3; // Skip caregiver step
@@ -276,6 +452,9 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Retrocede al paso anterior del formulario
+   */
   pasoAnterior(): void {
     if (this.pasoActual === 3 && !this.tieneCuidador) {
       this.pasoActual = 2; // Skip caregiver step
@@ -283,57 +462,10 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       this.pasoActual--;
     }
   }
-  // private forceRefreshPermissions(): void {
-  //   this.authService.forceRefreshPermissions().subscribe({
-  //     next: () => {
-  //       this.loadUserResearchLayer(); // Recargar los permisos
-  //     },
-  //     error: (err) => {
-  //       console.error('Error refrescando permisos:', err);
-  //       this.showErrorAlert('Error al actualizar permisos. Por favor recarga la página.');
-  //     }
-  //   });
-  // }
-  private sendDataToServer(): void {
-    // Verificación adicional por si el usuario modificó el frontend
-    if (!this.authService.hasRole('Doctor_client_role')) {
-      this.handlePermissionError();
-      return;
-    }
 
-    const requestBody = this.buildRequestBody();
-    const userEmail = this.authService.getUserEmail();
-
-    if (!userEmail) {
-      this.showErrorAlert('No se pudo obtener el email del usuario. Por favor inicie sesión nuevamente.');
-      this.isSending = false;
-      return;
-    }
-
-    Swal.fire({
-      title: 'Registrando datos...',
-      html: 'Por favor espere mientras procesamos su solicitud',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-
-    this.isSending = true;
-
-    this.consolaService.registrarRegistro(requestBody, userEmail).subscribe({
-      next: (response) => this.handleSuccess(response),
-      error: (error) => {
-        if (error.code === 'PERMISSION_DENIED' || error.status === 403) {
-          this.handlePermissionError();
-        } else {
-          this.handleError(error);
-        }
-      }
-    });
-  }
-
-
+  /**
+   * Maneja errores de permisos
+   */
   private handlePermissionError(): void {
     this.isSending = false;
     Swal.close();
@@ -349,10 +481,22 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     });
   }
 
+  /**
+   * Construye el cuerpo de la petición para el servidor
+   * @returns Objeto con los datos estructurados para enviar al servidor
+   */
   public buildRequestBody(): any {
-    return {
+    const body: {
+      variables: any[];
+      patientIdentificationNumber: number;
+      patientIdentificationType: string;
+      patient: any;
+      caregiver?: any;
+      healthProfessional?: any;
+    } = {
       variables: this.clinicalData.map(item => ({
         id: item.id || this.generateUUID(),
+        variableName: item.variableName || '',
         value: this.convertValue(item.value, item.type),
         type: item.type,
         researchLayerId: this.currentResearchLayerId
@@ -374,23 +518,35 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
         currentCity: this.pacienteData.currentCity,
         firstCrisisDate: this.pacienteData.firstCrisisDate,
         crisisStatus: this.pacienteData.crisisStatus
-      },
-      caregiver: this.tieneCuidador ? {
+      }
+    };
+
+    if (this.tieneCuidador) {
+      body.caregiver = {
         name: this.cuidadorData.name,
         identificationType: this.cuidadorData.identificationType,
         identificationNumber: Number(this.cuidadorData.identificationNumber),
         age: Number(this.cuidadorData.age),
         educationLevel: this.cuidadorData.educationLevel,
         occupation: this.cuidadorData.occupation
-      } : null,
-      healthProfessional: {
+      };
+    }
+
+    if (this.profesionalData) {
+      body.healthProfessional = {
         id: this.profesionalData.healthProfessionalId,
         name: this.profesionalData.healthProfessionalName,
         identificationNumber: Number(this.profesionalData.healthProfessionalIdentificationNumber)
-      }
-    };
+      };
+    }
+
+    return body;
   }
 
+  /**
+   * Genera un UUID v4
+   * @returns Cadena con el UUID generado
+   */
   private generateUUID(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       const r = Math.random() * 16 | 0,
@@ -399,12 +555,23 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     });
   }
 
+  /**
+   * Formatea una fecha para la API (YYYY-MM-DD)
+   * @param date Fecha a formatear
+   * @returns Cadena con la fecha formateada o cadena vacía si no hay fecha
+   */
   private formatDateForAPI(date: any): string {
     if (!date) return '';
     const d = new Date(date);
     return d.toISOString().split('T')[0];
   }
 
+  /**
+   * Convierte un valor al tipo especificado
+   * @param value Valor a convertir
+   * @param type Tipo al que convertir
+   * @returns Valor convertido
+   */
   private convertValue(value: any, type: string): any {
     switch (type) {
       case 'number':
@@ -428,6 +595,11 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Calcula la edad a partir de una fecha de nacimiento
+   * @param birthdate Fecha de nacimiento
+   * @returns Edad calculada
+   */
   public calculateAge(birthdate: any): number {
     if (!birthdate) return 0;
     const birthDate = new Date(birthdate);
@@ -440,6 +612,10 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     return age;
   }
 
+  /**
+   * Valida los datos antes de enviarlos al servidor
+   * @returns true si los datos son válidos, false en caso contrario
+   */
   public validateBeforeSend(): boolean {
     // Verificar rol
     if (!this.authService.hasRole('Doctor_client_role')) {
@@ -449,7 +625,6 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
 
     // Verificar capa
     if (!this.currentResearchLayerId || !this.userResearchLayers.includes(this.currentResearchLayerId)) {
-      console.error('Intento de registro en capa no autorizada:', this.currentResearchLayerId);
       this.showErrorAlert('No tiene permisos para la capa seleccionada');
       return false;
     }
@@ -473,6 +648,10 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     return !requiredFields.some(field => !field);
   }
 
+  /**
+   * Maneja el éxito en el envío de datos
+   * @param response Respuesta del servidor
+   */
   private handleSuccess(response: any): void {
     this.isSending = false;
     localStorage.removeItem(`clinicalFormData_${this.currentResearchLayerId}`);
@@ -489,6 +668,10 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     });
   }
 
+  /**
+   * Maneja errores en el envío de datos
+   * @param error Error recibido
+   */
   private handleError(error: any): void {
     this.isSending = false;
     Swal.close();
@@ -503,14 +686,6 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       errorMessage = 'Acceso denegado por el servidor';
       technicalDetails = `El backend rechazó explícitamente la capa ${this.currentResearchLayerId}`;
     }
-
-    console.error('Detalles técnicos del error:', {
-      error,
-      currentLayer: this.currentResearchLayerId,
-      userLayers: this.userResearchLayers,
-      userEmail: this.authService.getUserEmail(),
-      timestamp: new Date().toISOString()
-    });
 
     // Mostrar al usuario un mensaje con opción para ver detalles
     Swal.fire({
@@ -532,6 +707,10 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     });
   }
 
+  /**
+   * Reinicia el formulario
+   * @param clearClinicalData Indica si se deben limpiar los datos clínicos
+   */
   public resetForm(clearClinicalData: boolean = true): void {
     this.pasoActual = 1;
     this.pacienteData = {};
@@ -543,6 +722,10 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     this.tieneCuidador = false;
   }
 
+  /**
+   * Muestra un mensaje de error
+   * @param message Mensaje a mostrar
+   */
   private showErrorAlert(message: string): void {
     Swal.fire({
       title: 'Error',

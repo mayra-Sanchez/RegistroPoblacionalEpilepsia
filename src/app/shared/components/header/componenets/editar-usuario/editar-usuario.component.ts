@@ -85,7 +85,6 @@ export class EditarUsuarioComponent implements OnInit {
       error: (err) => {
         this.errorMessage = 'Error al cargar los datos del usuario: ' + (err.message || 'Error desconocido');
         this.isLoading = false;
-        console.error('Error loading user data:', err);
       }
     });
   }
@@ -184,7 +183,6 @@ export class EditarUsuarioComponent implements OnInit {
       confirmButtonText: 'Cerrar'
     });
 
-    console.error('Error updating user:', error);
   }
 
   // Marca todos los campos del formulario como "tocados" para mostrar errores

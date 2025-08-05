@@ -106,8 +106,19 @@ export class CuidadorFormComponent {
    * Si hay datos iniciales (initialData), puebla el formulario con estos valores
    */
   ngOnInit(): void {
-    if (this.initialData) {
-      this.form.patchValue(this.initialData);
+    if (this.initialData && Object.keys(this.initialData).length > 0) {
+      console.log('Datos iniciales del cuidador:', this.initialData); // Para depuración
+
+      const transformedData = {
+        caregiverName: this.initialData.name || '',
+        caregiverIdentificationType: this.initialData.identificationType || '',
+        caregiverIdentificationNumber: this.initialData.identificationNumber || '',
+        caregiverAge: this.initialData.age || '',
+        caregiverEducationLevel: this.initialData.educationLevel || '',
+        caregiverOccupation: this.initialData.occupation || ''
+      };
+
+      this.form.patchValue(transformedData);
     }
   }
 
@@ -125,7 +136,7 @@ export class CuidadorFormComponent {
   onSubmit(): void {
     if (this.form.valid) {
       const formData = this.form.value;
-      
+
       const transformedData = {
         name: formData.caregiverName,
         identificationType: formData.caregiverIdentificationType,

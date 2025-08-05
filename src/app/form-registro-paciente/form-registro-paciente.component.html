@@ -1,6 +1,7 @@
 <div class="user-form-container">
   <!-- Paso 1: Datos del paciente -->
-  <app-paciente-form *ngIf="pasoActual === 1" (next)="handlePacienteData($event)">
+  <app-paciente-form *ngIf="pasoActual === 1" [researchLayerId]="currentResearchLayerId"
+    (next)="handlePacienteData($event)">
   </app-paciente-form>
 
   <!-- Paso 2: Datos clínicos -->
