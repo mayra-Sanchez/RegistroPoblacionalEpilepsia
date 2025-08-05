@@ -38,9 +38,11 @@ export interface ResearchLayer {
 }
 
 export interface Register {
+  researchLayerId: string;
   registerId: string;
   id?: string; // Añadir esta propiedad opcional
   registerDate: string;
+  updatedBy?: string;
   updateRegisterDate: string | null;
   patientIdentificationNumber: number;
   patientIdentificationType: string;
@@ -60,7 +62,7 @@ export interface Register {
     currentCity: string;
     firstCrisisDate: string;
     crisisStatus: string;
-    hasCaregiver?: boolean; 
+    hasCaregiver?: boolean;
   };
   caregiver: {
     name: string;

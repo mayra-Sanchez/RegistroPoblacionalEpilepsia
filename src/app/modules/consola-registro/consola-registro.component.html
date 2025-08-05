@@ -108,7 +108,8 @@
       </div>
     </div>
     <div *ngIf="selectedTab === 'registroPaciente'">
-      <app-form-registro-paciente></app-form-registro-paciente>
+      <app-form-registro-paciente *ngIf="selectedTab === 'registroPaciente'"
+        [researchLayerId]="selectedLayerId"></app-form-registro-paciente>
     </div>
     <!-- Añade esto encima de la tabla -->
     <div class="search-options" *ngIf="selectedTab === 'listadoPacientes'">

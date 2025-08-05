@@ -1,319 +1,107 @@
-import { Component, OnInit } from '@angular/core';
-import { AuthService } from 'src/app/services/auth.service';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { Variable, UserResponse, ResearchLayer, Register } from './interfaces';
-import { ChangeDetectorRef, NgZone } from '@angular/core';
 import Swal from 'sweetalert2';
 
-/**
- * Componente principal de la consola de registro
- * 
- * Este componente gestiona la interfaz de usuario para el registro y consulta de datos
- * de pacientes en un contexto de investigación médica. Proporciona:
- * - Visualización de datos del usuario y su capa de investigación asignada
- * - Gestión de registros de pacientes con paginación
- * - Modales para ver/editar registros
- * - Estadísticas de registros
- * - Navegación entre diferentes vistas
- * 
- * @example
- * <app-consola-registro></app-consola-registro>
- */
 @Component({
   selector: 'app-consola-registro',
   templateUrl: './consola-registro.component.html',
   styleUrls: ['./consola-registro.component.css']
 })
 export class ConsolaRegistroComponent implements OnInit {
-  //#region Propiedades del Componente
-
-  /**
-   * Pestaña actualmente seleccionada en la interfaz
-   * @default 'inicioDigitador'
-   */
   selectedTab: string = 'inicioDigitador';
-
-  /**
-   * Indica si se está cargando información inicial
-   * @type {boolean}
-   */
   isLoading: boolean = true;
-
-  /**
-   * Mensaje de error para mostrar al usuario
-   * @type {string | null}
-   */
   errorMessage: string | null = null;
-
-  /**
-   * Listado de variables asociadas a la capa de investigación
-   * @type {Variable[]}
-   */
   variablesDeCapa: Variable[] = [];
-
-  /**
-   * Indica si se están cargando las variables
-   * @type {boolean}
-   */
   loadingVariables: boolean = false;
-
-  /**
-   * Datos del usuario autenticado
-   * @type {UserResponse | null}
-   */
   userData: UserResponse | null = null;
-
-  /**
-   * Capa de investigación asignada al usuario
-   * @type {ResearchLayer | null}
-   */
   currentResearchLayer: ResearchLayer | null = null;
-
-  //#region Propiedades de Paginación
-
-  /**
-   * Página actual en la paginación
-   * @type {number}
-   * @default 0
-   */
   currentPage: number = 0;
-
-  /**
-   * Tamaño de página para la paginación
-   * @type {number}
-   * @default 10
-   */
   pageSize: number = 10;
-
-  /**
-   * Total de elementos disponibles
-   * @type {number}
-   */
   totalElements: number = 0;
-
-  /**
-   * Total de páginas disponibles
-   * @type {number}
-   */
   totalPages: number = 0;
-
-  //#endregion
-
-  /**
-   * Listado de registros de pacientes
-   * @type {Register[]}
-   */
   registros: Register[] = [];
-
-  /**
-   * Indica si se están cargando los registros
-   * @type {boolean}
-   */
   loadingRegistros: boolean = false;
-
-  /**
-   * Nombre del jefe de investigación
-   * @type {string}
-   * @default 'Cargando...'
-   */
   jefeInvestigacion: string = 'Cargando...';
-
-  /**
-   * Descripción de la investigación
-   * @type {string}
-   * @default 'Cargando descripción...'
-   */
   DescripcionInvestigacion: string = 'Cargando descripción...';
-
-  /**
-   * Total de pacientes registrados
-   * @type {number}
-   */
   totalPacientes: number = 0;
-
-  /**
-   * Pacientes registrados hoy
-   * @type {number}
-   */
   pacientesHoy: number = 0;
-
-  //#region Propiedades de Modales
-
-  /**
-   * Controla la visibilidad del modal de visualización
-   * @type {boolean}
-   */
   showViewModal: boolean = false;
-
-  /**
-   * Controla la visibilidad del modal de edición
-   * @type {boolean}
-   */
   showEditModal: boolean = false;
-
-  /**
-   * Registro seleccionado para visualización/edición
-   * @type {Register | null}
-   */
   selectedRegistro: Register | null = null;
-
-  //#endregion
-
-  /**
-   * Registros más recientes para el dashboard
-   * @type {any[]}
-   */
   registrosRecientes: any[] = [];
-
-  /**
-   * Datos para la tabla de usuarios
-   * @type {any[]}
-   */
   usuariosData: any[] = [];
-
-  /**
-   * Controla la visibilidad del modal de búsqueda por profesional
-   * @type {boolean}
-   */
   showBuscarProfesionalModal = false;
-
-  /**
-   * Modo actual de búsqueda
-   * @type {'default' | 'profesional' | 'paciente'}
-   * @default 'default'
-   */
   modoBusqueda: 'default' | 'profesional' | 'paciente' = 'default';
-
-  /**
-   * Identificación del profesional buscado
-   * @type {string}
-   */
   profesionalBuscado: string = '';
-
-  /**
-   * Controla la visibilidad del modal de búsqueda por paciente
-   * @type {boolean}
-   */
   showBuscarPacienteModal = false;
-
-  /**
-   * Identificación del paciente buscado
-   * @type {string}
-   */
   pacienteBuscado: string = '';
-
-  /**
-   * Columnas para la tabla de usuarios
-   * @type {Array<{field: string, header: string}>}
-   */
   usuariosColumns = [
     { field: 'nombre', header: 'Nombre' },
     { field: 'documento', header: 'Número de documento' },
     { field: 'fechaRegistro', header: 'Fecha de último registro' },
     { field: 'registradoPor', header: 'Registrado por' }
   ];
-
-  selectedLayerId: string | null = null;
+  selectedLayerId: string = '';
   availableLayers: ResearchLayer[] = [];
 
-  //#endregion
-
-  //#region Constructor
-
-  /**
-   * Constructor del componente
-   * @param authService Servicio de autenticación
-   * @param consolaService Servicio para operaciones de registro
-   * @param cdr Servicio para detección de cambios
-   * @param ngZone Servicio para ejecutar código dentro de la zona Angular
-   */
   constructor(
     private authService: AuthService,
     private consolaService: ConsolaRegistroService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
   ) {
-    // Suscripción a cambios en los datos
     this.consolaService.dataChanged$.subscribe(() => {
-      this.refreshData();
+      this.ngZone.run(() => this.refreshData());
     });
   }
 
-  //#endregion
-
-  //#region Métodos del Ciclo de Vida
-
-  /**
-   * Método del ciclo de vida que se ejecuta al inicializar el componente
-   * @async
-   */
   async ngOnInit() {
     try {
       await this.loadUserData();
       await this.loadAvailableLayers();
-
-      // Try to get last selected layer from storage
       const savedLayerId = localStorage.getItem('selectedLayerId');
-
-      // If user has available layers
       if (this.availableLayers.length > 0) {
-        // Use saved layer if available and valid, otherwise use first available
         const initialLayerId = savedLayerId && this.availableLayers.some(l => l.id === savedLayerId)
           ? savedLayerId
           : this.availableLayers[0].id;
-
+        this.selectedLayerId = initialLayerId;
+        console.log('ngOnInit: Selected initial layer:', initialLayerId);
         await this.loadCapaInvestigacion(initialLayerId);
+        this.loadRegistros();
+        this.loadVariablesDeCapa(initialLayerId);
+        this.refreshData();
       } else {
-        await this.loadCapaInvestigacion(); // Try with default logic
+        this.selectedLayerId = '';
+        this.showErrorAlert('No se encontraron capas de investigación disponibles');
+        console.warn('ngOnInit: No available layers for user');
       }
-
-      this.loadRegistros();
-      this.refreshData();
     } catch (error) {
       this.handleError('Error al inicializar componente');
+      this.selectedLayerId = '';
+    } finally {
+      this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
-  //#endregion
 
-  //#region Propiedades Computadas
-
-  /**
-   * Obtiene el nombre completo del usuario
-   * @returns {string} Nombre completo o 'Usuario' si no hay datos
-   */
   get username(): string {
     return this.userData ? `${this.userData.firstName} ${this.userData.lastName}` : 'Usuario';
   }
 
-  /**
-   * Obtiene el nombre de la capa de investigación asignada
-   * @returns {string} Nombre de la capa o 'No asignada'
-   */
   get capaUsuario(): string {
     return this.currentResearchLayer?.layerName || 'No asignada';
   }
 
-  /**
-   * Obtiene el rol del usuario
-   * @returns {string} Rol del usuario o 'Usuario' por defecto
-   */
   get userRole(): string {
     return this.userData?.attributes?.role?.[0] || 'Usuario';
   }
 
-  //#endregion
-
-  //#region Métodos de Carga de Datos
-
-  /**
-   * Carga los datos del usuario autenticado
-   * @returns {Promise<void>} Promesa que se resuelve cuando se completó la carga
-   */
   loadUserData(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.isLoading = true;
       this.errorMessage = null;
-
       const email = this.authService.getUserEmail();
       if (!email) {
         this.handleError('No se pudo obtener el email del usuario');
@@ -328,8 +116,8 @@ export class ConsolaRegistroComponent implements OnInit {
             reject('Respuesta inválida');
             return;
           }
-
           this.userData = response[0];
+          console.log('loadUserData: User data loaded:', this.userData);
           resolve();
         },
         error: (err) => {
@@ -340,59 +128,103 @@ export class ConsolaRegistroComponent implements OnInit {
     });
   }
 
-  /**
-   * Carga la capa de investigación asignada al usuario
-   * @returns {Promise<void>} Promesa que se resuelve cuando se completó la carga
-   */
+  loadAvailableLayers(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const layerIds = this.userData?.attributes?.researchLayerId || [];
+      if (!layerIds.length) {
+        this.availableLayers = [];
+        console.warn('loadAvailableLayers: No research layers assigned to user');
+        resolve();
+        return;
+      }
+
+      const layerRequests = layerIds.map(id =>
+        this.consolaService.obtenerCapaPorId(id).toPromise()
+      );
+
+      Promise.all(layerRequests)
+        .then(layers => {
+          this.availableLayers = layers.filter(l => l?.id) as ResearchLayer[];
+          console.log('loadAvailableLayers: Available layers:', this.availableLayers);
+          resolve();
+        })
+        .catch(err => {
+          console.error('loadAvailableLayers: Error loading layers:', err);
+          reject(err);
+        });
+    });
+  }
+
   loadCapaInvestigacion(researchLayerId?: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      // If no layer ID provided, try to get one
       if (!researchLayerId) {
-        // Try to get from user's available layers
-        if (this.userData?.attributes?.researchLayerId?.length) {
-          researchLayerId = this.userData.attributes.researchLayerId[0];
-        }
-        // If still no ID, reject
-        if (!researchLayerId) {
-          console.warn('No se encontró ID de capa en userData');
+        const layerIds = this.userData?.attributes?.researchLayerId;
+        if (layerIds && layerIds.length > 0) {
+          researchLayerId = layerIds[0];
+        } else {
+          console.warn('loadCapaInvestigacion: No research layer ID provided and no user layers available');
           this.isLoading = false;
           this.setDefaultCapaValues();
+          this.selectedLayerId = '';
           reject('No hay ID de capa');
           return;
         }
+      }
+
+      const layerIds = this.userData?.attributes?.researchLayerId;
+      if (!layerIds?.includes(researchLayerId)) {
+        console.warn('loadCapaInvestigacion: Selected layer not authorized:', researchLayerId);
+        this.handleError('La capa seleccionada no está asignada a este usuario');
+        this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
+        localStorage.setItem('selectedLayerId', this.selectedLayerId);
+        reject('Capa no autorizada');
+        return;
       }
 
       this.isLoading = true;
       this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({
         next: (capa) => {
           if (!capa?.id) {
-            console.warn('Capa sin ID recibida');
+            console.warn('loadCapaInvestigacion: Capa sin ID recibida');
+            this.isLoading = false;
+            this.setDefaultCapaValues();
+            this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
+            localStorage.setItem('selectedLayerId', this.selectedLayerId);
             reject('Capa inválida');
             return;
           }
-
           this.currentResearchLayer = capa;
-          this.selectedLayerId = capa.id; // Track the currently selected layer
+          this.selectedLayerId = capa.id;
+          localStorage.setItem('selectedLayerId', capa.id);
           this.updateDatosCapa(capa);
-          this.loadVariablesDeCapa(capa.id);
           this.isLoading = false;
+          this.cdr.detectChanges();
+          console.log('loadCapaInvestigacion: Layer loaded:', capa);
           resolve();
         },
         error: (err) => {
-          console.error('Error al cargar capa:', err);
-          this.handleError(err.message);
+          console.error('loadCapaInvestigacion: Error al cargar capa:', err);
+          this.handleError('Error al cargar la capa de investigación');
           this.setDefaultCapaValues();
+          this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
+          localStorage.setItem('selectedLayerId', this.selectedLayerId);
+          this.isLoading = false;
+          this.cdr.detectChanges();
           reject(err);
         }
       });
     });
   }
 
-  /**
-   * Carga las variables asociadas a una capa de investigación
-   * @param {string} researchLayerId ID de la capa de investigación
-   */
-  loadVariablesDeCapa(researchLayerId: string) {
+  loadVariablesDeCapa(researchLayerId: string): void {
+    if (!researchLayerId) {
+      console.warn('loadVariablesDeCapa: No research layer ID provided');
+      this.variablesDeCapa = [];
+      this.loadingVariables = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.loadingVariables = true;
     this.variablesDeCapa = [];
 
@@ -400,52 +232,51 @@ export class ConsolaRegistroComponent implements OnInit {
       next: (variables) => {
         this.variablesDeCapa = variables.filter(v => v.isEnabled);
         this.loadingVariables = false;
+        this.cdr.detectChanges();
+        console.log('loadVariablesDeCapa: Variables loaded for layer:', researchLayerId, variables);
       },
       error: (err) => {
-        console.error('Error al cargar variables:', err);
+        console.error('loadVariablesDeCapa: Error al cargar variables:', err);
         this.loadingVariables = false;
         this.mostrarErrorVariables('No se pudieron cargar las variables');
+        this.cdr.detectChanges();
       }
     });
   }
 
-  /**
-   * Carga los registros de pacientes con paginación
-   * @param {number} [page=0] Página a cargar
-   * @param {number} [size=10] Tamaño de la página
-   * @param {string} [query=''] Término de búsqueda (opcional)
-   */
   loadRegistros(page: number = 0, size: number = 10): void {
     if (!this.selectedLayerId) {
-      console.warn('No research layer selected');
+      console.warn('loadRegistros: No research layer selected');
+      this.handleError('No se ha seleccionado ninguna capa de investigación');
+      this.resetRegistros();
       return;
     }
 
     this.loadingRegistros = true;
+    this.currentPage = page;
+    this.pageSize = size;
 
     this.consolaService.obtenerRegistrosPorCapa(
       this.selectedLayerId,
       page,
       size
     ).subscribe({
-      next: (response) => this.procesarRespuestaRegistros(response),
+      next: (response) => {
+        this.procesarRespuestaRegistros(response);
+        console.log('loadRegistros: Registros loaded for layer:', this.selectedLayerId);
+      },
       error: (err) => {
-        console.error('Detailed component error:', {
+        console.error('loadRegistros: Detailed component error:', {
           status: err.status,
           message: err.message,
           error: err.error
         });
-
         this.resetRegistros();
-
-        if (err.status === 500) {
-          this.showErrorAlert('El servidor encontró un error. Por favor contacte al administrador.');
-        } else {
-          this.showErrorAlert('Error al cargar registros. Por favor intente nuevamente.');
-        }
+        this.showErrorAlert('Error al cargar registros. Por favor intente nuevamente.');
       },
       complete: () => {
         this.loadingRegistros = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -454,63 +285,96 @@ export class ConsolaRegistroComponent implements OnInit {
     const selectElement = event.target as HTMLSelectElement;
     const layerId = selectElement.value;
 
-    if (!layerId) return;
+    if (!layerId) {
+      this.handleError('No se seleccionó ninguna capa de investigación');
+      const layerIds = this.userData?.attributes?.researchLayerId;
+      this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
+      localStorage.setItem('selectedLayerId', this.selectedLayerId);
+      this.cdr.detectChanges();
+      return;
+    }
 
-    // Save selection to localStorage
-    localStorage.setItem('selectedLayerId', layerId);
+    const layerIds = this.userData?.attributes?.researchLayerId;
+    if (!layerIds?.includes(layerId)) {
+      this.handleError('La capa seleccionada no está asignada a este usuario');
+      this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
+      localStorage.setItem('selectedLayerId', this.selectedLayerId);
+      this.cdr.detectChanges();
+      return;
+    }
 
-    // Load the new layer
-    this.loadCapaInvestigacion(layerId).then(() => {
-      // Refresh dependent data
-      this.loadRegistros();
-      this.refreshData();
+    this.ngZone.run(() => {
+      this.resetComponentState();
+      this.selectedLayerId = layerId;
+      localStorage.setItem('selectedLayerId', layerId);
 
-      // Show success message
-      const selectedLayer = this.availableLayers.find(l => l.id === layerId);
-      if (selectedLayer) {
-        Swal.fire({
-          title: 'Capa cambiada',
-          text: `Ahora estás trabajando en: ${selectedLayer.layerName}`,
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
+      this.loadCapaInvestigacion(layerId)
+        .then(() => {
+          this.loadRegistros();
+          this.loadVariablesDeCapa(layerId);
+          this.refreshData();
+
+          const selectedLayer = this.availableLayers.find(l => l.id === layerId);
+          if (selectedLayer) {
+            Swal.fire({
+              title: 'Capa cambiada',
+              text: `Ahora estás trabajando en: ${selectedLayer.layerName}`,
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          }
+        })
+        .catch(error => {
+          console.error('onLayerChange: Error changing layer:', error);
+          this.handleError('Error al cambiar de capa de investigación');
+          const layerIds = this.userData?.attributes?.researchLayerId;
+          this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
+          localStorage.setItem('selectedLayerId', this.selectedLayerId);
+          this.cdr.detectChanges();
         });
-      }
-    }).catch(error => {
-      console.error('Error changing layer:', error);
-      this.handleError('Error al cambiar de capa de investigación');
+    });
+  }
+
+  private resetComponentState(): void {
+    this.registros = [];
+    this.usuariosData = [];
+    this.registrosRecientes = [];
+    this.variablesDeCapa = [];
+    this.currentPage = 0;
+    this.totalElements = 0;
+    this.totalPages = 0;
+    this.totalPacientes = 0;
+    this.pacientesHoy = 0;
+    this.currentResearchLayer = null;
+    this.selectedRegistro = null;
+    this.showViewModal = false;
+    this.showEditModal = false;
+    this.modoBusqueda = 'default';
+    this.profesionalBuscado = '';
+    this.pacienteBuscado = '';
+    this.isLoading = true;
+    this.loadingRegistros = false;
+    this.loadingVariables = false;
+    this.errorMessage = null;
+    this.cdr.detectChanges();
+  }
+
+  private showErrorAlert(message: string): void {
+    this.ngZone.run(() => {
+      Swal.fire({
+        title: 'Error',
+        text: message,
+        icon: 'error',
+        confirmButtonText: 'Entendido'
+      });
     });
   }
 
   /**
    * Loads all available research layers for the current user
    */
-  loadAvailableLayers(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const layerIds = this.userData?.attributes?.researchLayerId;
 
-      if (!layerIds || layerIds.length === 0) {
-        this.availableLayers = [];
-        resolve();
-        return;
-      }
-
-      // Load all layers in parallel
-      const layerRequests = layerIds.map(id =>
-        this.consolaService.obtenerCapaPorId(id).toPromise()
-      );
-
-      Promise.all(layerRequests)
-        .then(layers => {
-          this.availableLayers = layers.filter(l => l?.id) as ResearchLayer[];
-          resolve();
-        })
-        .catch(err => {
-          console.error('Error loading available layers:', err);
-          reject(err);
-        });
-    });
-  }
 
   // New method to load initial layer
   async loadInitialLayer(): Promise<void> {
@@ -646,9 +510,19 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
+    const userEmail = this.authService.getUserEmail();
+    if (!userEmail) {
+      console.error('No se pudo obtener el email del usuario');
+      return;
+    }
+
+    // Transformar el Register al formato esperado por la API
+    const updateData = this.transformRegisterToApiFormat(updatedRegistro);
+
     this.consolaService.actualizarRegistro(
       updatedRegistro.registerId,
-      updatedRegistro
+      userEmail,
+      updateData
     ).subscribe({
       next: () => {
         this.loadRegistros();
@@ -658,7 +532,71 @@ export class ConsolaRegistroComponent implements OnInit {
       error: (err) => console.error('Error al actualizar:', err)
     });
   }
+  private transformRegisterToApiFormat(registro: Register): any {
+    return {
+      variables: registro.variablesRegister?.map(v => ({
+        id: v.variableId,
+        variableName: v.variableName,
+        value: v.value,
+        type: v.type,
+        researchLayerId: v.researchLayerId,
+        researchLayerName: v.researchLayerName
+      })) || [],
+      patientIdentificationNumber: registro.patientIdentificationNumber,
+      patientIdentificationType: registro.patientIdentificationType,
+      patient: {
+        name: registro.patientBasicInfo?.name,
+        sex: registro.patientBasicInfo?.sex,
+        birthDate: this.formatDateForApi(registro.patientBasicInfo?.birthDate),
+        age: registro.patientBasicInfo?.age,
+        email: registro.patientBasicInfo?.email,
+        phoneNumber: registro.patientBasicInfo?.phoneNumber,
+        deathDate: this.formatDateForApi(registro.patientBasicInfo?.deathDate),
+        economicStatus: registro.patientBasicInfo?.economicStatus,
+        educationLevel: registro.patientBasicInfo?.educationLevel,
+        maritalStatus: registro.patientBasicInfo?.maritalStatus,
+        hometown: registro.patientBasicInfo?.hometown,
+        currentCity: registro.patientBasicInfo?.currentCity,
+        firstCrisisDate: this.formatDateForApi(registro.patientBasicInfo?.firstCrisisDate),
+        crisisStatus: registro.patientBasicInfo?.crisisStatus
+      },
+      ...(registro.caregiver && {
+        caregiver: {
+          name: registro.caregiver.name,
+          identificationType: registro.caregiver.identificationType,
+          identificationNumber: registro.caregiver.identificationNumber,
+          age: registro.caregiver.age,
+          educationLevel: registro.caregiver.educationLevel,
+          occupation: registro.caregiver.occupation
+        }
+      }),
+      ...(registro.healthProfessional && {
+        healthProfessional: {
+          id: registro.healthProfessional.id,
+          name: registro.healthProfessional.name,
+          identificationNumber: registro.healthProfessional.identificationNumber
+        }
+      })
+    };
+  }
+  private formatDateForApi(dateValue: any): string | null {
+    if (!dateValue) return null;
 
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+
+    try {
+      const date = new Date(dateValue);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+    } catch (e) {
+      console.error('Error al formatear fecha:', dateValue, e);
+    }
+
+    return null;
+  }
   //#endregion
 
   //#region Métodos de Modales
@@ -739,6 +677,11 @@ export class ConsolaRegistroComponent implements OnInit {
    * Refresca los datos de la tabla según la pestaña actual
    */
   refreshData(): void {
+    if (!this.selectedLayerId) {
+      console.warn('No research layer selected for refresh');
+      return;
+    }
+
     switch (this.selectedTab) {
       case 'listadoPacientes':
       case 'consultaDatosDigitador':
@@ -750,6 +693,9 @@ export class ConsolaRegistroComponent implements OnInit {
       default:
         break;
     }
+
+    // Always reload variables to ensure they match the selected layer
+    this.loadVariablesDeCapa(this.selectedLayerId);
   }
 
   /**
@@ -874,19 +820,6 @@ export class ConsolaRegistroComponent implements OnInit {
     this.errorMessage = mensaje;
   }
 
-  /**
-   * Muestra un mensaje de error al usuario
-   * @param {string} message Mensaje de error
-   * @private
-   */
-  private showErrorAlert(message: string): void {
-    Swal.fire({
-      title: 'Error',
-      text: message,
-      icon: 'error',
-      confirmButtonText: 'Entendido'
-    });
-  }
 
   /**
    * Resetea los registros a su estado inicial

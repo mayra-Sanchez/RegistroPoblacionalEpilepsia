@@ -203,11 +203,16 @@ export class FormRegistroVariablesComponent implements OnInit {
 
     Swal.fire({
       title: '¿Confirmar registro?',
-      text: '¿Estás seguro de registrar esta variable?',
-      icon: 'question',
+      html: `
+    <p>¿Estás seguro de registrar esta variable?</p>
+    <strong style="color: #d33;">⚠️ Una vez creada, no se podrá editar algunos elementos como el nombre de la variable.</strong>
+  `,
+      icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, registrar',
-      cancelButtonText: 'Cancelar'
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#aaa'
     }).then((result) => {
       if (result.isConfirmed) {
         this.variableService.crearVariable(variableData).subscribe({

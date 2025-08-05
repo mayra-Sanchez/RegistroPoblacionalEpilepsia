@@ -222,13 +222,27 @@
 
 
         <!-- Sección Metadatos -->
-        <div class="info-section">
+        <div class="info-section" *ngIf="registro">
           <h4 class="section-title">Metadatos del Registro</h4>
           <div class="info-grid">
             <div class="info-item">
               <span class="info-label">Fecha de Creación:</span>
               <div class="info-value">
-                {{ registro.registerDate }}
+                {{ formatVariableValue('Fecha', registro.registerDate, 'date') }}
+              </div>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">Última Modificación:</span>
+              <div class="info-value">
+                {{ formatVariableValue('Fecha de Modificación', registro.updateRegisterDate, 'date') }}
+              </div>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">Modificado Por:</span>
+              <div class="info-value">
+                {{ registro.updatedBy || 'No especificado' }}
               </div>
             </div>
 
@@ -240,14 +254,13 @@
             </div>
           </div>
         </div>
+
+
+        <!-- Pie -->
+        <div class="modal-footer">
+          <button class="btn-close" (click)="closeModal()">
+            Cerrar Detalles
+          </button>
+        </div>
       </div>
     </div>
-
-    <!-- Pie -->
-    <div class="modal-footer">
-      <button class="btn-close" (click)="closeModal()">
-        Cerrar Detalles
-      </button>
-    </div>
-  </div>
-</div>

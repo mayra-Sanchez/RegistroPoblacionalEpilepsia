@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { formatDate } from '@angular/common';
 import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, Subject } from 'rxjs';
+import { Observable, throwError, Subject, of } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
 import { AuthService } from 'src/app/services/auth.service';
 import { ResearchLayer, Variable, Register } from '../modules/consola-registro/interfaces';
 import { environment } from '../environments/environment';
-
+import { timeout } from 'rxjs/operators';
+import { Constants } from './constants';
 @Injectable({
   providedIn: 'root'
 })
@@ -59,38 +60,67 @@ export class ConsolaRegistroService {
       return false;
     }
   }
+
+  getToken(): string | null {
+    return localStorage.getItem('kc_token');
+  }
+
   //#endregion
+  verifyLayerPermission(layerId: string): Observable<boolean> {
+    // Usar el endpoint existente de obtener capa por ID
+    return this.obtenerCapaPorId(layerId).pipe(
+      map(capa => {
+        // Si puede obtener la capa, tiene permiso
+        return !!capa?.id;
+      }),
+      catchError(error => {
+        // Si falla, no tiene permiso
+        console.error('Error verificando permiso:', error);
+        return of(false);
+      }),
+      timeout(5000)
+    );
+  }
 
   //#region Métodos de Usuarios
-  obtenerUsuarioAutenticado(email: string): Observable<any> {
-    if (!email) {
-      return throwError(() => this.createError('Email is required', 'VALIDATION_ERROR'));
+  obtenerUsuarioAutenticado(email: string, headers?: HttpHeaders): Observable<any> {
+    const token = this.getToken();
+    if (!token) {
+      return throwError(() => new Error('No hay token disponible.'));
     }
 
-    try {
-      const token = this.authService.getToken();
-      if (!token) {
-        return throwError(() => this.createError('No authentication token available', 'AUTH_ERROR'));
-      }
+    const defaultHeaders = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
 
-      const headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      });
+    const finalHeaders = headers || defaultHeaders;
+    const params = new HttpParams().set('email', email);
 
-      const params = new HttpParams().set('email', email);
-
-      return this.http.get<any>(`${this.API_USERS}`, { headers, params }).pipe(
-        catchError(error => this.handleHttpError(error, 'Failed to fetch user'))
-      );
-    } catch (error) {
-      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
-    }
+    return this.http.get<any>(this.API_USERS, {
+      headers: finalHeaders,
+      params: params
+    }).pipe(
+      catchError(error => {
+        console.error('Error al obtener usuario:', error);
+        return throwError(() => new Error(error.error?.message || 'Ocurrió un error al obtener el usuario.'));
+      })
+    );
   }
   //#endregion
 
   //#region Métodos de Registros
   registrarRegistro(registerData: any, userEmail: string): Observable<any> {
+    // Verificar primero si el usuario es doctor
+    if (!this.isDoctor()) {
+      return throwError(() => this.createError(
+        'Solo los doctores pueden crear registros',
+        'PERMISSION_DENIED',
+        null,
+        403
+      ));
+    }
+
     if (!userEmail) {
       return throwError(() => this.createError('User email is required', 'VALIDATION_ERROR'));
     }
@@ -189,6 +219,22 @@ export class ConsolaRegistroService {
     }
   }
 
+  obtenerRegistroMasRecientePorPaciente(patientIdentificationNumber: number): Observable<Register> {
+    if (!patientIdentificationNumber) {
+      return throwError(() => this.createError('Patient identification number is required', 'VALIDATION_ERROR'));
+    }
+
+    return this.obtenerRegistrosPorPaciente(patientIdentificationNumber, 0, 1, 'registerDate', 'DESC').pipe(
+      map(response => {
+        if (!response.registers || response.registers.length === 0) {
+          throw this.createError('Patient not found', 'NOT_FOUND_ERROR');
+        }
+        return response.registers[0];
+      }),
+      catchError(error => this.handleHttpError(error, 'Failed to fetch latest patient register'))
+    );
+  }
+
   obtenerRegistrosPorCapa(
     researchLayerId: string,
     page: number = 0,
@@ -238,64 +284,72 @@ export class ConsolaRegistroService {
     }
   }
 
-  actualizarRegistro(registerId: string, data: any): Observable<any> {
+  /**
+   * Actualiza un registro existente
+   * @param registerId ID del registro a actualizar
+   * @param userEmail Email del usuario que realiza la actualización
+   * @param data Datos actualizados del registro
+   */
+  actualizarRegistro(registerId: string, userEmail: string, data: {
+    variables: Array<{
+      id: string;
+      variableName: string;
+      value: any;
+      type: string;
+      researchLayerId: string;
+      researchLayerName?: string;
+    }>;
+    patientIdentificationNumber: number;
+    patientIdentificationType: string;
+    patient: {
+      name: string;
+      sex: string;
+      birthDate: string;
+      age: number;
+      email: string;
+      phoneNumber: string;
+      deathDate?: string;
+      economicStatus: string;
+      educationLevel: string;
+      maritalStatus: string;
+      hometown: string;
+      currentCity: string;
+    };
+    caregiver?: {
+      name: string;
+      identificationType: string;
+      identificationNumber: number;
+      age: number;
+      educationLevel: string;
+      occupation: string;
+    };
+    healthProfessional?: {
+      id: string;
+      name: string;
+      identificationNumber: number;
+    };
+  }): Observable<any> {
+
+    // Validaciones básicas
     if (!registerId) {
-      return throwError(() => this.createError('Register ID is required', 'VALIDATION_ERROR'));
+      return throwError(() => new Error('ID de registro es requerido'));
     }
 
-    if (!data) {
-      return throwError(() => this.createError('Update data is required', 'VALIDATION_ERROR'));
+    if (!userEmail) {
+      return throwError(() => new Error('Email de usuario es requerido'));
     }
 
-    if (!this.isDoctor()) {
-      return throwError(() => this.createError('Only doctors can perform this action', 'AUTH_ERROR', null, 403));
-    }
+    const headers = this.getAuthHeaders();
+    const params = new HttpParams()
+      .set('registerId', registerId)
+      .set('userEmail', userEmail);
 
-    try {
-      const userEmail = this.authService.getUserEmail();
-      if (!userEmail) {
-        return throwError(() => this.createError('User email not available', 'AUTH_ERROR'));
-      }
-
-      // Ensure variables array exists
-      if (!data.variablesRegister || !Array.isArray(data.variablesRegister)) {
-        data.variablesRegister = [];
-      }
-
-      // Format dates and prepare payload
-      const formattedData = this.formatRegisterData(data);
-
-      const token = this.authService.getToken();
-      if (!token) {
-        return throwError(() => this.createError('No authentication token available', 'AUTH_ERROR'));
-      }
-
-      const headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      });
-
-      const params = new HttpParams()
-        .set('registerId', registerId)
-        .set('userEmail', userEmail);
-
-      return this.http.put(this.API_REGISTERS, formattedData, { headers, params }).pipe(
-        tap(() => {
-          this.notifyDataChanged();
-        }),
-        catchError(error => {
-          console.error('Detailed error:', {
-            url: error.url,
-            status: error.status,
-            error: error.error,
-            message: error.message
-          });
-          return this.handleHttpError(error, 'Failed to update register');
-        })
-      );
-    } catch (error) {
-      return throwError(() => this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error));
-    }
+    return this.http.put(`${this.API_REGISTERS}`, data, { headers, params }).pipe(
+      catchError(error => {
+        console.error('Error al actualizar registro:', error);
+        return throwError(() => error);
+      })
+    );
   }
   //#endregion
 

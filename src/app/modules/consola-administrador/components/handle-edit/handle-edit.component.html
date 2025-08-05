@@ -110,7 +110,7 @@
                     <form *ngSwitchCase="'variable'" [formGroup]="editForm" (ngSubmit)="guardarCambios()">
                         <div class="form-group">
                             <label>Nombre de la Variable</label>
-                            <input type="text" class="form-control" formControlName="variableName" required>
+                            <input type="text" class="form-control" formControlName="variableName">
                         </div>
 
                         <div class="form-group">
@@ -172,8 +172,7 @@
                     <form *ngSwitchCase="'capa'" (ngSubmit)="guardarCambios()">
                         <div class="form-group">
                             <label>Nombre de la Capa</label>
-                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.layerName" name="layerName"
-                                required>
+                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.layerName" name="layerName">
                         </div>
                         <div class="form-group">
                             <label>Descripción</label>

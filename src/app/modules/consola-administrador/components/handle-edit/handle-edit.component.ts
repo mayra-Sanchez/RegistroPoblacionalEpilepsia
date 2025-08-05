@@ -58,7 +58,7 @@ export class HandleEditComponent implements OnInit {
       case 'variable':
         this.tieneOpciones = Array.isArray(this.itemToEdit.options) && this.itemToEdit.options.length > 0;
         this.editForm = this.fb.group({
-          variableName: [this.itemToEdit.variableName, Validators.required],
+          variableName: [{ value: this.itemToEdit.variableName, disabled: true }, Validators.required], // ← deshabilitado
           description: [this.itemToEdit.description],
           type: [this.itemToEdit.type, Validators.required],
           researchLayerId: [this.itemToEdit.researchLayerId || this.capas[0]?.id, Validators.required],
@@ -70,14 +70,16 @@ export class HandleEditComponent implements OnInit {
         });
         break;
 
+
       case 'capa':
         this.editForm = this.fb.group({
-          layerName: [this.itemToEdit.layerName, Validators.required],
+          layerName: [{ value: this.itemToEdit.layerName, disabled: true }, Validators.required], // ← deshabilitado
           description: [this.itemToEdit.description],
           jefeNombre: [this.itemToEdit.layerBoss?.name || ''],
           jefeDocumento: [this.itemToEdit.layerBoss?.identificationNumber || '']
         });
         break;
+
     }
   }
 

@@ -124,8 +124,11 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     // Mostrar diálogo de confirmación antes de registrar
     Swal.fire({
       title: '¿Confirmar registro?',
-      text: '¿Estás seguro de registrar esta capa?',
-      icon: 'question',
+      html: `
+    <p>¿Estás seguro de registrar esta capa?</p>
+    <strong style="color: #d33;">⚠️ Una vez creada, no se podrá editar algunos campos cómo el nombre de la capa.</strong>
+  `,
+      icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, registrar',
       cancelButtonText: 'Cancelar',
@@ -136,6 +139,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
         this.procesarRegistro(capaData);
       }
     });
+
   }
 
   /**

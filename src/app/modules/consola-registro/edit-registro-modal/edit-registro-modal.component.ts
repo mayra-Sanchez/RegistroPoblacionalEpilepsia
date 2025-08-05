@@ -89,6 +89,12 @@ export class EditRegistroModalComponent {
       return;
     }
 
+    const userEmail = this.authService.getUserEmail();
+    if (!userEmail) {
+      this.showErrorAlert('No se pudo obtener el email del usuario');
+      return;
+    }
+
     this.isLoading = true;
     this.errorMessage = null;
     this.successMessage = null;
@@ -101,7 +107,11 @@ export class EditRegistroModalComponent {
     // Prepara los datos para el envío
     const updateData = this.prepareUpdateData();
 
-    this.registroService.actualizarRegistro(this.registro.registerId, updateData)
+    this.registroService.actualizarRegistro(
+      this.registro.registerId,
+      userEmail,
+      updateData
+    )
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (response) => {
@@ -113,7 +123,7 @@ export class EditRegistroModalComponent {
           console.error('Error completo:', err);
           let errorMsg = 'Error al actualizar el registro';
 
-          if (err.message.includes('Sesión expirada')) {
+          if (err.message?.includes('Sesión expirada')) {
             errorMsg = err.message;
             // Forzar logout después de mostrar el mensaje
             setTimeout(() => this.authService.logout(), 3000);
@@ -128,27 +138,6 @@ export class EditRegistroModalComponent {
       });
   }
 
-  private isFormValid(): boolean {
-    if (!this.registro) return false;
-
-    if (!this.registro.patientBasicInfo?.name ||
-      !this.registro.patientIdentificationType ||
-      !this.registro.patientIdentificationNumber) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private resetFormState(): void {
-    this.registro = null;
-    this.isLoading = false;
-    this.isUpdating = false;
-    this.formSubmitted = false;
-    this.errorMessage = null;
-    this.successMessage = null;
-    this.activeTab = 'paciente';
-  }
 
   private showSuccessAlert(message: string): void {
     Swal.fire({
@@ -170,65 +159,57 @@ export class EditRegistroModalComponent {
     });
   }
 
-  private getErrorMessage(err: any): string {
-    if (err.error?.errors) {
-      return Object.values(err.error.errors).join(', ');
-    }
-    if (err.error?.message) {
-      return err.error.message;
-    }
-    if (err.message) {
-      return err.message;
-    }
-    return 'Error desconocido al actualizar el registro';
-  }
 
-  private prepareUpdateData(): any {
-    if (!this.registro) return null;
+private prepareUpdateData(): any {
+  if (!this.registro) return null;
 
-    const payload: any = {
-      variables: this.prepareVariablesArray(),
-      patientIdentificationNumber: this.registro.patientIdentificationNumber,
-      patientIdentificationType: this.registro.patientIdentificationType,
-      patient: {
-        name: this.registro.patientBasicInfo?.name || '',
-        sex: this.registro.patientBasicInfo?.sex || '',
-        birthDate: this.formatDateForAPI(this.registro.patientBasicInfo?.birthDate),
-        age: this.registro.patientBasicInfo?.age || 0,
-        email: this.registro.patientBasicInfo?.email || '',
-        phoneNumber: this.registro.patientBasicInfo?.phoneNumber || '',
-        deathDate: this.formatDateForAPI(this.registro.patientBasicInfo?.deathDate),
-        economicStatus: this.registro.patientBasicInfo?.economicStatus || '',
-        educationLevel: this.registro.patientBasicInfo?.educationLevel || '',
-        maritalStatus: this.registro.patientBasicInfo?.maritalStatus || '',
-        hometown: this.registro.patientBasicInfo?.hometown || '',
-        currentCity: this.registro.patientBasicInfo?.currentCity || '',
-        firstCrisisDate: this.formatDateForAPI(this.registro.patientBasicInfo?.firstCrisisDate),
-        crisisStatus: this.registro.patientBasicInfo?.crisisStatus || ''
+  return {
+    variables: this.registro.variablesRegister?.map(v => ({
+      id: v.variableId,
+      variableName: v.variableName,
+      value: v.value,
+      type: v.type,
+      researchLayerId: v.researchLayerId,
+      researchLayerName: v.researchLayerName
+    })) || [],
+    patientIdentificationNumber: this.registro.patientIdentificationNumber,
+    patientIdentificationType: this.registro.patientIdentificationType,
+    patient: {
+      name: this.registro.patientBasicInfo?.name,
+      sex: this.registro.patientBasicInfo?.sex,
+      birthDate: this.formatDateForAPI(this.registro.patientBasicInfo?.birthDate),
+      age: this.registro.patientBasicInfo?.age,
+      email: this.registro.patientBasicInfo?.email,
+      phoneNumber: this.registro.patientBasicInfo?.phoneNumber,
+      deathDate: this.formatDateForAPI(this.registro.patientBasicInfo?.deathDate),
+      economicStatus: this.registro.patientBasicInfo?.economicStatus,
+      educationLevel: this.registro.patientBasicInfo?.educationLevel,
+      maritalStatus: this.registro.patientBasicInfo?.maritalStatus,
+      hometown: this.registro.patientBasicInfo?.hometown,
+      currentCity: this.registro.patientBasicInfo?.currentCity,
+      firstCrisisDate: this.formatDateForAPI(this.registro.patientBasicInfo?.firstCrisisDate),
+      crisisStatus: this.registro.patientBasicInfo?.crisisStatus
+    },
+    ...(this.registro.caregiver && {
+      caregiver: {
+        name: this.registro.caregiver.name,
+        identificationType: this.registro.caregiver.identificationType,
+        identificationNumber: this.registro.caregiver.identificationNumber,
+        age: this.registro.caregiver.age,
+        educationLevel: this.registro.caregiver.educationLevel,
+        occupation: this.registro.caregiver.occupation
       }
-    };
+    }),
+    ...(this.registro.healthProfessional && {
+      healthProfessional: {
+        id: this.registro.healthProfessional.id,
+        name: this.registro.healthProfessional.name,
+        identificationNumber: this.registro.healthProfessional.identificationNumber
+      }
+    })
+  };
+}
 
-    if (this.registro.caregiver && this.hasCaregiverData(this.registro.caregiver)) {
-      payload.caregiver = {
-        name: this.registro.caregiver.name || '',
-        identificationType: this.registro.caregiver.identificationType || '',
-        identificationNumber: this.registro.caregiver.identificationNumber || 0,
-        age: this.registro.caregiver.age || 0,
-        educationLevel: this.registro.caregiver.educationLevel || '',
-        occupation: this.registro.caregiver.occupation || ''
-      };
-    }
-
-    if (this.registro.healthProfessional) {
-      payload.healthProfessional = {
-        id: this.registro.healthProfessional.id || '',
-        name: this.registro.healthProfessional.name || '',
-        identificationNumber: this.registro.healthProfessional.identificationNumber || 0
-      };
-    }
-
-    return this.cleanPayload(payload);
-  }
 
   private hasCaregiverData(caregiver: any): boolean {
     if (!caregiver) return false;
@@ -405,13 +386,13 @@ export class EditRegistroModalComponent {
   }
 
   formatDate(value: any): string | null {
-  if (!value) return null;
+    if (!value) return null;
 
-  const date = new Date(value);
-  if (isNaN(date.getTime())) return null;
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return null;
 
-  // Devuelve en formato 'yyyy-MM-dd'
-  return date.toISOString().split('T')[0];
-}
+    // Devuelve en formato 'yyyy-MM-dd'
+    return date.toISOString().split('T')[0];
+  }
 
 }
