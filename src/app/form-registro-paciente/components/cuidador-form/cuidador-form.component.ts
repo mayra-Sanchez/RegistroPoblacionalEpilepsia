@@ -49,6 +49,22 @@ export class CuidadorFormComponent {
    * Grupo de formulario reactivo que contiene todos los controles y validaciones
    */
   form: FormGroup;
+  
+  /**
+   * Ocupaciones de un cuidador
+   */
+  occupationOptions = [
+    { value: 'empleado', label: 'Empleado/a' },
+    { value: 'independiente', label: 'Trabajador/a independiente' },
+    { value: 'ama_casa', label: 'Ama de casa' },
+    { value: 'estudiante', label: 'Estudiante' },
+    { value: 'jubilado', label: 'Jubilado/a/Pensionado/a' },
+    { value: 'desempleado', label: 'Desempleado/a' },
+    { value: 'profesional_salud', label: 'Profesional de la salud' },
+    { value: 'docente', label: 'Docente' },
+    { value: 'comerciante', label: 'Comerciante' },
+    { value: 'otro', label: 'Otro' }
+  ];
 
   /**
    * Constructor del componente

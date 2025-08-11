@@ -18,34 +18,36 @@ import { lastValueFrom } from 'rxjs';
 export class FormRegistroPacienteComponent implements OnInit, OnChanges {
   /** ID de la capa de investigación actual (input) */
   @Input() researchLayerId: string = '';
-  
+
   /** Paso actual del formulario (1-4) */
   pasoActual = 1;
-  
+
   /** Indica si el paciente tiene cuidador */
   tieneCuidador = false;
-  
+
   /** ID de la capa de investigación actualmente seleccionada */
   currentResearchLayerId: string = '';
-  
+
   /** Indica si se está enviando datos al servidor */
   isSending = false;
-  
+
   /** Datos del paciente */
   pacienteData: any = {};
-  
+
   /** Datos clínicos del paciente */
   clinicalData: any[] = [];
-  
+
   /** Datos del cuidador (si aplica) */
   cuidadorData: any = {};
-  
+
   /** Datos del profesional de salud */
   profesionalData: any = {};
-  
+
   /** Lista de IDs de capas de investigación a las que tiene acceso el usuario */
   userResearchLayers: string[] = [];
 
+  isNewPatient: boolean = true;
+  
   /**
    * Constructor del componente
    * @param consolaService Servicio para interactuar con la consola de registros
@@ -285,6 +287,8 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
         return;
       }
 
+      this.isNewPatient = !registroExistente;
+
       if (registroExistente) {
         // Verificar que el ID existe antes de actualizar
         if (!registroExistente.id) {
@@ -417,14 +421,16 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
 
     const requestBody = this.buildRequestBody();
 
-    Swal.fire({
-      title: 'Actualizando datos...',
-      text: 'Este paciente ya existe en la capa, actualizando información',
-      icon: 'info',
-      showCancelButton: true,
-      confirmButtonText: 'Actualizar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    try {
+      const result = await Swal.fire({
+        title: '¿Actualizar registro existente?',
+        text: 'Este paciente ya existe en la capa, ¿desea actualizar la información?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, actualizar',
+        cancelButtonText: 'Cancelar'
+      });
+
       if (result.isConfirmed) {
         this.isSending = true;
         Swal.fire({
@@ -433,12 +439,14 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
           didOpen: () => Swal.showLoading()
         });
 
-        this.consolaService.actualizarRegistro(registerId, userEmail, requestBody).subscribe({
-          next: (response) => this.handleSuccess(response),
-          error: (error) => this.handleError(error)
-        });
+        const response = await lastValueFrom(
+          this.consolaService.actualizarRegistro(registerId, userEmail, requestBody)
+        );
+        this.handleSuccess(response);
       }
-    });
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   /**
@@ -733,5 +741,12 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       icon: 'error',
       confirmButtonText: 'Entendido'
     });
+  }
+
+  onConsentUploaded(success: boolean): void {
+    if (success) {
+      // Lógica adicional si es necesario
+      console.log('Documento de consentimiento subido con éxito');
+    }
   }
 }

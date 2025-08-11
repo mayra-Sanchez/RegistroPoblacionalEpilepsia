@@ -1,12 +1,25 @@
-<div class="signature-container">
-    <canvas #signatureCanvas width="400" height="200"></canvas>
-  </div>
-  
-  <div class="modal-actions">
-    <button type="button" class="btn btn-secondary" (click)="clearSignature()">
-      Borrar Firma
+<div class="signature-container" *ngIf="isNewPatient">
+    <div class="file-upload-container">
+        <label for="consentFileInput" class="file-upload-label">
+            <i class="fas fa-upload"></i> Seleccionar archivo de consentimiento
+            <input id="consentFileInput" type="file" accept=".pdf,.jpg,.jpeg,.png" 
+                   (change)="onFileSelected($event)" style="display: none;">
+        </label>
+        
+        <div *ngIf="selectedFile" class="file-info">
+            <span>{{ selectedFile.name }}</span>
+            <span class="file-size">({{ selectedFile.size | fileSize }})</span>
+        </div>
+    </div>
+</div>
+
+<div class="modal-actions" *ngIf="isNewPatient">
+    <button type="button" class="btn btn-secondary" (click)="clearSelection()" [disabled]="isSaving">
+        Borrar selección
     </button>
-    <button type="button" class="btn btn-primary" (click)="saveSignature()">
-      Aceptar y Guardar
+    <button type="button" class="btn btn-primary" (click)="uploadConsent()" 
+            [disabled]="isSaving || !selectedFile">
+        <span *ngIf="!isSaving">Subir documento</span>
+        <span *ngIf="isSaving">Subiendo...</span>
     </button>
-  </div>
+</div>

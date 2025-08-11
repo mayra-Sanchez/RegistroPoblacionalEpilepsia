@@ -1,12 +1,17 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Register } from '../interfaces';
 import { DatePipe } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { SignatureUploadService } from 'src/app/services/signature-upload.service';
+import Swal from 'sweetalert2';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /**
  * Componente modal para visualización detallada de registros de pacientes
  * 
  * Este componente muestra todos los datos de un registro médico en un formato organizado,
  * convirtiendo códigos internos a etiquetas legibles y formateando adecuadamente los datos.
+ * Además, permite visualizar y subir documentos de consentimiento firmados.
  * 
  * @example
  * <app-view-registro-modal 
@@ -34,6 +39,12 @@ export class ViewRegistroModalComponent {
    * @type {EventEmitter<void>}
    */
   @Output() close = new EventEmitter<void>();
+
+  /**
+   * URL no segura del documento (para limpieza de memoria)
+   * @private
+   */
+  private unsafeDocumentUrl: string | null = null;
 
   //#endregion
 
@@ -96,15 +107,81 @@ export class ViewRegistroModalComponent {
     { value: 'union_libre', label: 'Unión libre' }
   ];
 
+  /**
+   * Indica si se debe mostrar el visor de documentos
+   * @type {boolean}
+   */
+  showDocument: boolean = false;
+
+  /**
+   * URL segura del documento para visualización
+   * @type {SafeResourceUrl | null}
+   */
+  documentUrl: SafeResourceUrl | null = null;
+
+  /**
+   * Indica si se está cargando un documento
+   * @type {boolean}
+   */
+  isLoadingDocument: boolean = false;
+
+  /**
+   * Mensaje de error al cargar documento
+   * @type {string | null}
+   */
+  documentError: string | null = null;
+
+  /**
+   * Tipo de documento detectado (pdf, image, unknown)
+   * @type {string}
+   */
+  documentType: string = '';
+
+  /**
+   * Indica si se debe mostrar el modal de subida
+   * @type {boolean}
+   */
+  showUploadModal: boolean = false;
+
+  /**
+   * Archivo seleccionado para subir
+   * @type {File | null}
+   */
+  selectedFile: File | null = null;
+
+  /**
+   * Indica si se está subiendo un archivo
+   * @type {boolean}
+   */
+  isUploading: boolean = false;
+
+  /**
+   * Progreso de subida del archivo (0-100)
+   * @type {number | null}
+   */
+  uploadProgress: number | null = null;
+
+  /**
+   * Mensaje de error al subir archivo
+   * @type {string | null}
+   */
+  uploadError: string | null = null;
+
   //#endregion
 
   //#region Constructor
 
   /**
    * Constructor del componente
-   * @param {DatePipe} datePipe Servicio para formateo de fechas
+   * @param datePipe Servicio para formateo de fechas
+   * @param signatureService Servicio para manejo de documentos de consentimiento
+   * @param sanitizer Servicio para sanitización de URLs
    */
-  constructor(private datePipe: DatePipe) { }
+  constructor(
+    private datePipe: DatePipe,
+    private signatureService: SignatureUploadService,
+    private sanitizer: DomSanitizer
+  ) { }
 
   //#endregion
 
@@ -113,9 +190,9 @@ export class ViewRegistroModalComponent {
   /**
    * Obtiene la etiqueta legible correspondiente a un valor de un conjunto de opciones
    * 
-   * @param {Array<{value: string, label: string}>} options - Lista de opciones disponibles
-   * @param {string | null | undefined} value - Valor a buscar en las opciones
-   * @returns {string} La etiqueta correspondiente o 'No especificado' si el valor es nulo/undefined
+   * @param options Lista de opciones disponibles
+   * @param value Valor a buscar en las opciones
+   * @returns La etiqueta correspondiente o 'No especificado' si el valor es nulo/undefined
    * 
    * @example
    * // Returns 'Cédula de Ciudadanía'
@@ -130,8 +207,8 @@ export class ViewRegistroModalComponent {
   /**
    * Determina si existen datos válidos del cuidador para mostrar en la interfaz
    * 
-   * @param {any} caregiver - Objeto con los datos del cuidador
-   * @returns {boolean} True si hay al menos un campo con datos válidos (no nulo, no undefined y no string vacío)
+   * @param caregiver Objeto con los datos del cuidador
+   * @returns True si hay al menos un campo con datos válidos (no nulo, no undefined y no string vacío)
    * 
    * @example
    * // Returns false
@@ -158,28 +235,17 @@ export class ViewRegistroModalComponent {
     this.close.emit();
   }
 
-  //#endregion
-
-  //#region Métodos de Formateo (Privados)
-
   /**
-   * Formatea una fecha usando el DatePipe de Angular
-   * @private
-   * @param {string | Date} date - Fecha a formatear
-   * @returns {string} Fecha formateada o 'No especificada' si es nula
+   * Formatea inteligentemente el valor de una variable:
+   * - Si es una fecha, intenta formatearla como fecha legible.
+   * - Si está vacío o null, retorna "No especificado"
+   * - Para otros casos, retorna el valor tal cual
+   * 
+   * @param nombre Nombre del campo (para detectar si es fecha por nombre)
+   * @param valor Valor a formatear
+   * @param tipo Tipo de dato (opcional, para detectar fechas)
+   * @returns Valor formateado o "No especificado" si es nulo/vacío
    */
-  private formatDate(date: string | Date | null | undefined): string {
-    if (!date) return 'No especificada';
-    return this.datePipe.transform(date, 'mediumDate') || 'Fecha inválida';
-  }
-
-  //#endregion
-
-  /**
- * Formatea inteligentemente el valor de una variable:
- * - Si es una fecha, intenta formatearla como fecha legible.
- * - Si está vacío o null, retorna "No especificado"
- */
   formatVariableValue(nombre: string, valor: any, tipo?: string): string {
     if (!valor || valor === '') return 'No especificado';
 
@@ -198,4 +264,196 @@ export class ViewRegistroModalComponent {
 
     return valor;
   }
+
+  /**
+   * Abre el visor de documentos de consentimiento
+   */
+  viewConsentDocument(): void {
+    const patientId = this.registro?.patientIdentificationNumber;
+
+    if (!patientId) {
+      this.documentError = 'No se pudo identificar al paciente';
+      return;
+    }
+
+    const numericId = Number(patientId);
+    if (isNaN(numericId)) {
+      this.documentError = 'Número de documento inválido';
+      return;
+    }
+
+    this.isLoadingDocument = true;
+    this.documentError = null;
+    this.showDocument = true;
+
+    this.signatureService.downloadConsentFile(numericId).subscribe({
+      next: (blob: Blob) => {
+        this.determineDocumentType(blob);
+        this.createDocumentUrl(blob);
+        this.isLoadingDocument = false;
+      },
+      error: (err) => {
+        console.error('Error al descargar el documento:', err);
+        if (err.status === 404) {
+          this.documentError = 'El paciente no tiene documento de consentimiento registrado';
+        } else {
+          this.documentError = 'Error al cargar el documento';
+        }
+        this.isLoadingDocument = false;
+      }
+    });
+  }
+
+  /**
+   * Cierra el visor de documentos y limpia los recursos
+   */
+  closeDocumentView(): void {
+    this.showDocument = false;
+    this.cleanUpDocumentUrl();
+  }
+
+  /**
+   * Abre el modal para subir un documento de consentimiento
+   */
+  openUploadModal(): void {
+    this.showUploadModal = true;
+    this.selectedFile = null;
+  }
+
+  /**
+   * Cierra el modal de subida de documentos
+   */
+  closeUploadModal(): void {
+    this.showUploadModal = false;
+  }
+
+  /**
+   * Maneja la selección de un archivo para subir
+   * @param event Evento de selección de archivo
+   */
+  onFileSelected(event: any): void {
+    this.selectedFile = event.target.files[0];
+  }
+
+  /**
+   * Sube el documento de consentimiento seleccionado
+   */
+  async uploadConsent(): Promise<void> {
+    if (!this.selectedFile || !this.registro?.patientIdentificationNumber) {
+      Swal.fire('Error', 'Por favor seleccione un archivo', 'error');
+      return;
+    }
+
+    const patientId = Number(this.registro.patientIdentificationNumber);
+    if (isNaN(patientId)) {
+      Swal.fire('Error', 'ID de paciente inválido', 'error');
+      return;
+    }
+
+    this.isUploading = true;
+
+    try {
+      const response = await this.signatureService
+        .uploadConsentFile(patientId, this.selectedFile)
+        .toPromise();
+      
+      Swal.fire('Éxito', 'Documento subido correctamente', 'success');
+      this.closeUploadModal();
+      this.viewConsentDocument(); // Intenta ver el documento después de subirlo
+    } catch (error: unknown) {
+      console.error('Error completo:', error);
+      
+      let errorMessage = 'No se pudo subir el documento';
+      
+      if (error instanceof HttpErrorResponse) {
+        errorMessage = error.error?.message || error.message || error.statusText;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+
+      Swal.fire('Error', errorMessage, 'error');
+    } finally {
+      this.isUploading = false;
+    }
+  }
+
+  /**
+   * Limpia la selección de archivo
+   */
+  clearFileSelection(): void {
+    this.selectedFile = null;
+    const fileInput = document.getElementById('consentFileInput') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  }
+
+  //#endregion
+
+  //#region Métodos Privados
+
+  /**
+   * Formatea una fecha usando el DatePipe de Angular
+   * @private
+   * @param date Fecha a formatear
+   * @returns Fecha formateada o 'No especificada' si es nula
+   */
+  private formatDate(date: string | Date | null | undefined): string {
+    if (!date) return 'No especificada';
+    return this.datePipe.transform(date, 'mediumDate') || 'Fecha inválida';
+  }
+
+  /**
+   * Determina el tipo de documento basado en su tipo MIME
+   * @private
+   * @param blob Blob del documento
+   */
+  private determineDocumentType(blob: Blob): void {
+    if (blob.type.includes('pdf')) {
+      this.documentType = 'pdf';
+    } else if (blob.type.includes('image')) {
+      this.documentType = 'image';
+    } else {
+      this.documentType = 'unknown';
+    }
+  }
+
+  /**
+   * Limpia la URL del documento y libera recursos
+   * @private
+   */
+  private cleanUpDocumentUrl(): void {
+    if (this.unsafeDocumentUrl) {
+      URL.revokeObjectURL(this.unsafeDocumentUrl);
+      this.unsafeDocumentUrl = null;
+      this.documentUrl = null;
+    }
+  }
+
+  /**
+   * Crea una URL segura para visualizar el documento
+   * @private
+   * @param blob Blob del documento
+   */
+  private createDocumentUrl(blob: Blob): void {
+    this.cleanUpDocumentUrl(); // Limpiar primero
+
+    try {
+      this.unsafeDocumentUrl = URL.createObjectURL(blob);
+      this.documentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.unsafeDocumentUrl);
+    } catch (error) {
+      console.error('Error creating document URL:', error);
+      this.documentError = 'Error al preparar el documento para visualización';
+      this.cleanUpDocumentUrl();
+    }
+  }
+
+  /**
+   * Método del ciclo de vida para limpieza al destruir el componente
+   */
+  ngOnDestroy(): void {
+    this.cleanUpDocumentUrl();
+  }
+
+  //#endregion
 }

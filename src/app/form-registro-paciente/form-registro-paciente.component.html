@@ -20,10 +20,23 @@
     </button>
   </div>
 
-  <!-- Paso 4: Datos del profesional -->
-  <app-profesional-form *ngIf="pasoActual === 4" [initialData]="profesionalData" (prev)="pasoAnterior()"
-    (submit)="handleProfesionalData($event)">
-  </app-profesional-form>
+  <!-- Paso 4: Datos del profesional + Consentimiento -->
+  <div *ngIf="pasoActual === 4">
+    <app-profesional-form [initialData]="profesionalData" (prev)="pasoAnterior()"
+      (submit)="handleProfesionalData($event)">
+    </app-profesional-form>
+
+    <!-- Sección de consentimiento informado -->
+    <div class="consent-section mt-4">
+      <h5>Consentimiento Informado</h5>
+      <div class="alert alert-info">
+        Por favor suba el documento firmado del consentimiento informado si el paciente es nuevo en el sistema
+      </div>
+      <app-signature-pad [isNewPatient]="true" [patientId]="pacienteData.identificationNumber" 
+                        (fileUploaded)="onConsentUploaded($event)">
+      </app-signature-pad>
+    </div>
+  </div>
 
   <!-- Spinner durante el envío -->
   <div *ngIf="isSending" class="loading-overlay">

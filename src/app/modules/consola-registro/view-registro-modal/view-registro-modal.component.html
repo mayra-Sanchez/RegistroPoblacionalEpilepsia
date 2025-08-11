@@ -220,7 +220,6 @@
           </div>
         </div>
 
-
         <!-- Sección Metadatos -->
         <div class="info-section" *ngIf="registro">
           <h4 class="section-title">Metadatos del Registro</h4>
@@ -255,7 +254,113 @@
           </div>
         </div>
 
+        <div class="info-section">
+          <h4 class="section-title">Documento de Consentimiento</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <button (click)="viewConsentDocument()" [disabled]="isLoadingDocument" class="btn-document">
+                <i class="fas fa-file-contract"></i>
+                <span *ngIf="!isLoadingDocument">Ver Consentimiento Firmado</span>
+                <span *ngIf="isLoadingDocument">Cargando documento...</span>
+              </button>
 
+              <div *ngIf="documentError" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> {{ documentError }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal para visualizar el documento -->
+        <div *ngIf="showDocument" class="document-modal-overlay">
+          <div class="document-modal">
+            <div class="document-modal-header">
+              <h4>Documento de Consentimiento</h4>
+              <button (click)="closeDocumentView()" class="close-button">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div class="document-modal-body">
+              <div *ngIf="isLoadingDocument" class="loading-message">
+                <i class="fas fa-spinner fa-spin"></i> Cargando documento...
+              </div>
+
+              <div *ngIf="!isLoadingDocument && documentUrl">
+                <iframe *ngIf="documentType === 'pdf'" [src]="documentUrl" width="100%" height="500px" frameborder="0"
+                  style="border: none;">
+                </iframe>
+
+                <img *ngIf="documentType === 'image'" [src]="documentUrl" alt="Documento de consentimiento"
+                  class="document-image">
+
+                <div *ngIf="documentType === 'unknown'" class="unsupported-document">
+                  <p><i class="fas fa-exclamation-triangle"></i> Formato de documento no soportado para vista previa</p>
+                  <a [href]="documentUrl" download="consentimiento.pdf" class="download-link">
+                    <i class="fas fa-download"></i> Descargar documento
+                  </a>
+                </div>
+              </div>
+
+              <div *ngIf="!isLoadingDocument && !documentUrl && documentError" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> {{ documentError }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Modal para subir documento -->
+        <div *ngIf="showUploadModal" class="upload-modal-overlay">
+          <div class="upload-modal">
+            <div class="upload-modal-header">
+              <h4>Subir Documento de Consentimiento</h4>
+              <button (click)="closeUploadModal()" class="close-button">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div class="upload-modal-body">
+              <div class="file-upload-container">
+                <label for="consentFileInput" class="file-upload-label">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span *ngIf="!selectedFile">Seleccionar archivo (PDF o imagen)</span>
+                  <span *ngIf="selectedFile">{{ selectedFile.name }}</span>
+                  <input id="consentFileInput" type="file" (change)="onFileSelected($event)"
+                    accept=".pdf,.jpg,.jpeg,.png" hidden>
+                </label>
+
+                <div *ngIf="selectedFile" class="file-actions">
+                  <button (click)="clearFileSelection()" class="btn-clear">
+                    <i class="fas fa-times"></i> Cambiar archivo
+                  </button>
+                </div>
+              </div>
+
+              <div class="upload-actions">
+                <button (click)="closeUploadModal()" class="btn-cancel">Cancelar</button>
+                <button (click)="uploadConsent()" class="btn-upload" [disabled]="!selectedFile || isUploading">
+                  <span *ngIf="!isUploading">
+                    <i class="fas fa-upload"></i> Subir Documento
+                  </span>
+                  <span *ngIf="isUploading">
+                    <i class="fas fa-spinner fa-spin"></i> Subiendo...
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje cuando no hay documento -->
+        <div *ngIf="documentError === 'El paciente no tiene documento de consentimiento registrado'"
+          class="no-document-message">
+          <div class="message-content">
+            <i class="fas fa-file-exclamation"></i>
+            <p>El paciente no tiene documento de consentimiento registrado</p>
+            <button (click)="openUploadModal()" class="btn-upload">
+              <i class="fas fa-upload"></i> Subir Documento
+            </button>
+          </div>
+        </div>
         <!-- Pie -->
         <div class="modal-footer">
           <button class="btn-close" (click)="closeModal()">
@@ -264,3 +369,5 @@
         </div>
       </div>
     </div>
+  </div>
+</div>

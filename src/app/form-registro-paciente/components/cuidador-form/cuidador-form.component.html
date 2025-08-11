@@ -1,55 +1,60 @@
 <form [formGroup]="form" class="form-step">
-  <h2 class="form-title">
-      <i class="fas fa-user-nurse"></i> Datos del Cuidador
-  </h2>
+    <h2 class="form-title">
+        <i class="fas fa-user-nurse"></i> Datos del Cuidador
+    </h2>
 
-  <div class="form-group">
-      <label>Nombre Completo</label>
-      <input type="text" formControlName="caregiverName">
-  </div>
+    <div class="form-group">
+        <label>Nombre Completo</label>
+        <input type="text" formControlName="caregiverName">
+    </div>
 
-  <div class="form-group">
-      <label>Tipo de Documento</label>
-      <select formControlName="caregiverIdentificationType">
-          <option value="">Seleccione...</option>
-          <option value="cc">Cédula de Ciudadanía</option>
-          <option value="ti">Tarjeta de Identidad</option>
-          <option value="ce">Cédula de Extranjería</option>
-      </select>
-  </div>
+    <div class="form-group">
+        <label>Tipo de Documento</label>
+        <select formControlName="caregiverIdentificationType">
+            <option value="">Seleccione...</option>
+            <option value="cc">Cédula de Ciudadanía</option>
+            <option value="ti">Tarjeta de Identidad</option>
+            <option value="ce">Cédula de Extranjería</option>
+        </select>
+    </div>
 
-  <div class="form-group">
-      <label>Número de Documento</label>
-      <input type="text" formControlName="caregiverIdentificationNumber">
-  </div>
+    <div class="form-group">
+        <label>Número de Documento</label>
+        <input type="text" formControlName="caregiverIdentificationNumber">
+    </div>
 
-  <div class="form-group">
-      <label>Edad</label>
-      <input type="number" formControlName="caregiverAge">
-  </div>
+    <div class="form-group">
+        <label>Edad</label>
+        <input type="number" formControlName="caregiverAge">
+    </div>
 
-  <div class="form-group">
-      <label>Nivel Educativo</label>
-      <select formControlName="caregiverEducationLevel">
-          <option value="">Seleccione...</option>
-          <option value="primaria">Primaria</option>
-          <option value="secundaria">Secundaria</option>
-          <option value="tecnico">Técnico</option>
-          <option value="universitario">Universitario</option>
-      </select>
-  </div>
+    <div class="form-group">
+        <label>Nivel Educativo</label>
+        <select formControlName="caregiverEducationLevel">
+            <option value="">Seleccione...</option>
+            <option value="primaria">Primaria</option>
+            <option value="secundaria">Secundaria</option>
+            <option value="tecnico">Técnico</option>
+            <option value="universitario">Universitario</option>
+        </select>
+    </div>
 
-  <div class="form-group">
-      <label>Ocupación</label>
-      <input type="text" formControlName="caregiverOccupation">
-  </div>
+    <div class="form-group">
+        <label>Ocupación</label>
+        <select formControlName="caregiverOccupation">
+            <option value="">Seleccione...</option>
+            <option *ngFor="let option of occupationOptions" [value]="option.value">
+                {{option.label}}
+            </option>
+        </select>
+    </div>
 
-  <div class="form-actions">
-      <button type="button" class="btn btn-prev" (click)="onPrevious()">
-          <i class="fas fa-arrow-left"></i> Anterior
-      </button>
-      <button type="button" class="btn btn-next" (click)="onSubmit()" [disabled]="form.invalid">
-          Siguiente <i class="fas fa-arrow-right"></i>
-      </button>
-  </div>
+    <div class="form-actions">
+        <button type="button" class="btn btn-prev" (click)="onPrevious()">
+            <i class="fas fa-arrow-left"></i> Anterior
+        </button>
+        <button type="button" class="btn btn-next" (click)="onSubmit()" [disabled]="form.invalid">
+            Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
 </form>

@@ -38,6 +38,8 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
+import { SafeUrlPipe } from 'src/app/pipes/safeUrl.pipe';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -54,6 +56,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     ConsultaDinamicaComponent,
     BuscarProfesionalModalComponent,
     BuscarPacienteModalComponent,
+    FileSizePipe,
+    SafeUrlPipe
   ],
   imports: [
     CommonModule,
@@ -85,5 +89,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatCheckboxModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  exports: [
+    FileSizePipe,
+    SafeUrlPipe
+  ]
 })
 export class ConsolaRegistroModule { }
