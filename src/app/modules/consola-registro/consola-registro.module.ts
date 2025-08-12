@@ -40,6 +40,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { SafeUrlPipe } from 'src/app/pipes/safeUrl.pipe';
+import { ConsentimientoInformadoComponent } from './components/consentimiento-informado/consentimiento-informado.component';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -57,7 +58,8 @@ import { SafeUrlPipe } from 'src/app/pipes/safeUrl.pipe';
     BuscarProfesionalModalComponent,
     BuscarPacienteModalComponent,
     FileSizePipe,
-    SafeUrlPipe
+    SafeUrlPipe,
+    ConsentimientoInformadoComponent
   ],
   imports: [
     CommonModule,

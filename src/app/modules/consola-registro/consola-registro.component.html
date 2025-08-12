@@ -86,6 +86,11 @@
               <i class="fas fa-file-alt"></i>
               <span>Generar Reporte</span>
             </button>
+            <!-- Nuevo botón para consentimiento informado -->
+            <button class="action-btn" (click)="openConsentimientoModal()">
+              <i class="fas fa-file-signature"></i>
+              <span>Llenar Consentimiento</span>
+            </button>
           </div>
         </div>
 
@@ -164,4 +169,11 @@
   <app-edit-registro-modal *ngIf="showEditModal" [registro]="selectedRegistro" (saveChanges)="onSaveChanges($event)"
     (close)="closeEditModal()">
   </app-edit-registro-modal>
-</div>
+
+  <div class="modal-overlay" *ngIf="showConsentimientoModal">
+    <div class="modal-container">
+      <app-consentimiento-informado [paciente]="selectedPaciente"
+        (submitConsentimiento)="handleSubmitConsentimiento($event)" (cancel)="closeConsentimientoModal()">
+      </app-consentimiento-informado>
+    </div>
+  </div>

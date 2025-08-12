@@ -171,6 +171,93 @@ h1, h2, h3 {
   margin: 0 auto;
 }
 
+
+/* Estilos para el modal */
+/* ==================== 2. Modales y Overlays ==================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px; /* Añade padding para dispositivos móviles */
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: auto; /* Centra el modal */
+  position: relative; /* Cambia de fixed a relative */
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Elimina la transformación translate ya que estamos usando flexbox */
+/* Mantén solo la animación de fade in */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-start; /* Alinea en la parte superior en móviles */
+  }
+  
+  .modal-container {
+    width: 95%;
+    max-height: 85vh;
+  }
+  
+  .consentimiento-container {
+    padding: 20px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-container {
+    width: 98%;
+    max-height: 80vh;
+  }
+  
+  .consentimiento-container {
+    padding: 15px;
+  }
+  
+  .consentimiento-header h2 {
+    font-size: 22px;
+  }
+  
+  .form-section h3 {
+    font-size: 18px;
+  }
+}
+
 .dashboard-header {
   text-align: center;
   margin-bottom: 40px;

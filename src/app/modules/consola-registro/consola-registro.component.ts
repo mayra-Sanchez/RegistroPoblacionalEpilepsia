@@ -3,6 +3,8 @@ import { ConsolaRegistroService } from 'src/app/services/consola-registro.servic
 import { AuthService } from 'src/app/services/auth.service';
 import { Variable, UserResponse, ResearchLayer, Register } from './interfaces';
 import Swal from 'sweetalert2';
+import { MatDialog } from '@angular/material/dialog';
+import { ConsentimientoInformadoComponent } from './components/consentimiento-informado/consentimiento-informado.component';
 
 @Component({
   selector: 'app-consola-registro',
@@ -45,12 +47,14 @@ export class ConsolaRegistroComponent implements OnInit {
   ];
   selectedLayerId: string = '';
   availableLayers: ResearchLayer[] = [];
-
+  showConsentimientoModal = false;
+  selectedPaciente: any;
   constructor(
     private authService: AuthService,
     private consolaService: ConsolaRegistroService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private dialog: MatDialog
   ) {
     this.consolaService.dataChanged$.subscribe(() => {
       this.ngZone.run(() => this.refreshData());
@@ -253,7 +257,7 @@ export class ConsolaRegistroComponent implements OnInit {
     ).subscribe({
       next: (response) => {
         this.procesarRespuestaRegistros(response);
-        },
+      },
       error: (err) => {
         this.resetRegistros();
         this.showErrorAlert('Error al cargar registros. Por favor intente nuevamente.');
@@ -816,6 +820,25 @@ export class ConsolaRegistroComponent implements OnInit {
     this.totalElements = 0;
     this.loadingRegistros = false;
     this.cdr.detectChanges();
+  }
+
+  // Método para abrir el modal de consentimiento
+  openConsentimientoModal() {
+    // Aquí deberías asignar el paciente seleccionado si es necesario
+    // this.selectedPaciente = ...;
+    this.showConsentimientoModal = true;
+  }
+
+  // Método para manejar el envío del consentimiento
+  handleSubmitConsentimiento(consentimientoData: any) {
+    // Lógica para guardar el consentimiento
+    console.log('Consentimiento enviado:', consentimientoData);
+    this.showConsentimientoModal = false;
+  }
+
+  // Método para cerrar el modal de consentimiento
+  closeConsentimientoModal() {
+    this.showConsentimientoModal = false;
   }
 
   //#endregion

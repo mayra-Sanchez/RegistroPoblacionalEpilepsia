@@ -1,0 +1,129 @@
+<!-- consentimiento-informado.component.html -->
+<div class="consentimiento-container">
+    <div class="consentimiento-header">
+        <h2>Consentimiento Informado para el Tratamiento de Datos Personales</h2>
+        <p>Proyecto: Registro de Pacientes con Epilepsia (RPE) – Piloto</p>
+    </div>
+
+    <div class="consentimiento-body">
+        <form [formGroup]="consentimientoForm">
+            <div class="form-section">
+                <h3>1. Finalidad del tratamiento de datos</h3>
+                <p>
+                    En cumplimiento de la Ley 1581 de 2012 y sus decretos reglamentarios, informo que los datos
+                    personales recolectados a través de este registro serán utilizados exclusivamente para:
+                </p>
+                <ul>
+                    <li>Llevar un registro clínico y estadístico de pacientes con epilepsia.</li>
+                    <li>Analizar información para fines académicos y de investigación.</li>
+                    <li>Elaborar reportes agregados para mejorar la atención y el seguimiento médico.</li>
+                </ul>
+                <p>
+                    Los datos no serán compartidos con terceros no autorizados y serán tratados con estricta
+                    confidencialidad.
+                </p>
+            </div>
+
+            <div class="form-section">
+                <h3>2. Derechos del titular de los datos</h3>
+                <p>Como paciente, usted tiene derecho a:</p>
+                <ul>
+                    <li>Conocer, actualizar y rectificar sus datos.</li>
+                    <li>Revocar la autorización y/o solicitar la supresión de sus datos.</li>
+                    <li>Acceder de forma gratuita a los datos personales que hayan sido objeto de tratamiento.</li>
+                </ul>
+            </div>
+
+            <div class="form-section">
+                <h3>3. Declaración de consentimiento</h3>
+                <p>
+                    Declaro que he leído y comprendido la información anterior, y que otorgo de manera libre, expresa,
+                    voluntaria e informada mi autorización para que mis datos personales y clínicos sean recolectados,
+                    almacenados y tratados con las finalidades aquí descritas.
+                </p>
+            </div>
+
+            <div class="form-section patient-data">
+                <h4>Datos del paciente o representante legal</h4>
+                <div class="form-group">
+                    <label>Nombre completo</label>
+                    <input type="text" formControlName="nombrePaciente" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Tipo y número de documento</label>
+                    <input type="text" formControlName="documentoPaciente" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Firma</label>
+                    <div class="signature-pad">
+                        <button type="button" class="btn btn-sign" (click)="toggleFirmaPaciente()">
+                            {{ consentimientoForm.get('firmaPaciente')?.value ? 'Firma completada' : 'Firmar aquí' }}
+                        </button>
+                        <small *ngIf="consentimientoForm.get('firmaPaciente')?.value">Firma registrada</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="text" formControlName="fechaPaciente" class="form-control" readonly>
+                </div>
+            </div>
+
+            <div class="form-section professional-data">
+                <h4>Datos del profesional de salud</h4>
+                <div class="form-group">
+                    <label>Nombre completo</label>
+                    <input type="text" formControlName="nombreProfesional" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Cargo / Especialidad</label>
+                    <input type="text" formControlName="cargoProfesional" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Firma</label>
+                    <div class="signature-pad">
+                        <button type="button" class="btn btn-sign" (click)="toggleFirmaProfesional()">
+                            {{ consentimientoForm.get('firmaProfesional')?.value ? 'Firma completada' : 'Firmar aquí' }}
+                        </button>
+                        <small *ngIf="consentimientoForm.get('firmaProfesional')?.value">Firma registrada</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="text" formControlName="fechaProfesional" class="form-control" readonly>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" (click)="onCancel()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-download" (click)="generatePDF()">
+                    <i class="fas fa-download"></i> Descargar PDF
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para firma -->
+<div class="signature-modal" *ngIf="showFirmaPaciente || showFirmaProfesional">
+    <div class="modal-content">
+        <h4>{{ currentSignatureType === 'paciente' ? 'Firma del Paciente' : 'Firma del Profesional' }}</h4>
+
+        <div class="signature-container">
+            <canvas #signaturePad class="signature-canvas" (touchstart)="onTouchStart($event)"
+                (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd()" (mousedown)="onMouseDown($event)"
+                (mousemove)="onMouseMove($event)" (mouseup)="onMouseUp()" (mouseleave)="onMouseUp()">
+            </canvas>
+        </div>
+
+        <div class="signature-actions">
+            <button type="button" class="btn btn-clear" (click)="limpiarFirma()">
+                <i class="fas fa-eraser"></i> Limpiar
+            </button>
+            <button type="button" class="btn btn-confirm" (click)="confirmarFirma()">
+                <i class="fas fa-check"></i> Confirmar Firma
+            </button>
+        </div>
+    </div>
+</div>
