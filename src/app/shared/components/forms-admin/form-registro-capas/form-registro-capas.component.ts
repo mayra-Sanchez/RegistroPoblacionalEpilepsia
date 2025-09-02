@@ -69,7 +69,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
           Validators.minLength(3),
           Validators.pattern(/^[a-zA-ZÀ-ÿ\s]+$/)
         ]],
-
+        email: ['', [Validators.required, Validators.email]],
 
         // Número de identificación con validación de requerido y mínimo 5 caracteres
         identificationNumber: ['', [
@@ -117,6 +117,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       layerBoss: {
         id: this.form.value.layerBoss?.id || 0,
         name: this.form.value.layerBoss?.name?.trim(),
+        email: this.form.value.layerBoss?.email?.trim(),
         identificationNumber: this.form.value.layerBoss?.identificationNumber?.trim(),
       },
     };

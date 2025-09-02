@@ -1,11 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { Register } from '../interfaces';
+import { Register, VariableInfoResponse } from '../interfaces';
 import { DatePipe } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SignatureUploadService } from 'src/app/services/signature-upload.service';
 import Swal from 'sweetalert2';
 import { HttpErrorResponse } from '@angular/common/http';
-
 /**
  * Componente modal para visualización detallada de registros de pacientes
  * 
@@ -166,104 +165,97 @@ export class ViewRegistroModalComponent {
    * @type {string | null}
    */
   uploadError: string | null = null;
+  currentLayerId: string | null = null;
 
   //#endregion
 
   //#region Constructor
 
-  /**
-   * Constructor del componente
-   * @param datePipe Servicio para formateo de fechas
-   * @param signatureService Servicio para manejo de documentos de consentimiento
-   * @param sanitizer Servicio para sanitización de URLs
-   */
   constructor(
     private datePipe: DatePipe,
     private signatureService: SignatureUploadService,
     private sanitizer: DomSanitizer
   ) { }
 
-  //#endregion
+  ngOnInit(): void {
+    const capaString = localStorage.getItem('capaInvestigacion');
+    if (capaString) {
+      try {
+        const capa = JSON.parse(capaString);
+        this.currentLayerId = capa.id;
+      } catch (e) {
+        console.error('Error parseando la capa del localStorage', e);
+      }
+    }
+  }
 
-  //#region Métodos Públicos
-
-  /**
-   * Obtiene la etiqueta legible correspondiente a un valor de un conjunto de opciones
-   * 
-   * @param options Lista de opciones disponibles
-   * @param value Valor a buscar en las opciones
-   * @returns La etiqueta correspondiente o 'No especificado' si el valor es nulo/undefined
-   * 
-   * @example
-   * // Returns 'Cédula de Ciudadanía'
-   * getLabel(tiposIdentificacion, 'cc');
-   */
-  getLabel(options: { value: string, label: string }[], value: string | null | undefined): string {
+  getLabel(options: { value: string; label: string }[], value: string | null | undefined): string {
     if (!value) return 'No especificado';
     const option = options.find(opt => opt.value === value);
     return option ? option.label : value;
   }
 
-  /**
-   * Determina si existen datos válidos del cuidador para mostrar en la interfaz
-   * 
-   * @param caregiver Objeto con los datos del cuidador
-   * @returns True si hay al menos un campo con datos válidos (no nulo, no undefined y no string vacío)
-   * 
-   * @example
-   * // Returns false
-   * hasCaregiverData(null);
-   * 
-   * // Returns true
-   * hasCaregiverData({ nombre: 'Juan', parentesco: 'Hijo' });
-   */
   hasCaregiverData(caregiver: any): boolean {
     if (!caregiver) return false;
-    return Object.values(caregiver).some(
-      (val: any) => val !== null && val !== undefined && val !== ''
-    );
+    return Object.values(caregiver).some(val => val !== null && val !== undefined && val !== '');
   }
 
-  /**
-   * Emite el evento para cerrar el modal
-   * 
-   * @example
-   * // En el template:
-   * <button (click)="closeModal()">Cerrar</button>
-   */
   closeModal() {
     this.close.emit();
   }
 
-  /**
-   * Formatea inteligentemente el valor de una variable:
-   * - Si es una fecha, intenta formatearla como fecha legible.
-   * - Si está vacío o null, retorna "No especificado"
-   * - Para otros casos, retorna el valor tal cual
-   * 
-   * @param nombre Nombre del campo (para detectar si es fecha por nombre)
-   * @param valor Valor a formatear
-   * @param tipo Tipo de dato (opcional, para detectar fechas)
-   * @returns Valor formateado o "No especificado" si es nulo/vacío
-   */
   formatVariableValue(nombre: string, valor: any, tipo?: string): string {
     if (!valor || valor === '') return 'No especificado';
-
     const nombreNormalizado = nombre.toLowerCase();
-    const esFechaPorNombre = nombreNormalizado.includes('fecha');
-    const esFechaPorTipo = tipo === 'date';
-
-    if (esFechaPorNombre || esFechaPorTipo) {
+    const esFecha = nombreNormalizado.includes('fecha') || tipo === 'date';
+    if (esFecha) {
       try {
-        const fechaFormateada = this.datePipe.transform(valor, 'dd/MM/yyyy');
-        return fechaFormateada || valor;
+        return this.datePipe.transform(valor, 'dd/MM/yyyy') || valor;
       } catch {
         return valor;
       }
     }
-
     return valor;
   }
+
+  getCurrentLayerVariables(): Array<{ variableName: string; value: any; type: string }> {
+    if (!this.currentLayerId || !this.registro) return [];
+
+    const capaActual = this.registro.registerInfo.find(
+      layer => layer.researchLayerId === this.currentLayerId
+    );
+
+    if (!capaActual || !capaActual.variablesInfo) return [];
+
+    return capaActual.variablesInfo
+      .map(v => {
+        let value: any = null;
+
+        switch (v.variableType.toLowerCase()) {
+          case 'number':
+            value = v.valueAsNumber;
+            break;
+          case 'string':
+          case 'text':
+            value = v.valueAsString;
+            break;
+          case 'date':
+            value = v.valueAsDate ?? v.valueAsString;
+            break;
+          default:
+            value = v.valueAsString ?? v.valueAsNumber;
+        }
+
+        return {
+          variableName: v.variableName,
+          type: v.variableType,
+          value
+        };
+      })
+      .filter(v => v.value !== null && v.value !== undefined && v.value !== '');
+  }
+
+
 
   /**
    * Abre el visor de documentos de consentimiento
@@ -356,15 +348,15 @@ export class ViewRegistroModalComponent {
       const response = await this.signatureService
         .uploadConsentFile(patientId, this.selectedFile)
         .toPromise();
-      
+
       Swal.fire('Éxito', 'Documento subido correctamente', 'success');
       this.closeUploadModal();
       this.viewConsentDocument(); // Intenta ver el documento después de subirlo
     } catch (error: unknown) {
       console.error('Error completo:', error);
-      
+
       let errorMessage = 'No se pudo subir el documento';
-      
+
       if (error instanceof HttpErrorResponse) {
         errorMessage = error.error?.message || error.message || error.statusText;
       } else if (error instanceof Error) {

@@ -17,6 +17,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
   showPassword: boolean = false;
   sugerenciasUsername: string[] = [];
 
+
   roles = [
     { valor: 'Admin', label: 'Administrador', descripcion: 'Administrador: puede gestionar usuarios, capas y variables.' },
     { valor: 'Researcher', label: 'Investigador', descripcion: 'Investigador: puede investigar datos clínicos de una capa.' },
@@ -55,10 +56,13 @@ export class FormRegistroUsuarioComponent implements OnInit {
   obtenerCapas() {
     this.consolaAdministradorService.getAllLayers().subscribe(
       (capas) => {
-        this.capas = capas.map(capa => ({
+        const capasMapeadas = capas.map(capa => ({
           id: capa.id,
           nombreCapa: capa.layerName || capa.nombreCapa
         }));
+
+        // Agregar capa por defecto "Ninguna" con id 'none'
+        this.capas = [{ id: 'none', nombreCapa: 'Ninguna' }, ...capasMapeadas];
       },
       (error) => {
         console.error('Error al obtener capas:', error);
@@ -71,6 +75,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
       }
     );
   }
+
 
   /**
    * Genera varias sugerencias de usernames
@@ -128,6 +133,9 @@ export class FormRegistroUsuarioComponent implements OnInit {
 
     const username = this.usuarioForm.value.username;
 
+    const capaSeleccionada = this.usuarioForm.value.capaInvestigacion;
+    const capaFinal = capaSeleccionada.length ? capaSeleccionada : ['none'];
+
     const usuarioData = {
       firstName: this.usuarioForm.value.nombre,
       lastName: this.usuarioForm.value.apellido,
@@ -137,7 +145,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
       identificationType: this.usuarioForm.value.tipoDocumento,
       identificationNumber: Number(this.usuarioForm.value.numeroDocumento),
       birthDate: this.usuarioForm.value.fechaNacimiento,
-      researchLayer: this.usuarioForm.value.capaInvestigacion,
+      researchLayer: capaFinal, // <- aquí usamos la capa por defecto si está vacío
       role: this.usuarioForm.value.rol
     };
 

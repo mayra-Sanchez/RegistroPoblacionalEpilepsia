@@ -8,6 +8,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { AuthService } from 'src/app/services/auth.service';
 import { Observable } from 'rxjs';
+import { saveAs } from 'file-saver';
 
 /**
  * Interfaz para el tipo Registro que representa un item en el historial de actividad
@@ -286,8 +287,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     { field: 'patientBasicInfo.sex', header: 'Sexo' },
     { field: 'patientBasicInfo.age', header: 'Edad' },
     { field: 'healthProfessional.name', header: 'Profesional' },
-    { field: 'variablesRegister.length', header: 'Variables' }
+    {
+      field: 'registerInfo',
+      header: 'Variables',
+      formatter: (registerInfo: any[]) =>
+        registerInfo.reduce((acc, layer) => acc + (layer.variablesInfo?.length || 0), 0).toString()
+    }
   ];
+
 
   /**
    * Constructor del componente
@@ -743,27 +750,22 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * @returns Nombre de la capa o mensaje predeterminado
    */
   getCapaNombreById(idOrName: string): string {
-    // Validar valor vacío o nulo
     if (!idOrName || idOrName === 'undefined' || idOrName === 'null') {
-      return 'Sin asignar';
+      return 'Ninguna'; // <-- cambiar de "Sin asignar" a "Ninguna"
     }
 
-    // Concatenar ambos arreglos (capas y capasData)
     const allCapas = [...(this.capas || []), ...(this.capasData || [])];
     const capa = allCapas.find(c =>
-      c.id === idOrName ||
-      c._id === idOrName ||
-      c.layerId === idOrName
+      c.id === idOrName || c._id === idOrName || c.layerId === idOrName
     );
 
-    // Si se encuentra, devolver su nombre
     if (capa) {
-      return capa.layerName || capa.nombreCapa || 'Capa sin nombre';
+      return capa.layerName || capa.nombreCapa || 'Ninguna'; // <-- aquí también
     }
 
-    // Si no existe, mensaje por defecto
-    return 'Capa no encontrada';
+    return 'Ninguna'; // <-- y aquí
   }
+
 
 
   /**
@@ -772,26 +774,22 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * @returns Nombre de la capa o mensaje predeterminado
    */
   getCapaNombreByIdVariables(id: string | number): string {
-    // Convertir a string para comparación consistente
     const idStr = String(id);
 
-    // Buscar en capasData primero
     const capa = this.capasData?.find(c =>
-      String(c.id) === idStr ||
-      String(c._id) === idStr
+      String(c.id) === idStr || String(c._id) === idStr
     );
 
-    // Si no se encuentra en capasData, buscar en capas
     if (!capa) {
       const capaAlternativa = this.capas?.find(c =>
-        String(c.id) === idStr ||
-        String(c._id) === idStr
+        String(c.id) === idStr || String(c._id) === idStr
       );
-      return capaAlternativa ? capaAlternativa.nombreCapa || 'Capa sin nombre' : 'Capa no encontrada';
+      return capaAlternativa ? capaAlternativa.nombreCapa || 'Ninguna' : 'Ninguna'; // <-- aquí
     }
 
-    return capa.nombreCapa || 'Capa sin nombre';
+    return capa.nombreCapa || 'Ninguna'; // <-- aquí también
   }
+
 
   /**
    * Transforma valores de texto a formatos más legibles
@@ -1479,6 +1477,22 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     link.href = URL.createObjectURL(blob);
     link.setAttribute('download', filename);
     link.click();
+  }
+
+  downloadAllDocuments(): void {
+    this.loadingRegistrosCapas = true; // opcional: mostrar spinner
+    this.consolaService.downloadAllDocuments().subscribe({
+      next: (blob: Blob) => {
+        const fileName = `todos_los_documentos_${new Date().toISOString()}.zip`;
+        saveAs(blob, fileName);
+        this.loadingRegistrosCapas = false;
+      },
+      error: (err) => {
+        console.error('Error descargando documentos', err);
+        this.loadingRegistrosCapas = false;
+        alert('No se pudo descargar los documentos');
+      }
+    });
   }
 
 }

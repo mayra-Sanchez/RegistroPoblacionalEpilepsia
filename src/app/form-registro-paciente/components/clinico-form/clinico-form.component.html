@@ -114,8 +114,8 @@
 
           <!-- Date input -->
           <input *ngSwitchCase="'Fecha'" type="date" formControlName="valor"
-            [required]="variableGroup.get('required')?.value" (input)="onInputChange(variableGroup)"
-            [value]="variableGroup.get('valor')?.value | date:'yyyy-MM-dd'">
+            [required]="variableGroup.get('required')?.value" (change)="onInputChange(variableGroup)">
+
         </ng-container>
 
         <div class="variable-footer">

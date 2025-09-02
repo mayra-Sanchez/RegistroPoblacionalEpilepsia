@@ -7,6 +7,13 @@
  * Interfaz que representa una variable en el sistema.
  * Usada para definir las características de las variables de investigación.
  */
+
+export interface VariableInfo {
+  variableId: string;
+  variableName: string;
+  variableValue: any;
+  variableType: string;
+}
 export interface Variable {
   /** Identificador único de la variable */
   id: string;
@@ -65,6 +72,7 @@ export interface UserResponse {
 export interface ResearchLayer {
   /** ID único de la capa */
   id: string;
+  researchLayerId: string;
   /** Nombre descriptivo de la capa */
   layerName: string;
   /** Descripción detallada de la capa */
@@ -80,163 +88,113 @@ export interface ResearchLayer {
   };
 }
 
-/**
- * Interfaz que representa un registro completo en el sistema.
- * Contiene información del paciente, variables registradas y metadatos.
- */
-export interface Register {
-  /** ID de la capa de investigación asociada */
-  researchLayerId: string;
-  /** ID único del registro */
-  registerId: string;
-  /** ID alternativo (opcional) */
-  id?: string;
-  /** Fecha de creación del registro en formato ISO */
-  registerDate: string;
-  /** Usuario que realizó la última actualización (opcional) */
-  updatedBy?: string;
-  /** Fecha de última actualización (puede ser null si no hay actualizaciones) */
-  updateRegisterDate: string | null;
-  /** Número de identificación del paciente */
-  patientIdentificationNumber: number;
-  /** Tipo de identificación del paciente */
-  patientIdentificationType: string;
-  /** Array con las variables registradas */
-  variablesRegister: any[];
-  /** Información básica del paciente */
-  patientBasicInfo: {
-    /** Nombre completo del paciente */
-    name: string;
-    /** Sexo del paciente */
-    sex: string;
-    /** Fecha de nacimiento (puede ser null) */
-    birthDate: string | null;
-    /** Edad del paciente */
-    age: number;
-    /** Email de contacto */
-    email: string;
-    /** Número de teléfono */
-    phoneNumber: string;
-    /** Fecha de fallecimiento (opcional) */
-    deathDate: string | null;
-    /** Nivel socioeconómico */
-    economicStatus: string;
-    /** Nivel educativo */
-    educationLevel: string;
-    /** Estado civil */
-    maritalStatus: string;
-    /** Ciudad de origen */
-    hometown: string;
-    /** Ciudad de residencia actual */
-    currentCity: string;
-    /** Fecha de primera crisis (opcional) */
-    firstCrisisDate: string;
-    /** Estado de crisis actual */
-    crisisStatus: string;
-    /** Indica si tiene cuidador (opcional) */
-    hasCaregiver?: boolean;
-  };
-  /** Información del cuidador (puede ser null si no tiene) */
-  caregiver: {
-    /** Nombre completo del cuidador */
-    name: string;
-    /** Tipo de identificación */
-    identificationType: string;
-    /** Número de identificación */
-    identificationNumber: number;
-    /** Edad del cuidador */
-    age: number;
-    /** Nivel educativo */
-    educationLevel: string;
-    /** Ocupación */
-    occupation: string;
-  } | null;
-  /** Información del profesional de salud (puede ser null) */
-  healthProfessional: {
-    /** ID del profesional */
-    id: string;
-    /** Nombre completo */
-    name: string;
-    /** Número de identificación */
-    identificationNumber: number;
-  } | null;
+
+export interface VariableInfo {
+  variableId: string;
+  variableName: string;
+  variableType: string;
+  valueAsString?: String | null;
+  valueAsNumber?: Number | null;
+  valueAsDate?: Date | null;
+  // opcionales (si realmente los usas en tu app)
+  researchLayerId?: string;
+  researchLayerName?: string;
+  unit?: string;
+  referenceRange?: string;
+  lastUpdate?: string;
 }
 
-/**
- * Interfaz para el cuerpo de la petición al crear/actualizar un registro.
- * Representa los datos necesarios para crear o actualizar un registro.
- */
-interface RegisterRequestBody {
-  /** Lista de variables a registrar */
-  variables: Array<{
-    /** ID de la variable */
-    id: string;
-    /** Nombre de la variable (opcional) */
-    variableName?: string;
-    /** Valor asignado a la variable */
-    value: any;
-    /** Tipo de dato de la variable */
-    type: string;
-    /** ID de la capa de investigación asociada */
-    researchLayerId: string;
-  }>;
-  /** Número de identificación del paciente */
+export interface PatientBasicInfo {
+  name: string;
+  sex: string;
+  birthDate: string | null;
+  age: number;
+  email: string;
+  phoneNumber: string;
+  deathDate: string | null;
+  economicStatus: string;
+  educationLevel: string;
+  maritalStatus: string;
+  hometown: string;
+  currentCity: string;
+  firstCrisisDate: string;
+  crisisStatus: string;
+  hasCaregiver?: boolean;
+}
+
+export interface VariableRequest {
+  id: string;
+  variableName: string;
+  value: any;
+  type: string; // 'number' | 'text' | 'boolean' | 'string' | 'string[]' | 'date'
+  researchLayerId: string;
+  researchLayerName?: string;
+}
+
+// --- Para RECIBIR del backend (GET) ---
+export interface VariableInfoResponse {
+  variableId: string;
+  variableName: string;
+  variableType: string;        // p.ej. 'number' | 'string' | 'text'
+  valueAsString?: String | null;
+  valueAsNumber?: Number | null;
+  valueAsDate?: Date | null;
+}
+
+export interface Register {
+  registerId: string;
+  id?: string;
+  registerDate: string;
+  updateRegisterDate: string | null;
+  updatedBy?: string;
   patientIdentificationNumber: number;
-  /** Tipo de identificación del paciente */
   patientIdentificationType: string;
-  /** Información del paciente */
-  patient: {
-    /** Nombre completo */
+
+  // ⬇️ El backend devuelve un ARREGLO
+  registerInfo: Array<{
+    researchLayerId: string;
+    researchLayerName?: string | null;
+    variablesInfo: VariableInfoResponse[];
+  }>;
+
+  // Útil para vistas: versión “aplanada”
+  variablesRegister?: Array<{
+    variableId: string;
+    variableName: string;
+    value: any;
+    type: string;
+    researchLayerId: string;
+    researchLayerName?: string | null;
+  }>;
+
+  patientBasicInfo: {
     name: string;
-    /** Sexo */
     sex: string;
-    /** Fecha de nacimiento */
-    birthDate: string;
-    /** Edad */
+    birthDate: string | null;
     age: number;
-    /** Email */
     email: string;
-    /** Teléfono */
     phoneNumber: string;
-    /** Fecha de fallecimiento (opcional) */
-    deathDate?: string;
-    /** Nivel socioeconómico */
+    deathDate: string | null;
     economicStatus: string;
-    /** Nivel educativo */
     educationLevel: string;
-    /** Estado civil */
     maritalStatus: string;
-    /** Ciudad de origen */
     hometown: string;
-    /** Ciudad de residencia */
     currentCity: string;
-    /** Fecha de primera crisis (opcional) */
-    firstCrisisDate?: string;
-    /** Estado de crisis (opcional) */
-    crisisStatus?: string;
+    firstCrisisDate: string;
+    crisisStatus: string;
+    hasCaregiver?: boolean;
   };
-  /** Información del cuidador (opcional) */
-  caregiver?: {
-    /** Nombre completo */
+  caregiver: {
     name: string;
-    /** Tipo de identificación */
     identificationType: string;
-    /** Número de identificación */
     identificationNumber: number;
-    /** Edad */
     age: number;
-    /** Nivel educativo */
     educationLevel: string;
-    /** Ocupación */
     occupation: string;
-  };
-  /** Información del profesional de salud (opcional) */
-  healthProfessional?: {
-    /** ID del profesional */
+  } | null;
+  healthProfessional: {
     id: string;
-    /** Nombre completo */
     name: string;
-    /** Número de identificación */
     identificationNumber: number;
-  };
+  } | null;
 }

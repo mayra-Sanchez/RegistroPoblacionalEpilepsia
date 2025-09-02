@@ -217,6 +217,9 @@
     <!-- Gestión de Registros de Capas (solo para SuperAdmin) -->
     <div *ngIf="selectedTab === 'gestionRegistrosCapas'">
       <div class="action-bar">
+        <button class="btn btn-primary" (click)="downloadAllDocuments()">
+          Descargar todos los consentimientos informados
+        </button>
       </div>
 
       <app-data-table [data]="registrosCapasData" [columns]="registrosCapasColumns" [itemsPerPageOptions]="[5, 10, 20]"
@@ -224,6 +227,7 @@
         (onDelete)="handleDeleteRegistro($event)">
       </app-data-table>
     </div>
+
 
     <div *ngIf="selectedTab === 'gestionSuperset'">
       <app-consultas-superset></app-consultas-superset>

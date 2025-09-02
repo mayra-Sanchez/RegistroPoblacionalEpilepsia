@@ -215,61 +215,53 @@
         </div>
 
         <!-- Sección de Variables Médicas -->
-        <div *ngIf="activeTab === 'variables' && registro?.variablesRegister?.length" class="form-section">
-          <h4 class="section-title">
-            <i class="fas fa-chart-line"></i> Variables Médicas
-          </h4>
+<div *ngIf="activeTab === 'variables' && flattenedVariables.length" class="form-section">
+  <h4 class="section-title">
+    <i class="fas fa-chart-line"></i> Variables Médicas
+  </h4>
 
-          <div class="variables-container">
-            <div *ngFor="let variable of registro.variablesRegister" class="variable-group">
-              <div class="variable-header">
-                <h5>{{ variable.variableName }}</h5>
-                <span class="variable-unit" *ngIf="variable.unit">({{ variable.unit }})</span>
-              </div>
+  <div class="variables-container">
+    <div *ngFor="let variable of flattenedVariables" class="variable-group">
 
-              <div class="form-group">
-                <label class="form-label">Valor</label>
+      <div class="variable-header">
+        <h5>{{ variable.variableName }}</h5>
+        <span class="variable-unit" *ngIf="variable.unit">({{ variable.unit }})</span>
+      </div>
 
-                <!-- Input dinámico por tipo -->
-                <ng-container [ngSwitch]="variable.type">
+      <div class="form-group">
+        <label class="form-label">Valor</label>
+        <ng-container [ngSwitch]="variable.variableType">
+          <!-- Numérico -->
+          <input *ngSwitchCase="'number'" type="number" class="form-input"
+                 [value]="variable.variableValue"
+                 (input)="updateVariableValue(variable, $event)">
 
-                  <!-- Fecha -->
-                  <input *ngSwitchCase="'date'" type="date" class="form-input"
-                    [value]="prepareDateForInput(variable.value)" (input)="updateVariableValue(variable, $event)"
-                    [name]="'variableValue_' + variable.id">
+          <!-- Texto -->
+          <input *ngSwitchCase="'text'" type="text" class="form-input"
+                 [value]="variable.variableValue"
+                 (input)="updateVariableValue(variable, $event)">
 
-                  <!-- Número -->
-                  <input *ngSwitchCase="'number'" type="number" class="form-input" [value]="variable.value"
-                    (input)="updateVariableValue(variable, $event)" [name]="'variableValue_' + variable.id">
+          <!-- Por defecto, texto -->
+          <input *ngSwitchDefault type="text" class="form-input"
+                 [value]="variable.variableValue"
+                 (input)="updateVariableValue(variable, $event)">
+        </ng-container>
+      </div>
 
-                  <!-- Booleano -->
-                  <select *ngSwitchCase="'boolean'" class="form-input" (change)="updateVariableValue(variable, $event)"
-                    [value]="variable.value" [name]="'variableValue_' + variable.id">
-                    <option [value]="true">Sí</option>
-                    <option [value]="false">No</option>
-                  </select>
+      <div class="form-group" *ngIf="variable.referenceRange">
+        <label class="form-label">Rango de referencia</label>
+        <span class="reference-range">{{ variable.referenceRange }}</span>
+      </div>
 
-                  <!-- Texto por defecto -->
-                  <input *ngSwitchDefault type="text" class="form-input" [value]="variable.value"
-                    (input)="updateVariableValue(variable, $event)" [name]="'variableValue_' + variable.id">
+      <div class="form-group" *ngIf="variable.lastUpdate">
+        <label class="form-label">Última actualización</label>
+        <span class="last-update">{{ variable.lastUpdate | date:'medium' }}</span>
+      </div>
 
-                </ng-container>
-              </div>
+    </div>
+  </div>
+</div>
 
-              <!-- Rango de referencia -->
-              <div class="form-group" *ngIf="variable.referenceRange">
-                <label class="form-label">Rango de referencia</label>
-                <span class="reference-range">{{ variable.referenceRange }}</span>
-              </div>
-
-              <!-- Última actualización -->
-              <div class="form-group" *ngIf="variable.lastUpdate">
-                <label class="form-label">Última actualización</label>
-                <span class="last-update">{{ variable.lastUpdate | date:'medium' }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
 
         <!-- Botones de acción -->

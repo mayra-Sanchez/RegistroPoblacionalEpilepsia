@@ -2,7 +2,7 @@ import { Component, Input, OnInit, ViewChild, ElementRef, OnDestroy, TemplateRef
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
 import { AuthService } from 'src/app/services/auth.service';
-import { ResearchLayer } from '../../../consola-registro/interfaces';
+import { Register, ResearchLayer, PatientBasicInfo } from '../../../consola-registro/interfaces';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Subject, takeUntil } from 'rxjs';
 import { MatMenuTrigger } from '@angular/material/menu';
@@ -27,65 +27,6 @@ interface SummaryCard {
   icon: string;
   trend: TrendDirection;
   change: number;
-}
-
-/**
- * Interfaz para la información básica del paciente
- */
-interface PatientBasicInfo {
-  name?: string;
-  sex?: string;
-  birthDate?: string | null;
-  age?: number;
-  educationLevel?: string;
-  economicStatus?: string;
-  maritalStatus?: string;
-  crisisStatus?: string;
-  currentCity?: string;
-  hometown?: string;
-}
-
-/**
- * Interfaz completa para los registros de pacientes
- */
-export interface Register {
-  registerId: string;
-  id?: string;
-  registerDate: string;
-  updateRegisterDate: string | null;
-  patientIdentificationNumber: number;
-  patientIdentificationType: string;
-  variablesRegister: any[];
-  patientBasicInfo: {
-    name: string;
-    sex: string;
-    birthDate: string | null;
-    age: number;
-    email: string;
-    phoneNumber: string;
-    deathDate: string | null;
-    economicStatus: string;
-    educationLevel: string;
-    maritalStatus: string;
-    hometown: string;
-    currentCity: string;
-    firstCrisisDate: string;
-    crisisStatus: string;
-    hasCaregiver?: boolean;
-  };
-  caregiver: {
-    name: string;
-    identificationType: string;
-    identificationNumber: number;
-    age: number;
-    educationLevel: string;
-    occupation: string;
-  } | null;
-  healthProfessional: {
-    id: string;
-    name: string;
-    identificationNumber: number;
-  } | null;
 }
 
 /**

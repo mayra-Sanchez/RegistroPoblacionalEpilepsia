@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ResearchLayer } from '../modules/consola-registro/interfaces';
 import { lastValueFrom } from 'rxjs';
+import { Output, EventEmitter } from '@angular/core';
 
 /**
  * Componente para el formulario de registro de pacientes.
@@ -18,7 +19,7 @@ import { lastValueFrom } from 'rxjs';
 export class FormRegistroPacienteComponent implements OnInit, OnChanges {
   /** ID de la capa de investigación actual (input) */
   @Input() researchLayerId: string = '';
-
+  @Output() registroExitoso = new EventEmitter<void>();
   /** Paso actual del formulario (1-4) */
   pasoActual = 1;
 
@@ -47,7 +48,7 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
   userResearchLayers: string[] = [];
 
   isNewPatient: boolean = true;
-  
+
   /**
    * Constructor del componente
    * @param consolaService Servicio para interactuar con la consola de registros
@@ -186,18 +187,18 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
    * @param frontendType Tipo de dato en el frontend
    * @returns Tipo de dato correspondiente en el backend
    */
-  private mapToBackendType(frontendType: string): string {
-    const typeMap: Record<string, string> = {
-      'Entero': 'number',
-      'Decimal': 'number',
-      'Texto': 'string',
-      'Booleano': 'boolean',
-      'Opciones': 'string',
-      'OpcionesMúltiples': 'string[]',
-      'Fecha': 'date'
-    };
-    return typeMap[frontendType] || 'string';
+  mapToBackendType(frontendType: string): string {
+    switch (frontendType) {
+      case 'Entero':
+      case 'Decimal':
+        return 'Number';
+      case 'Fecha':
+        return 'Date';
+      default:
+        return 'String'; // texto, booleano, opciones, etc.
+    }
   }
+
 
   /**
    * Maneja los datos del paciente recibidos del formulario
@@ -323,6 +324,9 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
 
     const requestBody = this.buildRequestBody();
 
+    // ✅ Aquí pones el console para ver lo que vas a enviar
+    console.log('Datos a enviar al backend:', requestBody);
+
     Swal.fire({
       title: 'Registrando datos...',
       allowOutsideClick: false,
@@ -343,6 +347,7 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       }
     });
   }
+
 
   /**
    * Maneja un registro existente intentando actualizarlo
@@ -398,6 +403,9 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
 
     const requestBody = this.buildRequestBody();
 
+    // ✅ Aquí pones el console para ver lo que se va a crear
+    console.log('Creando registro con estos datos:', requestBody);
+
     try {
       const response = await lastValueFrom(
         this.consolaService.registrarRegistro(requestBody, userEmail)
@@ -407,6 +415,7 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       this.handleError(error);
     }
   }
+
 
   /**
    * Maneja la actualización de un registro existente
@@ -490,6 +499,29 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
   }
 
   /**
+ * Convierte un valor al tipo correspondiente para enviarlo al backend
+ * @param value Valor a convertir
+ * @param type Tipo de dato esperado ('Number', 'Date', 'String', etc.)
+ * @returns Valor convertido
+ */
+  private convertValue(value: any, type: string): any {
+    if (value === null || value === undefined) return null;
+
+    switch (type) {
+      case 'Number':
+        return Number(value);
+      case 'Date':
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
+      case 'String':
+        return String(value);
+      default:
+        return value;
+    }
+  }
+
+
+  /**
    * Construye el cuerpo de la petición para el servidor
    * @returns Objeto con los datos estructurados para enviar al servidor
    */
@@ -524,7 +556,9 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
         maritalStatus: this.pacienteData.maritalStatus,
         hometown: this.pacienteData.hometown,
         currentCity: this.pacienteData.currentCity,
-        firstCrisisDate: this.pacienteData.firstCrisisDate,
+        firstCrisisDate: this.pacienteData.firstCrisisDate
+          ? this.formatDateForAPI(this.pacienteData.firstCrisisDate)
+          : null,
         crisisStatus: this.pacienteData.crisisStatus
       }
     };
@@ -572,35 +606,6 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     if (!date) return '';
     const d = new Date(date);
     return d.toISOString().split('T')[0];
-  }
-
-  /**
-   * Convierte un valor al tipo especificado
-   * @param value Valor a convertir
-   * @param type Tipo al que convertir
-   * @returns Valor convertido
-   */
-  private convertValue(value: any, type: string): any {
-    switch (type) {
-      case 'number':
-        return Number(value);
-      case 'boolean':
-        return value === 'true' || value === true;
-      case 'string':
-        return String(value);
-      case 'date':
-        if (!value) return null;
-        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-          return value;
-        }
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) {
-          return date.toISOString().split('T')[0];
-        }
-        return null;
-      default:
-        return value;
-    }
   }
 
   /**
@@ -660,7 +665,7 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
    * Maneja el éxito en el envío de datos
    * @param response Respuesta del servidor
    */
-  private handleSuccess(response: any): void {
+  private handleSuccess(_response: any): void {
     this.isSending = false;
     localStorage.removeItem(`clinicalFormData_${this.currentResearchLayerId}`);
     Swal.fire({
@@ -672,9 +677,12 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       timerProgressBar: true,
       willClose: () => {
         this.resetForm(true);
+        this.registroExitoso.emit();
+        window.location.reload(); // 🔥 Fuerza refresco completo
       }
     });
   }
+
 
   /**
    * Maneja errores en el envío de datos

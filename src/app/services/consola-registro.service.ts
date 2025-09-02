@@ -668,11 +668,12 @@ export class ConsolaRegistroService {
           const layerIds = new Set<string>();
 
           registros.forEach((reg: Register) => {
-            reg.variablesRegister.forEach((variable: { researchLayerId?: string }) => {
+            reg.variablesRegister?.forEach((variable: { researchLayerId?: string }) => {
               if (variable.researchLayerId) {
                 layerIds.add(variable.researchLayerId);
               }
             });
+
           });
 
           return Array.from(layerIds);

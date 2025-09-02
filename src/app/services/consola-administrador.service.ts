@@ -450,4 +450,17 @@ export class ConsolaAdministradorService {
       params: new HttpParams().set('registerId', registerId)
     }).pipe(catchError(this.handleHttpError('Eliminación de registro de capa')));
   }
+
+
+  /**
+   * Descarga todos los documentos (para auditoría)
+   * @returns Observable con el blob del archivo
+   */
+  downloadAllDocuments(): Observable<Blob> {
+    const url = `${environment.backendUrl}/documents/download/all`;
+    return this.http.get(url, { responseType: 'blob' })
+      .pipe(
+        catchError(this.handleHttpError('Descarga de documentos'))
+      );
+  }
 }
