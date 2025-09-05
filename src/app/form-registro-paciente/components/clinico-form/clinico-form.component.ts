@@ -262,33 +262,32 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.form.valid && this.allRequiredFieldsFilled()) {
       this.saveToLocalStorage();
-
       const currentValues = this.variablesClinicas.controls.map(control => {
         const frontendType = control.get('type')?.value;
         const backendType = this.mapToBackendType(frontendType);
         let value = control.get('valor')?.value;
 
-        switch (backendType) {
-          case 'Number':
-            value = value !== null ? Number(value) : null;
-            break;
-
-          case 'Date':
-            if (value) {
-              const dateObj = new Date(value);
+        if (backendType === 'Number') {
+          value = value !== null ? Number(value) : null;
+        } else if (backendType === 'Date') {
+          // 🔥 Asegurar formato YYYY-MM-DD
+          if (value) {
+            const dateObj = new Date(value);
+            if (!isNaN(dateObj.getTime())) {
               const year = dateObj.getFullYear();
               const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
               const day = dateObj.getDate().toString().padStart(2, '0');
-              value = `${year}-${month}-${day}`; // Ej: '2025-09-02'
+
+              value = `${year}-${month}-${day}`;
+              console.log('📅 Formatted date for clinical variable:', value);
             } else {
               value = null;
             }
-            break;
-
-
-
-          default:
-            value = value !== null ? String(value) : null;
+          } else {
+            value = null;
+          }
+        } else {
+          value = value !== null ? String(value) : null;
         }
 
         return {
@@ -299,9 +298,8 @@ export class ClinicoFormComponent implements OnInit, OnDestroy {
         };
       });
 
+      console.log('🔍 Clinical data before sending:', currentValues);
       this.next.emit(currentValues);
-      console.log('Datos que se van a enviar al backend:', currentValues);
-
     } else {
       this.form.markAllAsTouched();
       this.errorMessage = 'Por favor complete todos los campos requeridos';

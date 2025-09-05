@@ -2,6 +2,9 @@ import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, AbstractControl } from '@angular/forms';
 import emailjs, { EmailJSResponseStatus } from 'emailjs-com';
 import { jsPDF } from 'jspdf';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { MatDialog } from '@angular/material/dialog';
+import { TerminosModalComponent } from './modal/terminos-modal.component';
 
 @Component({
   selector: 'app-contacto-section',
@@ -33,7 +36,7 @@ export class ContactoSectionComponent implements OnInit {
     { valor: 'Lógico', descripcion: 'Ej: Verdadero o Falso' }
   ];
 
-  constructor(private cdRef: ChangeDetectorRef, private fb: FormBuilder) { }
+  constructor(private cdRef: ChangeDetectorRef,  private dialog: MatDialog,  private fb: FormBuilder, private modalService: NgbModal) { }
 
   ngOnInit(): void {
     this.initializeForms();
@@ -53,7 +56,8 @@ export class ContactoSectionComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       responsable: ['', [Validators.required]],
-      username: ['']
+      username: [''],
+      acceptTerms: [false, Validators.requiredTrue]   // 👈 Nuevo campo obligatorio
     });
 
     // Research Layer Form
@@ -307,6 +311,9 @@ export class ContactoSectionComponent implements OnInit {
     yPosition += 7;
     doc.text(`• Capa de investigación: ${formData.capaInvestigacion}`, 20, yPosition);
     yPosition += 7;
+    yPosition += 7;
+    doc.text(`• Términos y condiciones aceptados: ${formData.acceptTerms ? 'Sí' : 'No'}`, 20, yPosition);
+    yPosition += 7;
     doc.setFont('helvetica', 'bold');
     doc.text('3. RESPONSABLE DEL REGISTRO', 15, yPosition);
     doc.setFont('helvetica', 'normal');
@@ -427,6 +434,17 @@ export class ContactoSectionComponent implements OnInit {
     });
   }
 
+  abrirTerminos(): void {
+    this.dialog.open(TerminosModalComponent, {
+      width: '80vw',
+      maxWidth: '900px',
+      height: '80vh',
+      panelClass: 'terminos-dialog',
+      autoFocus: false
+    });
+  }
+
+
   async sendRegistrationEmail(pdfBlob: Blob): Promise<EmailJSResponseStatus> {
     const formData = this.registrationForm.value;
     const pdfBase64 = await this.blobToBase64(pdfBlob);
@@ -440,6 +458,7 @@ export class ContactoSectionComponent implements OnInit {
       role: this.getRoleName(formData.rol),
       research_layer: formData.capaInvestigacion,
       responsible: formData.responsable,
+      accept_terms: formData.acceptTerms ? 'Sí' : 'No',
       attachment: pdfBase64,
       message: 'Nueva solicitud de registro de usuario'
     };

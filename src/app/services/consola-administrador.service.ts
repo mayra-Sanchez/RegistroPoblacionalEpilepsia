@@ -237,6 +237,7 @@ export class ConsolaAdministradorService {
    */
   updateUsuario(userId: string, usuario: any): Observable<any> {
     const url = `${this.API_USERS}/update?userId=${userId}`;
+
     const formatDate = (dateStr: string): string => {
       if (!dateStr) return '';
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
@@ -261,7 +262,9 @@ export class ConsolaAdministradorService {
       identificationNumber: usuario.identificationNumber || usuario.documento,
       birthDate: formatDate(usuario.birthDate || usuario.fechaNacimiento),
       researchLayer: usuario.researchLayer || usuario.capaRawValue || usuario.capaId,
-      role: usuario.role
+      role: usuario.role,
+      acceptTermsAndConditions:
+        usuario.acceptTermsAndConditions === true || usuario.acceptTermsAndConditions === 'true'
     };
 
     return this.http.put<any>(url, payload, { headers: this.getAuthHeaders() }).pipe(
@@ -269,6 +272,8 @@ export class ConsolaAdministradorService {
       catchError(this.handleHttpError('Actualización de usuario'))
     );
   }
+
+
 
   /**
    * Elimina un usuario

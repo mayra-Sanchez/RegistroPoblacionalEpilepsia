@@ -892,6 +892,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     if (tipo === 'usuario') {
       this.isEditingUserModal = true;
 
+      // Normalizar el rol
       let rawRole = row.rol;
       if (Array.isArray(row.attributes?.role)) {
         rawRole = row.attributes.role[0];
@@ -907,9 +908,15 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           : [];
 
       // Obtener lastPasswordUpdate correctamente
-      const lastUpdate = row.attributes?.lastPasswordUpdate?.[0] ||
+      const lastUpdate =
+        row.attributes?.lastPasswordUpdate?.[0] ||
         row.lastPasswordUpdate ||
         'No registrada';
+
+      // ✅ Obtener aceptación de términos
+      const acceptTerms =
+        row.acceptTermsAndConditions ??
+        (row.attributes?.acceptTermsAndConditions?.[0] === 'true');
 
       this.userToEdit = {
         id: row.id,
@@ -920,12 +927,12 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         tipoDocumento: row.tipoDocumento || row.identificationType,
         documento: row.documento || row.identificationNumber,
         fechaNacimiento: row.fechaNacimiento || row.birthDate,
-        capaRawValue: Array.isArray(row.capaRawValue) ? row.capaRawValue :
-          (row.capaRawValue ? [row.capaRawValue] : []),
-        role: row.rol || row.attributes?.role?.[0],
+        capaRawValue: capaRawValue,
+        role: rawRole,
         password: row.passwordActual || '',
-        lastPasswordUpdate: lastUpdate,  // <-- Aquí está el cambio clave
-        attributes: row.attributes || {} // Pasamos todos los atributos
+        lastPasswordUpdate: lastUpdate,
+        attributes: row.attributes || {},
+        acceptTermsAndConditions: acceptTerms // 👈 agregado
       };
     } else if (tipo === 'capa') {
       this.capaToEdit = {
@@ -935,7 +942,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         layerBoss: {
           id: row.layerBoss?.id || 1,
           name: row.layerBoss?.name || row.jefeCapaNombre || '',
-          identificationNumber: row.layerBoss?.identificationNumber || row.jefeIdentificacion || ''
+          identificationNumber:
+            row.layerBoss?.identificationNumber || row.jefeIdentificacion || '',
+          email: row.layerBoss?.email || row.jefeEmail || '' // 👈 agregado
         }
       };
       this.isEditingCapa = true;
@@ -947,11 +956,12 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         type: row.type,
         researchLayerId: row.researchLayerId,
         options: row.options || [],
-        tieneOpciones: (row.options && row.options.length > 0)
+        tieneOpciones: row.options && row.options.length > 0
       };
       this.isEditingVar = true;
     }
   }
+
 
   /**
    * Cambia el estado de un usuario (habilitar/deshabilitar)
@@ -1122,26 +1132,20 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * Guarda los cambios en un usuario
    * @param usuarioEditado Usuario con los cambios
    */
-  guardarEdicionUsuario(usuarioEditado: any): void {
-    if (!usuarioEditado?.id) {
+  guardarEdicionUsuario(usuarioEditado: { userId: string, payload: any }): void {
+    if (!usuarioEditado?.userId) {
       Swal.fire('Error', 'Falta el ID del usuario.', 'error');
+      console.error('[guardarEdicionUsuario] No se recibió userId:', usuarioEditado);
       return;
     }
 
+    const userId = usuarioEditado.userId;
     const usuarioPayload = {
-      firstName: usuarioEditado.nombre,
-      lastName: usuarioEditado.apellido,
-      email: usuarioEditado.email,
-      username: usuarioEditado.usuario,
-      identificationType: usuarioEditado.tipoDocumento,
-      identificationNumber: usuarioEditado.documento,
-      birthDate: usuarioEditado.fechaNacimiento,
-      researchLayer: usuarioEditado.capaRawValue || usuarioEditado.researchLayerId,
-      role: usuarioEditado.role,
-      password: usuarioEditado.password || '',
-      // Añade esto para actualizar la fecha cuando se cambia la contraseña
-      ...(usuarioEditado.password && {
+      ...usuarioEditado.payload,
+      // Si viene password, actualizamos lastPasswordUpdate
+      ...(usuarioEditado.payload.password && {
         attributes: {
+          ...usuarioEditado.payload.attributes,
           lastPasswordUpdate: [new Date().toISOString()]
         }
       })
@@ -1158,31 +1162,32 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.consolaService.updateUsuario(usuarioEditado.id, usuarioPayload).subscribe({
+        this.consolaService.updateUsuario(userId, usuarioPayload).subscribe({
           next: (updatedUser) => {
             Swal.fire('Éxito', 'Usuario actualizado con éxito.', 'success');
             this.isEditingUserModal = false;
 
-            // Actualiza la fecha de última modificación localmente
-            if (usuarioEditado.password) {
-              usuarioEditado.lastPasswordUpdate = new Date().toISOString();
+            // Refrescar campo lastPasswordUpdate local
+            if (usuarioPayload.password) {
+              usuarioPayload.lastPasswordUpdate = new Date().toISOString();
             }
 
-            const index = this.usuariosData.findIndex(u => u.id === usuarioEditado.id);
+            const index = this.usuariosData.findIndex(u => u.id === userId || u.userId === userId || u._id === userId);
             if (index !== -1) {
               this.usuariosData[index] = {
                 ...this.usuariosData[index],
-                nombre: updatedUser.firstName || usuarioEditado.nombre,
-                apellido: updatedUser.lastName || usuarioEditado.apellido,
-                email: updatedUser.email || usuarioEditado.email,
-                usuario: updatedUser.username || usuarioEditado.usuario,
-                tipoDocumento: updatedUser.identificationType || usuarioEditado.tipoDocumento,
-                documento: updatedUser.identificationNumber || usuarioEditado.documento,
-                fechaNacimiento: updatedUser.birthDate || usuarioEditado.fechaNacimiento,
-                capaRawValue: updatedUser.researchLayer || usuarioEditado.capaRawValue,
-                rol: updatedUser.role || usuarioEditado.role,
-                rolDisplay: this.transformarString(updatedUser.role || usuarioEditado.role),
-                lastPasswordUpdate: updatedUser.attributes?.lastPasswordUpdate?.[0] || usuarioEditado.lastPasswordUpdate,
+                nombre: updatedUser.firstName || this.usuariosData[index].nombre,
+                apellido: updatedUser.lastName || this.usuariosData[index].apellido,
+                email: updatedUser.email || this.usuariosData[index].email,
+                usuario: updatedUser.username || this.usuariosData[index].usuario,
+                tipoDocumento: updatedUser.identificationType || this.usuariosData[index].tipoDocumento,
+                documento: updatedUser.identificationNumber || this.usuariosData[index].documento,
+                fechaNacimiento: updatedUser.birthDate || this.usuariosData[index].fechaNacimiento,
+                capaRawValue: updatedUser.researchLayer || this.usuariosData[index].capaRawValue,
+                rol: updatedUser.role || this.usuariosData[index].rol,
+                rolDisplay: this.transformarString(updatedUser.role || this.usuariosData[index].rol),
+                lastPasswordUpdate: updatedUser.attributes?.lastPasswordUpdate?.[0] || usuarioPayload.lastPasswordUpdate,
+                acceptTermsAndConditions: updatedUser.acceptTermsAndConditions ?? usuarioPayload.acceptTermsAndConditions
               };
 
               this.usuariosData = [...this.usuariosData];
@@ -1191,13 +1196,14 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             this.loadUsuariosData();
           },
           error: (error) => {
-            console.error('Error al actualizar el usuario:', error);
+            console.error('[guardarEdicionUsuario] Error al actualizar:', error);
             Swal.fire('Error', error.error?.message || 'Hubo un problema al actualizar el usuario.', 'error');
           }
         });
       }
     });
   }
+
 
   /* -------------------- Métodos de eliminación -------------------- */
   obtenerTipoElemento(): string {

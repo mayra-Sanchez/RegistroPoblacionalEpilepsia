@@ -505,20 +505,52 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
  * @returns Valor convertido
  */
   private convertValue(value: any, type: string): any {
-    if (value === null || value === undefined) return null;
+    if (value === null || value === undefined || value === '') return null;
 
     switch (type) {
       case 'Number':
-        return Number(value);
+        return isNaN(Number(value)) ? null : Number(value);
+
       case 'Date':
-        const d = new Date(value);
-        return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
-      case 'String':
-        return String(value);
+        if (!value) return null;
+
+        console.log('🔍 Date value received:', value, 'Type:', typeof value);
+
+        let dateObj: Date;
+        if (value instanceof Date) {
+          dateObj = value;
+        } else if (typeof value === 'string') {
+          // Si ya viene en formato YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            console.log('✅ Already in YYYY-MM-DD format:', value);
+            return value;
+          }
+          // Intentar parsear otros formatos
+          dateObj = new Date(value);
+        } else {
+          console.log('❌ Invalid date type:', typeof value);
+          return null;
+        }
+
+        if (isNaN(dateObj.getTime())) {
+          console.log('❌ Invalid date:', value);
+          return null;
+        }
+
+        // Formatear siempre a YYYY-MM-DD
+        const year = dateObj.getFullYear();
+        const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+        const day = dateObj.getDate().toString().padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+
+        console.log('✅ Formatted date:', formattedDate);
+        return formattedDate;
+
       default:
-        return value;
+        return String(value);
     }
   }
+
 
 
   /**
@@ -526,6 +558,9 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
    * @returns Objeto con los datos estructurados para enviar al servidor
    */
   public buildRequestBody(): any {
+    // Debug de datos clínicos antes de convertirlos
+    console.log('🔍 Clinical data before conversion:', this.clinicalData);
+
     const body: {
       variables: any[];
       patientIdentificationNumber: number;
@@ -534,13 +569,24 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       caregiver?: any;
       healthProfessional?: any;
     } = {
-      variables: this.clinicalData.map(item => ({
-        id: item.id || this.generateUUID(),
-        variableName: item.variableName || '',
-        value: this.convertValue(item.value, item.type),
-        type: item.type,
-        researchLayerId: this.currentResearchLayerId
-      })),
+      variables: this.clinicalData.map(item => {
+        const convertedValue = this.convertValue(item.value, item.type);
+        console.log('🔍 Variable conversion:', {
+          id: item.id,
+          name: item.variableName,
+          type: item.type,
+          originalValue: item.value,
+          convertedValue: convertedValue
+        });
+
+        return {
+          id: item.id || this.generateUUID(),
+          variableName: item.variableName || '',
+          value: convertedValue,
+          type: item.type,
+          researchLayerId: this.currentResearchLayerId
+        };
+      }),
       patientIdentificationNumber: Number(this.pacienteData.identificationNumber),
       patientIdentificationType: this.pacienteData.identificationType || 'Cedula de ciudadania',
       patient: {
@@ -582,6 +628,7 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       };
     }
 
+    console.log('🔍 Final request body variables:', body.variables);
     return body;
   }
 
@@ -604,8 +651,16 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
    */
   private formatDateForAPI(date: any): string {
     if (!date) return '';
-    const d = new Date(date);
-    return d.toISOString().split('T')[0];
+
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return '';
+
+    // Usar el mismo formato YYYY-MM-DD
+    const year = dateObj.getFullYear();
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const day = dateObj.getDate().toString().padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -695,15 +750,54 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
     let errorMessage = 'Ocurrió un error al registrar los datos';
     let technicalDetails = '';
 
+    const patientId = this.pacienteData?.identificationNumber || 'N/A';
+    const patientName = this.pacienteData?.name || 'N/A';
+    const variablesSent = this.clinicalData?.map(v => ({
+      id: v.id,
+      name: v.variableName,
+      type: v.type,
+      value: v.value
+    })) || [];
+
     if (error.status === 400) {
       errorMessage = error.error?.message || 'Datos inválidos';
-      technicalDetails = `Capa intentada: ${this.currentResearchLayerId} | Capas permitidas: ${this.userResearchLayers.join(', ')}`;
+      technicalDetails = `
+      <b>Paciente:</b> ${patientName} (${patientId})<br>
+      <b>Capa:</b> ${this.currentResearchLayerId}<br>
+      <b>Variables enviadas:</b> ${JSON.stringify(variablesSent, null, 2)}<br>
+      <b>Capas permitidas:</b> ${this.userResearchLayers.join(', ')}<br>
+      <b>Fecha:</b> ${new Date().toISOString()}
+    `;
     } else if (error.status === 403) {
       errorMessage = 'Acceso denegado por el servidor';
-      technicalDetails = `El backend rechazó explícitamente la capa ${this.currentResearchLayerId}`;
+      technicalDetails = `
+      <b>Paciente:</b> ${patientName} (${patientId})<br>
+      <b>Capa:</b> ${this.currentResearchLayerId}<br>
+      <b>Variables enviadas:</b> ${JSON.stringify(variablesSent, null, 2)}<br>
+      <b>Capas permitidas:</b> ${this.userResearchLayers.join(', ')}<br>
+      <b>Fecha:</b> ${new Date().toISOString()}
+    `;
+    } else if (error.status === 409) {
+      errorMessage = 'Registro ya existe';
+      technicalDetails = `
+      <b>Paciente:</b> ${patientName} (${patientId})<br>
+      <b>Capa:</b> ${this.currentResearchLayerId}<br>
+      <b>Variables enviadas:</b> ${JSON.stringify(variablesSent, null, 2)}<br>
+      <b>Fecha:</b> ${new Date().toISOString()}
+    `;
+    } else {
+      // Otros errores inesperados
+      technicalDetails = `
+      <b>Paciente:</b> ${patientName} (${patientId})<br>
+      <b>Capa:</b> ${this.currentResearchLayerId}<br>
+      <b>Variables enviadas:</b> ${JSON.stringify(variablesSent, null, 2)}<br>
+      <b>Estado HTTP:</b> ${error.status || 'N/A'}<br>
+      <b>Mensaje del backend:</b> ${error.message || JSON.stringify(error)}<br>
+      <b>Fecha:</b> ${new Date().toISOString()}
+    `;
     }
 
-    // Mostrar al usuario un mensaje con opción para ver detalles
+    // Mostrar mensaje principal con opción de ver detalles
     Swal.fire({
       title: 'Error',
       html: `${errorMessage}<br><small id="techDetails" style="display:none">${technicalDetails}</small>`,
@@ -716,12 +810,13 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       if (result.dismiss === Swal.DismissReason.cancel) {
         Swal.fire({
           title: 'Detalles del error',
-          text: technicalDetails,
+          html: `<pre style="text-align:left;white-space:pre-wrap">${technicalDetails}</pre>`,
           icon: 'info'
         });
       }
     });
   }
+
 
   /**
    * Reinicia el formulario

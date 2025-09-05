@@ -21,7 +21,10 @@ import { SafePipe } from './pipes/safe.pipe';
 import { InicioSectionComponent } from './home/sections/inicio-section/inicio-section.component';
 import { SistemaSectionComponent } from './home/sections/sistema-section/sistema-section.component';
 import { ContactoSectionComponent } from './home/sections/contacto-section/contacto-section.component';
-
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { CommonModule } from '@angular/common';
+import { TerminosModalComponent } from './home/sections/contacto-section/modal/terminos-modal.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @NgModule({
   declarations: [
     AppComponent,
@@ -36,6 +39,7 @@ import { ContactoSectionComponent } from './home/sections/contacto-section/conta
     InicioSectionComponent,
     SistemaSectionComponent,
     ContactoSectionComponent,
+    TerminosModalComponent
   ],
   imports: [
     BrowserModule,
@@ -47,7 +51,10 @@ import { ContactoSectionComponent } from './home/sections/contacto-section/conta
     FormsModule,
     ReactiveFormsModule,
     MatIconModule,
-    MatChipsModule
+    MatChipsModule,
+    NgbModule,
+      CommonModule,             
+    MatProgressSpinnerModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }

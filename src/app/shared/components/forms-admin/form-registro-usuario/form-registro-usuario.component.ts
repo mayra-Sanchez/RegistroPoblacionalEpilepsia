@@ -17,12 +17,11 @@ export class FormRegistroUsuarioComponent implements OnInit {
   showPassword: boolean = false;
   sugerenciasUsername: string[] = [];
 
-
   roles = [
-    { valor: 'Admin', label: 'Administrador', descripcion: 'Administrador: puede gestionar usuarios, capas y variables.' },
-    { valor: 'Researcher', label: 'Investigador', descripcion: 'Investigador: puede investigar datos clínicos de una capa.' },
-    { valor: 'Doctor', label: 'Personal de salud', descripcion: 'Personal de salud: puede registrar pacientes y ver reportes.' },
-    { valor: 'SuperAdmin', label: 'Super administrador', descripcion: 'SuperAdmin: administración completa del sistema.' }
+    { valor: 'Admin', label: 'Administrador', descripcion: 'Puede gestionar usuarios, capas y variables.' },
+    { valor: 'Researcher', label: 'Investigador', descripcion: 'Puede investigar datos clínicos de una capa.' },
+    { valor: 'Doctor', label: 'Personal de salud', descripcion: 'Puede registrar pacientes y ver reportes.' },
+    { valor: 'SuperAdmin', label: 'Super administrador', descripcion: 'Administración completa del sistema.' }
   ];
 
   constructor(private consolaAdministradorService: ConsolaAdministradorService) {
@@ -36,10 +35,15 @@ export class FormRegistroUsuarioComponent implements OnInit {
       username: new FormControl('', [Validators.required]),
       capaInvestigacion: new FormControl([], [Validators.required]),
       email: new FormControl('', [Validators.required, Validators.email]),
-      password: new FormControl('', [Validators.required, Validators.minLength(6)])
+      password: new FormControl('', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$')
+      ]),
+      acceptTermsAndConditions: new FormControl(false, [Validators.requiredTrue])
     });
 
-    // Generar sugerencias cada vez que cambian los datos relevantes
+    // Generar sugerencias de username al cambiar nombre, apellido o fecha
     this.usuarioForm.get('nombre')?.valueChanges.subscribe(() => this.generarSugerenciasUsername());
     this.usuarioForm.get('apellido')?.valueChanges.subscribe(() => this.generarSugerenciasUsername());
     this.usuarioForm.get('fechaNacimiento')?.valueChanges.subscribe(() => this.generarSugerenciasUsername());
@@ -60,8 +64,6 @@ export class FormRegistroUsuarioComponent implements OnInit {
           id: capa.id,
           nombreCapa: capa.layerName || capa.nombreCapa
         }));
-
-        // Agregar capa por defecto "Ninguna" con id 'none'
         this.capas = [{ id: 'none', nombreCapa: 'Ninguna' }, ...capasMapeadas];
       },
       (error) => {
@@ -76,10 +78,6 @@ export class FormRegistroUsuarioComponent implements OnInit {
     );
   }
 
-
-  /**
-   * Genera varias sugerencias de usernames
-   */
   generarSugerenciasUsername(): void {
     const nombre = this.usuarioForm.get('nombre')?.value;
     const apellido = this.usuarioForm.get('apellido')?.value;
@@ -87,26 +85,21 @@ export class FormRegistroUsuarioComponent implements OnInit {
 
     if (nombre && apellido && fechaNacimiento) {
       this.sugerenciasUsername = this.generarUsernameSugerencias(nombre, apellido, fechaNacimiento);
-      // Preseleccionamos la primera
       this.usuarioForm.get('username')?.setValue(this.sugerenciasUsername[0]);
     }
   }
 
   generarUsernameSugerencias(nombre: string, apellido: string, fechaNacimiento: string): string[] {
     const normalize = (str: string) =>
-      str.normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '');
+      str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
     const nombreLimpio = normalize(nombre.trim());
     const apellidoLimpio = normalize(apellido.trim());
-    const fecha = fechaNacimiento?.replaceAll('-', '') || ''; // YYYYMMDD
     const anio = fechaNacimiento?.slice(0, 4) || '';
     const diaMes = fechaNacimiento?.slice(5, 10).replace('-', '') || '';
 
     const base = `${nombreLimpio.charAt(0)}${apellidoLimpio}`;
-    const random = () => Math.floor(100 + Math.random() * 900); // 3 dígitos
+    const random = () => Math.floor(100 + Math.random() * 900);
 
     return [
       `${base}`,
@@ -131,22 +124,20 @@ export class FormRegistroUsuarioComponent implements OnInit {
       return;
     }
 
-    const username = this.usuarioForm.value.username;
-
-    const capaSeleccionada = this.usuarioForm.value.capaInvestigacion;
-    const capaFinal = capaSeleccionada.length ? capaSeleccionada : ['none'];
+    const { nombre, apellido, email, username, password, tipoDocumento, numeroDocumento, fechaNacimiento, capaInvestigacion, rol, acceptTermsAndConditions } = this.usuarioForm.value;
 
     const usuarioData = {
-      firstName: this.usuarioForm.value.nombre,
-      lastName: this.usuarioForm.value.apellido,
-      email: this.usuarioForm.value.email,
-      username: username,
-      password: this.usuarioForm.value.password,
-      identificationType: this.usuarioForm.value.tipoDocumento,
-      identificationNumber: Number(this.usuarioForm.value.numeroDocumento),
-      birthDate: this.usuarioForm.value.fechaNacimiento,
-      researchLayer: capaFinal, // <- aquí usamos la capa por defecto si está vacío
-      role: this.usuarioForm.value.rol
+      firstName: nombre,
+      lastName: apellido,
+      email,
+      username,
+      password,
+      identificationType: tipoDocumento,
+      identificationNumber: String(numeroDocumento),
+      birthDate: fechaNacimiento,
+      researchLayer: capaInvestigacion.length ? capaInvestigacion : ['none'],
+      role: rol,
+      acceptTermsAndConditions
     };
 
     Swal.fire({
@@ -176,9 +167,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
             if (error?.error?.message) {
               mensaje = error.error.message;
             } else if (error?.error?.errors && Array.isArray(error.error.errors)) {
-              mensaje = error.error.errors
-                .map((e: any) => e.msg || e.message || 'Error desconocido')
-                .join('\n');
+              mensaje = error.error.errors.map((e: any) => e.msg || e.message || 'Error desconocido').join('\n');
             } else if (error?.message) {
               mensaje = error.message;
             }
@@ -212,17 +201,9 @@ export class FormRegistroUsuarioComponent implements OnInit {
 
   campoEsValido(campo: string): boolean {
     const control = this.usuarioForm.get(campo);
-    if (!control) return false;
-    if (campo === 'capaInvestigacion') {
-      return (Array.isArray(control.value) && control.value.length === 0) || control.invalid && control.touched;
-    }
-    return control.invalid && control.touched;
+    return !!(control && control.invalid && control.touched);
   }
 
-
-  /**
-   * Permite al usuario seleccionar manualmente un username de las sugerencias
-   */
   seleccionarUsername(sugerencia: string) {
     this.usuarioForm.get('username')?.setValue(sugerencia);
   }
@@ -237,11 +218,8 @@ export class FormRegistroUsuarioComponent implements OnInit {
     if (index === -1) {
       control.setValue([...valores, capaId]);
     } else {
-      const nuevosValores = valores.filter((id: string) => id !== capaId);
-      control.setValue(nuevosValores);
+      control.setValue(valores.filter((id: string) => id !== capaId));
     }
-
-    control.markAsTouched(); // para validar en tiempo real
+    control.markAsTouched();
   }
-
 }

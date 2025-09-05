@@ -99,6 +99,13 @@
                             </div>
                         </div>
 
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" formControlName="acceptTermsAndConditions">
+                            <label class="form-check-label">
+                                Acepto los <a href="#" (click)="abrirTerminos()">Términos y Condiciones</a>
+                            </label>
+                        </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -185,6 +192,12 @@
                                 name="jefeNombre">
                         </div>
                         <div class="form-group">
+                            <label>Email del Jefe de Capa</label>
+                            <input type="email" class="form-control" [(ngModel)]="itemToEdit.layerBoss.email"
+                                name="jefeEmail">
+                        </div>
+
+                        <div class="form-group">
                             <label>Documento del Jefe</label>
                             <input type="text" class="form-control"
                                 [(ngModel)]="itemToEdit.layerBoss.identificationNumber" name="jefeDocumento">
@@ -194,6 +207,7 @@
                             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                         </div>
                     </form>
+
                 </ng-container>
             </div>
         </div>
