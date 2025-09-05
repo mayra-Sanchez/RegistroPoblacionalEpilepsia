@@ -1,398 +1,265 @@
-/* Asegúrate de que el contenedor principal no tenga position: fixed */
+
 .consentimiento-container {
-  max-width: 100%; /* Cambia de 900px a 100% */
-  margin: 0 auto; /* Centra el contenido */
-  padding: 30px;
-  background: #fff;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  margin: 2rem auto;
+  background: white;
   border-radius: 10px;
-  font-family: 'Arial', sans-serif;
-  color: #333;
-  line-height: 1.6;
-  width: 100%;
-  box-sizing: border-box; /* Incluye padding en el ancho */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-/* Encabezado con estilo elegante */
+/* Encabezado */
 .consentimiento-header {
+  background: linear-gradient(135deg, #1a6fc4 0%, #2c3e50 100%);
+  color: white;
+  padding: 2rem;
   text-align: center;
-  margin-bottom: 35px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #eaeaea;
-  position: relative;
-}
-
-.consentimiento-header::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 3px;
-  background: linear-gradient(90deg, #3498db, #2ecc71);
 }
 
 .consentimiento-header h2 {
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-size: 28px;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
 }
 
 .consentimiento-header p {
-  color: #7f8c8d;
-  font-size: 16px;
-  margin-top: 10px;
+  font-size: 1.1rem;
+  opacity: 0.9;
 }
 
-/* Secciones del formulario con efecto sutil */
+/* Cuerpo del formulario */
+.consentimiento-body {
+  padding: 2rem;
+  display: flex ;
+}
+
 .form-section {
-  margin-bottom: 30px;
-  padding-bottom: 25px;
-  border-bottom: 1px dashed #eaeaea;
-  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eaeaea;
 }
 
-.form-section:hover {
-  background: rgba(245, 245, 245, 0.3);
-  padding-left: 10px;
-  border-left: 3px solid #3498db;
+.form-section:last-of-type {
+  border-bottom: none;
 }
 
 .form-section h3 {
-  color: #3498db;
-  margin-bottom: 18px;
-  font-size: 20px;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-}
-
-.form-section h3::before {
-  content: '•';
-  margin-right: 10px;
-  color: #3498db;
-  font-size: 30px;
 }
 
 .form-section h4 {
-  color: #2980b9;
-  margin-bottom: 15px;
-  font-size: 18px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 8px;
+  color: #2c3e50;
+  margin-bottom: 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .form-section p {
-  margin-bottom: 15px;
-  color: #555;
+  margin-bottom: 1rem;
+  text-align: justify;
 }
 
 .form-section ul {
-  padding-left: 20px;
-  margin: 15px 0;
+  margin: 1rem 0;
+  padding-left: 1.5rem;
 }
 
-.form-section ul li {
-  margin-bottom: 8px;
-  position: relative;
-  padding-left: 15px;
+.form-section li {
+  margin-bottom: 0.5rem;
 }
 
-.form-section ul li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  width: 6px;
-  height: 6px;
-  background: #3498db;
-  border-radius: 50%;
-}
-
-.consentimiento-body .form-section ul {
-  list-style-type: none; /* Esto quita los puntos/bullets tradicionales */
-  padding-left: 0; /* Elimina el padding izquierdo */
-}
-
-.consentimiento-body .form-section ul li {
-  position: relative;
-  padding-left: 25px; /* Espacio para el ícono personalizado */
-  margin-bottom: 10px;
-}
-
-/* Reemplazar los © con íconos modernos (opcional) */
-.consentimiento-body .form-section ul li::before {
-  content: ''; /* Elimina el contenido del pseudoelemento */
-  /* O si prefieres usar un ícono moderno: */
-  /* content: '→'; */
-  /* content: '✓'; */
-  /* content: '•'; */
-  position: absolute;
-  left: 0;
-  color: #3498db; /* Color del ícono */
-  font-weight: bold;
-}
-
-/* Bloques de datos con efecto de tarjeta */
-.patient-data, 
-.professional-data {
-  background: #f8f9fa;
-  padding: 25px;
-  border-radius: 8px;
-  margin-top: 25px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  border-top: 3px solid #3498db;
-}
-
-/* Campos de formulario mejorados */
+/* Campos de formulario */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 15px;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #444;
 }
 
 .form-control {
   width: 100%;
-  padding: 12px 15px;
+  padding: 0.75rem;
   border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 15px;
-  transition: all 0.3s;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
 }
 
-/* Área de firma con estilo moderno */
+/* Área de firma */
 .signature-pad {
-  border: 1px dashed #ccc;
-  padding: 20px;
-  text-align: center;
-  border-radius: 8px;
-  background: #fff;
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin: 15px 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.signature-pad::before {
-  content: 'Firma aquí';
-  position: absolute;
-  color: #bbb;
-  font-size: 14px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 0;
-  display: none;
-}
-
-.signature-pad.empty::before {
-  display: block;
+  margin-top: 0.5rem;
 }
 
 .btn-sign {
-  padding: 12px 25px;
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-  border: none;
-  border-radius: 6px;
+  background-color: #f8f9fa;
+  border: 1px dashed #6c757d;
+  color: #495057;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
   cursor: pointer;
-  font-weight: 500;
-  font-size: 15px;
   transition: all 0.3s;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  position: relative;
-  overflow: hidden;
+  font-weight: 500;
 }
 
 .btn-sign:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  background-color: #e9ecef;
+  border-color: #4a90e2;
+  color: #4a90e2;
 }
 
-.btn-sign:active {
-  transform: translateY(0);
+.signature-pad small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #28a745;
+  font-weight: 500;
 }
 
-.btn-sign::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.5);
-  opacity: 0;
-  border-radius: 100%;
-  transform: scale(1, 1) translate(-50%);
-  transform-origin: 50% 50%;
+/* Secciones de datos */
+.patient-data, .professional-data {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #4a90e2;
 }
 
-.btn-sign:focus:not(:active)::after {
-  animation: ripple 1s ease-out;
+.professional-data {
+  border-left-color: #28a745;
 }
 
-@keyframes ripple {
-  0% {
-    transform: scale(0, 0);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(20, 20);
-    opacity: 0;
-  }
-}
-
-/* Botones con efecto profesional */
+/* Botones de acción */
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 15px;
-  margin-top: 40px;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eaeaea;
 }
 
 .btn {
-  padding: 12px 25px;
-  border-radius: 6px;
-  cursor: pointer;
+  padding: 0.75rem 1.5rem;
   border: none;
-  color: white;
+  border-radius: 5px;
+  cursor: pointer;
   font-weight: 500;
-  font-size: 15px;
   transition: all 0.3s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  background-color: #6c757d;
+  color: white;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
+.btn-secondary:hover {
+  background-color: #5a6268;
 }
 
 .btn-download {
-  background: linear-gradient(135deg, #e67e22, #d35400);
+  background-color: #28a745;
+  color: white;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+.btn-download:hover {
+  background-color: #218838;
 }
 
-.btn:active {
-  transform: translateY(0);
-}
-
-.btn i {
-  font-size: 14px;
-}
-
-/* Modal de firma mejorado */
+/* Modal de firma */
 .signature-modal {
-  position: fixed;
+  position:absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(3px);
 }
 
-.modal-content {
+.modal-content-consentimiento {
   background: white;
-  padding: 30px;
+  padding: 2rem;
   border-radius: 10px;
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  animation: modalFadeIn 0.3s ease-out;
+  width: 90%; 
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
 }
 
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-content h4 {
-  margin-bottom: 20px;
+.modal-content-consentimiento h4 {
+  margin-bottom: 1.5rem;
   color: #2c3e50;
   text-align: center;
-  font-size: 22px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  font-size: 1.4rem;
 }
 
 .signature-container {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 20px 0;
-  background: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 1.5rem;
+  background-color: white;
+  position: relative;
 }
 
-.signature-container canvas {
-  display: block;
+.signature-canvas {
   width: 100%;
-  height: 200px;
-  background: #fff;
+  height: 100%;
+  cursor: crosshair;
+  border-radius: 5px;
 }
 
 .signature-actions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
+  justify-content: center;
+  gap: 1rem;
 }
 
 .btn-clear {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-clear:hover {
+  background-color: #c82333;
 }
 
 .btn-confirm {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  background-color: #28a745;
+  color: white;
 }
 
-/* Responsive mejorado */
+.btn-confirm:hover {
+  background-color: #218838;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .consentimiento-container {
-    padding: 20px;
-    margin: 10px;
+    margin: 1rem;
+    border-radius: 8px;
   }
   
-  .consentimiento-header h2 {
-    font-size: 24px;
+  .consentimiento-header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .consentimiento-body {
+    padding: 1.5rem;
   }
   
   .form-actions {
@@ -401,20 +268,10 @@
   
   .btn {
     width: 100%;
-    margin-bottom: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .form-section h3 {
-    font-size: 18px;
   }
   
-  .form-control {
-    padding: 10px 12px;
-  }
-  
-  .signature-pad {
-    padding: 15px;
+  .modal-content-consentimiento {
+    width: 95%;
+    padding: 1.5rem;
   }
 }

@@ -170,8 +170,8 @@
     (close)="closeEditModal()">
   </app-edit-registro-modal>
 
-  <div class="modal-overlay" *ngIf="showConsentimientoModal">
-    <div class="modal-container">
+  <div class="modal-overlay-consentimiento" *ngIf="showConsentimientoModal">
+    <div class="modal-container-consentimiento">
       <app-consentimiento-informado [paciente]="selectedPaciente"
         (submitConsentimiento)="handleSubmitConsentimiento($event)" (cancel)="closeConsentimientoModal()">
       </app-consentimiento-informado>

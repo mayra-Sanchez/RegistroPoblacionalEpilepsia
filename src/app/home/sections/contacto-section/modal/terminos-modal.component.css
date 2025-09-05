@@ -1,25 +1,32 @@
-/* Fuerza que este modal quede encima de cualquier otro */
+/* Fuerza que el modal quede encima */
 ::ng-deep .cdk-overlay-container {
-  z-index: 2000 !important; /* Más alto que el modal de registro */
+  z-index: 3000 !important;
 }
 
-/* Personalización del modal de términos */
+/* Contenedor principal */
 ::ng-deep .terminos-dialog .mat-dialog-container {
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 0 !important;
   overflow: hidden;
   max-width: 900px;
   width: 90vw;
   height: 80vh;
-  background-color: #fff;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Encabezado fijo */
+/* Animación de entrada */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Encabezado */
 .modal-header {
-  background: #3f51b5;
+  background: linear-gradient(135deg, #3f51b5, #5c6bc0);
   color: white;
   font-size: 1.2rem;
   font-weight: 600;
@@ -27,23 +34,49 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-/* Cuerpo con scroll independiente */
+/* Botón X elegante */
+.btn-cerrar-icon {
+  font-size: 1.3rem;
+  color: white;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.btn-cerrar-icon:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+/* Cuerpo con scroll bonito */
 .modal-body {
   flex: 1;
   padding: 1.5rem;
   overflow-y: auto;
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.6;
   color: #333;
 }
 
-/* Pie fijo abajo */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-body::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Pie */
 .modal-footer {
   padding: 0.75rem 1.5rem;
-  background: #f5f5f5;
-  border-top: 1px solid #ddd;
+  background: #f9f9f9;
+  border-top: 1px solid #eee;
   display: flex;
   justify-content: flex-end;
 }
@@ -53,14 +86,18 @@
   background: #3f51b5;
   color: white;
   border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 8px;
+  padding: 0.6rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(63,81,181,0.3);
 }
 
 .btn-cerrar:hover {
   background: #2c3e99;
+  box-shadow: 0 6px 16px rgba(63,81,181,0.45);
+  transform: translateY(-2px);
 }
 
 /* Responsivo */
@@ -70,13 +107,18 @@
     height: 85vh;
   }
 
+  .modal-header {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+
   .modal-body {
     padding: 1rem;
     font-size: 0.9rem;
   }
 
-  .modal-header {
-    font-size: 1rem;
-    padding: 0.75rem 1rem;
+  .btn-cerrar {
+    font-size: 0.85rem;
+    padding: 0.5rem 1.2rem;
   }
 }
