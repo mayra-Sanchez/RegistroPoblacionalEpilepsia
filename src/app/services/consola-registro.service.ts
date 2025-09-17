@@ -432,6 +432,31 @@ export class ConsolaRegistroService {
   }
   //#endregion
 
+  /**
+ * Elimina un registro por ID.
+ * @param registerId ID del registro a eliminar.
+ * @returns Observable<any> Confirmación de eliminación.
+ */
+deleteRegistro(registerId: string): Observable<any> {
+  if (!registerId) {
+    return throwError(() => this.createError('Register ID is required', 'VALIDATION_ERROR'));
+  }
+
+  try {
+    const headers = this.getAuthHeaders();
+    const params = new HttpParams().set('registerId', registerId);
+
+    return this.http.delete<any>(this.API_REGISTERS, { headers, params }).pipe(
+      tap(() => console.log(`Registro eliminado: ${registerId}`)),
+      catchError(error => this.handleHttpError(error, 'Failed to delete register'))
+    );
+  } catch (error) {
+    return throwError(() =>
+      this.createError('Failed to prepare request', 'REQUEST_PREPARATION_ERROR', error)
+    );
+  }
+}
+
   //#region Métodos de Capas de Investigación
   /**
    * Obtiene todas las capas de investigación.

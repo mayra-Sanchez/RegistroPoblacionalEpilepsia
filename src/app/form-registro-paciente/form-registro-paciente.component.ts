@@ -192,8 +192,6 @@ export class FormRegistroPacienteComponent implements OnInit, OnChanges {
       case 'Entero':
       case 'Decimal':
         return 'Number';
-      case 'Fecha':
-        return 'Date';
       default:
         return 'String'; // texto, booleano, opciones, etc.
     }

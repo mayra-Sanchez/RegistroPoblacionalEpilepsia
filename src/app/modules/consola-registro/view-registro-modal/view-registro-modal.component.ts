@@ -237,10 +237,8 @@ export class ViewRegistroModalComponent {
             break;
           case 'string':
           case 'text':
-            value = v.valueAsString;
-            break;
           case 'date':
-            value = v.valueAsDate ?? v.valueAsString;
+            value = v.valueAsString;
             break;
           default:
             value = v.valueAsString ?? v.valueAsNumber;

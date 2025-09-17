@@ -138,7 +138,6 @@ export interface VariableInfoResponse {
   variableType: string;        // p.ej. 'number' | 'string' | 'text'
   valueAsString?: String | null;
   valueAsNumber?: Number | null;
-  valueAsDate?: Date | null;
 }
 
 export interface Register {

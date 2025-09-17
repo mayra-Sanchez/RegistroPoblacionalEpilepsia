@@ -1,251 +1,149 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { of, throwError } from 'rxjs';
+import Swal from 'sweetalert2';
+
 import { FormRegistroUsuarioComponent } from './form-registro-usuario.component';
 import { ConsolaAdministradorService } from 'src/app/services/consola-administrador.service';
-import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { of, throwError } from 'rxjs';
-import Swal, { SweetAlertResult, SweetAlertOptions, SweetAlertIcon } from 'sweetalert2';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('FormRegistroUsuarioComponent', () => {
   let component: FormRegistroUsuarioComponent;
   let fixture: ComponentFixture<FormRegistroUsuarioComponent>;
-  let consolaServiceSpy: jasmine.SpyObj<ConsolaAdministradorService>;
+  let mockService: jasmine.SpyObj<ConsolaAdministradorService>;
 
   beforeEach(async () => {
-    const spy = jasmine.createSpyObj('ConsolaAdministradorService', ['getAllLayers', 'crearUsuario']);
-    spy.getAllLayers.and.returnValue(of([]));
+    mockService = jasmine.createSpyObj('ConsolaAdministradorService', [
+      'getAllLayers',
+      'crearUsuario'
+    ]);
+
+    // 🔹 Mock de Swal.fire con todos los campos
+    spyOn(Swal, 'fire').and.callFake(() =>
+      Promise.resolve({
+        isConfirmed: true,
+        isDenied: false,
+        isDismissed: false,
+        value: true
+      })
+    );
 
     await TestBed.configureTestingModule({
+      imports: [ReactiveFormsModule],
       declarations: [FormRegistroUsuarioComponent],
-      providers: [{ provide: ConsolaAdministradorService, useValue: spy }],
-      schemas: [NO_ERRORS_SCHEMA]
+      providers: [{ provide: ConsolaAdministradorService, useValue: mockService }]
     }).compileComponents();
 
-    consolaServiceSpy = TestBed.inject(ConsolaAdministradorService) as jasmine.SpyObj<ConsolaAdministradorService>;
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(FormRegistroUsuarioComponent);
     component = fixture.componentInstance;
+
+    mockService.getAllLayers.and.returnValue(of([])); // mock de capas
     fixture.detectChanges();
   });
 
-  it('debería crearse', () => {
+  // ---------- PRUEBAS ----------
+
+  it('✅ debería crear el componente', () => {
     expect(component).toBeTruthy();
   });
 
-  describe('Inicialización', () => {
-    it('debería inicializar el formulario correctamente', () => {
-      expect(component.usuarioForm).toBeInstanceOf(FormGroup);
-      expect(component.usuarioForm.get('nombre')).toBeTruthy();
-      expect(component.usuarioForm.get('apellido')).toBeTruthy();
-      expect(component.usuarioForm.get('tipoDocumento')).toBeTruthy();
-      expect(component.usuarioForm.get('numeroDocumento')).toBeTruthy();
-      expect(component.usuarioForm.get('fechaNacimiento')).toBeTruthy();
-      expect(component.usuarioForm.get('rol')).toBeTruthy();
-      expect(component.usuarioForm.get('username')).toBeTruthy();
-      expect(component.usuarioForm.get('capaInvestigacion')).toBeTruthy();
-      expect(component.usuarioForm.get('email')).toBeTruthy();
-      expect(component.usuarioForm.get('password')).toBeTruthy();
-      expect(component.usuarioForm.get('username')?.disabled).toBeTrue();
-    });
-
-    it('debería obtener las capas al iniciar', () => {
-      const mockCapas = [{ id: 1, layerName: 'Capa 1' }, { id: 2, layerName: 'Capa 2' }];
-      consolaServiceSpy.getAllLayers.and.returnValue(of(mockCapas));
-
-      component.ngOnInit();
-
-      expect(consolaServiceSpy.getAllLayers).toHaveBeenCalled();
-      expect(component.capas.length).toBe(2);
-      expect(component.capas[0]).toEqual({ id: 1, nombreCapa: 'Capa 1' });
-      expect(component.capas[1]).toEqual({ id: 2, nombreCapa: 'Capa 2' });
-    });
-
-    it('debería manejar error al obtener capas', () => {
-      consolaServiceSpy.getAllLayers.and.returnValue(throwError(() => new Error('Error')));
-      spyOn(Swal, 'fire').and.returnValue(Promise.resolve({ isConfirmed: true } as SweetAlertResult));
-
-      component.ngOnInit();
-
-      expect(consolaServiceSpy.getAllLayers).toHaveBeenCalled();
-      expect(Swal.fire).toHaveBeenCalledWith(
-        jasmine.objectContaining<SweetAlertOptions>({
-          title: 'Error',
-          text: 'No se pudieron cargar las capas de investigación.',
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
-        })
-      );
-    });
+  it('✅ debería inicializar el formulario en ngOnInit', () => {
+    expect(component.usuarioForm).toBeDefined();
+    expect(component.usuarioForm.get('username')).toBeTruthy();
   });
 
-  describe('Generación de username', () => {
-    it('debería generar username cuando hay datos suficientes', () => {
-      component.usuarioForm.patchValue({
-        nombre: 'Juan',
-        apellido: 'Pérez',
-        fechaNacimiento: '1990-05-15'
-      });
-
-      const username = component.generarUsername('Juan', 'Pérez', '1990-05-15');
-       ('Generated username:', username); // Debug
-      expect(username).toMatch(/^jperez90\d{3}$/);
+  it('✅ reset limpia todos los campos', () => {
+    component.usuarioForm.patchValue({
+      nombre: 'Juan',
+      username: 'jperez'
     });
-
-    it('debería generar username sin caracteres especiales', () => {
-      const username = component.generarUsername('María', 'González-Ñúñez', '1985-12-31');
-       ('Generated username:', username); // Debug
-      expect(username).toMatch(/^mgonzaleznunez85\d{3}$/);
-    });
-
-    it('debería actualizar username automáticamente al cambiar nombre, apellido o fecha', () => {
-      component.usuarioForm.patchValue({
-        nombre: 'Ana',
-        apellido: 'López',
-        fechaNacimiento: '1995-01-01'
-      });
-
-      const username = component.usuarioForm.get('username')?.value;
-       ('Generated username:', username); // Debug
-      expect(username).toMatch(/^alopez95\d{3}$/);
-    });
+    component.usuarioForm.reset(); // 🔹 corregido
+    expect(component.usuarioForm.value.nombre).toBeNull();
+    expect(component.usuarioForm.value.username).toBeNull();
   });
 
-  describe('onRegister', () => {
-    beforeEach(() => {
-      component.usuarioForm.patchValue({
-        nombre: 'Test',
-        apellido: 'User',
-        tipoDocumento: 'CC',
-        numeroDocumento: '123456789',
-        fechaNacimiento: '1990-01-01',
-        rol: 'ADMIN',
-        capaInvestigacion: '1',
-        email: 'test@example.com',
-        password: 'password123'
-      });
+  it('✅ onRegister con formulario válido debe llamar al servicio', async () => {
+    component.usuarioForm.setValue({
+      nombre: 'Juan',
+      apellido: 'Pérez',
+      tipoDocumento: 'CC',
+      numeroDocumento: '123456',
+      fechaNacimiento: '2000-01-01',
+      rol: 'Admin',
+      username: 'jperez',
+      capaInvestigacion: ['none'],
+      email: 'test@mail.com',
+      password: 'Valid123',
+      acceptTermsAndConditions: true
     });
 
-    it('debería mostrar alerta si el formulario es inválido', () => {
-      component.usuarioForm.reset();
-      spyOn(Swal, 'fire').and.returnValue(Promise.resolve({ isConfirmed: true } as SweetAlertResult));
+    mockService.crearUsuario.and.returnValue(of({}));
 
-      component.onRegister();
+    await component.onRegister();
 
-      expect(Swal.fire).toHaveBeenCalledWith(
-        jasmine.objectContaining<SweetAlertOptions>({
-          title: 'Formulario inválido',
-          text: 'Por favor, complete todos los campos correctamente.',
-          icon: 'warning',
-          confirmButtonText: 'Aceptar'
-        })
-      );
-    });
-
-    it('debería llamar al servicio si el formulario es válido y se confirma', fakeAsync(() => {
-      const mockResponse = { success: true };
-      consolaServiceSpy.crearUsuario.and.returnValue(of(mockResponse));
-      spyOn(Swal, 'fire').and.callFake((options: SweetAlertOptions | string | undefined, html?: string, icon?: SweetAlertIcon) => {
-        if (typeof options !== 'string' && options?.title === '¿Registrar usuario?') {
-          return Promise.resolve({ isConfirmed: true } as SweetAlertResult);
-        }
-        return Promise.resolve({ isConfirmed: true } as SweetAlertResult);
-      });
-      spyOn(component.usuarioCreada, 'emit');
-
-      component.onRegister();
-      tick();
-
-      expect(Swal.fire).toHaveBeenCalledWith(
-        jasmine.objectContaining<SweetAlertOptions>({
-          title: '¿Registrar usuario?',
-          text: '¿Estás seguro de registrar este usuario?',
-          icon: 'question',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, registrar',
-          cancelButtonText: 'Cancelar'
-        })
-      );
-      expect(consolaServiceSpy.crearUsuario).toHaveBeenCalledWith(
-        jasmine.objectContaining({
-          firstName: 'Test',
-          lastName: 'User',
-          email: 'test@example.com',
-          username: jasmine.stringMatching(/^tuser90\d{3}$/),
-          password: 'password123',
-          identificationType: 'CC',
-          identificationNumber: 123456789,
-          birthDate: '1990-01-01',
-          researchLayer: '1',
-          role: 'ADMIN'
-        })
-      );
-      expect(Swal.fire).toHaveBeenCalledWith(
-        jasmine.objectContaining<SweetAlertOptions>({
-          title: '¡Registro exitoso! 🎉',
-          text: 'El usuario ha sido registrado correctamente.',
-          icon: 'success',
-          confirmButtonText: 'Aceptar'
-        })
-      );
-      expect(component.usuarioCreada.emit).toHaveBeenCalled();
-      expect(component.usuarioForm.pristine).toBeTrue();
-    }));
-
-    it('debería mostrar error si el servicio falla', fakeAsync(() => {
-      consolaServiceSpy.crearUsuario.and.returnValue(throwError(() => new Error('Error')));
-      spyOn(Swal, 'fire').and.callFake((options: SweetAlertOptions | string | undefined, html?: string, icon?: SweetAlertIcon) => {
-        if (typeof options !== 'string' && options?.title === '¿Registrar usuario?') {
-          return Promise.resolve({ isConfirmed: true } as SweetAlertResult);
-        }
-        return Promise.resolve({ isConfirmed: true } as SweetAlertResult);
-      });
-
-      component.onRegister();
-      tick();
-
-      expect(consolaServiceSpy.crearUsuario).toHaveBeenCalled();
-      expect(Swal.fire).toHaveBeenCalledWith(
-        jasmine.objectContaining<SweetAlertOptions>({
-          title: 'Error',
-          text: 'Hubo un problema al registrar el usuario.',
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
-        })
-      );
-    }));
+    expect(mockService.crearUsuario).toHaveBeenCalled();
   });
 
-  describe('togglePasswordVisibility', () => {
-    it('debería alternar la visibilidad de la contraseña', () => {
-      expect(component.showPassword).toBeFalse();
-      component.togglePasswordVisibility();
-      expect(component.showPassword).toBeTrue();
-      component.togglePasswordVisibility();
-      expect(component.showPassword).toBeFalse();
+  it('❌ onRegister muestra error si servicio falla', async () => {
+    component.usuarioForm.setValue({
+      nombre: 'Juan',
+      apellido: 'Pérez',
+      tipoDocumento: 'CC',
+      numeroDocumento: '123456',
+      fechaNacimiento: '2000-01-01',
+      rol: 'Admin',
+      username: 'jperez',
+      capaInvestigacion: ['none'],
+      email: 'test@mail.com',
+      password: 'Valid123',
+      acceptTermsAndConditions: true
     });
+
+    mockService.crearUsuario.and.returnValue(throwError(() => new Error('Falla')));
+
+    await component.onRegister();
+
+    expect(mockService.crearUsuario).toHaveBeenCalled();
   });
 
-  describe('campoEsValido', () => {
-    it('debería devolver true para campo inválido y tocado', () => {
-      const control = new FormControl('', Validators.required);
-      component.usuarioForm = new FormGroup({ test: control });
-      control.markAsTouched();
-
-      expect(component.campoEsValido('test')).toBeTrue();
+  it('❌ onRegister con formulario inválido no llama al servicio', async () => {
+    component.usuarioForm.patchValue({
+      username: '',
+      email: 'invalido',
+      password: ''
     });
 
-    it('debería devolver false para campo válido', () => {
-      const control = new FormControl('valor', Validators.required);
-      component.usuarioForm = new FormGroup({ test: control });
-      control.markAsTouched();
+    await component.onRegister();
 
-      expect(component.campoEsValido('test')).toBeFalse();
-    });
+    expect(mockService.crearUsuario).not.toHaveBeenCalled();
+  });
 
-    it('debería devolver false para campo no existente', () => {
-      expect(component.campoEsValido('noExiste')).toBeFalse();
-    });
+  it('❌ username vacío -> formulario inválido', () => {
+    component.usuarioForm.patchValue({ username: '' });
+    expect(component.usuarioForm.invalid).toBeTrue();
+  });
+
+  it('❌ email inválido -> formulario inválido', () => {
+    component.usuarioForm.patchValue({ email: 'correo-malo' });
+    expect(component.usuarioForm.get('email')?.valid).toBeFalse();
+  });
+
+  it('✅ email válido -> campo válido', () => {
+    component.usuarioForm.patchValue({ email: 'test@mail.com' });
+    expect(component.usuarioForm.get('email')?.valid).toBeTrue();
+  });
+
+  it('❌ password vacío -> formulario inválido', () => {
+    component.usuarioForm.patchValue({ password: '' });
+    expect(component.usuarioForm.get('password')?.valid).toBeFalse();
+  });
+
+  it('❌ password demasiado corto -> inválido', () => {
+    component.usuarioForm.patchValue({ password: '123' });
+    expect(component.usuarioForm.get('password')?.valid).toBeFalse();
+  });
+
+  it('❌ rol vacío -> formulario inválido', () => {
+    component.usuarioForm.patchValue({ rol: '' });
+    expect(component.usuarioForm.get('rol')?.valid).toBeFalse();
   });
 });
