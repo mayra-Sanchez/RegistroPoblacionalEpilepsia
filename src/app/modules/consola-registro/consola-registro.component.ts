@@ -1,11 +1,11 @@
 import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
-import { ConsolaRegistroService } from 'src/app/services/consola-registro.service';
+import { ConsolaRegistroService } from 'src/app/services/register.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { Variable, UserResponse, ResearchLayer, Register } from './interfaces';
 import Swal from 'sweetalert2';
 import { MatDialog } from '@angular/material/dialog';
 import { ConsentimientoInformadoComponent } from './components/consentimiento-informado/consentimiento-informado.component';
-
+import { catchError, forkJoin, of } from 'rxjs';
 @Component({
   selector: 'app-consola-registro',
   templateUrl: './consola-registro.component.html',
@@ -64,23 +64,32 @@ export class ConsolaRegistroComponent implements OnInit {
   async ngOnInit() {
     try {
       await this.loadUserData();
+
+      // Debug: ver qué capas tiene el usuario
+      console.log('User researchLayerId:', this.userData?.attributes?.researchLayerId);
+
       await this.loadAvailableLayers();
-      const savedLayerId = localStorage.getItem('selectedLayerId');
-      if (this.availableLayers.length > 0) {
-        const initialLayerId = savedLayerId && this.availableLayers.some(l => l.id === savedLayerId)
-          ? savedLayerId
-          : this.availableLayers[0].id;
-        this.selectedLayerId = initialLayerId;
-        await this.loadCapaInvestigacion(initialLayerId);
-        this.loadRegistros();
-        this.loadVariablesDeCapa(initialLayerId);
-        this.refreshData();
-      } else {
+
+      if (this.availableLayers.length === 0) {
+        this.showErrorAlert('No tienes capas de investigación asignadas o no se pudieron cargar');
         this.selectedLayerId = '';
-        this.showErrorAlert('No se encontraron capas de investigación disponibles');
+        return;
       }
+
+      const savedLayerId = localStorage.getItem('selectedLayerId');
+      let initialLayerId = this.availableLayers[0].id;
+
+      // Verificar si la capa guardada es válida
+      if (savedLayerId && this.availableLayers.some(l => l.id === savedLayerId)) {
+        initialLayerId = savedLayerId;
+      }
+
+      await this.loadCapaInvestigacion(initialLayerId);
+      this.loadRegistros();
+      this.loadVariablesDeCapa(initialLayerId);
+
     } catch (error) {
-      this.handleError('Error al inicializar componente');
+      console.error('Error en ngOnInit:', error);
       this.selectedLayerId = '';
     } finally {
       this.isLoading = false;
@@ -132,84 +141,128 @@ export class ConsolaRegistroComponent implements OnInit {
   loadAvailableLayers(): Promise<void> {
     return new Promise((resolve, reject) => {
       const layerIds = this.userData?.attributes?.researchLayerId || [];
-      if (!layerIds.length) {
+
+      console.log('IDs de capa del usuario:', layerIds);
+
+      // Filtrar IDs válidos
+      const validLayerIds = layerIds.filter(id =>
+        id &&
+        id !== 'none' &&
+        id !== 'undefined' &&
+        id !== 'null' &&
+        id.trim() !== ''
+      );
+
+      if (validLayerIds.length === 0) {
+        console.warn('No hay IDs de capa válidos para el usuario');
         this.availableLayers = [];
         resolve();
         return;
       }
 
-      const layerRequests = layerIds.map(id =>
-        this.consolaService.obtenerCapaPorId(id).toPromise()
+      const layerRequests = validLayerIds.map(id =>
+        this.consolaService.obtenerCapaPorId(id).pipe(
+          catchError(error => {
+            console.warn(`Error al cargar capa ${id}:`, error);
+            return of(null); // Retornar null para manejar errores gracefulmente
+          })
+        )
       );
 
-      Promise.all(layerRequests)
-        .then(layers => {
-          this.availableLayers = layers.filter(l => l?.id) as ResearchLayer[];
-          resolve();
-        })
-        .catch(err => {
-          reject(err);
-        });
-    });
-  }
+      forkJoin(layerRequests).subscribe({
+        next: (layers) => {
+          // Filtrar solo capas válidas
+          this.availableLayers = layers.filter(l => l !== null && l?.id) as ResearchLayer[];
 
-  loadCapaInvestigacion(researchLayerId?: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!researchLayerId) {
-        const layerIds = this.userData?.attributes?.researchLayerId;
-        if (layerIds && layerIds.length > 0) {
-          researchLayerId = layerIds[0];
-        } else {
-          this.isLoading = false;
-          this.setDefaultCapaValues();
-          this.selectedLayerId = '';
-          reject('No hay ID de capa');
-          return;
-        }
-      }
+          console.log('Capas disponibles cargadas:', this.availableLayers);
 
-      const layerIds = this.userData?.attributes?.researchLayerId;
-      if (!layerIds?.includes(researchLayerId)) {
-        console.warn('loadCapaInvestigacion: Selected layer not authorized:', researchLayerId);
-        this.handleError('La capa seleccionada no está asignada a este usuario');
-        this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
-        localStorage.setItem('selectedLayerId', this.selectedLayerId);
-        reject('Capa no autorizada');
-        return;
-      }
-
-      this.isLoading = true;
-      this.consolaService.obtenerCapaPorId(researchLayerId).subscribe({
-        next: (capa) => {
-          if (!capa?.id) {
-            console.warn('loadCapaInvestigacion: Capa sin ID recibida');
-            this.isLoading = false;
-            this.setDefaultCapaValues();
-            this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
-            localStorage.setItem('selectedLayerId', this.selectedLayerId);
-            reject('Capa inválida');
-            return;
+          if (this.availableLayers.length === 0) {
+            console.warn('No se pudieron cargar ninguna capa válida');
           }
-          this.currentResearchLayer = capa;
-          this.selectedLayerId = capa.id;
-          localStorage.setItem('selectedLayerId', capa.id);
-          this.updateDatosCapa(capa);
-          this.isLoading = false;
-          this.cdr.detectChanges();
+
           resolve();
         },
         error: (err) => {
-          console.error('loadCapaInvestigacion: Error al cargar capa:', err);
-          this.handleError('Error al cargar la capa de investigación');
-          this.setDefaultCapaValues();
-          this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
-          localStorage.setItem('selectedLayerId', this.selectedLayerId);
-          this.isLoading = false;
-          this.cdr.detectChanges();
+          console.error('Error crítico al cargar capas:', err);
+          this.availableLayers = [];
           reject(err);
         }
       });
     });
+  }
+
+  async loadCapaInvestigacion(researchLayerId?: string): Promise<void> {
+    try {
+      // Validar el ID de entrada
+      if (!researchLayerId || researchLayerId === 'none' || researchLayerId === 'undefined') {
+        throw new Error('ID de capa inválido proporcionado');
+      }
+
+      // Verificar que el usuario tenga permiso para esta capa
+      const userLayerIds = this.userData?.attributes?.researchLayerId || [];
+      if (!userLayerIds.includes(researchLayerId)) {
+        throw new Error(`Usuario no tiene acceso a la capa: ${researchLayerId}`);
+      }
+
+      this.isLoading = true;
+
+      const capa = await this.consolaService.obtenerCapaPorId(researchLayerId).toPromise();
+
+      if (!capa?.id) {
+        throw new Error('La capa devuelta no tiene ID válido');
+      }
+
+      this.currentResearchLayer = capa;
+      this.selectedLayerId = capa.id;
+      localStorage.setItem('selectedLayerId', capa.id);
+      this.updateDatosCapa(capa);
+
+    } catch (error) {
+      console.error('Error en loadCapaInvestigacion:', error);
+
+      // Intentar recuperación con una capa alternativa
+      await this.fallbackToAlternativeLayer(researchLayerId);
+
+      throw error; // Re-lanzar el error para manejo superior
+    } finally {
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Nuevo método para fallback
+  private async fallbackToAlternativeLayer(failedLayerId?: string): Promise<void> {
+    try {
+      // Buscar una capa alternativa que no sea la que falló
+      const alternativeLayer = this.availableLayers.find(layer =>
+        layer.id !== failedLayerId && layer.id
+      );
+
+      if (alternativeLayer) {
+        console.log(`Fallback a capa alternativa: ${alternativeLayer.layerName}`);
+        this.currentResearchLayer = alternativeLayer;
+        this.selectedLayerId = alternativeLayer.id;
+        localStorage.setItem('selectedLayerId', alternativeLayer.id);
+        this.updateDatosCapa(alternativeLayer);
+      } else if (this.availableLayers.length > 0) {
+        // Usar la primera capa disponible
+        const firstLayer = this.availableLayers[0];
+        console.log(`Usando primera capa disponible: ${firstLayer.layerName}`);
+        this.currentResearchLayer = firstLayer;
+        this.selectedLayerId = firstLayer.id;
+        localStorage.setItem('selectedLayerId', firstLayer.id);
+        this.updateDatosCapa(firstLayer);
+      } else {
+        // No hay capas disponibles
+        this.setDefaultCapaValues();
+        this.selectedLayerId = '';
+        throw new Error('No hay capas alternativas disponibles');
+      }
+    } catch (fallbackError) {
+      console.error('Error en fallback:', fallbackError);
+      this.setDefaultCapaValues();
+      this.selectedLayerId = '';
+    }
   }
 
   loadVariablesDeCapa(researchLayerId: string): void {
@@ -226,6 +279,7 @@ export class ConsolaRegistroComponent implements OnInit {
 
     this.consolaService.obtenerVariablesPorCapa(researchLayerId).subscribe({
       next: (variables) => {
+        console.log('Variables recibidas:', variables); // ← Agrega esto para debuggear
         this.variablesDeCapa = variables.filter(v => v.isEnabled);
         this.loadingVariables = false;
         this.cdr.detectChanges();
@@ -246,19 +300,45 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
+    const userEmail = this.authService.getUserEmail();
+    if (!userEmail) {
+      this.handleError('No se pudo obtener el email del usuario');
+      this.resetRegistros();
+      return;
+    }
+
     this.loadingRegistros = true;
     this.currentPage = page;
     this.pageSize = size;
 
+    console.log('Cargando registros con parámetros:', {
+      researchLayerId: this.selectedLayerId,
+      userEmail: userEmail,
+      page: page,
+      size: size
+    });
+
     this.consolaService.obtenerRegistrosPorCapa(
       this.selectedLayerId,
+      userEmail,
+      undefined,
       page,
-      size
+      size,
+      'registerDate',
+      'DESC'
     ).subscribe({
       next: (response) => {
-        this.procesarRespuestaRegistros(response);
+        console.log('Respuesta del servidor:', response);
+        if (response === null) {
+          console.warn('El servicio retornó null, inicializando registros vacíos');
+          this.resetRegistros();
+        } else {
+          this.procesarRespuestaRegistros(response);
+        }
       },
       error: (err) => {
+        console.error('Error al cargar registros:', err);
+        console.error('Error details:', err.error);
         this.resetRegistros();
         this.showErrorAlert('Error al cargar registros. Por favor intente nuevamente.');
       },
@@ -380,24 +460,6 @@ export class ConsolaRegistroComponent implements OnInit {
     }
   }
 
-  /**
-   * Carga registros filtrados por profesional
-   * @param {number} healthProfessionalId ID del profesional
-   * @param {number} [page=0] Página a cargar
-   * @param {number} [size=10] Tamaño de la página
-   */
-  loadRegistrosPorProfesional(healthProfessionalId: number, page: number = 0, size: number = 10) {
-    this.loadingRegistros = true;
-
-    this.consolaService.obtenerRegistrosPorProfesional(healthProfessionalId, page, size)
-      .subscribe({
-        next: (response) => this.procesarRespuestaRegistros(response),
-        error: (err) => {
-          console.error('Error al cargar registros por profesional:', err);
-          this.resetRegistros();
-        }
-      });
-  }
 
   /**
    * Carga registros filtrados por paciente
@@ -408,16 +470,20 @@ export class ConsolaRegistroComponent implements OnInit {
   loadRegistrosPorPaciente(patientIdentificationNumber: number, page: number = 0, size: number = 10) {
     this.loadingRegistros = true;
 
-    this.consolaService.obtenerRegistrosPorPaciente(patientIdentificationNumber, page, size)
-      .subscribe({
-        next: (response) => this.procesarRespuestaRegistros(response),
-        error: (err) => {
-          console.error('Error al cargar registros por paciente:', err);
-          this.resetRegistros();
-        }
-      });
+    this.consolaService.obtenerRegistrosPorPaciente(
+      patientIdentificationNumber,
+      page,
+      size,
+      'registerDate', // sort
+      'DESC' // sortDirection
+    ).subscribe({
+      next: (response) => this.procesarRespuestaRegistros(response),
+      error: (err) => {
+        console.error('Error al cargar registros por paciente:', err);
+        this.resetRegistros();
+      }
+    });
   }
-
   //#endregion
 
   //#region Métodos de Navegación
@@ -507,7 +573,7 @@ export class ConsolaRegistroComponent implements OnInit {
     // Transformar el Register al formato esperado por la API
     const updateData = this.transformRegisterToApiFormat(updatedRegistro);
 
-    this.consolaService.actualizarRegistro(
+    this.consolaService.updateRegister(
       updatedRegistro.registerId,
       userEmail,
       updateData
@@ -520,67 +586,86 @@ export class ConsolaRegistroComponent implements OnInit {
       error: (err) => console.error('Error al actualizar:', err)
     });
   }
+
   private transformRegisterToApiFormat(registro: Register): any {
+    // Transformar las variables al formato correcto
+    const variablesInfo = registro.variablesRegister?.map(v => ({
+      id: v.variableId,
+      name: v.variableName,  // Cambiado de variableName a name
+      value: v.value,
+      type: v.type
+    })) || [];
+
+    // Crear el objeto registerInfo en el formato correcto
+    const registerInfo = {
+      researchLayerId: registro.registerInfo?.[0]?.researchLayerId || this.selectedLayerId,
+      researchLayerName: registro.registerInfo?.[0]?.researchLayerName || this.currentResearchLayer?.layerName || '',
+      variablesInfo: variablesInfo
+    };
+
+    // Crear el objeto paciente en el formato correcto
+    const patient = {
+      name: registro.patientBasicInfo?.name || '',
+      sex: registro.patientBasicInfo?.sex || '',
+      birthDate: this.formatDateForApi(registro.patientBasicInfo?.birthDate),
+      age: registro.patientBasicInfo?.age || 0,
+      email: registro.patientBasicInfo?.email || '',
+      phoneNumber: registro.patientBasicInfo?.phoneNumber || '',
+      deathDate: this.formatDateForApi(registro.patientBasicInfo?.deathDate),
+      economicStatus: registro.patientBasicInfo?.economicStatus || '',
+      educationLevel: registro.patientBasicInfo?.educationLevel || '',
+      maritalStatus: registro.patientBasicInfo?.maritalStatus || '',
+      hometown: registro.patientBasicInfo?.hometown || '',
+      currentCity: registro.patientBasicInfo?.currentCity || '',
+      firstCrisisDate: this.formatDateForApi(registro.patientBasicInfo?.firstCrisisDate),
+      crisisStatus: registro.patientBasicInfo?.crisisStatus || ''
+    };
+
+    // Crear el objeto cuidador si existe
+    let caregiver;
+    if (registro.caregiver) {
+      caregiver = {
+        name: registro.caregiver.name || '',
+        identificationType: registro.caregiver.identificationType || '',
+        identificationNumber: registro.caregiver.identificationNumber || 0,
+        age: registro.caregiver.age || 0,
+        educationLevel: registro.caregiver.educationLevel || '',
+        occupation: registro.caregiver.occupation || ''
+      };
+    }
+
+    // Retornar el objeto en el formato exacto que espera la API
     return {
-      variables: registro.variablesRegister?.map(v => ({
-        id: v.variableId,
-        variableName: v.variableName,
-        value: v.value,
-        type: v.type,
-        researchLayerId: v.researchLayerId,
-        researchLayerName: v.researchLayerName
-      })) || [],
+      registerInfo: registerInfo,  // Objeto simple, no array
       patientIdentificationNumber: registro.patientIdentificationNumber,
       patientIdentificationType: registro.patientIdentificationType,
-      patient: {
-        name: registro.patientBasicInfo?.name,
-        sex: registro.patientBasicInfo?.sex,
-        birthDate: this.formatDateForApi(registro.patientBasicInfo?.birthDate),
-        age: registro.patientBasicInfo?.age,
-        email: registro.patientBasicInfo?.email,
-        phoneNumber: registro.patientBasicInfo?.phoneNumber,
-        deathDate: this.formatDateForApi(registro.patientBasicInfo?.deathDate),
-        economicStatus: registro.patientBasicInfo?.economicStatus,
-        educationLevel: registro.patientBasicInfo?.educationLevel,
-        maritalStatus: registro.patientBasicInfo?.maritalStatus,
-        hometown: registro.patientBasicInfo?.hometown,
-        currentCity: registro.patientBasicInfo?.currentCity,
-        firstCrisisDate: this.formatDateForApi(registro.patientBasicInfo?.firstCrisisDate),
-        crisisStatus: registro.patientBasicInfo?.crisisStatus
-      },
-      ...(registro.caregiver && {
-        caregiver: {
-          name: registro.caregiver.name,
-          identificationType: registro.caregiver.identificationType,
-          identificationNumber: registro.caregiver.identificationNumber,
-          age: registro.caregiver.age,
-          educationLevel: registro.caregiver.educationLevel,
-          occupation: registro.caregiver.occupation
-        }
-      }),
-      ...(registro.healthProfessional && {
-        healthProfessional: {
-          id: registro.healthProfessional.id,
-          name: registro.healthProfessional.name,
-          identificationNumber: registro.healthProfessional.identificationNumber
-        }
-      })
+      patient: patient,
+      ...(caregiver && { caregiver: caregiver }) // Incluir caregiver solo si existe
     };
   }
+
   private formatDateForApi(dateValue: any): string | null {
     if (!dateValue) return null;
 
+    // Si ya está en formato yyyy-MM-dd, retornarlo directamente
     if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
       return dateValue;
     }
 
+    // Si es una fecha de JavaScript o string ISO
     try {
       const date = new Date(dateValue);
       if (!isNaN(date.getTime())) {
-        return date.toISOString().split('T')[0];
+        return date.toISOString().split('T')[0]; // Formato yyyy-MM-dd
       }
     } catch (e) {
       console.error('Error al formatear fecha:', dateValue, e);
+    }
+
+    // Si es un string con formato dd-MM-yyyy, convertirlo
+    if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
+      const [day, month, year] = dateValue.split('-');
+      return `${year}-${month}-${day}`;
     }
 
     return null;
@@ -628,7 +713,6 @@ export class ConsolaRegistroComponent implements OnInit {
   buscarPorProfesional(identificacion: number) {
     this.modoBusqueda = 'profesional';
     this.profesionalBuscado = identificacion.toString();
-    this.loadRegistrosPorProfesional(identificacion);
     this.cerrarBusquedaPorProfesional();
   }
 
@@ -704,9 +788,7 @@ export class ConsolaRegistroComponent implements OnInit {
     this.currentPage = event.page;
     this.pageSize = event.rows;
 
-    if (this.modoBusqueda === 'profesional') {
-      this.loadRegistrosPorProfesional(Number(this.profesionalBuscado), event.page, event.rows);
-    } else if (this.modoBusqueda === 'paciente') {
+    if (this.modoBusqueda === 'paciente') {
       this.loadRegistrosPorPaciente(Number(this.pacienteBuscado), event.page, event.rows);
     } else {
       this.loadRegistros(event.page, event.rows);
@@ -722,17 +804,44 @@ export class ConsolaRegistroComponent implements OnInit {
    * @param {any} response Respuesta del servicio
    * @private
    */
+  /**
+   * Procesa la respuesta de los registros y actualiza el estado del componente
+   * @param {any} response Respuesta del servicio
+   * @private
+   */
   private procesarRespuestaRegistros(response: any): void {
-    this.registros = response.registers || [];
+    console.log('Procesando respuesta:', response);
+
+    // Handle null or undefined response
+    if (!response) {
+      console.error('Respuesta nula recibida del servidor');
+      this.resetRegistros();
+      this.showErrorAlert('No se recibieron datos del servidor');
+      return;
+    }
+
+    // La respuesta puede venir de diferentes formas, intentemos todas las posibilidades
+    let registros = [];
+
+    if (response.registers) {
+      registros = response.registers;
+    } else if (response.data) {
+      registros = response.data;
+    } else if (Array.isArray(response)) {
+      registros = response;
+    } else {
+      console.warn('Formato de respuesta no reconocido:', response);
+      this.resetRegistros();
+      return;
+    }
+
+    this.registros = registros;
+    console.log('Registros procesados:', this.registros.length);
 
     this.usuariosData = this.registros.map(registro => ({
       nombre: registro.patientBasicInfo?.name || 'No disponible',
-      documento: registro.patientIdentificationNumber.toString(),
-      fechaRegistro: registro.updateRegisterDate
-        ? new Date(registro.updateRegisterDate).toLocaleDateString()
-        : registro.registerDate
-          ? new Date(registro.registerDate).toLocaleDateString()
-          : 'Fecha no disponible',
+      documento: registro.patientIdentificationNumber?.toString() || 'No disponible',
+      fechaRegistro: this.formatDateForDisplay(registro.updateRegisterDate || registro.registerDate),
       registradoPor: registro.healthProfessional?.name || 'Desconocido',
       _fullData: registro
     }));
@@ -746,12 +855,18 @@ export class ConsolaRegistroComponent implements OnInit {
       .sort((a, b) => {
         const dateA = a.updateRegisterDate || a.registerDate;
         const dateB = b.updateRegisterDate || b.registerDate;
+
+        // Verificar que las fechas no sean undefined antes de crear objetos Date
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       })
       .slice(0, 3)
       .map(registro => ({
         nombre: registro.patientBasicInfo?.name || 'No disponible',
-        documento: registro.patientIdentificationNumber.toString(),
+        documento: registro.patientIdentificationNumber?.toString() || 'No disponible',
         fecha: registro.updateRegisterDate || registro.registerDate,
         registradoPor: registro.healthProfessional?.name || 'Desconocido',
         _fullData: registro
@@ -759,6 +874,22 @@ export class ConsolaRegistroComponent implements OnInit {
 
     this.loadingRegistros = false;
     this.cdr.detectChanges();
+  }
+
+  // Método auxiliar para formatear fechas para display
+  private formatDateForDisplay(dateValue: any): string {
+    if (!dateValue) return 'Fecha no disponible';
+
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        return 'Fecha inválida';
+      }
+      return date.toLocaleDateString();
+    } catch (e) {
+      console.error('Error al formatear fecha:', dateValue, e);
+      return 'Fecha no disponible';
+    }
   }
 
   /**
@@ -770,11 +901,15 @@ export class ConsolaRegistroComponent implements OnInit {
     this.DescripcionInvestigacion = capa?.description || 'Descripción no disponible';
     this.jefeInvestigacion = capa?.layerBoss?.name || 'Jefe no asignado';
 
-    try {
-      this.cdr.detectChanges();
-    } catch (e) {
-      console.warn('Error en detección de cambios:', e);
-    }
+    // Debug info
+    console.log('Capa cargada:', {
+      nombre: capa.layerName,
+      descripcion: this.DescripcionInvestigacion,
+      jefe: this.jefeInvestigacion,
+      jefeCompleto: capa.layerBoss
+    });
+
+    this.cdr.detectChanges();
   }
 
   /**
@@ -818,6 +953,9 @@ export class ConsolaRegistroComponent implements OnInit {
     this.usuariosData = [];
     this.registrosRecientes = [];
     this.totalElements = 0;
+    this.totalPages = 0;
+    this.currentPage = 0;
+    this.totalPacientes = 0;
     this.loadingRegistros = false;
     this.cdr.detectChanges();
   }

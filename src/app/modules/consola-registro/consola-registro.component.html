@@ -113,16 +113,15 @@
       </div>
     </div>
     <div *ngIf="selectedTab === 'registroPaciente'">
-      <app-form-registro-paciente *ngIf="selectedTab === 'registroPaciente'"
-        [researchLayerId]="selectedLayerId"></app-form-registro-paciente>
+
+      <app-registro-paciente [researchLayerId]="selectedLayerId"
+        [researchLayerName]="currentResearchLayer?.layerName || ''" (registroGuardado)="refreshData()">
+      </app-registro-paciente>
+
     </div>
     <!-- Añade esto encima de la tabla -->
     <div class="search-options" *ngIf="selectedTab === 'listadoPacientes'">
       <div class="button-group">
-        <button class="search-btn professional-btn" (click)="abrirBusquedaPorProfesional()">
-          <i class="fas fa-user-md"></i>
-          <span>Buscar por profesional</span>
-        </button>
         <button class="search-btn patient-btn" (click)="abrirBusquedaPorPaciente()">
           <i class="fas fa-user-injured"></i>
           <span>Buscar por paciente</span>
@@ -141,10 +140,6 @@
         <i class="fas fa-info-circle"></i> Mostrando registros del paciente: <strong>{{ pacienteBuscado }}</strong>
       </div>
     </div>
-    <!-- Modales -->
-    <app-buscar-profesional-modal *ngIf="showBuscarProfesionalModal" (buscar)="buscarPorProfesional($event)"
-      (cerrar)="cerrarBusquedaPorProfesional()">
-    </app-buscar-profesional-modal>
 
     <app-buscar-paciente-modal *ngIf="showBuscarPacienteModal" (buscar)="buscarPorPaciente($event)"
       (cerrar)="cerrarBusquedaPorPaciente()">
@@ -166,9 +161,6 @@
   <app-view-registro-modal *ngIf="showViewModal" [registro]="selectedRegistro" (close)="closeViewModal()">
   </app-view-registro-modal>
 
-  <app-edit-registro-modal *ngIf="showEditModal" [registro]="selectedRegistro" (saveChanges)="onSaveChanges($event)"
-    (close)="closeEditModal()">
-  </app-edit-registro-modal>
 
   <div class="modal-overlay-consentimiento" *ngIf="showConsentimientoModal">
     <div class="modal-container-consentimiento">

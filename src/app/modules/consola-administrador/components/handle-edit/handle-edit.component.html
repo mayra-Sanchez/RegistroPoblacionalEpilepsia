@@ -130,12 +130,12 @@
                             <select class="form-control" formControlName="type" required>
                                 <option value="Entero" title="Ej: 1, 2, 3">Entero</option>
                                 <option value="Real" title="Ej: 1.5, 2.75, 3.14">Real</option>
-                                <option value="Cadena" title="Ej: texto como 'Juan', 'Azul'">Cadena</option>
+                                <option value="Texto" title="Ej: texto como 'Juan', 'Azul'">Texto</option>
+                                <!-- Cambiado de "Cadena" a "Texto" -->
                                 <option value="Fecha" title="Ej: 2023-04-01">Fecha</option>
                                 <option value="Lógico" title="Ej: Verdadero o Falso">Lógico</option>
                             </select>
                         </div>
-
 
                         <div class="form-group">
                             <label>Capa de Investigación</label>
@@ -176,31 +176,26 @@
                     </form>
 
                     <!-- Edición para Capas -->
-                    <form *ngSwitchCase="'capa'" (ngSubmit)="guardarCambios()">
+                    <form *ngSwitchCase="'capa'" [formGroup]="editForm" (ngSubmit)="guardarCambios()">
                         <div class="form-group">
                             <label>Nombre de la Capa</label>
-                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.layerName" name="layerName">
+                            <input type="text" class="form-control" formControlName="layerName">
                         </div>
                         <div class="form-group">
                             <label>Descripción</label>
-                            <textarea class="form-control" [(ngModel)]="itemToEdit.description"
-                                name="description"></textarea>
+                            <textarea class="form-control" formControlName="description"></textarea>
                         </div>
                         <div class="form-group">
                             <label>Nombre del Jefe de Capa</label>
-                            <input type="text" class="form-control" [(ngModel)]="itemToEdit.layerBoss.name"
-                                name="jefeNombre">
+                            <input type="text" class="form-control" formControlName="jefeNombre">
                         </div>
                         <div class="form-group">
                             <label>Email del Jefe de Capa</label>
-                            <input type="email" class="form-control" [(ngModel)]="itemToEdit.layerBoss.email"
-                                name="jefeEmail">
+                            <input type="email" class="form-control" formControlName="jefeEmail">
                         </div>
-
                         <div class="form-group">
                             <label>Documento del Jefe</label>
-                            <input type="text" class="form-control"
-                                [(ngModel)]="itemToEdit.layerBoss.identificationNumber" name="jefeDocumento">
+                            <input type="text" class="form-control" formControlName="jefeDocumento">
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>

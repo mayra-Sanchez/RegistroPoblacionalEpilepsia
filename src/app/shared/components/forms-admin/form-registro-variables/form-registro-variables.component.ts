@@ -50,7 +50,7 @@ export class FormRegistroVariablesComponent implements OnInit {
   tipos = [
     { valor: 'Entero', descripcion: 'Ej: 1, 2, 3' },
     { valor: 'Real', descripcion: 'Ej: 1.5, 2.75, 3.14' },
-    { valor: 'Cadena', descripcion: 'Ej: texto como "Juan", "Azul"' },
+    { valor: 'Texto', descripcion: 'Ej: texto como "Juan", "Azul"' },
     { valor: 'Fecha', descripcion: 'Ej: 2023-04-01' },
     { valor: 'Lógico', descripcion: 'Ej: Verdadero o Falso' }
   ];

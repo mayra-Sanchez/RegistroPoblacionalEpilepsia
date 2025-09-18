@@ -9,7 +9,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
-import { GraficasInicioComponent } from './components/graficas-inicio/graficas-inicio.component';
 import { ConsultaDatosComponent } from './components/consulta-datos/consulta-datos.component';
 
 // Módulos adicionales necesarios para las gráficas
@@ -40,7 +39,6 @@ import { MatDialogModule } from '@angular/material/dialog';
     ConsolaInvestigadorComponent,
     NavbarInvestigadorComponent,
     TableVerConsultasComponent,
-    GraficasInicioComponent,
     ConsultaDatosComponent,
   ],
   imports: [

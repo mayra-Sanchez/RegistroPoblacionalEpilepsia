@@ -1,0 +1,419 @@
+/* =============================
+   CONTENEDOR PRINCIPAL
+============================= */
+.registro-paciente-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  font-family: "Segoe UI", Roboto, sans-serif;
+  color: #333;
+}
+
+/* =============================
+   ENCABEZADO
+============================= */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.header h2 {
+  font-size: 1.8rem;
+  color: #4a4a8a;
+  margin: 0;
+}
+.header h2 i {
+  margin-right: 0.5rem;
+  color: #3b82f6;
+}
+.header .layer-info {
+  font-size: 0.95rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+/* =============================
+   LOADING
+============================= */
+.loading-variables {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+  color: #555;
+}
+.loading-variables i {
+  margin-right: 0.5rem;
+  color: #3b82f6;
+}
+
+/* =============================
+   NAVEGACIÓN SECCIONES
+============================= */
+.section-navigation {
+  margin-bottom: 1.5rem;
+}
+.nav-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.nav-btn {
+  position: relative;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+.nav-btn .step-number {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e5e7eb;
+  color: #333;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  font-size: 0.8rem;
+}
+.nav-btn.active {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+.nav-btn.active .step-number {
+  background: #fff;
+  color: #3b82f6;
+}
+
+/* =============================
+   PROGRESS BAR
+============================= */
+.progress-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  transition: width 0.4s ease;
+}
+
+/* =============================
+   FORMULARIO
+============================= */
+.registro-form {
+  margin-top: 1rem;
+}
+.form-section {
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+.form-section.active {
+  display: block;
+}
+.form-section h3 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: #4a4a8a;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.form-section h3 i {
+  color: #3b82f6;
+}
+
+/* =============================
+   CAMPOS DE FORMULARIO
+============================= */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.form-group {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+}
+.form-group.full-width {
+  flex: 100%;
+}
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #444;
+}
+.form-group input,
+.form-group select {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+  outline: none;
+}
+
+/* =============================
+   MENSAJES DE ERROR
+============================= */
+.error-message {
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin-top: 0.3rem;
+}
+
+/* =============================
+   BOTONES DE SECCIÓN
+============================= */
+.section-navigation-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn i {
+  font-size: 0.9rem;
+}
+.btn-prev {
+  background: #e5e7eb;
+  color: #333;
+}
+.btn-next {
+  background: #3b82f6;
+  color: #fff;
+}
+.btn-primary {
+  background: #16a34a;
+  color: #fff;
+}
+.btn-secondary {
+  background: #f43f5e;
+  color: #fff;
+}
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* =============================
+   SWITCH (Cuidador)
+============================= */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  margin-left: 1rem;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.4s;
+}
+input:checked + .slider {
+  background-color: #3b82f6;
+}
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* =============================
+   VARIABLES DINÁMICAS
+============================= */
+.variable-item {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+.required-asterisk {
+  color: #dc2626;
+  margin-left: 0.25rem;
+}
+
+/* =============================
+   ACCIONES FINALES
+============================= */
+.form-actions {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* =============================
+   ANIMACIONES
+============================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================
+   RESPONSIVE
+============================= */
+@media (max-width: 768px) {
+  .nav-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .section-navigation-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* =============================
+   VARIABLES DINÁMICAS - REDISEÑO
+============================= */
+.variables-container {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Layout flexible: 2 columnas en pantallas grandes */
+@media (min-width: 992px) {
+  .variables-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.variable-field {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  border: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.variable-field:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+/* Títulos de cada variable */
+.variable-field label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+/* Badge por tipo de variable */
+.variable-type-badge {
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.6rem;
+  color: white;
+}
+
+.variable-type-badge[data-type="Entero"] { background: #2563eb; }   /* Azul */
+.variable-type-badge[data-type="Real"] { background: #0ea5e9; }     /* Celeste */
+.variable-type-badge[data-type="Texto"] { background: #9333ea; }    /* Morado */
+.variable-type-badge[data-type="Fecha"] { background: #16a34a; }    /* Verde */
+.variable-type-badge[data-type="Lógico"] { background: #f59e0b; }   /* Amarillo */
+
+/* Inputs */
+.input-container {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* Checkbox personalizado */
+.checkbox-container {
+  margin-top: 0.5rem;
+}
+
+.checkbox-label.large {
+  background: #f3f4f6;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+.checkbox-label.large:hover {
+  background: #e5e7eb;
+}
+
+/* Mensajes */
+.error-message {
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin-top: 0.5rem;
+}
+.help-text {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
