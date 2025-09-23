@@ -420,14 +420,25 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.consolaService.getAllLayers().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
-        this.capasData = data.map(capa => ({
-          id: capa.id,
-          nombreCapa: capa.layerName,
-          descripcion: capa.description,
-          jefeCapa: capa.layerBoss || {},
-          jefeCapaNombre: capa.layerBoss?.name || 'Sin asignar',
-          jefeIdentificacion: capa.layerBoss?.identificationNumber || 'Sin asignar'
-        }));
+        this.capasData = data.map(capa => {
+          console.log('[loadCapasData] Capa recibida:', capa); // DEBUG
+          console.log('[loadCapasData] Email del jefe:', capa.layerBoss?.email); // DEBUG
+
+          return {
+            id: capa.id,
+            nombreCapa: capa.layerName,
+            descripcion: capa.description,
+            jefeCapa: capa.layerBoss || {},
+            jefeCapaNombre: capa.layerBoss?.name || 'Sin asignar',
+            jefeIdentificacion: capa.layerBoss?.identificationNumber || 'Sin asignar',
+            // Asegurarse de incluir el email
+            layerBoss: capa.layerBoss ? {
+              ...capa.layerBoss,
+              email: capa.layerBoss.email || '' // ← Incluir explícitamente el email
+            } : {}
+          };
+        });
+
         this.capas = this.capasData;
         this.updateDashboard();
         this.totalCapas = this.capasData.length;
@@ -913,10 +924,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         row.lastPasswordUpdate ||
         'No registrada';
 
-      // ✅ Obtener aceptación de términos
-      const acceptTerms =
-        row.acceptTermsAndConditions ??
-        (row.attributes?.acceptTermsAndConditions?.[0] === 'true');
+      // ✅ FORZAR SIEMPRE A TRUE (solución temporal)
+      const acceptTerms = true;
 
       this.userToEdit = {
         id: row.id,
@@ -932,8 +941,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         password: row.passwordActual || '',
         lastPasswordUpdate: lastUpdate,
         attributes: row.attributes || {},
-        acceptTermsAndConditions: acceptTerms // 👈 agregado
+        acceptTermsAndConditions: true // 👈 Siempre true
       };
+
     } else if (tipo === 'capa') {
       this.capaToEdit = {
         id: row.id,
@@ -944,10 +954,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           name: row.layerBoss?.name || row.jefeCapaNombre || '',
           identificationNumber:
             row.layerBoss?.identificationNumber || row.jefeIdentificacion || '',
-          email: row.layerBoss?.email || row.jefeEmail || '' // 👈 agregado
+          email: row.layerBoss?.email || row.jefeEmail || ''
         }
       };
       this.isEditingCapa = true;
+
     } else if (tipo === 'variable') {
       this.varToEdit = {
         ...row,

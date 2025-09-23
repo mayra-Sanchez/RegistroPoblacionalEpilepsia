@@ -100,11 +100,13 @@
 
     <!-- Botón de envío -->
     <div class="form-footer">
-      <button type="button" class="submit-button" (click)="onCancel()">
-        Cancelar
+      <button type="button" class="submit-button cancel-button" (click)="onCancel()" [disabled]="isSubmitting">
+        <i class="fas fa-times"></i> Cancelar
       </button>
-      <button type="submit" class="submit-button" [disabled]="form.invalid">
-        <i class="fas fa-save"></i> Registrar Capa
+      <button type="submit" class="submit-button" [disabled]="form.invalid || isSubmitting">
+        <i class="fas" [class.fa-save]="!isSubmitting" [class.fa-spinner]="isSubmitting"
+          [class.fa-spin]="isSubmitting"></i>
+        {{ isSubmitting ? 'Registrando...' : 'Registrar Capa' }}
       </button>
     </div>
   </form>

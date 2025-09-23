@@ -279,3 +279,20 @@
   animation: fadeIn 0.3s ease;
 }
 
+/* Estilos para el estado de carga */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  background-color: #6c757d !important;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: #5a6268 !important;
+}
+
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}

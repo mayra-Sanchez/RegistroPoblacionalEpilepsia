@@ -57,7 +57,7 @@ export class HandleEditComponent implements OnInit {
           ],
           // en edición no forzamos requiredTrue (evita bloqueo si el usuario ya aceptó o no)
           acceptTermsAndConditions: [
-            (this.itemToEdit.attributes?.acceptTermsAndConditions?.[0] === 'true') || false
+            this.getAcceptTermsValue(this.itemToEdit)
           ]
         });
         break;
@@ -78,12 +78,16 @@ export class HandleEditComponent implements OnInit {
         break;
 
       case 'capa':
+        // Asegurarnos de que el email se carga correctamente
+        const layerBossEmail = this.itemToEdit.layerBoss?.email || '';
+        console.log('[HandleEdit] Cargando capa - email del jefe:', layerBossEmail);
+
         this.editForm = this.fb.group({
           layerName: [{ value: this.itemToEdit.layerName, disabled: true }, Validators.required],
-          description: [this.itemToEdit.description],
+          description: [this.itemToEdit.description || ''],
           jefeNombre: [this.itemToEdit.layerBoss?.name || ''],
           jefeDocumento: [this.itemToEdit.layerBoss?.identificationNumber || ''],
-          jefeEmail: [this.itemToEdit.layerBoss?.email || '', [Validators.required, Validators.email]]
+          jefeEmail: [layerBossEmail, [Validators.required, Validators.email]]
         });
         break;
     }
@@ -91,6 +95,10 @@ export class HandleEditComponent implements OnInit {
     console.log('[HandleEdit] itemToEdit:', this.itemToEdit);
     console.log('[HandleEdit] normalizedUserId:', this.normalizedUserId);
     console.log('[HandleEdit] selectedCapas:', this.selectedCapas);
+  }
+
+  private getAcceptTermsValue(item: any): boolean {
+    return true;
   }
 
   get opcionesArray(): FormArray {

@@ -1,17 +1,61 @@
-<div class="modal-header">
-  <h5 class="modal-title">📜 Términos y Condiciones</h5>
-  <button mat-icon-button mat-dialog-close aria-label="Cerrar" class="btn-cerrar-icon">
-    ✕
-  </button>
-</div>
-
-<div class="modal-body">
-  <div *ngIf="cargando" class="text-center">
-    <mat-spinner diameter="40"></mat-spinner>
+<div class="modal-container">
+  <!-- Header elegante -->
+  <div class="modal-header">
+    <div class="header-content">
+      <div class="icon-title">
+        <div class="icon-container">
+          <i class="fas fa-file-contract"></i>
+        </div>
+        <div class="title-section">
+          <h2>Términos y Condiciones</h2>
+          <p>Políticas y acuerdos del sistema</p>
+        </div>
+      </div>
+      <button class="close-btn" mat-dialog-close aria-label="Cerrar">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
   </div>
 
-  <div *ngIf="!cargando">
-    <p [innerHTML]="contenido"></p>
+  <!-- Body con diseño moderno -->
+  <div class="modal-body">
+    <!-- Estado de carga -->
+    <div *ngIf="cargando" class="loading-state">
+      <div class="spinner-container">
+        <div class="spinner"></div>
+      </div>
+      <p>Cargando términos y condiciones...</p>
+    </div>
+
+    <!-- Contenido -->
+    <div *ngIf="!cargando" class="content-container">
+      <!-- Tarjeta de información -->
+      <div class="info-card">
+        <div class="card-header">
+          <i class="fas fa-info-circle"></i>
+          <span>Información importante</span>
+        </div>
+        <p>Por favor, lea atentamente los siguientes términos antes de continuar.</p>
+      </div>
+
+      <!-- Contenido de términos -->
+      <div class="terms-content">
+        <div class="content-card" [innerHTML]="contenido"></div>
+      </div>
+
+      <!-- Fecha de actualización -->
+      <div class="update-info">
+        <i class="fas fa-clock"></i>
+        <span>Última actualización: {{fechaActual | date:'dd/MM/yyyy'}}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer mejorado -->
+  <div class="modal-footer">
+    <button class="btn-primary" mat-dialog-close>
+      <i class="fas fa-check"></i>
+      Entendido
+    </button>
   </div>
 </div>
-

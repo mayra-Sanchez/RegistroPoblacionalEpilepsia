@@ -33,7 +33,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
    * Suscripción para manejar la llamada al servicio de registro
    */
   private capasSubscription: Subscription = Subscription.EMPTY;
-
+  isSubmitting: boolean = false;
   /**
    * Constructor del componente
    * @param fb Servicio FormBuilder para crear formularios reactivos
@@ -98,7 +98,11 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
    * Si el formulario es inválido, marca todos los controles como touched y muestra alerta.
    */
   registrarCapa(): void {
-    // Validar si el formulario es inválido
+    // Prevenir múltiples envíos simultáneos
+    if (this.isSubmitting) {
+      return;
+    }
+
     if (this.form.invalid) {
       Swal.fire({
         title: 'Formulario inválido',
@@ -110,7 +114,6 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Preparar los datos del formulario, recortando espacios en blanco
     const capaData = {
       layerName: this.form.value.layerName?.trim(),
       description: this.form.value.description?.trim(),
@@ -122,13 +125,12 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       },
     };
 
-    // Mostrar diálogo de confirmación antes de registrar
     Swal.fire({
       title: '¿Confirmar registro?',
       html: `
-    <p>¿Estás seguro de registrar esta capa?</p>
-    <strong style="color: #d33;">⚠️ Una vez creada, no se podrá editar algunos campos cómo el nombre de la capa.</strong>
-  `,
+      <p>¿Estás seguro de registrar esta capa?</p>
+      <strong style="color: #d33;">⚠️ Una vez creada, no se podrá editar algunos campos cómo el nombre de la capa.</strong>
+    `,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, registrar',
@@ -137,10 +139,10 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       cancelButtonColor: '#d33'
     }).then((result) => {
       if (result.isConfirmed) {
+        this.isSubmitting = true;
         this.procesarRegistro(capaData);
       }
     });
-
   }
 
   /**
@@ -150,7 +152,8 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   private procesarRegistro(capaData: any): void {
     this.capasSubscription = this.consolaAdministradorService.registrarCapa(capaData).subscribe({
       next: () => this.mostrarExito(),
-      error: (error) => this.mostrarError(error)
+      error: (error) => this.mostrarError(error),
+      complete: () => this.isSubmitting = false // Aseguramos que se resetee el estado
     });
   }
 
@@ -161,20 +164,43 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     Swal.fire({
       title: '¡Registro exitoso! 🎉',
       html: `
-        <div style="text-align: center;">
-          <p>La capa ha sido registrada correctamente.</p>
-          <img src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" 
-            alt="Éxito" style="width: 150px; margin-top: 10px;">
-        </div>
-      `,
+      <div style="text-align: center;">
+        <p>La capa ha sido registrada correctamente.</p>
+        <img src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" 
+          alt="Éxito" style="width: 150px; margin-top: 10px;">
+      </div>
+    `,
       icon: 'success',
       confirmButtonText: 'Aceptar',
       confirmButtonColor: '#3085d6',
       background: '#f1f8ff',
       timer: 5000,
       timerProgressBar: true
+    }).then(() => {
+      // Resetear formulario después de que el usuario cierre la alerta
+      this.resetearFormulario();
     });
-    this.form.reset();
+  }
+
+  /**
+ * Resetea el formulario completamente
+ */
+  private resetearFormulario(): void {
+    this.form.reset({
+      layerBoss: { id: 1 } // Mantener el ID por defecto
+    });
+
+    // Resetear el estado de validación
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+
+    // Forzar actualización de la vista
+    setTimeout(() => {
+      Object.keys(this.form.controls).forEach(key => {
+        const control = this.form.get(key);
+        control?.setErrors(null);
+      });
+    }, 0);
   }
 
   /**
@@ -182,18 +208,37 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
    * Muestra confirmación antes de emitir el evento de cancelación
    */
   onCancel() {
-    Swal.fire({
-      title: '¿Cancelar registro?',
-      text: '¿Estás seguro de que deseas cancelar el registro?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, cancelar',
-      cancelButtonText: 'Continuar editando'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.cancelar.emit();
-      }
-    });
+    // Si hay un envío en proceso, prevenir cancelación accidental
+    if (this.isSubmitting) {
+      Swal.fire({
+        title: 'Registro en proceso',
+        text: 'Por favor espera a que termine el registro actual.',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar'
+      });
+      return;
+    }
+
+    // Si el formulario tiene cambios sin guardar
+    if (this.form.dirty) {
+      Swal.fire({
+        title: '¿Cancelar registro?',
+        text: 'Tienes cambios sin guardar. ¿Estás seguro de que deseas cancelar?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'Continuar editando',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.cancelar.emit();
+        }
+      });
+    } else {
+      // Si no hay cambios, cancelar directamente
+      this.cancelar.emit();
+    }
   }
 
   /**
@@ -201,6 +246,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
    * @param error Objeto de error recibido del servicio
    */
   private mostrarError(error: any): void {
+    this.isSubmitting = false;
     console.error('Error al registrar capa:', error);
 
     let mensaje = 'Hubo un problema inesperado al registrar la capa.';

@@ -108,10 +108,10 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Fecha de Nacimiento *</label>
-                        <input type="date" formControlName="birthdate" (change)="onBirthDateChange()" />
+                        <input type="date" formControlName="birthDate" (change)="onBirthDateChange()" />
                         <div *ngIf="
-                  registroForm.get('patient')?.get('birthdate')?.invalid &&
-                  registroForm.get('patient')?.get('birthdate')?.touched
+                  registroForm.get('patient')?.get('birthDate')?.invalid &&
+                  registroForm.get('patient')?.get('birthDate')?.touched
                 " class="error-message">
                             Fecha de nacimiento es requerida
                         </div>

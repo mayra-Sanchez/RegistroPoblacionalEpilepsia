@@ -1,0 +1,337 @@
+<div class="modal-container">
+    <!-- Encabezado del modal -->
+    <div class="modal-header">
+        <div class="header-content">
+            <div class="patient-avatar">
+                <mat-icon>person</mat-icon>
+            </div>
+            <div class="patient-title">
+                <h2>Información del Paciente</h2>
+                <p *ngIf="registro?.patientBasicInfo">{{getSafeValue(registro.patientBasicInfo?.name)}} •
+                    {{getSafeValue(registro.patientIdentificationNumber)}}</p>
+            </div>
+        </div>
+        <button mat-icon-button (click)="onClose()" class="close-button" aria-label="Cerrar">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <!-- Navegación por pestañas -->
+    <div class="modal-tabs">
+        <button class="tab-button" [class.active]="isTabActive('basic')" (click)="setActiveTab('basic')">
+            Información Básica
+        </button>
+        <button class="tab-button" [class.active]="isTabActive('caregiver')" (click)="setActiveTab('caregiver')"
+            *ngIf="hasCaregiver()">
+            Cuidador
+        </button>
+        <button class="tab-button" [class.active]="isTabActive('research')" (click)="setActiveTab('research')"
+            *ngIf="getVariables().length > 0">
+            Investigación
+        </button>
+        <button class="tab-button" [class.active]="isTabActive('layer')" (click)="setActiveTab('layer')"
+            *ngIf="getMainRegisterInfo()">
+            Capa
+        </button>
+        <button class="tab-button" [class.active]="isTabActive('consentimiento')"
+            (click)="setActiveTab('consentimiento')" *ngIf="hasConsentimiento">
+            Consentimiento
+        </button>
+    </div>
+
+    <!-- Contenido del modal -->
+    <div class="modal-content" *ngIf="registro">
+        <!-- Información básica del paciente -->
+        <div class="tab-content" [class.active]="isTabActive('basic')" id="basic-tab">
+            <div class="section-card">
+                <div class="section-header">
+                    <mat-icon>person_outline</mat-icon>
+                    <h3>Datos Personales</h3>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">
+                            <mat-icon>badge</mat-icon>
+                            <span>Documento</span>
+                        </div>
+                        <div class="info-value">
+                            {{getSafeValue(registro.patientIdentificationNumber, 'No disponible')}}
+                            ({{getSafeValue(registro.patientIdentificationType, 'No especificado')}})
+                        </div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>person</mat-icon>
+                            <span>Nombre</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.name)}}</div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>wc</mat-icon>
+                            <span>Sexo</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.sex)}}</div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>cake</mat-icon>
+                            <span>Edad</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.age)}} años</div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>event</mat-icon>
+                            <span>Fecha de nacimiento</span>
+                        </div>
+                        <div class="info-value">{{formatDate(getSafeValue(registro.patientBasicInfo.birthDate))}}</div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>email</mat-icon>
+                            <span>Email</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.email, 'No disponible')}}</div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>phone</mat-icon>
+                            <span>Teléfono</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.phoneNumber, 'No disponible')}}
+                        </div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>favorite</mat-icon>
+                            <span>Estado civil</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.maritalStatus, 'No
+                            especificado')}}</div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>school</mat-icon>
+                            <span>Nivel educativo</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.educationLevel, 'No
+                            especificado')}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header">
+                    <mat-icon>location_on</mat-icon>
+                    <h3>Información Geográfica</h3>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>place</mat-icon>
+                            <span>Ciudad de origen</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.hometown, 'No especificado')}}
+                        </div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>my_location</mat-icon>
+                            <span>Ciudad actual</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.currentCity, 'No
+                            especificado')}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header">
+                    <mat-icon>show_chart</mat-icon>
+                    <h3>Estado y Situación</h3>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>attach_money</mat-icon>
+                            <span>Nivel económico</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.economicStatus, 'No
+                            especificado')}}</div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>warning</mat-icon>
+                            <span>Primera crisis</span>
+                        </div>
+                        <div class="info-value">{{formatDate(getSafeValue(registro.patientBasicInfo.firstCrisisDate))}}
+                        </div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                        <div class="info-label">
+                            <mat-icon>healing</mat-icon>
+                            <span>Estado de crisis</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.crisisStatus, 'No
+                            especificado')}}</div>
+                    </div>
+                    <div class="info-item" *ngIf="registro.patientBasicInfo && registro.patientBasicInfo.deathDate">
+                        <div class="info-label">
+                            <mat-icon>remove_circle</mat-icon>
+                            <span>Fecha de fallecimiento</span>
+                        </div>
+                        <div class="info-value">{{formatDate(registro.patientBasicInfo.deathDate)}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del cuidador -->
+        <div class="tab-content" [class.active]="isTabActive('caregiver')" id="caregiver-tab" *ngIf="hasCaregiver()">
+            <div class="section-card">
+                <div class="section-header">
+                    <mat-icon>accessibility</mat-icon>
+                    <h3>Información del Cuidador</h3>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">
+                            <mat-icon>person</mat-icon>
+                            <span>Nombre</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.caregiver?.name)}}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <mat-icon>badge</mat-icon>
+                            <span>Documento</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.caregiver?.identificationNumber, 'No
+                            disponible')}}
+                            ({{getSafeValue(registro.caregiver?.identificationType, 'No especificado')}})</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <mat-icon>cake</mat-icon>
+                            <span>Edad</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.caregiver?.age, 'No disponible')}} años</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <mat-icon>school</mat-icon>
+                            <span>Nivel educativo</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.caregiver?.educationLevel, 'No especificado')}}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <mat-icon>work</mat-icon>
+                            <span>Ocupación</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(registro.caregiver?.occupation, 'No especificado')}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variables de la capa de investigación -->
+        <div class="tab-content" [class.active]="isTabActive('research')" id="research-tab"
+            *ngIf="getVariables().length > 0">
+            <div class="section-card">
+                <div class="section-header">
+                    <mat-icon>science</mat-icon>
+                    <h3>Variables de Investigación</h3>
+                </div>
+                <div class="variables-grid">
+                    <div class="variable-item" *ngFor="let variable of getVariables()">
+                        <div class="variable-header">
+                            <span class="variable-name">{{getSafeValue(variable.variableName, 'Variable sin
+                                nombre')}}</span>
+                            <span class="variable-type">{{getSafeValue(variable.variableType, 'Tipo no
+                                especificado')}}</span>
+                        </div>
+                        <div class="variable-value">{{formatVariableValue(variable)}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de la capa de investigación -->
+        <div class="tab-content" [class.active]="isTabActive('layer')" id="layer-tab" *ngIf="getMainRegisterInfo()">
+            <div class="section-card">
+                <div class="section-header">
+                    <mat-icon>layers</mat-icon>
+                    <h3>Información de la Capa de Investigación</h3>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">
+                            <mat-icon>title</mat-icon>
+                            <span>Nombre de la capa</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(getMainRegisterInfo()?.researchLayerName, 'No
+                            disponible')}}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <mat-icon>fingerprint</mat-icon>
+                            <span>ID de la capa</span>
+                        </div>
+                        <div class="info-value">{{getSafeValue(getMainRegisterInfo()?.researchLayerId, 'No
+                            disponible')}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" [class.active]="isTabActive('consentimiento')" id="consentimiento-tab"
+            *ngIf="hasConsentimiento">
+            <div class="section-card">
+                <div class="section-header">
+                    <mat-icon>assignment</mat-icon>
+                    <h3>Consentimiento Informado</h3>
+                </div>
+
+                <div class="consentimiento-container" *ngIf="!loadingConsentimiento && consentimientoUrl">
+                    <div class="consentimiento-actions">
+                        <button mat-raised-button color="primary" (click)="viewConsentimiento()">
+                            <mat-icon>visibility</mat-icon>
+                            Ver Consentimiento
+                        </button>
+                        <button mat-stroked-button (click)="downloadConsentimiento()">
+                            <mat-icon>download</mat-icon>
+                            Descargar
+                        </button>
+                    </div>
+
+                    <div class="consentimiento-preview">
+                        <iframe [src]="consentimientoUrl | safeUrl" width="100%" height="500px" frameborder="0"
+                            title="Vista previa del consentimiento informado">
+                        </iframe>
+                    </div>
+                </div>
+
+                <div class="loading-spinner" *ngIf="loadingConsentimiento">
+                    <mat-spinner diameter="40"></mat-spinner>
+                    <p>Cargando consentimiento...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje si no hay información -->
+        <div class="section" *ngIf="!registro.patientBasicInfo">
+            <div class="warning-message">
+                <mat-icon>warning</mat-icon>
+                <span>No se encontró información detallada del paciente.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-actions">
+        <button mat-stroked-button (click)="onClose()">Cerrar</button>
+    </div>
+</div>

@@ -81,8 +81,8 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadVariablesDeCapa();
 
-    // Actualizar edad cuando cambie birthdate (soporta input type="date" y strings)
-    const birthControl = this.registroForm.get('patient.birthdate');
+    // Actualizar edad cuando cambie birthDate (soporta input type="date" y strings)
+    const birthControl = this.registroForm.get('patient.birthDate');
     birthControl?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.onBirthDateChange());
   }
 
@@ -99,7 +99,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       patient: this.fb.group({
         name: ['', Validators.required],
         sex: ['', Validators.required],
-        birthdate: ['', Validators.required],
+        birthDate: ['', Validators.required],
         age: [{ value: '', disabled: true }],
         email: ['', [Validators.email]],
         phoneNumber: [''],
@@ -209,10 +209,10 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       case 1:
         const name = this.registroForm.get('patient.name');
         const sex = this.registroForm.get('patient.sex');
-        const birthdate = this.registroForm.get('patient.birthdate');
+        const birthDate = this.registroForm.get('patient.birthDate');
 
-        if (name?.invalid || sex?.invalid || birthdate?.invalid) {
-          this.markFieldsAsTouched([name, sex, birthdate]);
+        if (name?.invalid || sex?.invalid || birthDate?.invalid) {
+          this.markFieldsAsTouched([name, sex, birthDate]);
           Swal.fire('Error', 'Por favor complete los campos requeridos de información personal', 'error');
           return false;
         }
@@ -231,7 +231,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   }
 
   onBirthDateChange(): void {
-    const birthDate = this.registroForm.get('patient.birthdate')?.value;
+    const birthDate = this.registroForm.get('patient.birthDate')?.value;
     if (birthDate) {
       const today = new Date();
       const birth = new Date(birthDate);
@@ -302,7 +302,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       patient: {
         name: formValue.patient.name,
         sex: formValue.patient.sex,
-        birthdate: this.formatDateForBackend(formValue.patient.birthdate),
+        birthDate: this.formatDateForBackend(formValue.patient.birthDate),
         age: Number(formValue.patient.age),
         email: formValue.patient.email || '',
         phoneNumber: formValue.patient.phoneNumber || '',
@@ -337,7 +337,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
 
     // DEBUG: Mostrar específicamente las fechas
     console.log('📅 FECHAS ENVIADAS:');
-    console.log(' - birthdate:', registerRequest.patient.birthdate);
+    console.log(' - birthDate:', registerRequest.patient.birthDate);
     console.log(' - deathDate:', registerRequest.patient.deathDate);
     console.log(' - firstCrisisDate:', registerRequest.patient.firstCrisisDate);
 
@@ -471,15 +471,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   private validateRequest(request: any): boolean {
     console.log('🔍 VALIDANDO REQUEST:');
 
-    const dateFields = ['birthdate', 'deathDate', 'firstCrisisDate'];
-    for (const field of dateFields) {
-      if (request.patient[field] && !/^\d{2}-\d{2}-\d{4}$/.test(request.patient[field])) {
-        console.error(`❌ Invalid date format for ${field}:`, request.patient[field]);
-        return false;
-      }
-    }
-
-    // Resto de la validación...
+    // Validaciones críticas únicamente
     if (isNaN(request.patientIdentificationNumber)) {
       console.error('❌ Invalid patient identification number');
       return false;
@@ -490,17 +482,38 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    for (const variable of request.registerInfo.variablesInfo) {
-      if (variable.type === 'Number' && variable.value !== null && isNaN(variable.value)) {
-        console.error(`❌ Invalid numeric value for variable:`, variable);
-        return false;
+    if (!request.patient.name || request.patient.name.trim() === '') {
+      console.error('❌ Patient name is required');
+      return false;
+    }
+
+    if (!request.patient.sex || request.patient.sex.trim() === '') {
+      console.error('❌ Patient sex is required');
+      return false;
+    }
+
+    // Validación básica de fechas - solo verificar que si existen, sean strings válidos
+    const dateFields = ['birthDate', 'deathDate', 'firstCrisisDate'];
+    for (const field of dateFields) {
+      const dateValue = request.patient[field];
+
+      if (dateValue && dateValue !== null) {
+        // Aceptar cualquier string no vacío para fechas
+        if (typeof dateValue !== 'string' || dateValue.trim() === '') {
+          console.error(`❌ Invalid date value for ${field}:`, dateValue);
+          return false;
+        }
+
+        // Debug adicional para ver el formato real
+        console.log(`📅 ${field}:`, dateValue, 'type:', typeof dateValue);
       }
-      // Validar fechas en variables
-      if (variable.type === 'String' && variable.value && /^\d{2}-\d{2}-\d{4}$/.test(variable.value)) {
-        const [day, month, year] = variable.value.split('-');
-        const date = new Date(`${year}-${month}-${day}`);
-        if (isNaN(date.getTime())) {
-          console.error(`❌ Invalid date value for variable:`, variable);
+    }
+
+    // Validación básica de variables numéricas
+    for (const variable of request.registerInfo.variablesInfo) {
+      if (variable.type === 'Number' && variable.value !== null && variable.value !== undefined) {
+        if (isNaN(variable.value)) {
+          console.error(`❌ Invalid numeric value for variable:`, variable);
           return false;
         }
       }
@@ -514,19 +527,19 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     if (!dateValue) return null;
 
     try {
-      // Si ya está en formato dd-MM-yyyy, devolverlo tal cual
-      if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
+      // Si ya está en formato yyyy-MM-dd (desde input type="date"), mantenerlo
+      if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
         return dateValue;
       }
 
-      // Si ya está en formato yyyy-MM-dd (desde input type="date"), convertirlo
-      if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-        const [year, month, day] = dateValue.split('-');
-        return `${day}-${month}-${year}`;
+      // Si está en formato dd-MM-yyyy, convertirlo a yyyy-MM-dd
+      if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
+        const [day, month, year] = dateValue.split('-');
+        return `${year}-${month}-${day}`;
       }
 
+      // Para objetos Date
       let date: Date;
-
       if (dateValue instanceof Date) {
         date = dateValue;
       } else {
@@ -535,11 +548,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
 
       if (isNaN(date.getTime())) return null;
 
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
 
-      return `${day}-${month}-${year}`;
+      return `${year}-${month}-${day}`; // Formato yyyy-MM-dd
     } catch {
       return null;
     }
