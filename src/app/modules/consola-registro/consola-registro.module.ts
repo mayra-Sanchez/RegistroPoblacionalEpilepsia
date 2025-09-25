@@ -16,8 +16,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { BuscarProfesionalModalComponent } from './components/buscar-profesional-modal/buscar-profesional-modal.component';
-import { BuscarPacienteModalComponent } from './components/buscar-paciente-modal/buscar-paciente-modal.component';
 import { NgChartsModule } from 'ng2-charts';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -33,19 +31,21 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { SafeUrlPipe } from 'src/app/pipes/safeUrl.pipe';
 import { ConsentimientoInformadoComponent } from './components/consentimiento-informado/consentimiento-informado.component';
+import { ViewRegistroModalComponent } from './components/view-registro-modal/view-registro-modal.component';
 import { RegistroPacienteComponent } from './components/registro-paciente/registro-paciente.component';
+import { EditRegistroModalComponent } from './components/edit-registro-modal/edit-registro-modal.component';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
     NavbarRegistroComponent,
     TableVerUsuariosComponent,
     ConsultaDinamicaComponent,
-    BuscarProfesionalModalComponent,
-    BuscarPacienteModalComponent,
     FileSizePipe,
     SafeUrlPipe,
     ConsentimientoInformadoComponent,
-    RegistroPacienteComponent
+    RegistroPacienteComponent,
+    EditRegistroModalComponent,
+    ViewRegistroModalComponent
   ],
   imports: [
     CommonModule,

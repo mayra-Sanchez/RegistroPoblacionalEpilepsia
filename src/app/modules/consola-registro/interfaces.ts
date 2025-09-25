@@ -278,3 +278,39 @@ export interface SearchMessage {
   type: 'info' | 'success' | 'error';
   text: string;
 }
+
+// Agrega estas interfaces al archivo interfaces.ts
+
+/* --------------------------------------------------
+ * HISTORIAL DE CAMBIOS
+ * -------------------------------------------------- */
+export interface VariableHistory {
+  id: string;
+  name: string;
+  type: string;
+  valueAsString: string | null;
+  valueAsNumber: number | null;
+}
+
+export interface ResearchLayerGroupHistory {
+  researchLayerId: string;
+  researchLayerName: string;
+  variables: VariableHistory[];
+}
+
+export interface RegisterHistory {
+  id: string;
+  registerId: string;
+  changedBy: string;
+  changedAt: string;
+  operation: string;
+  patientIdentificationNumber: number;
+  isResearchLayerGroup: ResearchLayerGroupHistory;
+}
+
+export interface RegisterHistoryResponse {
+  data: RegisterHistory[];
+  currentPage: number;
+  totalPages: number;
+  totalElements: number;
+}

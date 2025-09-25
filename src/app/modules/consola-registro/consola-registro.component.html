@@ -2,53 +2,73 @@
   <app-navbar-registro (tabSelected)="onTabSelected($event)"></app-navbar-registro>
 
   <div class="contentDigitador">
-    <!-- Contenido de las pestañas (igual que antes) -->
-    <div *ngIf="selectedTab === 'inicioDigitador'" class="digitador-dashboard">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando información del dashboard...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!isLoading && errorMessage" class="error-container">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>{{ errorMessage }}</p>
+      <button class="retry-btn" (click)="ngOnInit()">Reintentar</button>
+    </div>
+
+    <!-- Contenido principal cuando hay datos -->
+    <div *ngIf="!isLoading && !errorMessage && selectedTab === 'inicioDigitador'" class="digitador-dashboard">
       <div class="dashboard-header">
         <p class="welcome-message">Bienvenido/a, {{ username }}</p>
+        <span class="user-role">{{ userRole }}</span>
       </div>
 
       <!-- Contenido principal -->
       <div class="dashboard-grid">
-        <!-- Sección de descripción (ocupará más espacio) -->
+        <!-- Sección de descripción -->
         <div class="dashboard-card description-card">
           <div class="card-header">
             <i class="fas fa-book-open card-icon"></i>
-            <h3>Descripción de la Investigación</h3>
+            <h3>{{ currentResearchLayer?.layerName}}</h3>
           </div>
           <div class="card-content">
-            <p>
-              {{ currentResearchLayer?.description }}
+            <p class="description-text">
+              {{ currentResearchLayer?.description || 'No hay descripción disponible' }}
             </p>
             <div class="research-info">
               <div class="info-item">
                 <i class="fas fa-user-tie"></i>
-                <span><strong>Jefe de investigación:</strong> {{ currentResearchLayer?.layerBoss?.name }}</span>
+                <span><strong>Jefe de investigación:</strong> {{ currentResearchLayer?.layerBoss?.name || 'No asignado'
+                  }}</span>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Estadísticas -->
         <div class="dashboard-card stats-card">
           <div class="card-header">
             <i class="fas fa-chart-line card-icon"></i>
-            <h3>Tus Estadísticas</h3>
+            <span class="last-update">Actualizado: {{ lastUpdate | date:'short' }}</span>
           </div>
           <div class="stats-grid">
-            <div class="stat-item">
-              <div class="stat-circle">
+            <!-- Selector de capa -->
+            <div class="stat-item layer-selector-item">
+              <div class="stat-circle primary">
                 <i class="fas fa-layer-group"></i>
               </div>
               <div class="layer-selector-container">
                 <div class="layer-selector">
-                  <label for="researchLayer">
-                    Capa de investigación:
+                  <label for="researchLayer" class="layer-label">
+                    Capa de investigación activa:
                   </label>
-
-                  <!-- Modern dropdown version -->
                   <div class="layer-selector-modern">
-                    <select id="researchLayer" [(ngModel)]="selectedLayerId" (change)="onLayerChange($event)">
-                      <option *ngFor="let layer of availableLayers" [value]="layer.id">
+                    <select id="researchLayer" [(ngModel)]="selectedLayerId" (change)="onLayerChange($event)"
+                      [disabled]="availableLayers.length === 0">
+                      <option value="" disabled *ngIf="availableLayers.length === 0">
+                        No hay capas disponibles
+                      </option>
+                      <option *ngFor="let layer of availableLayers" [value]="layer.id"
+                        [selected]="layer.id === selectedLayerId">
                         {{ layer.layerName }}
                       </option>
                     </select>
@@ -56,112 +76,140 @@
                 </div>
               </div>
             </div>
+
+            <!-- Total de pacientes -->
             <div class="stat-item">
-              <div class="stat-circle">
+              <div class="stat-circle success">
                 <i class="fas fa-users"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label">Pacientes totales</span>
+                <span class="stat-label">Pacientes registrados</span>
                 <span class="stat-value">{{ totalPacientes }}</span>
+                <span class="stat-subtext">Solo registros creados</span>
+              </div>
+            </div>
+
+            <!-- Total de operaciones -->
+            <div class="stat-item">
+              <div class="stat-circle warning">
+                <i class="fas fa-tasks"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total de actividades</span>
+                <span class="stat-value">{{ totalElements }}</span>
+                <span class="stat-subtext">Todas las operaciones</span>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Acciones rápidas -->
         <div class="dashboard-card actions-card">
           <div class="card-header">
             <i class="fas fa-bolt card-icon"></i>
             <h3>Acciones Rápidas</h3>
           </div>
           <div class="actions-grid">
-            <button class="action-btn" (click)="navigateTo('registroPaciente')">
+            <button class="action-btn primary" (click)="navigateTo('registroPaciente')" [disabled]="!selectedLayerId">
               <i class="fas fa-user-plus"></i>
               <span>Nuevo Paciente</span>
+              <small>Crear nuevo registro</small>
             </button>
-            <button class="action-btn" (click)="navigateTo('listadoPacientes')">
+            <button class="action-btn secondary" (click)="navigateTo('listadoPacientes')">
               <i class="fas fa-list"></i>
-              <span>Ver Lista de Registros</span>
+              <span>Ver Lista Completa</span>
+              <small>Explorar todos los registros</small>
             </button>
-            <button class="action-btn" (click)="navigateTo('consultaDatosDigitador')">
+            <button class="action-btn info" (click)="navigateTo('consultaDatosDigitador')">
               <i class="fas fa-file-alt"></i>
               <span>Generar Reporte</span>
+              <small>Exportar datos</small>
             </button>
-            <!-- Nuevo botón para consentimiento informado -->
-            <button class="action-btn" (click)="openConsentimientoModal()">
+            <button class="action-btn success" (click)="openConsentimientoModal()">
               <i class="fas fa-file-signature"></i>
-              <span>Llenar Consentimiento</span>
+              <span>Consentimiento</span>
+              <small>Documentación</small>
+            </button>
+            <button class="action-btn warning" (click)="refreshData()">
+              <i class="fas fa-sync-alt"></i>
+              <span>Actualizar</span>
+              <small>Refrescar datos</small>
             </button>
           </div>
         </div>
 
+        <!-- Registros recientes -->
         <div class="dashboard-card recent-card">
           <div class="card-header">
             <i class="fas fa-history card-icon"></i>
             <h3>Registros Recientes</h3>
+            <button class="refresh-btn" (click)="loadHistorial(0, 5)" title="Actualizar registros recientes">
+              <i class="fas fa-redo"></i>
+            </button>
           </div>
-          <div class="recent-list">
-            <div class="recent-item" *ngFor="let registro of registrosRecientes" (click)="handleView(registro)"
-              [class.clickable]="true">
-              <div class="recent-info">
-                <span class="recent-name">{{ registro.nombre }}</span>
-                <span class="recent-responsible">Registrado por: {{ registro.registradoPor }}</span>
-                <span class="recent-date">{{ registro.fecha | date:'medium' }}</span>
+          <div class="recent-content">
+            <div *ngIf="loadingRegistros" class="loading-recent">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Cargando registros recientes...</span>
+            </div>
+
+            <div *ngIf="!loadingRegistros && registrosRecientes.length === 0" class="no-recent">
+              <i class="fas fa-inbox"></i>
+              <span>No hay registros recientes</span>
+            </div>
+
+            <div class="recent-list" *ngIf="!loadingRegistros && registrosRecientes.length > 0">
+              <!-- En tu template, esto debería funcionar correctamente -->
+              <div class="recent-item" *ngFor="let registro of registrosRecientes" (click)="handleView(registro)"
+                [class.clickable]="true">
+                <div class="recent-avatar">
+                  <i class="fas fa-user-circle" [ngClass]="getOperacionClass(registro.operacionOriginal)"></i>
+                </div>
+                <div class="recent-info">
+                  <span class="recent-name">{{ registro.pacienteNombre }}</span>
+                  <span class="recent-document">Doc: {{ registro.documento }}</span>
+                  <div class="recent-meta">
+                    <span class="recent-operation" [ngClass]="getOperacionClass(registro.operacionOriginal)">
+                      {{ registro.operacion }}
+                    </span>
+                    <span class="recent-date">{{ registro.fechaCambio }}</span>
+                  </div>
+                  <span class="recent-responsible">Por: {{ registro.realizadoPor }}</span>
+                </div>
               </div>
             </div>
+          </div>
+
+          <div class="recent-footer" *ngIf="registrosRecientes.length > 0">
+            <button class="view-all-btn" (click)="navigateTo('listadoPacientes')">
+              Ver todos los registros
+              <i class="fas fa-arrow-right"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Otras pestañas -->
     <div *ngIf="selectedTab === 'registroPaciente'">
-
       <app-registro-paciente [researchLayerId]="selectedLayerId"
-        [researchLayerName]="currentResearchLayer?.layerName || ''" (registroGuardado)="refreshData()">
+        [researchLayerName]="currentResearchLayer?.layerName || ''" (registroGuardado)="onRegistroGuardado()">
       </app-registro-paciente>
-
-    </div>
-    <!-- Añade esto encima de la tabla -->
-    <div class="search-options" *ngIf="selectedTab === 'listadoPacientes'">
-      <div class="button-group">
-        <button class="search-btn patient-btn" (click)="abrirBusquedaPorPaciente()">
-          <i class="fas fa-user-injured"></i>
-          <span>Buscar por paciente</span>
-        </button>
-        <button class="reset-btn" (click)="resetearBusqueda()" *ngIf="modoBusqueda !== 'default'">
-          <i class="fas fa-redo"></i>
-          <span>Ver todos</span>
-        </button>
-      </div>
-
-      <div *ngIf="modoBusqueda === 'profesional'" class="search-info">
-        <i class="fas fa-info-circle"></i> Mostrando registros del profesional: <strong>{{ profesionalBuscado
-          }}</strong>
-      </div>
-      <div *ngIf="modoBusqueda === 'paciente'" class="search-info">
-        <i class="fas fa-info-circle"></i> Mostrando registros del paciente: <strong>{{ pacienteBuscado }}</strong>
-      </div>
     </div>
 
-    <app-buscar-paciente-modal *ngIf="showBuscarPacienteModal" (buscar)="buscarPorPaciente($event)"
-      (cerrar)="cerrarBusquedaPorPaciente()">
-    </app-buscar-paciente-modal>
-
-    <!-- La tabla que ya tenías -->
     <div *ngIf="selectedTab === 'listadoPacientes'">
       <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[10, 20, 30]"
         [totalRecords]="totalElements" [loading]="loadingRegistros" (onPageChange)="onPageChange($event)"
         (onView)="handleView($event)" (onEdit)="handleEdit($event)">
       </app-table-ver-usuarios>
     </div>
+
     <div *ngIf="selectedTab === 'consultaDatosDigitador'">
       <app-consulta-dinamica></app-consulta-dinamica>
     </div>
   </div>
 
-  <!-- MODALES FUERA DEL CONTENEDOR DE PESTAÑAS -->
-  <app-view-registro-modal *ngIf="showViewModal" [registro]="selectedRegistro" (close)="closeViewModal()">
-  </app-view-registro-modal>
-
-
+  <!-- Modales -->
   <div class="modal-overlay-consentimiento" *ngIf="showConsentimientoModal">
     <div class="modal-container-consentimiento">
       <app-consentimiento-informado [paciente]="selectedPaciente"
@@ -169,3 +217,4 @@
       </app-consentimiento-informado>
     </div>
   </div>
+</div>

@@ -7,8 +7,8 @@
             </div>
             <div class="patient-title">
                 <h2>Información del Paciente</h2>
-                <p *ngIf="registro?.patientBasicInfo">{{getSafeValue(registro.patientBasicInfo?.name)}} •
-                    {{getSafeValue(registro.patientIdentificationNumber)}}</p>
+                <p *ngIf="getPatientBasicInfo()">{{getSafeValue(getPatientBasicInfo().name)}} •
+                    {{getSafeValue(getPatientId())}}</p>
             </div>
         </div>
         <button mat-icon-button (click)="onClose()" class="close-button" aria-label="Cerrar">
@@ -30,7 +30,7 @@
             Investigación
         </button>
         <button class="tab-button" [class.active]="isTabActive('layer')" (click)="setActiveTab('layer')"
-            *ngIf="getMainRegisterInfo()">
+            *ngIf="getLayerInfo().researchLayerName">
             Capa
         </button>
         <button class="tab-button" [class.active]="isTabActive('consentimiento')"
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Contenido del modal -->
-    <div class="modal-content" *ngIf="registro">
+    <div class="modal-content" *ngIf="datos">
         <!-- Información básica del paciente -->
         <div class="tab-content" [class.active]="isTabActive('basic')" id="basic-tab">
             <div class="section-card">
@@ -55,67 +55,67 @@
                             <span>Documento</span>
                         </div>
                         <div class="info-value">
-                            {{getSafeValue(registro.patientIdentificationNumber, 'No disponible')}}
-                            ({{getSafeValue(registro.patientIdentificationType, 'No especificado')}})
+                            {{getSafeValue(getPatientId(), 'No disponible')}}
+                            ({{getSafeValue(getPatientBasicInfo().identificationType, 'No especificado')}})
                         </div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>person</mat-icon>
                             <span>Nombre</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.name)}}</div>
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().name)}}</div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>wc</mat-icon>
                             <span>Sexo</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.sex)}}</div>
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().sex)}}</div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>cake</mat-icon>
                             <span>Edad</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.age)}} años</div>
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().age)}} años</div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>event</mat-icon>
                             <span>Fecha de nacimiento</span>
                         </div>
-                        <div class="info-value">{{formatDate(getSafeValue(registro.patientBasicInfo.birthDate))}}</div>
+                        <div class="info-value">{{formatDate(getSafeValue(getPatientBasicInfo().birthDate))}}</div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>email</mat-icon>
                             <span>Email</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.email, 'No disponible')}}</div>
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().email, 'No disponible')}}</div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>phone</mat-icon>
                             <span>Teléfono</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.phoneNumber, 'No disponible')}}
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().phoneNumber, 'No disponible')}}
                         </div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>favorite</mat-icon>
                             <span>Estado civil</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.maritalStatus, 'No
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().maritalStatus, 'No
                             especificado')}}</div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>school</mat-icon>
                             <span>Nivel educativo</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.educationLevel, 'No
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().educationLevel, 'No
                             especificado')}}</div>
                     </div>
                 </div>
@@ -127,20 +127,20 @@
                     <h3>Información Geográfica</h3>
                 </div>
                 <div class="info-grid">
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>place</mat-icon>
                             <span>Ciudad de origen</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.hometown, 'No especificado')}}
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().hometown, 'No especificado')}}
                         </div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>my_location</mat-icon>
                             <span>Ciudad actual</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.currentCity, 'No
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().currentCity, 'No
                             especificado')}}</div>
                     </div>
                 </div>
@@ -152,36 +152,36 @@
                     <h3>Estado y Situación</h3>
                 </div>
                 <div class="info-grid">
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>attach_money</mat-icon>
                             <span>Nivel económico</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.economicStatus, 'No
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().economicStatus, 'No
                             especificado')}}</div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>warning</mat-icon>
                             <span>Primera crisis</span>
                         </div>
-                        <div class="info-value">{{formatDate(getSafeValue(registro.patientBasicInfo.firstCrisisDate))}}
+                        <div class="info-value">{{formatDate(getSafeValue(getPatientBasicInfo().firstCrisisDate))}}
                         </div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo">
+                    <div class="info-item" *ngIf="getPatientBasicInfo()">
                         <div class="info-label">
                             <mat-icon>healing</mat-icon>
                             <span>Estado de crisis</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.patientBasicInfo.crisisStatus, 'No
+                        <div class="info-value">{{getSafeValue(getPatientBasicInfo().crisisStatus, 'No
                             especificado')}}</div>
                     </div>
-                    <div class="info-item" *ngIf="registro.patientBasicInfo && registro.patientBasicInfo.deathDate">
+                    <div class="info-item" *ngIf="getPatientBasicInfo() && getPatientBasicInfo().deathDate">
                         <div class="info-label">
                             <mat-icon>remove_circle</mat-icon>
                             <span>Fecha de fallecimiento</span>
                         </div>
-                        <div class="info-value">{{formatDate(registro.patientBasicInfo.deathDate)}}</div>
+                        <div class="info-value">{{formatDate(getPatientBasicInfo().deathDate)}}</div>
                     </div>
                 </div>
             </div>
@@ -200,30 +200,30 @@
                             <mat-icon>person</mat-icon>
                             <span>Nombre</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.caregiver?.name)}}</div>
+                        <div class="info-value">{{getSafeValue(getCaregiver()?.name)}}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">
                             <mat-icon>badge</mat-icon>
                             <span>Documento</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.caregiver?.identificationNumber, 'No
+                        <div class="info-value">{{getSafeValue(getCaregiver()?.identificationNumber, 'No
                             disponible')}}
-                            ({{getSafeValue(registro.caregiver?.identificationType, 'No especificado')}})</div>
+                            ({{getSafeValue(getCaregiver()?.identificationType, 'No especificado')}})</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">
                             <mat-icon>cake</mat-icon>
                             <span>Edad</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.caregiver?.age, 'No disponible')}} años</div>
+                        <div class="info-value">{{getSafeValue(getCaregiver()?.age, 'No disponible')}} años</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">
                             <mat-icon>school</mat-icon>
                             <span>Nivel educativo</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.caregiver?.educationLevel, 'No especificado')}}
+                        <div class="info-value">{{getSafeValue(getCaregiver()?.educationLevel, 'No especificado')}}
                         </div>
                     </div>
                     <div class="info-item">
@@ -231,7 +231,7 @@
                             <mat-icon>work</mat-icon>
                             <span>Ocupación</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(registro.caregiver?.occupation, 'No especificado')}}
+                        <div class="info-value">{{getSafeValue(getCaregiver()?.occupation, 'No especificado')}}
                         </div>
                     </div>
                 </div>
@@ -249,10 +249,8 @@
                 <div class="variables-grid">
                     <div class="variable-item" *ngFor="let variable of getVariables()">
                         <div class="variable-header">
-                            <span class="variable-name">{{getSafeValue(variable.variableName, 'Variable sin
-                                nombre')}}</span>
-                            <span class="variable-type">{{getSafeValue(variable.variableType, 'Tipo no
-                                especificado')}}</span>
+                            <span class="variable-name">{{getVariableName(variable)}}</span>
+                            <span class="variable-type">{{getVariableType(variable)}}</span>
                         </div>
                         <div class="variable-value">{{formatVariableValue(variable)}}</div>
                     </div>
@@ -261,7 +259,8 @@
         </div>
 
         <!-- Información de la capa de investigación -->
-        <div class="tab-content" [class.active]="isTabActive('layer')" id="layer-tab" *ngIf="getMainRegisterInfo()">
+        <div class="tab-content" [class.active]="isTabActive('layer')" id="layer-tab"
+            *ngIf="getLayerInfo().researchLayerName">
             <div class="section-card">
                 <div class="section-header">
                     <mat-icon>layers</mat-icon>
@@ -273,21 +272,21 @@
                             <mat-icon>title</mat-icon>
                             <span>Nombre de la capa</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(getMainRegisterInfo()?.researchLayerName, 'No
-                            disponible')}}</div>
+                        <div class="info-value">{{getSafeValue(getLayerInfo().researchLayerName, 'No disponible')}}
+                        </div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">
                             <mat-icon>fingerprint</mat-icon>
                             <span>ID de la capa</span>
                         </div>
-                        <div class="info-value">{{getSafeValue(getMainRegisterInfo()?.researchLayerId, 'No
-                            disponible')}}</div>
+                        <div class="info-value">{{getSafeValue(getLayerInfo().researchLayerId, 'No disponible')}}</div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Consentimiento informado -->
         <div class="tab-content" [class.active]="isTabActive('consentimiento')" id="consentimiento-tab"
             *ngIf="hasConsentimiento">
             <div class="section-card">
@@ -323,10 +322,13 @@
         </div>
 
         <!-- Mensaje si no hay información -->
-        <div class="section" *ngIf="!registro.patientBasicInfo">
+        <div class="section" *ngIf="isPatientBasicInfoEmpty()">
             <div class="warning-message">
                 <mat-icon>warning</mat-icon>
                 <span>No se encontró información detallada del paciente.</span>
+                <span *ngIf="tipoDatos === 'historial'" class="info-text">
+                    (Visualizando datos del historial de cambios)
+                </span>
             </div>
         </div>
     </div>

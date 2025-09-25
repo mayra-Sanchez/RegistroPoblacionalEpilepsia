@@ -1,276 +1,579 @@
 /* ===============================================
-   CONTROLES SUPERIORES DE TABLA (Filtro, Orden, Búsqueda)
+   CONTROLES SUPERIORES DE TABLA - MEJORADO
    =============================================== */
 .table-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  gap: 1.5rem;
   align-items: center;
-  margin: 1.5rem 0;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  background-color: #f8fafc;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
-.items-per-page,
-.sort-options,
-.search-bar {
+.table-controls-group {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-}
-
-.table-controls label {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: #334155;
-  white-space: nowrap;
-}
-
-/* ===============================================
-   SELECTS (Items por página, orden)
-   =============================================== */
-.table-controls select {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  background-color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 120px;
-}
-
-.table-controls select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-}
-
-/* ===============================================
-   BARRA DE BÚSQUEDA
-   =============================================== */
-.search-bar {
-  position: relative;
-  flex-grow: 1;
-  max-width: 400px;
-}
-
-.search-bar input {
-  width: 100%;
-  padding: 0.5rem 2.5rem 0.5rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.search-bar input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-}
-
-.search-bar i {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-  font-size: 0.9rem;
-  pointer-events: none;
-}
-
-/* ===============================================
-   TABLA Y CONTENEDOR
-   =============================================== */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  margin-bottom: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  background-color: #ffffff;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #fff;
-}
-
-thead {
-  background-color: #2D9FEF;
-  color: white;
-}
-
-th, td {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-th {
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-tbody tr:hover {
-  background-color: #f8fafc;
-}
-
-/* ===============================================
-   BOTONES DE ACCIÓN
-   =============================================== */
-.actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
-.action-btn {
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  border-radius: 50%;
+.control-item {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 150px;
 }
 
-.action-btn i {
-  font-size: 0.875rem;
-}
-
-/* Botón Ver */
-.action-btn.view {
-  background-color: #e0f2fe;
-  color: #3b82f6;
-}
-
-.action-btn.view:hover {
-  background-color: #bae6fd;
-}
-
-/* Botón Editar */
-.action-btn.edit {
-  background-color: #fff7ed;
-  color: #f59e0b;
-}
-
-.action-btn.edit:hover {
-  background-color: #ffedd5;
-}
-
-/* Botón Eliminar */
-.action-btn.delete {
-  background-color: #fee2e2;
-  color: #ef4444;
-}
-
-.action-btn.delete:hover {
-  background-color: #fecaca;
+.control-item label {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #2d3748;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ===============================================
-   CONTROLES DE PAGINACIÓN
+   SELECTS MEJORADOS
    =============================================== */
-.pagination-controls {
+.control-select {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.control-select:focus {
+  outline: none;
+  border-color: #2D9FEF;
+  box-shadow: 0 0 0 3px rgba(45, 159, 239, 0.1);
+  transform: translateY(-1px);
+}
+
+.control-select:hover {
+  border-color: #cbd5e0;
+}
+
+/* ===============================================
+   BARRA DE BÚSQUEDA MEJORADA
+   =============================================== */
+.search-container {
+  position: relative;
+  flex-grow: 1;
+  max-width: 350px;
+  min-width: 250px;
+}
+
+.search-wrapper {
+  position: relative;
   display: flex;
-  justify-content: center;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  background: white;
+  font-weight: 500;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #2D9FEF;
+  box-shadow: 0 0 0 3px rgba(45, 159, 239, 0.1);
+}
+
+.search-input::placeholder {
+  color: #a0aec0;
+  font-weight: normal;
+}
+
+.search-icon {
+  position: absolute;
+  right: 1rem;
+  color: #a0aec0;
+  font-size: 1rem;
+}
+
+.search-buttons {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.search-btn, .clear-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: #718096;
+}
+
+.search-btn:hover {
+  color: #2D9FEF;
+  background: rgba(45, 159, 239, 0.1);
+}
+
+.clear-btn:hover {
+  color: #e53e3e;
+  background: rgba(229, 62, 62, 0.1);
+}
+
+/* ===============================================
+   BOTONES DE ACCIÓN MEJORADOS
+   =============================================== */
+.reset-filters-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #2D9FEF 0%, #1e90ff 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 4px rgba(45, 159, 239, 0.3);
+}
+
+.reset-filters-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(45, 159, 239, 0.4);
+}
+
+/* ===============================================
+   TABLA MEJORADA
+   =============================================== */
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.table-header {
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.table-info {
+  display: flex;
   align-items: center;
   gap: 1rem;
-  margin-top: 1.5rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  color: #4a5568;
 }
 
-.pagination-controls button {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.875rem;
-  background-color: white;
-  color: #334155;
+.filter-indicator {
+  background: #e6fffa;
+  color: #234e52;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.pagination-controls button:hover:not(:disabled) {
-  background-color: #3b82f6;
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.history-table thead {
+  background: linear-gradient(135deg, #2D9FEF 0%, #1e90ff 100%);
+}
+
+.history-table th {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: white;
-  border-color: #3b82f6;
+  border-bottom: none;
 }
 
-.pagination-controls button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.history-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+  color: #4a5568;
 }
 
-.pagination-controls span {
-  font-size: 0.875rem;
-  color: #64748b;
+.history-row {
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.history-row:hover {
+  background: #f8fafc;
+  border-left-color: #2D9FEF;
+  transform: translateX(2px);
 }
 
 /* ===============================================
-   RESPONSIVE
+   BADGES MEJORADOS
    =============================================== */
+.operation-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  text-align: center;
+  min-width: 120px;
+}
+
+.badge-created {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);
+}
+
+.badge-updated {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(237, 137, 54, 0.3);
+}
+
+.badge-deleted {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(245, 101, 101, 0.3);
+}
+
+.badge-default {
+  background: #a0aec0;
+  color: white;
+}
+
+/* ===============================================
+   CELDAS ESPECIALES
+   =============================================== */
+.date-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #2d3748;
+  background: #f7fafc;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.patient-cell {
+  font-weight: 800;
+  color: #2D9FEF;
+  font-size: 1.1rem;
+}
+
+.variables-cell {
+  max-width: 250px;
+}
+
+.variables-content {
+  background: #f0fff4;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border-left: 3px solid #48bb78;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* ===============================================
+   PAGINACIÓN MEJORADA
+   =============================================== */
+.pagination-container {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.total-records {
+  background: #edf2f7;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pagination-buttons button {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #4a5568;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-buttons button:hover:not(:disabled) {
+  background: #2D9FEF;
+  color: white;
+  border-color: #2D9FEF;
+  transform: translateY(-1px);
+}
+
+.pagination-buttons button.active {
+  background: #2D9FEF;
+  color: white;
+  border-color: #2D9FEF;
+}
+
+.pagination-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===============================================
+   ESTADOS ESPECIALES
+   =============================================== */
+.loading-message, .no-data-message {
+  padding: 3rem 2rem;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #4a5568;
+  background: #f7fafc;
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.loading-message i, .no-data-message i {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #2D9FEF;
+}
+
+.no-data-message {
+  background: #fff5f5;
+  color: #c53030;
+}
+
+.no-data-message i {
+  color: #f56565;
+}
+
+/* ===============================================
+   RESPONSIVE MEJORADO
+   =============================================== */
+@media (max-width: 1024px) {
+  .table-controls {
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .control-item {
+    min-width: 120px;
+  }
+}
+
 @media (max-width: 768px) {
   .table-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 1rem;
-    padding: 1rem;
   }
-
-  .items-per-page,
-  .sort-options,
-  .search-bar {
-    width: 100%;
-  }
-
-  th, td {
-    padding: 0.625rem 0.75rem;
-    font-size: 0.85rem;
-  }
-
-  .action-btn {
-    width: 1.75rem;
-    height: 1.75rem;
-  }
-
-  .actions {
+  
+  .table-controls-group {
     justify-content: center;
-    gap: 0.4rem;
+  }
+  
+  .search-container {
+    max-width: 100%;
+  }
+  
+  .pagination-controls {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .history-table th,
+  .history-table td {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
   }
 }
 
 @media (max-width: 480px) {
-  .pagination-controls {
+  .table-header {
     flex-direction: column;
+    align-items: stretch;
     gap: 0.75rem;
   }
-
-  .table-controls {
-    padding: 0.75rem;
+  
+  .table-info {
+    justify-content: center;
   }
-
-  th, td {
+  
+  .page-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .pagination-buttons button {
     padding: 0.5rem 0.75rem;
+    min-width: 40px;
   }
+}
 
-  .pagination-controls button {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.8125rem;
+/* ===============================================
+   BOTONES DE ACCIÓN SIMPLIFICADOS Y LIMPIOS
+   =============================================== */
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+/* Botón VER - Estilo simple */
+.action-btn.view:hover {
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+}
+
+/* Botón EDITAR - Estilo simple */
+.action-btn.edit:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+/* Iconos */
+.action-btn i {
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.action-btn:hover i {
+  transform: scale(1.1);
+}
+
+/* Estados de deshabilitado */
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.action-btn:disabled:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
+/* ===============================================
+   VERSIÓN COMPACTA PARA MÓVILES
+   =============================================== */
+
+@media (max-width: 768px) {
+  .actions {
+    gap: 0.3rem;
   }
-
-  .pagination-controls span {
-    font-size: 0.8125rem;
+  
+  .action-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+  
+  .action-btn i {
+    font-size: 0.9rem;
   }
 }

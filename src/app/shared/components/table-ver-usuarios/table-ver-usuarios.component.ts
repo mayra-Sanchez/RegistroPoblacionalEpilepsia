@@ -23,16 +23,16 @@ export class TableVerUsuariosComponent implements OnChanges {
   //#region Input Properties
   /** Datos a mostrar en la tabla */
   @Input() data: any[] = [];
-  
+
   /** Configuración de columnas de la tabla */
   @Input() columns: { field: string; header: string }[] = [];
-  
+
   /** Opciones de items por página para el selector */
   @Input() itemsPerPageOptions: number[] = [10, 20, 30];
-  
+
   /** Total de registros disponibles (para mostrar en paginación) */
   @Input() totalRecords: number = 0;
-  
+
   /** Indica si los datos están cargando */
   @Input() loading: boolean = false;
   //#endregion
@@ -40,10 +40,10 @@ export class TableVerUsuariosComponent implements OnChanges {
   //#region Output Events
   /** Evento emitido cuando se hace click en ver un registro */
   @Output() onView = new EventEmitter<any>();
-  
+
   /** Evento emitido cuando se hace click en editar un registro */
   @Output() onEdit = new EventEmitter<any>();
-  
+
   /** Evento emitido cuando cambia la paginación o filtros */
   @Output() onPageChange = new EventEmitter<PageEvent>();
   //#endregion
@@ -51,19 +51,19 @@ export class TableVerUsuariosComponent implements OnChanges {
   //#region Propiedades de Estado de la Tabla
   /** Número de items por página actual */
   itemsPerPage = this.itemsPerPageOptions[0];
-  
+
   /** Página actual */
   currentPage = 1;
-  
+
   /** Término de búsqueda actual */
   searchQuery = '';
-  
+
   /** Operación seleccionada para filtrar */
   selectedOperation = '';
-  
+
   /** Datos filtrados según búsqueda y operación */
   filteredData: any[] = [];
-  
+
   /** Total de registros después de aplicar filtros */
   filteredTotalRecords: number = 0;
   //#endregion
@@ -134,7 +134,7 @@ export class TableVerUsuariosComponent implements OnChanges {
     // Búsqueda profunda en research layer group si existe
     if (item.isResearchLayerGroup) {
       const researchLayer = item.isResearchLayerGroup;
-      
+
       // Buscar en nombre de la capa de investigación
       if (researchLayer.researchLayerName?.toLowerCase().includes(query)) return true;
 
@@ -234,6 +234,15 @@ export class TableVerUsuariosComponent implements OnChanges {
 
   //#region Métodos de Formateo y Utilidades
   /**
+   * Obtiene el nombre legible para una operación (alias de getOperationDisplayName para compatibilidad con template)
+   * @param operation Operación a formatear
+   * @returns Nombre legible de la operación
+   */
+  getOperationLabel(operation: string): string {
+    return this.getOperationDisplayName(operation);
+  }
+
+  /**
    * Obtiene el nombre legible para una operación
    * @param operation Operación a formatear
    * @returns Nombre legible de la operación
@@ -241,22 +250,11 @@ export class TableVerUsuariosComponent implements OnChanges {
   getOperationDisplayName(operation: string): string {
     const operationMap: { [key: string]: string } = {
       'REGISTER_CREATED_SUCCESSFULL': 'Registro Creado',
-      'UPDATE_RESEARCH_LAYER': 'Actualización'
+      'UPDATE_RESEARCH_LAYER': 'Actualización',
+      'REGISTER_UPDATED': 'Actualizado',
+      'REGISTER_DELETED': 'Eliminado'
     };
     return operationMap[operation] || operation;
-  }
-
-  /**
-   * Obtiene la clase CSS para el badge de una operación
-   * @param operation Operación a evaluar
-   * @returns Clase CSS correspondiente
-   */
-  getOperationClass(operation: string): string {
-    const classMap: { [key: string]: string } = {
-      'REGISTER_CREATED_SUCCESSFULL': 'operation-created',
-      'UPDATE_RESEARCH_LAYER': 'operation-updated'
-    };
-    return classMap[operation] || 'operation-default';
   }
 
   /**
@@ -272,7 +270,7 @@ export class TableVerUsuariosComponent implements OnChanges {
       if (isNaN(date.getTime())) {
         return 'Fecha inválida';
       }
-      
+
       return date.toLocaleDateString('es-ES', {
         year: 'numeric',
         month: '2-digit',
@@ -285,25 +283,7 @@ export class TableVerUsuariosComponent implements OnChanges {
       return 'Fecha no disponible';
     }
   }
-
-  /**
-   * Formatea variables para display en la interfaz
-   * @param variables Array de variables a formatear
-   * @returns String formateado con las variables
-   */
-  formatVariablesForDisplay(variables: any[]): string {
-    if (!variables || !Array.isArray(variables)) return 'Sin variables';
-
-    return variables.map(v => {
-      if (v.valueAsNumber !== null && v.valueAsNumber !== undefined) {
-        return `${v.name}: ${v.valueAsNumber}`;
-      } else if (v.valueAsString) {
-        return `${v.name}: ${v.valueAsString}`;
-      } else {
-        return `${v.name}: N/A`;
-      }
-    }).join(', ');
-  }
+  
   //#endregion
 
   //#region Métodos de Utilidad para la Template
@@ -346,6 +326,13 @@ export class TableVerUsuariosComponent implements OnChanges {
     }
     return 'No hay registros disponibles';
   }
+
+  /**
+   * Total de items para mostrar en la paginación (alias de filteredTotalRecords)
+   */
+  get totalItems(): number {
+    return this.filteredTotalRecords;
+  }
   //#endregion
 
   //#region Métodos de Navegación de Páginas Avanzados
@@ -365,19 +352,19 @@ export class TableVerUsuariosComponent implements OnChanges {
   get pageNumbers(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     // Ajustar startPage si endPage está cerca del final
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 
@@ -421,6 +408,54 @@ export class TableVerUsuariosComponent implements OnChanges {
   clearOperationFilter(): void {
     this.selectedOperation = '';
     this.applyFilters();
+  }
+
+  /**
+   * Verifica si hay filtros de operación disponibles
+   */
+  get hasOperationFilter(): boolean {
+    return this.data.some(item => item.operation !== undefined);
+  }
+
+  /**
+   * Obtiene la clase CSS para el badge de operación
+   * @param operation Operación a evaluar
+   * @returns Clase CSS correspondiente
+   */
+  getOperationClass(operation: string): string {
+    const classMap: { [key: string]: string } = {
+      'REGISTER_CREATED_SUCCESSFULL': 'badge-created',
+      'UPDATE_RESEARCH_LAYER': 'badge-updated',
+      'REGISTER_UPDATED': 'badge-updated',
+      'REGISTER_DELETED': 'badge-deleted'
+    };
+    return classMap[operation] || 'badge-default';
+  }
+
+  // Método para obtener iconos según la operación
+  getOperationIcon(operation: string): string {
+    const iconMap: { [key: string]: string } = {
+      'REGISTER_CREATED_SUCCESSFULL': 'fa-plus',
+      'UPDATE_RESEARCH_LAYER': 'fa-edit',
+      'REGISTER_UPDATED': 'fa-edit',
+      'REGISTER_DELETED': 'fa-trash'
+    };
+    return iconMap[operation] || 'fa-circle';
+  }
+
+  // Método mejorado para formatear variables
+  formatVariablesForDisplay(variables: any[]): string {
+    if (!variables || !Array.isArray(variables)) return 'Sin variables';
+
+    return variables.map(v => {
+      if (v.valueAsNumber !== null && v.valueAsNumber !== undefined) {
+        return `${v.name}: ${v.valueAsNumber}`;
+      } else if (v.valueAsString) {
+        return `${v.name}: "${v.valueAsString}"`;
+      } else {
+        return `${v.name}: N/A`;
+      }
+    }).join('; ');
   }
   //#endregion
 }

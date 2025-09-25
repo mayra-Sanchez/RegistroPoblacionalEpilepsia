@@ -5,26 +5,46 @@ import { AuthService } from '../../../../services/auth.service';
 import { Variable } from '../../interfaces';
 import Swal from 'sweetalert2';
 import { Subject, takeUntil } from 'rxjs';
+import { SignatureUploadService } from 'src/app/services/signature-upload.service';
 
+/**
+ * Componente para el registro de pacientes en el sistema
+ * Incluye formulario multi-sección con validaciones y manejo de consentimiento informado
+ */
 @Component({
   selector: 'app-registro-paciente',
   templateUrl: './registro-paciente.component.html',
   styleUrls: ['./registro-paciente.component.css']
 })
 export class RegistroPacienteComponent implements OnInit, OnDestroy {
+  // Inputs para recibir datos de la capa de investigación
   @Input() researchLayerId: string = '';
   @Input() researchLayerName: string = '';
+
+  // Output para emitir evento cuando se guarda un registro
   @Output() registroGuardado = new EventEmitter<void>();
 
+  // Formulario reactivo para el registro
   registroForm: FormGroup;
+
+  // Estados de carga y control de UI
   loading: boolean = false;
-  hasCaregiver: boolean = false;
   loadingVariables: boolean = false;
-  variablesDeCapa: Variable[] = [];
+  hasCaregiver: boolean = false;
   currentSection: number = 0;
 
+  // Variables para manejo de archivos de consentimiento
+  consentimientoFile: File | null = null;
+  consentimientoSubido: boolean = false;
+  isDraggingOver: boolean = false;
+
+  // Almacenamiento de variables de la capa de investigación
+  variablesDeCapa: Variable[] = [];
+
+  // Subject para manejo de suscripciones y evitar memory leaks
   private destroy$ = new Subject<void>();
 
+  // Opciones predefinidas para los selects del formulario
   tiposIdentificacion = [
     { value: 'CC', label: 'Cédula de Ciudadanía' },
     { value: 'TI', label: 'Tarjeta de Identidad' },
@@ -70,27 +90,67 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     { value: 'Crónica', label: 'Crónica' }
   ];
 
+  ocupaciones = [
+    'Ama de casa',
+    'Estudiante',
+    'Jubilado/Pensionado',
+    'Desempleado',
+    'Agricultor',
+    'Comerciante',
+    'Empleado público',
+    'Empleado privado',
+    'Empresario',
+    'Profesional independiente',
+    'Técnico',
+    'Obrero',
+    'Conductor',
+    'Docente',
+    'Sanitario',
+    'Fuerzas armadas',
+    'Otro'
+  ];
+
+  /**
+   * Constructor del componente
+   * @param fb Servicio FormBuilder para crear formularios reactivos
+   * @param consolaService Servicio para operaciones de registro
+   * @param authService Servicio de autenticación
+   * @param consentimiento Servicio para subir archivos de consentimiento
+   */
   constructor(
     private fb: FormBuilder,
     private consolaService: ConsolaRegistroService,
-    private authService: AuthService
+    private authService: AuthService,
+    private consentimiento: SignatureUploadService
   ) {
     this.registroForm = this.createForm();
   }
 
+  /**
+   * Inicialización del componente
+   * Carga variables de la capa y configura observables
+   */
   ngOnInit(): void {
     this.loadVariablesDeCapa();
 
-    // Actualizar edad cuando cambie birthDate (soporta input type="date" y strings)
+    // Actualizar edad cuando cambie birthdate (soporta input type="date" y strings)
     const birthControl = this.registroForm.get('patient.birthDate');
     birthControl?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.onBirthDateChange());
   }
 
+  /**
+   * Limpieza al destruir el componente
+   * Cancela todas las suscripciones activas
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
+  /**
+   * Crea la estructura del formulario reactivo con validaciones
+   * @returns FormGroup configurado con todos los campos necesarios
+   */
   createForm(): FormGroup {
     return this.fb.group({
       patientIdentificationNumber: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
@@ -122,10 +182,17 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
         occupation: ['']
       }),
 
-      variables: this.fb.array([])
+      variables: this.fb.array([]),
+
+      hasConsentimiento: [false],
+      consentimientoFile: [null]
     });
   }
 
+  /**
+   * Carga las variables asociadas a la capa de investigación
+   * Solo carga las variables que estén habilitadas
+   */
   loadVariablesDeCapa(): void {
     if (!this.researchLayerId) {
       console.warn('No research layer ID provided');
@@ -151,6 +218,9 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Inicializa el FormArray de variables dinámicas basado en las variables de la capa
+   */
   initializeVariables(): void {
     const variablesArray = this.registroForm.get('variables') as FormArray;
     variablesArray.clear();
@@ -170,29 +240,55 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Getter para acceder al FormArray de variables
+   * @returns FormArray con las variables del formulario
+   */
   get variables(): FormArray {
     return this.registroForm.get('variables') as FormArray;
   }
 
+  /**
+   * Getter para obtener los grupos de formulario de variables
+   * @returns Array de FormGroups que representan cada variable
+   */
+  get variablesFormGroups(): FormGroup[] {
+    return (this.registroForm.get('variables') as FormArray).controls as FormGroup[];
+  }
+
+  /**
+   * Cambia la sección actual del formulario
+   * @param sectionIndex Índice de la sección a mostrar
+   */
   changeSection(sectionIndex: number): void {
     this.currentSection = sectionIndex;
   }
 
+  /**
+   * Avanza a la siguiente sección del formulario si la actual es válida
+   */
   nextSection(): void {
     if (this.validateCurrentSection()) {
-      const maxSections = this.variables.length > 0 ? 4 : 3;
+      const maxSections = this.variables.length > 0 ? 5 : 4; // Ahora 6 secciones en total (0-5)
       if (this.currentSection < maxSections) {
         this.currentSection++;
       }
     }
   }
 
+  /**
+   * Retrocede a la sección anterior del formulario
+   */
   prevSection(): void {
     if (this.currentSection > 0) {
       this.currentSection--;
     }
   }
 
+  /**
+   * Valida la sección actual del formulario
+   * @returns boolean indicando si la sección es válida
+   */
   validateCurrentSection(): boolean {
     switch (this.currentSection) {
       case 0:
@@ -217,11 +313,24 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
           return false;
         }
         break;
+
+      case 3: // Validación para la sección de consentimiento
+        const hasConsentimiento = this.registroForm.get('hasConsentimiento')?.value;
+
+        if (hasConsentimiento && !this.consentimientoFile) {
+          Swal.fire('Error', 'Debe subir el consentimiento informado', 'error');
+          return false;
+        }
+        break;
     }
 
     return true;
   }
 
+  /**
+   * Marca los campos como "touched" para mostrar errores de validación
+   * @param fields Array de campos a marcar como touched
+   */
   markFieldsAsTouched(fields: any[]): void {
     fields.forEach(field => {
       if (field) {
@@ -230,6 +339,9 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Maneja el cambio en la fecha de nacimiento y calcula la edad automáticamente
+   */
   onBirthDateChange(): void {
     const birthDate = this.registroForm.get('patient.birthDate')?.value;
     if (birthDate) {
@@ -246,6 +358,9 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Alterna la visibilidad de la sección de cuidador
+   */
   toggleCaregiver(): void {
     this.hasCaregiver = !this.hasCaregiver;
     if (!this.hasCaregiver) {
@@ -253,6 +368,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Convierte el tipo de identificación abreviado al formato completo para el backend
+   * @param type Tipo de identificación abreviado
+   * @returns Tipo de identificación completo
+   */
   private getBackendIdentificationType(type: string): string {
     switch (type) {
       case 'CC': return 'Cédula de Ciudadanía';
@@ -264,10 +384,20 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSubmit(): void {
+  /**
+   * Maneja el envío del formulario con todas las validaciones
+   */
+  async onSubmit(): Promise<void> {
     if (this.registroForm.invalid) {
       this.markFormGroupTouched(this.registroForm);
       Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      return;
+    }
+
+    // Validar consentimiento si es requerido
+    const hasConsentimiento = this.registroForm.get('hasConsentimiento')?.value;
+    if (hasConsentimiento && !this.consentimientoFile) {
+      Swal.fire('Error', 'Debe subir el consentimiento informado', 'error');
       return;
     }
 
@@ -337,7 +467,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
 
     // DEBUG: Mostrar específicamente las fechas
     console.log('📅 FECHAS ENVIADAS:');
-    console.log(' - birthDate:', registerRequest.patient.birthDate);
+    console.log(' - birthdate:', registerRequest.patient.birthDate);
     console.log(' - deathDate:', registerRequest.patient.deathDate);
     console.log(' - firstCrisisDate:', registerRequest.patient.firstCrisisDate);
 
@@ -356,41 +486,95 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
 
     console.log('📧 USER EMAIL:', userEmail);
 
-    this.consolaService.saveRegister(userEmail, registerRequest)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          console.log('✅ RESPUESTA EXITOSA:', response);
-          Swal.fire('Éxito', 'Registro guardado correctamente', 'success');
-          this.registroForm.reset();
-          this.initializeVariables();
-          this.hasCaregiver = false;
-          this.currentSection = 0;
-          this.registroGuardado.emit();
-        },
-        error: (error) => {
-          console.error('❌ ERROR AL GUARDAR:', error);
+    try {
+      // 1. Primero guardar el registro del paciente
+      const response = await this.consolaService.saveRegister(userEmail, registerRequest)
+        .pipe(takeUntil(this.destroy$))
+        .toPromise();
 
-          // Mostrar mensaje de error más detallado
-          let errorMessage = 'No se pudo guardar el registro';
-          if (error.message.includes('Error 500')) {
-            errorMessage = 'Error interno del servidor. Por favor contacte al administrador.';
-          } else if (error.error && typeof error.error === 'object') {
-            errorMessage = error.error.message || JSON.stringify(error.error);
-          } else if (typeof error.error === 'string') {
-            errorMessage = error.error;
-          } else if (error.status === 400) {
-            errorMessage = 'Datos inválidos enviados al servidor. Por favor verifique los campos.';
-          }
+      console.log('✅ REGISTRO GUARDADO:', response);
 
-          Swal.fire('Error', errorMessage, 'error');
-        },
-        complete: () => {
-          this.loading = false;
-        }
-      });
+      // 2. Si hay consentimiento, subirlo
+      if (hasConsentimiento && this.consentimientoFile) {
+        await this.subirConsentimiento();
+      }
+
+      // 3. Mostrar éxito
+      Swal.fire('Éxito', 'Registro y consentimiento guardados correctamente', 'success');
+      this.resetForm();
+
+    } catch (error: any) {
+      console.error('❌ ERROR AL GUARDAR:', error);
+
+      // Mostrar mensaje de error más detallado
+      let errorMessage = 'No se pudo guardar el registro';
+      if (error.message && error.message.includes('Error 500')) {
+        errorMessage = 'Error interno del servidor. Por favor contacte al administrador.';
+      } else if (error.error && typeof error.error === 'object') {
+        errorMessage = error.error.message || JSON.stringify(error.error);
+      } else if (typeof error.error === 'string') {
+        errorMessage = error.error;
+      } else if (error.status === 400) {
+        errorMessage = 'Datos inválidos enviados al servidor. Por favor verifique los campos.';
+      }
+
+      Swal.fire('Error', errorMessage, 'error');
+    } finally {
+      this.loading = false;
+    }
   }
-  // En tu componente TypeScript
+
+  /**
+   * Sube el archivo de consentimiento informado al servidor
+   */
+  private async subirConsentimiento(): Promise<void> {
+    if (!this.consentimientoFile) return;
+
+    try {
+      const idNumber = this.registroForm.get('patientIdentificationNumber')?.value;
+
+      if (!idNumber) {
+        console.error('❌ No se puede subir consentimiento: número de identificación no definido');
+        return;
+      }
+
+      const patientId = Number(idNumber);
+      if (isNaN(patientId)) {
+        console.error('❌ Número de identificación inválido:', idNumber);
+        Swal.fire('Error', 'El número de identificación no es válido', 'error');
+        return;
+      }
+
+      // ✅ CORRECTO: Pasar directamente el File al servicio
+      await this.consentimiento.uploadConsentFile(patientId, this.consentimientoFile)
+        .pipe(takeUntil(this.destroy$))
+        .toPromise();
+
+      console.log('✅ CONSENTIMIENTO SUBIDO CORRECTAMENTE');
+    } catch (error) {
+      console.error('❌ ERROR AL SUBIR CONSENTIMIENTO:', error);
+      Swal.fire('Advertencia', 'El registro se guardó pero hubo un error al subir el consentimiento', 'warning');
+    }
+  }
+
+  /**
+   * Resetea el formulario a su estado inicial
+   */
+  private resetForm(): void {
+    this.registroForm.reset();
+    this.initializeVariables();
+    this.hasCaregiver = false;
+    this.consentimientoFile = null;
+    this.consentimientoSubido = false;
+    this.currentSection = 0;
+    this.registroGuardado.emit();
+  }
+
+  /**
+   * Obtiene la etiqueta descriptiva para un tipo de variable
+   * @param type Tipo de variable
+   * @returns Etiqueta descriptiva del tipo
+   */
   getTypeLabel(type: string): string {
     const typeLabels: { [key: string]: string } = {
       'Entero': 'Entero',
@@ -402,6 +586,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     return typeLabels[type] || type;
   }
 
+  /**
+   * Obtiene la descripción para un tipo de variable
+   * @param type Tipo de variable
+   * @returns Descripción del tipo
+   */
   getTypeDescription(type: string): string {
     const typeDescriptions: { [key: string]: string } = {
       'Entero': 'Número entero sin decimales',
@@ -413,6 +602,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     return typeDescriptions[type] || '';
   }
 
+  /**
+   * Obtiene el mensaje de error para una variable
+   * @param variable Grupo de formulario de la variable
+   * @returns Mensaje de error correspondiente
+   */
   getErrorMessage(variable: FormGroup): string {
     const control = variable.get('value');
     if (control?.errors?.['required']) {
@@ -427,6 +621,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     return 'Valor inválido';
   }
 
+  /**
+   * Valida que solo se ingresen números en un campo
+   * @param event Evento de teclado
+   * @returns boolean indicando si la tecla es válida
+   */
   validateNumber(event: KeyboardEvent): boolean {
     const charCode = event.which ? event.which : event.keyCode;
 
@@ -439,6 +638,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  /**
+   * Valida que solo se ingresen números decimales en un campo
+   * @param event Evento de teclado
+   * @returns boolean indicando si la tecla es válida
+   */
   validateDecimal(event: KeyboardEvent): boolean {
     const charCode = event.which ? event.which : event.keyCode;
     const value = (event.target as HTMLInputElement).value;
@@ -460,6 +664,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  /**
+   * Maneja el cambio en un checkbox de variable lógica
+   * @param variable Grupo de formulario de la variable
+   * @param event Evento de cambio
+   */
   onCheckboxChange(variable: FormGroup, event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
     variable.get('value')?.setValue(isChecked);
@@ -468,10 +677,22 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     variable.get('value')?.updateValueAndValidity();
   }
 
+  /**
+   * Valida la estructura del request antes de enviarlo al servidor
+   * @param request Objeto request a validar
+   * @returns boolean indicando si el request es válido
+   */
   private validateRequest(request: any): boolean {
     console.log('🔍 VALIDANDO REQUEST:');
 
-    // Validaciones críticas únicamente
+    const dateFields = ['birthDate', 'deathDate', 'firstCrisisDate']; // birthDate en lugar de birthdate
+    for (const field of dateFields) {
+      if (request.patient[field] && !/^\d{4}-\d{2}-\d{2}$/.test(request.patient[field])) { // Validar formato YYYY-MM-DD
+        console.error(`❌ Invalid date format for ${field}:`, request.patient[field]);
+        return false;
+      }
+    }
+
     if (isNaN(request.patientIdentificationNumber)) {
       console.error('❌ Invalid patient identification number');
       return false;
@@ -482,38 +703,17 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    if (!request.patient.name || request.patient.name.trim() === '') {
-      console.error('❌ Patient name is required');
-      return false;
-    }
-
-    if (!request.patient.sex || request.patient.sex.trim() === '') {
-      console.error('❌ Patient sex is required');
-      return false;
-    }
-
-    // Validación básica de fechas - solo verificar que si existen, sean strings válidos
-    const dateFields = ['birthDate', 'deathDate', 'firstCrisisDate'];
-    for (const field of dateFields) {
-      const dateValue = request.patient[field];
-
-      if (dateValue && dateValue !== null) {
-        // Aceptar cualquier string no vacío para fechas
-        if (typeof dateValue !== 'string' || dateValue.trim() === '') {
-          console.error(`❌ Invalid date value for ${field}:`, dateValue);
-          return false;
-        }
-
-        // Debug adicional para ver el formato real
-        console.log(`📅 ${field}:`, dateValue, 'type:', typeof dateValue);
-      }
-    }
-
-    // Validación básica de variables numéricas
     for (const variable of request.registerInfo.variablesInfo) {
-      if (variable.type === 'Number' && variable.value !== null && variable.value !== undefined) {
-        if (isNaN(variable.value)) {
-          console.error(`❌ Invalid numeric value for variable:`, variable);
+      if (variable.type === 'Number' && variable.value !== null && isNaN(variable.value)) {
+        console.error(`❌ Invalid numeric value for variable:`, variable);
+        return false;
+      }
+      // Validar fechas en variables
+      if (variable.type === 'String' && variable.value && /^\d{2}-\d{2}-\d{4}$/.test(variable.value)) {
+        const [day, month, year] = variable.value.split('-');
+        const date = new Date(`${year}-${month}-${day}`);
+        if (isNaN(date.getTime())) {
+          console.error(`❌ Invalid date value for variable:`, variable);
           return false;
         }
       }
@@ -523,11 +723,16 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  /**
+   * Formatea una fecha para el backend (formato YYYY-MM-DD)
+   * @param dateValue Valor de fecha a formatear
+   * @returns Fecha formateada o null si es inválida
+   */
   private formatDateForBackend(dateValue: any): string | null {
     if (!dateValue) return null;
 
     try {
-      // Si ya está en formato yyyy-MM-dd (desde input type="date"), mantenerlo
+      // Si ya está en formato yyyy-MM-dd (desde input type="date"), devolverlo tal cual
       if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
         return dateValue;
       }
@@ -538,8 +743,8 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
         return `${year}-${month}-${day}`;
       }
 
-      // Para objetos Date
       let date: Date;
+
       if (dateValue instanceof Date) {
         date = dateValue;
       } else {
@@ -552,12 +757,18 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const day = date.getDate().toString().padStart(2, '0');
 
-      return `${year}-${month}-${day}`; // Formato yyyy-MM-dd
+      return `${year}-${month}-${day}`;
     } catch {
       return null;
     }
   }
 
+  /**
+   * Convierte el valor de una variable al tipo esperado por el API
+   * @param value Valor a convertir
+   * @param originalType Tipo original de la variable
+   * @returns Objeto con el valor convertido y su tipo
+   */
   private convertValueForApi(value: any, originalType: string): { value: any, type: string } {
     if (value === null || value === undefined || value === '') {
       return { value: null, type: 'String' };
@@ -603,10 +814,10 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     return { value: finalValue, type: finalType };
   }
 
-  get variablesFormGroups(): FormGroup[] {
-    return (this.registroForm.get('variables') as FormArray).controls as FormGroup[];
-  }
-
+  /**
+   * Marca todos los campos de un FormGroup como "touched"
+   * @param formGroup FormGroup a marcar
+   */
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
@@ -626,6 +837,9 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Maneja la cancelación del formulario con confirmación
+   */
   onCancel(): void {
     if (this.registroForm.dirty) {
       Swal.fire({
@@ -643,6 +857,107 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
           this.currentSection = 0;
         }
       });
+    }
+  }
+
+  /**
+   * Maneja la selección de archivo de consentimiento
+   * @param event Evento de selección de archivo
+   */
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.processFile(file);
+    }
+  }
+
+  /**
+   * Elimina el archivo de consentimiento seleccionado
+   */
+  removeFile(): void {
+    this.consentimientoFile = null;
+    this.registroForm.patchValue({ consentimientoFile: null });
+    this.consentimientoSubido = false;
+  }
+
+  /**
+   * Maneja el cambio en el toggle de consentimiento
+   */
+  onConsentimientoToggle(): void {
+    if (!this.registroForm.get('hasConsentimiento')?.value) {
+      this.removeFile();
+    }
+  }
+
+  /**
+   * Maneja el evento de arrastrar sobre la zona de drop
+   * @param event Evento de drag over
+   */
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingOver = true;
+  }
+
+  /**
+   * Maneja el evento de salir de la zona de drop
+   */
+  onDragLeave(): void {
+    this.isDraggingOver = false;
+  }
+
+  /**
+   * Maneja el evento de soltar archivo en la zona de drop
+   * @param event Evento de drop
+   */
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingOver = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.processFile(files[0]);
+    }
+  }
+
+  /**
+   * Procesa un archivo validando tipo y tamaño
+   * @param file Archivo a procesar
+   */
+  private processFile(file: File): void {
+    // Validar tipo de archivo
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      Swal.fire('Error', 'Solo se permiten archivos PDF, JPEG o PNG', 'error');
+      return;
+    }
+
+    // Validar tamaño (reducir a 2MB para evitar errores 413)
+    const maxSize = 2 * 1024 * 1024; // 2MB (más conservador)
+    if (file.size > maxSize) {
+      Swal.fire('Error', `El archivo no puede ser mayor a 2MB. Tamaño actual: ${this.getFileSize(file.size)}`, 'error');
+      return;
+    }
+
+    this.consentimientoFile = file;
+    this.consentimientoSubido = true;
+
+    Swal.fire('Éxito', 'Archivo cargado correctamente', 'success');
+  }
+
+  /**
+   * Formatea el tamaño de archivo para mostrarlo de forma legible
+   * @param size Tamaño en bytes
+   * @returns Cadena con el tamaño formateado
+   */
+  getFileSize(size: number): string {
+    if (size < 1024) {
+      return size + ' bytes';
+    } else if (size < 1048576) {
+      return (size / 1024).toFixed(1) + ' KB';
+    } else {
+      return (size / 1048576).toFixed(1) + ' MB';
     }
   }
 }

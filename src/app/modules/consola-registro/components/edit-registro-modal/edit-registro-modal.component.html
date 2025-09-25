@@ -1,0 +1,316 @@
+<div class="modal-container">
+  <div class="modal-header">
+    <h2 class="modal-header__title">Editar Registro de Paciente</h2>
+    <button mat-icon-button (click)="onCancel()" class="modal-header__close" aria-label="Cerrar modal">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="modal-content">
+    <!-- Indicador de secciones actualizado -->
+    <div class="section-indicator">
+      <div class="section-step" [class.active]="currentSection === 0" [class.completed]="currentSection > 0">
+        <span class="section-step__number">1</span>
+        <span class="section-step__label">Identificación</span>
+      </div>
+      <div class="section-step" [class.active]="currentSection === 1" [class.completed]="currentSection > 1">
+        <span class="section-step__number">2</span>
+        <span class="section-step__label">Paciente</span>
+      </div>
+      <div class="section-step" [class.active]="currentSection === 2" [class.completed]="currentSection > 2">
+        <span class="section-step__number">3</span>
+        <span class="section-step__label">Cuidador</span>
+      </div>
+      <div *ngIf="variables.length > 0" class="section-step" [class.active]="currentSection === 3"
+        [class.completed]="currentSection > 3">
+        <span class="section-step__number">4</span>
+        <span class="section-step__label">Variables</span>
+      </div>
+    </div>
+
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Sección 1: Identificación -->
+      <div *ngIf="currentSection === 0" class="section-content fade-in">
+        <h3 class="section-content__header">Identificación del Paciente</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="patientIdentificationType" class="form-group__label form-group__label--required">
+              Tipo de Identificación
+            </label>
+            <select id="patientIdentificationType" formControlName="patientIdentificationType" class="form-control">
+              <option *ngFor="let tipo of tiposIdentificacion" [value]="tipo.value">{{tipo.label}}</option>
+            </select>
+            <div *ngIf="editForm.get('patientIdentificationType')?.invalid && editForm.get('patientIdentificationType')?.touched" 
+                 class="form-group__error">
+              Este campo es requerido
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="patientIdentificationNumber" class="form-group__label form-group__label--required">
+              Número de Identificación
+            </label>
+            <input id="patientIdentificationNumber" type="text" formControlName="patientIdentificationNumber"
+              class="form-control" placeholder="Ingrese el número de identificación" readonly>
+            <div *ngIf="editForm.get('patientIdentificationNumber')?.invalid && editForm.get('patientIdentificationNumber')?.touched"
+                 class="form-group__error">
+              Este campo es requerido
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección 2: Información del Paciente -->
+      <div *ngIf="currentSection === 1" class="section-content fade-in">
+        <h3 class="section-content__header">Información Personal del Paciente</h3>
+
+        <div formGroupName="patient">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="patientName" class="form-group__label form-group__label--required">Nombre Completo</label>
+              <input id="patientName" type="text" formControlName="name" class="form-control"
+                placeholder="Nombre completo del paciente"
+                [class.form-control--error]="editForm.get('patient.name')?.invalid && editForm.get('patient.name')?.touched">
+              <div *ngIf="editForm.get('patient.name')?.invalid && editForm.get('patient.name')?.touched"
+                class="form-group__error">
+                El nombre es requerido
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="patientSex" class="form-group__label form-group__label--required">Sexo</label>
+              <select id="patientSex" formControlName="sex" class="form-control"
+                [class.form-control--error]="editForm.get('patient.sex')?.invalid && editForm.get('patient.sex')?.touched">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let sexo of sexos" [value]="sexo.value">{{sexo.label}}</option>
+              </select>
+              <div *ngIf="editForm.get('patient.sex')?.invalid && editForm.get('patient.sex')?.touched"
+                class="form-group__error">
+                El sexo es requerido
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="patientBirthDate" class="form-group__label form-group__label--required">Fecha de Nacimiento</label>
+              <input id="patientBirthDate" type="date" formControlName="birthDate" class="form-control"
+                [class.form-control--error]="editForm.get('patient.birthDate')?.invalid && editForm.get('patient.birthDate')?.touched">
+              <div *ngIf="editForm.get('patient.birthDate')?.invalid && editForm.get('patient.birthDate')?.touched"
+                class="form-group__error">
+                La fecha de nacimiento es requerida
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="patientAge" class="form-group__label">Edad</label>
+              <input id="patientAge" type="text" formControlName="age" class="form-control" readonly>
+              <small class="form-group__help">Calculada automáticamente</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="patientEmail" class="form-group__label">Email</label>
+              <input id="patientEmail" type="email" formControlName="email" class="form-control"
+                placeholder="correo@ejemplo.com"
+                [class.form-control--error]="editForm.get('patient.email')?.invalid && editForm.get('patient.email')?.touched">
+              <div *ngIf="editForm.get('patient.email')?.invalid && editForm.get('patient.email')?.touched"
+                class="form-group__error">
+                Formato de email inválido
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="patientPhone" class="form-group__label">Teléfono</label>
+              <input id="patientPhone" type="text" formControlName="phoneNumber" class="form-control"
+                placeholder="Número de teléfono">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="patientDeathDate" class="form-group__label">Fecha de Fallecimiento</label>
+              <input id="patientDeathDate" type="date" formControlName="deathDate" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="patientEconomicStatus" class="form-group__label">Nivel Económico</label>
+              <select id="patientEconomicStatus" formControlName="economicStatus" class="form-control">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let nivel of nivelesEconomicos" [value]="nivel.value">{{nivel.label}}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="patientEducation" class="form-group__label">Nivel de Educación</label>
+              <select id="patientEducation" formControlName="educationLevel" class="form-control">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let nivel of nivelesEducacion" [value]="nivel.value">{{nivel.label}}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="patientMaritalStatus" class="form-group__label">Estado Civil</label>
+              <select id="patientMaritalStatus" formControlName="maritalStatus" class="form-control">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let estado of estadosCiviles" [value]="estado.value">{{estado.label}}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="patientHometown" class="form-group__label">Ciudad de Origen</label>
+              <input id="patientHometown" type="text" formControlName="hometown" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="patientCurrentCity" class="form-group__label">Ciudad Actual</label>
+              <input id="patientCurrentCity" type="text" formControlName="currentCity" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="patientFirstCrisisDate" class="form-group__label">Fecha de Primera Crisis</label>
+              <input id="patientFirstCrisisDate" type="date" formControlName="firstCrisisDate" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="patientCrisisStatus" class="form-group__label">Estado de Crisis</label>
+              <select id="patientCrisisStatus" formControlName="crisisStatus" class="form-control">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let estado of estadosCrisis" [value]="estado.value">{{estado.label}}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección 3: Información del Cuidador -->
+      <div *ngIf="currentSection === 2" class="section-content fade-in">
+        <h3 class="section-content__header">Información del Cuidador</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <mat-checkbox [checked]="hasCaregiver" (change)="toggleCaregiver()" class="caregiver-toggle">
+              Tiene cuidador
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <div *ngIf="hasCaregiver" formGroupName="caregiver">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="caregiverName" class="form-group__label">Nombre del Cuidador</label>
+              <input id="caregiverName" type="text" formControlName="name" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="caregiverType" class="form-group__label">Tipo de Identificación</label>
+              <select id="caregiverType" formControlName="identificationType" class="form-control">
+                <option *ngFor="let tipo of tiposIdentificacion" [value]="tipo.value">{{tipo.label}}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="caregiverNumber" class="form-group__label">Número de Identificación</label>
+              <input id="caregiverNumber" type="text" formControlName="identificationNumber" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="caregiverAge" class="form-group__label">Edad</label>
+              <input id="caregiverAge" type="number" formControlName="age" class="form-control" min="0" max="120">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="caregiverEducation" class="form-group__label">Nivel de Educación</label>
+              <select id="caregiverEducation" formControlName="educationLevel" class="form-control">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let nivel of nivelesEducacion" [value]="nivel.value">{{nivel.label}}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="caregiverOccupation" class="form-group__label">Ocupación</label>
+              <select id="caregiverOccupation" formControlName="occupation" class="form-control">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let ocupacion of ocupaciones" [value]="ocupacion">{{ocupacion}}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección 4: Variables de la Capa -->
+      <div *ngIf="currentSection === 3 && variables.length > 0" class="section-content fade-in">
+        <h3 class="section-content__header">Variables de la Capa</h3>
+
+        <div formArrayName="variables" class="variables-list">
+          <div *ngFor="let variable of variablesFormGroups; let i = index" [formGroupName]="i" class="variable-item">
+            <label class="form-group__label">
+              {{variable.get('variableName')?.value}}
+              <span *ngIf="variable.get('isRequired')?.value" class="form-group__label--required">*</span>
+            </label>
+
+            <ng-container [ngSwitch]="variable.get('type')?.value">
+              <input *ngSwitchCase="'Entero'" type="number" formControlName="value" class="form-control"
+                (keypress)="validateNumber($event)"
+                [class.form-control--error]="variable.get('value')?.invalid && variable.get('value')?.touched">
+              
+              <input *ngSwitchCase="'Real'" type="text" formControlName="value" class="form-control"
+                (keypress)="validateDecimal($event)"
+                [class.form-control--error]="variable.get('value')?.invalid && variable.get('value')?.touched">
+              
+              <input *ngSwitchCase="'Texto'" type="text" formControlName="value" class="form-control"
+                [class.form-control--error]="variable.get('value')?.invalid && variable.get('value')?.touched">
+              
+              <input *ngSwitchCase="'Fecha'" type="date" formControlName="value" class="form-control"
+                [class.form-control--error]="variable.get('value')?.invalid && variable.get('value')?.touched">
+              
+              <mat-checkbox *ngSwitchCase="'Lógico'" formControlName="value" class="variable-checkbox">
+                {{ variable.get('variableName')?.value }}
+              </mat-checkbox>
+              
+              <input *ngSwitchDefault type="text" formControlName="value" class="form-control"
+                [class.form-control--error]="variable.get('value')?.invalid && variable.get('value')?.touched">
+            </ng-container>
+
+            <div *ngIf="variable.get('value')?.invalid && variable.get('value')?.touched" class="form-group__error">
+              {{ getErrorMessage(variable) }}
+            </div>
+            <small class="form-group__help">{{ getTypeDescription(variable.get('type')?.value) }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de navegación -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn--secondary" (click)="prevSection()" 
+                [disabled]="currentSection === 0" aria-label="Sección anterior">
+          Anterior
+        </button>
+
+        <button type="button" class="btn btn--primary" (click)="nextSection()" 
+                *ngIf="currentSection < (variables.length > 0 ? 3 : 2)"
+                aria-label="Siguiente sección">
+          Siguiente
+        </button>
+
+        <button type="submit" class="btn btn--success" 
+                *ngIf="currentSection === (variables.length > 0 ? 3 : 2)"
+                [disabled]="loading || editForm.invalid"
+                aria-label="Guardar cambios">
+          {{ loading ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

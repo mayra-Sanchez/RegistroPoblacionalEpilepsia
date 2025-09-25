@@ -1,51 +1,209 @@
+<!-- Controles de tabla mejorados -->
 <div class="table-controls">
-    <!-- Elementos por página -->
-    <div class="items-per-page">
-        <label>Elementos por página:</label>
-        <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
-            <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
-        </select>
+    <div class="table-controls-group">
+        <!-- Elementos por página -->
+        <div class="control-item">
+            <label for="items-per-page-select">Elementos por página</label>
+            <select id="items-per-page-select" class="control-select" 
+                    [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+                <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+            </select>
+        </div>
+
+        <!-- Filtro por operación -->
+        <div class="control-item" *ngIf="hasOperationFilter">
+            <label for="operation-filter-select">Filtrar por operación</label>
+            <select id="operation-filter-select" class="control-select"
+                    [(ngModel)]="selectedOperation" (change)="onOperationFilterChange()">
+                <option value="">Todas las operaciones</option>
+                <option value="REGISTER_CREATED_SUCCESSFULL">Registros Creados</option>
+                <option value="UPDATE_RESEARCH_LAYER">Actualizaciones</option>
+                <option value="REGISTER_UPDATED">Actualizados</option>
+                <option value="REGISTER_DELETED">Eliminados</option>
+            </select>
+        </div>
     </div>
 
-    <div class="search-bar">
-        <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar"
-            (keyup.enter)="onPageChange.emit({page: 0, size: itemsPerPage, query: searchQuery})" />
-        <i class="fa fa-search"></i>
+    <!-- Búsqueda mejorada -->
+    <div class="search-container">
+        <label for="search-input" class="sr-only">Buscar en historial</label>
+        <div class="search-wrapper">
+            <input id="search-input" type="text" class="search-input"
+                   [(ngModel)]="searchQuery" 
+                   placeholder="Buscar por paciente, usuario, variables..."
+                   (keyup.enter)="onSearch()" />
+            <div class="search-buttons">
+                <button *ngIf="searchQuery" (click)="clearSearch()" class="clear-btn" 
+                        aria-label="Limpiar búsqueda">
+                    <i class="fa fa-times"></i>
+                </button>
+                <button (click)="onSearch()" class="search-btn" aria-label="Buscar">
+                    <i class="fa fa-search"></i>
+                </button>
+            </div>
+        </div>
     </div>
+
+    <!-- Botón reset mejorado -->
+    <button *ngIf="searchQuery || selectedOperation" (click)="resetFilters()" 
+            class="reset-filters-btn">
+        <i class="fa fa-refresh"></i> Limpiar Filtros
+    </button>
 </div>
 
+<!-- Contenedor de tabla -->
 <div class="table-container" *ngIf="!loading; else loadingTemplate">
-    <table>
-        <thead>
-            <tr>
-                <th *ngFor="let col of columns">{{ col.header }}</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let row of data">
-                <td *ngFor="let col of columns">{{ row[col.field] }}</td>
-                <td>
-                    <div class="actions">
-                        <button class="action-btn view" (click)="view(row)">
-                            <i class="fa fa-eye"></i>
-                        </button>
-                        <button class="action-btn edit" (click)="edit(row)">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <!-- Header informativo -->
+    <div class="table-header">
+        <div class="table-info">
+            <span><strong>Mostrando {{ currentRange }}</strong> registros</span>
+            <span class="filter-indicator" *ngIf="searchQuery || selectedOperation">
+                <i class="fa fa-filter"></i> Filtros activos
+            </span>
+        </div>
+        <div class="table-stats" *ngIf="filteredTotalRecords > 0">
+            <small>Filtrado de {{ totalRecords }} registros totales</small>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrapper">
+        <table class="history-table" aria-describedby="table-description">
+            <caption id="table-description" class="sr-only">
+                Historial de cambios en capas de investigación clínica
+            </caption>
+            <thead>
+                <tr>
+                    <th *ngFor="let col of columns" [attr.scope]="'col'">
+                        <div class="column-header">
+                            <span>{{ col.header }}</span>
+                        </div>
+                    </th>
+                    <th scope="col" width="120">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let row of paginatedData; let i = index" class="history-row">
+                    <td *ngFor="let col of columns" [attr.data-label]="col.header">
+                        <div [ngSwitch]="col.field">
+                            <!-- Fecha -->
+                            <span *ngSwitchCase="'changedAt'" class="date-cell">
+                                <i class="fa fa-calendar"></i>
+                                {{ formatDateForDisplay(row[col.field]) }}
+                            </span>
+                            
+                            <!-- Operación con badge mejorado -->
+                            <span *ngSwitchCase="'operation'" 
+                                  [class]="'operation-badge ' + getOperationClass(row.operation)">
+                                <i class="fa" 
+                                   [class.fa-plus]="row.operation === 'REGISTER_CREATED_SUCCESSFULL'"
+                                   [class.fa-edit]="row.operation.includes('UPDATE')"
+                                   [class.fa-trash]="row.operation === 'REGISTER_DELETED'"
+                                   aria-hidden="true"></i>
+                                {{ getOperationLabel(row.operation) }}
+                            </span>
+                            
+                            <!-- Paciente -->
+                            <span *ngSwitchCase="'patientIdentificationNumber'" class="patient-cell">
+                                <i class="fa fa-user"></i>
+                                #{{ row[col.field] }}
+                            </span>
+                            
+                            <!-- Usuario que modificó -->
+                            <span *ngSwitchCase="'changedBy'" class="user-cell">
+                                <i class="fa fa-user-md"></i>
+                                {{ row[col.field] }}
+                            </span>
+                            
+                            <!-- Variables de investigación -->
+                            <span *ngSwitchCase="'variables'" class="variables-cell">
+                                <div class="variables-content" *ngIf="row.isResearchLayerGroup?.variables">
+                                    {{ formatVariablesForDisplay(row.isResearchLayerGroup.variables) }}
+                                </div>
+                                <span *ngIf="!row.isResearchLayerGroup?.variables" class="text-muted">
+                                    Sin variables
+                                </span>
+                            </span>
+                            
+                            <!-- Default -->
+                            <span *ngSwitchDefault class="text-cell">
+                                {{ row[col.field] }}
+                            </span>
+                        </div>
+                    </td>
+<!-- En la sección de acciones de la tabla -->
+<td data-label="Acciones">
+    <div class="actions">
+        <button class="action-btn view" (click)="view(row)" 
+                title="Ver detalles">
+            <i class="fa-solid fa-eye"></i>
+        </button>
+        <button class="action-btn edit" (click)="edit(row)" 
+                title="Editar">
+            <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+    </div>
+</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mensaje sin datos -->
+    <div *ngIf="noData" class="no-data-message" role="status" aria-live="polite">
+        <i class="fa fa-database"></i>
+        <h3>{{ noDataMessage }}</h3>
+        <p *ngIf="searchQuery || selectedOperation" class="text-muted">
+            Intenta ajustar los filtros de búsqueda
+        </p>
+    </div>
 </div>
 
+<!-- Loading template -->
 <ng-template #loadingTemplate>
-    <div class="loading-message">Cargando datos...</div>
+    <div class="loading-message" role="status" aria-live="polite">
+        <i class="fa fa-spinner fa-spin"></i>
+        <h3>Cargando historial clínico...</h3>
+        <p>Por favor espere</p>
+    </div>
 </ng-template>
 
-<div class="pagination-controls">
-    <button (click)="prevPage()" [disabled]="currentPage === 1 || loading">Anterior</button>
-    <span>Página {{ currentPage }} de {{ totalPages }} (Total: {{ totalRecords }} registros)</span>
-    <button (click)="nextPage()" [disabled]="loading">Siguiente</button>
+<!-- Paginación mejorada -->
+<div class="pagination-container" *ngIf="hasData">
+    <div class="pagination-controls" aria-label="Paginación de la tabla">
+        <div class="pagination-info">
+            <span>Página <strong>{{ currentPage }}</strong> de <strong>{{ totalPages }}</strong></span>
+            <span class="total-records">{{ totalItems }} registros</span>
+        </div>
+        
+        <div class="pagination-buttons">
+            <button (click)="goToPage(1)" [disabled]="isFirstPage || loading" 
+                    title="Primera página">
+                <i class="fa fa-angle-double-left"></i>
+            </button>
+            <button (click)="prevPage()" [disabled]="isFirstPage || loading" 
+                    title="Página anterior">
+                <i class="fa fa-angle-left"></i>
+            </button>
+            
+            <div class="page-numbers">
+                <button *ngFor="let page of pageNumbers" 
+                        [class.active]="page === currentPage"
+                        (click)="goToPage(page)"
+                        [disabled]="loading"
+                        [attr.aria-label]="'Página ' + page">
+                    {{ page }}
+                </button>
+            </div>
+            
+            <button (click)="nextPage()" [disabled]="isLastPage || loading" 
+                    title="Página siguiente">
+                <i class="fa fa-angle-right"></i>
+            </button>
+            <button (click)="goToPage(totalPages)" [disabled]="isLastPage || loading" 
+                    title="Última página">
+                <i class="fa fa-angle-double-right"></i>
+            </button>
+        </div>
+    </div>
 </div>

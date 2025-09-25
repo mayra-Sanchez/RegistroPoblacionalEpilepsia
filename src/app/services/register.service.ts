@@ -64,6 +64,34 @@ export interface BasicResponse {
     message: string;
 }
 
+interface RegisterHistory {
+    id: string;
+    registerId: string;
+    changedBy: string;
+    changedAt: string;
+    operation: string;
+    patientIdentificationNumber: number;
+    isResearchLayerGroup: {
+        researchLayerId: string;
+        researchLayerName: string;
+        variables: Array<{
+            id: string;
+            name: string;
+            type: string;
+            valueAsString: string | null;
+            valueAsNumber: number | null;
+        }>;
+    };
+}
+
+
+export interface RegisterHistoryResponse {
+    data: RegisterHistory[];
+    currentPage: number;
+    totalPages: number;
+    totalElements: number;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -470,6 +498,43 @@ export class ConsolaRegistroService {
         const serverMessage = error.error?.message || error.message || defaultMessage;
         return throwError(() => this.createError(serverMessage, 'API_ERROR', error, error.status));
     }
+
+    getRegisterHistory(
+    researchLayerId: string,
+    userEmail: string,
+    page: number = 0,
+    size: number = 10,
+    sort: string = 'changedAt', // Cambié de 'registerDate' a 'changedAt' según tu response
+    sortDirection: 'ASC' | 'DESC' = 'DESC'
+): Observable<RegisterHistoryResponse> {
+    if (!researchLayerId) {
+        return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
+    }
+
+    if (!userEmail) {
+        return throwError(() => this.createError('User email is required', 'VALIDATION_ERROR'));
+    }
+
+    try {
+        const headers = this.getAuthHeaders();
+        const params = new HttpParams()
+            .set('researchLayerId', researchLayerId)
+            .set('userEmail', userEmail)
+            .set('page', page.toString())
+            .set('size', size.toString())
+            .set('sort', sort)
+            .set('sortDirection', sortDirection);
+
+        return this.http.get<RegisterHistoryResponse>(
+            `${this.apiUrl}/allResearchLayerHistoryById`, 
+            { headers, params }
+        ).pipe(
+            catchError(error => this.handleHttpError(error, 'Failed to fetch register history'))
+        );
+    } catch (error) {
+        return throwError(() => this.createError('Failed to prepare register history request', 'REQUEST_PREPARATION_ERROR', error));
+    }
+}
 
     private createError(
         message: string,

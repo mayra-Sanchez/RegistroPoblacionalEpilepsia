@@ -26,19 +26,25 @@
                 <span class="step-number">3</span>
                 Información Adicional
             </button>
+            <!-- Nueva sección para consentimiento -->
             <button class="nav-btn" (click)="changeSection(3)" [class.active]="currentSection === 3">
                 <span class="step-number">4</span>
+                Consentimiento
+            </button>
+            <button class="nav-btn" (click)="changeSection(4)" [class.active]="currentSection === 4">
+                <span class="step-number">5</span>
                 Cuidador
             </button>
-            <button class="nav-btn" (click)="changeSection(4)" [class.active]="currentSection === 4"
+            <button class="nav-btn" (click)="changeSection(5)" [class.active]="currentSection === 5"
                 *ngIf="variables.length > 0">
-                <span class="step-number">5</span>
+                <span class="step-number">6</span>
                 Variables
             </button>
         </div>
 
         <div class="progress-bar">
-            <div class="progress" [style.width]="(currentSection / (variables.length > 0 ? 4 : 3)) * 100 + '%'"></div>
+            <div class="progress" [style.width]="((currentSection + 1) / (variables.length > 0 ? 6 : 5)) * 100 + '%'">
+            </div>
         </div>
     </div>
 
@@ -229,8 +235,68 @@
             </div>
         </div>
 
-        <!-- Sección: Cuidador -->
         <div class="form-section" [class.active]="currentSection === 3">
+            <h3><i class="fas fa-file-signature"></i> Consentimiento Informado</h3>
+
+            <div class="consentimiento-section">
+                <div class="form-group">
+                    <label>¿Requiere consentimiento informado? *</label>
+                    <label class="switch">
+                        <input type="checkbox" formControlName="hasConsentimiento"
+                            (change)="onConsentimientoToggle()" />
+                        <span class="slider round"></span>
+                        <span class="switch-label">{{ registroForm.get('hasConsentimiento')?.value ? 'Sí' : 'No'
+                            }}</span>
+                    </label>
+                </div>
+
+                <div *ngIf="registroForm.get('hasConsentimiento')?.value" class="file-upload-section">
+                    <div class="form-group">
+                        <label>Subir consentimiento informado *</label>
+                        <div class="file-upload-container" [class.has-file]="consentimientoFile">
+                            <input type="file" #fileInput (change)="onFileSelected($event)"
+                                accept=".pdf,.jpg,.jpeg,.png" hidden>
+
+                            <div class="upload-area" (click)="fileInput.click()" [class.drag-over]="isDraggingOver"
+                                (dragover)="onDragOver($event)" (dragleave)="onDragLeave()" (drop)="onDrop($event)">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Haga clic o arrastre el archivo aquí</p>
+                                <small>Formatos permitidos: PDF, JPG, PNG (Máx. 5MB)</small>
+                            </div>
+
+                            <div *ngIf="consentimientoFile" class="file-preview">
+                                <div class="file-info">
+                                    <i class="fas fa-file-pdf"
+                                        *ngIf="consentimientoFile.type === 'application/pdf'"></i>
+                                    <i class="fas fa-file-image" *ngIf="consentimientoFile.type.includes('image')"></i>
+                                    <span class="file-name">{{ consentimientoFile.name }}</span>
+                                    <span class="file-size">({{ getFileSize(consentimientoFile.size) }})</span>
+                                </div>
+                                <button type="button" class="btn-remove" (click)="removeFile()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div *ngIf="consentimientoSubido" class="success-message">
+                            <i class="fas fa-check-circle"></i> Consentimiento subido correctamente
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-navigation-controls">
+                <button type="button" class="btn btn-prev" (click)="prevSection()">
+                    <i class="fas fa-arrow-left"></i> Anterior
+                </button>
+                <button type="button" class="btn btn-next" (click)="nextSection()">
+                    Siguiente <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sección: Cuidador -->
+        <div class="form-section" [class.active]="currentSection === 4">
             <h3>
                 <i class="fas fa-hands-helping"></i> Cuidador
                 <label class="switch">
@@ -281,7 +347,12 @@
 
                     <div class="form-group">
                         <label>Ocupación</label>
-                        <input type="text" formControlName="occupation" placeholder="Ocupación" />
+                        <select formControlName="occupation">
+                            <option value="">Seleccionar...</option>
+                            <option *ngFor="let ocupacion of ocupaciones" [value]="ocupacion">
+                                {{ ocupacion }}
+                            </option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -297,7 +368,7 @@
         </div>
 
         <!-- Sección: Variables -->
-        <div class="form-section" [class.active]="currentSection === 4" *ngIf="variables.length > 0">
+        <div class="form-section" [class.active]="currentSection === 5" *ngIf="variables.length > 0">
             <h3><i class="fas fa-list"></i> Variables de la Capa</h3>
 
             <div class="variables-container">
@@ -372,12 +443,6 @@
             <div class="section-navigation-controls">
                 <button type="button" class="btn btn-prev" (click)="prevSection()">
                     <i class="fas fa-arrow-left"></i> Anterior
-                </button>
-                <button type="submit" class="btn btn-submit" [disabled]="loading">
-                    <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status"
-                        aria-hidden="true"></span>
-                    <i *ngIf="!loading" class="fas fa-save"></i>
-                    {{ loading ? 'Guardando...' : 'Guardar Registro' }}
                 </button>
             </div>
         </div>
