@@ -110,6 +110,19 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     'Otro'
   ];
 
+  selectionTypes = [
+    { value: 'single', label: 'Selección Única' },
+    { value: 'multiple', label: 'Selección Múltiple' }
+  ];
+
+  filterOptions = [
+    { value: 'all', label: 'Todas' },
+    { value: 'completed', label: 'Completadas' },
+    { value: 'pending', label: 'Pendientes' }
+  ];
+
+  currentFilter = 'all';
+
   /**
    * Constructor del componente
    * @param fb Servicio FormBuilder para crear formularios reactivos
@@ -228,14 +241,39 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     this.variablesDeCapa.forEach(variable => {
       const isVariableRequired = variable.isRequired ?? false;
       const variableName = variable.name || variable.variableName || 'Variable sin nombre';
-      const validators = isVariableRequired ? [Validators.required] : [];
 
+      // Configurar validadores según el tipo de variable
+      let validators = isVariableRequired ? [Validators.required] : [];
+      let initialValue: any = '';
+
+      // Configurar valor inicial y validadores según el tipo
+      if (variable.hasOptions) {
+        // Para variables con opciones, el valor inicial depende del tipo de selección
+        initialValue = variable.selectionType === 'multiple' ? [] : '';
+      } else {
+        // Para variables sin opciones, valor inicial según tipo de dato
+        switch (variable.type) {
+          case 'Entero':
+          case 'Real':
+            initialValue = null;
+            break;
+          case 'Lógico':
+            initialValue = false;
+            break;
+          default:
+            initialValue = '';
+        }
+      }
       variablesArray.push(this.fb.group({
         variableId: [variable.id],
         variableName: [variableName],
-        value: ['', validators],
+        value: [initialValue, validators],
         type: [variable.type],
-        isRequired: [isVariableRequired]
+        isRequired: [isVariableRequired],
+        hasOptions: [variable.hasOptions || false],
+        options: [variable.options || []],
+        selectionType: [variable.selectionType || 'single'],
+        description: [variable.description || '']
       }));
     });
   }
@@ -764,54 +802,55 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Convierte el valor de una variable al tipo esperado por el API
-   * @param value Valor a convertir
-   * @param originalType Tipo original de la variable
-   * @returns Objeto con el valor convertido y su tipo
+   * Maneja el cambio en selecciones múltiples
+   * @param variable Grupo de formulario de la variable
+   * @param optionValue Valor de la opción
+   * @param event Evento de cambio
    */
-  private convertValueForApi(value: any, originalType: string): { value: any, type: string } {
-    if (value === null || value === undefined || value === '') {
-      return { value: null, type: 'String' };
+  onMultipleSelectionChange(variable: FormGroup, optionValue: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    const currentValue: string[] = variable.get('value')?.value || [];
+
+    if (isChecked) {
+      // Agregar opción si no existe
+      if (!currentValue.includes(optionValue)) {
+        variable.get('value')?.setValue([...currentValue, optionValue]);
+      }
+    } else {
+      // Remover opción si existe
+      variable.get('value')?.setValue(currentValue.filter(v => v !== optionValue));
     }
 
-    let finalValue: any;
-    let finalType: string;
+    // Forzar actualización del control
+    variable.get('value')?.updateValueAndValidity();
+  }
 
-    switch (originalType) {
-      case 'Entero': // Entero → Number
-        finalValue = typeof value === 'string' ? parseInt(value, 10) : Number(value);
-        if (isNaN(finalValue)) return { value: null, type: 'String' };
-        finalType = 'Number';
-        break;
 
-      case 'Real': // Real → Number (con decimales)
-        finalValue = typeof value === 'string' ? parseFloat(value) : Number(value);
-        if (isNaN(finalValue)) return { value: null, type: 'String' };
-        finalType = 'Number';
-        break;
+  /**
+   * Verifica si una opción está seleccionada en selección múltiple
+   * @param variable Grupo de formulario de la variable
+   * @param optionValue Valor de la opción
+   * @returns boolean indicando si está seleccionada
+   */
+  isOptionSelected(variable: FormGroup, optionValue: string): boolean {
+    const currentValue: string[] = variable.get('value')?.value || [];
+    return currentValue.includes(optionValue);
+  }
 
-      case 'Fecha': // Fecha → String en formato dd-MM-yyyy
-        finalValue = this.formatDateForBackend(value);
-        finalType = 'String';
-        break;
+  /**
+   * Maneja el cambio en el tipo de selección para una variable
+   * @param variable Grupo de formulario de la variable
+   * @param event Evento de cambio
+   */
+  onSelectionTypeChange(variable: FormGroup, event: Event): void {
+    const selectionType = (event.target as HTMLSelectElement).value;
+    variable.get('selectionType')?.setValue(selectionType);
 
-      case 'Lógico':
-        if (typeof value === 'string') {
-          finalValue = value.toLowerCase() === 'true' || value === '1';
-        } else {
-          finalValue = !!value;
-        }
-        finalType = 'String'; // o 'Boolean' si backend soporta
-        break;
-
-      case 'Texto': // Texto → String
-      default:
-        finalValue = String(value);
-        finalType = 'String';
-        break;
+    if (selectionType === 'multiple') {
+      variable.get('value')?.setValue([]);
+    } else {
+      variable.get('value')?.setValue('');
     }
-
-    return { value: finalValue, type: finalType };
   }
 
   /**
@@ -959,5 +998,95 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     } else {
       return (size / 1048576).toFixed(1) + ' MB';
     }
+  }
+
+
+  /**
+    * Convierte el valor de una variable al tipo esperado por el API
+    * @param value Valor a convertir
+    * @param originalType Tipo original de la variable
+    * @returns Objeto con el valor convertido y su tipo
+    */
+  private convertValueForApi(value: any, originalType: string): { value: any, type: string } {
+    if (value === null || value === undefined || value === '' ||
+      (Array.isArray(value) && value.length === 0)) {
+      return { value: null, type: 'String' };
+    }
+
+    let finalValue: any;
+    let finalType: string;
+
+    switch (originalType) {
+      case 'Entero': // Entero → Number
+        finalValue = typeof value === 'string' ? parseInt(value, 10) : Number(value);
+        if (isNaN(finalValue)) return { value: null, type: 'String' };
+        finalType = 'Number';
+        break;
+
+      case 'Real': // Real → Number (con decimales)
+        finalValue = typeof value === 'string' ? parseFloat(value) : Number(value);
+        if (isNaN(finalValue)) return { value: null, type: 'String' };
+        finalType = 'Number';
+        break;
+
+      case 'Fecha': // Fecha → String en formato dd-MM-yyyy
+        finalValue = this.formatDateForBackend(value);
+        finalType = 'String';
+        break;
+
+      case 'Lógico':
+        if (typeof value === 'string') {
+          finalValue = value.toLowerCase() === 'true' || value === '1';
+        } else {
+          finalValue = !!value;
+        }
+        finalType = 'String';
+        break;
+
+      case 'Texto': // Texto → String
+      default:
+        // Si es array (selección múltiple), convertir a string separado por comas
+        if (Array.isArray(value)) {
+          finalValue = value.join(', ');
+        } else {
+          finalValue = String(value);
+        }
+        finalType = 'String';
+        break;
+    }
+
+    return { value: finalValue, type: finalType };
+  }
+
+  /**
+ * Retorna si una variable está completada
+ */
+  isCompleted(variable: FormGroup): boolean {
+    const value = variable.get('value')?.value;
+    return value !== null && value !== undefined && value !== '' && !(Array.isArray(value) && value.length === 0);
+  }
+
+  /**
+   * Devuelve las variables según el filtro actual
+   */
+  getFilteredVariables(): FormGroup[] {
+    if (this.currentFilter === 'completed') {
+      return this.variablesFormGroups.filter(v => this.isCompleted(v));
+    }
+    if (this.currentFilter === 'pending') {
+      return this.variablesFormGroups.filter(v => !this.isCompleted(v));
+    }
+    return this.variablesFormGroups; // all
+  }
+
+  /**
+   * Contadores para mostrar progreso
+   */
+  get completedCount(): number {
+    return this.variablesFormGroups.filter(v => this.isCompleted(v)).length;
+  }
+
+  get totalCount(): number {
+    return this.variablesFormGroups.length;
   }
 }

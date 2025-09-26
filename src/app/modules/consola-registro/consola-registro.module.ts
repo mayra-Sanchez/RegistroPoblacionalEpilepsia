@@ -34,6 +34,8 @@ import { ConsentimientoInformadoComponent } from './components/consentimiento-in
 import { ViewRegistroModalComponent } from './components/view-registro-modal/view-registro-modal.component';
 import { RegistroPacienteComponent } from './components/registro-paciente/registro-paciente.component';
 import { EditRegistroModalComponent } from './components/edit-registro-modal/edit-registro-modal.component';
+import { VersionamientoModalComponent } from './components/versionamiento-modal/versionamiento-modal.component';
+import { MatDialogModule } from '@angular/material/dialog';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -45,7 +47,8 @@ import { EditRegistroModalComponent } from './components/edit-registro-modal/edi
     ConsentimientoInformadoComponent,
     RegistroPacienteComponent,
     EditRegistroModalComponent,
-    ViewRegistroModalComponent
+    ViewRegistroModalComponent,
+    VersionamientoModalComponent
   ],
   imports: [
     CommonModule,
@@ -74,7 +77,8 @@ import { EditRegistroModalComponent } from './components/edit-registro-modal/edi
     MatButtonToggleModule,
     MatAutocompleteModule,
     MatSliderModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatDialogModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   exports: [

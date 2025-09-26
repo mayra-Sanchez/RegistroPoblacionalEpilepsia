@@ -650,7 +650,6 @@ h1, h2, h3 {
   width: 100%;
   justify-content: flex-start;
   padding: 0;
-  background: #f4f6f9;
 }
 
 .contentDigitador {
@@ -937,4 +936,79 @@ h1, h2, h3 {
 @media (max-width: 480px) {
   .dashboard-header .welcome-message { font-size: 1rem; }
   .action-btn { padding: 15px; }
+}
+
+/* ==================== Botón de Versionamiento Simplificado ==================== */
+.version-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8f9fa;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px 20px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.version-btn:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: #007bff;
+  color: #007bff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.version-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 123, 255, 0.1);
+}
+
+.version-btn:disabled {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+  color: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.version-btn i:first-child {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.version-btn i:last-child {
+  font-size: 12px;
+  opacity: 0.6;
+  transition: transform 0.2s ease;
+}
+
+.version-btn:hover:not(:disabled) i:last-child {
+  transform: translateX(2px);
+  opacity: 1;
+}
+
+/* Versión alternativa más destacada */
+.version-btn.primary {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.version-btn.primary:hover:not(:disabled) {
+  background: #0056b3;
+  border-color: #0056b3;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .version-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+  }
 }

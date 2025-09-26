@@ -26,6 +26,7 @@ export interface VariableInfo {
 
 /** Definición completa de una variable en el sistema */
 export interface Variable {
+  selectionType: string;
   id: string;
   researchLayerId: string;
   variableName: string;
@@ -38,6 +39,9 @@ export interface Variable {
   updatedAt: string;
   isRequired?: boolean; // opcional
   name?: string;
+  selectionTypes?: string;
+  category?: string;
+  order?: string;
 }
 
 /** Request para guardar/actualizar una variable */

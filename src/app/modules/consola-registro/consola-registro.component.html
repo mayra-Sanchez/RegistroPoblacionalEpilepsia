@@ -198,6 +198,14 @@
     </div>
 
     <div *ngIf="selectedTab === 'listadoPacientes'">
+      <div class="mb-4">
+        <button class="version-btn" (click)="openVersionamientoModal()" [disabled]="!selectedLayerId">
+          <i class="pi pi-history"></i>
+          <span>Historial de cambios</span>
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+
       <app-table-ver-usuarios [data]="usuariosData" [columns]="usuariosColumns" [itemsPerPageOptions]="[10, 20, 30]"
         [totalRecords]="totalElements" [loading]="loadingRegistros" (onPageChange)="onPageChange($event)"
         (onView)="handleView($event)" (onEdit)="handleEdit($event)">

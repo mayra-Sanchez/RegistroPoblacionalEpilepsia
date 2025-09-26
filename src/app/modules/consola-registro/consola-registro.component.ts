@@ -17,6 +17,8 @@ import Swal from 'sweetalert2';
 import { MatDialog } from '@angular/material/dialog';
 import { catchError, forkJoin, of } from 'rxjs';
 import { ViewRegistroModalComponent } from './components/view-registro-modal/view-registro-modal.component';
+import { VersionamientoModalComponent } from './components/versionamiento-modal/versionamiento-modal.component';
+import { EditRegistroModalComponent } from './components/edit-registro-modal/edit-registro-modal.component';
 
 @Component({
   selector: 'app-consola-registro',
@@ -404,12 +406,124 @@ export class ConsolaRegistroComponent implements OnInit {
    * Maneja la edición de un registro
    * @param item Elemento del historial a editar
    */
+  /**
+   * Maneja la edición de un registro
+   * @param item Elemento del historial a editar
+   */
   handleEdit(item: any): void {
-    // Puedes decidir si permitir edición desde el historial
-    console.log('Editar elemento del historial:', item);
-    // this.selectedRegistro = { ...item._fullData };
-    // this.showEditModal = true;
-    // this.cdr.detectChanges();
+    console.log('🔄 Iniciando edición para:', item);
+
+    // Obtener el ID del paciente del item del historial
+    const patientId = item.patientIdentificationNumber ||
+      item._fullData?.patientIdentificationNumber ||
+      (item.documento && parseInt(item.documento));
+
+    if (!patientId) {
+      console.error('❌ No se puede identificar al paciente para editar', item);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se puede identificar al paciente para editar',
+        icon: 'error',
+        timer: 3000
+      });
+      return;
+    }
+
+    if (!this.selectedLayerId) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No hay una capa de investigación seleccionada',
+        icon: 'error',
+        timer: 3000
+      });
+      return;
+    }
+
+    // Mostrar loading
+    Swal.fire({
+      title: 'Cargando datos...',
+      text: 'Preparando formulario de edición',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Cargar los datos actuales del paciente para editar
+    this.consolaService.getActualRegisterByPatient(patientId, this.selectedLayerId).subscribe({
+      next: (registroActual) => {
+        Swal.close();
+
+        if (!registroActual) {
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudieron cargar los datos del paciente para editar',
+            icon: 'error'
+          });
+          return;
+        }
+
+        // Abrir el modal de edición con los datos actuales
+        this.abrirModalEdicion(registroActual);
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar datos para editar:', error);
+        Swal.close();
+
+        Swal.fire({
+          title: 'Error',
+          text: 'Error al cargar los datos del paciente: ' + (error.message || 'Error desconocido'),
+          icon: 'error'
+        });
+      }
+    });
+  }
+
+  /**
+   * Abre el modal de edición con los datos del registro
+   * @param registroActual Registro actual del paciente
+   */
+  private abrirModalEdicion(registroActual: Register): void {
+    try {
+      const dialogRef = this.dialog.open(EditRegistroModalComponent, {
+        width: '95%',
+        maxWidth: '1400px',
+        height: '90vh',
+        data: {
+          registro: registroActual,
+          variables: this.variablesDeCapa // ← Enviar las variables de la capa
+        },
+        panelClass: 'custom-modal-container',
+        autoFocus: false
+      });
+
+      // Suscribirse al resultado del modal
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result === true) {
+          // Si la edición fue exitosa, refrescar los datos
+          console.log('✅ Edición completada, refrescando datos...');
+          this.refreshData();
+
+          Swal.fire({
+            title: '¡Éxito!',
+            text: 'Registro actualizado correctamente',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        } else {
+          console.log('❌ Edición cancelada');
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Error al abrir modal de edición:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo abrir el formulario de edición',
+        icon: 'error'
+      });
+    }
   }
 
   /**
@@ -1285,6 +1399,44 @@ export class ConsolaRegistroComponent implements OnInit {
     });
 
     this.cdr.detectChanges();
+  }
+
+  /**
+ * Abre el modal de versionamiento de registros
+ */
+  openVersionamientoModal(): void {
+    if (!this.selectedLayerId) {
+      this.showErrorAlert('Por favor selecciona una capa de investigación primero');
+      return;
+    }
+
+    // Verificar que tenemos los datos necesarios
+    if (!this.selectedLayerId) {
+      this.showErrorAlert('No hay una capa de investigación seleccionada');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(VersionamientoModalComponent, {
+      width: '95%',
+      maxWidth: '1400px',
+      height: '90vh',
+      panelClass: 'versionamiento-modal-container',
+      autoFocus: false,
+      disableClose: false,
+      data: {
+        researchLayerId: this.selectedLayerId,
+        // patientIdentificationNumber es opcional, se buscará en el modal
+        patientIdentificationNumber: undefined
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Modal de versionamiento cerrado', result);
+      if (result === 'search') {
+        // Si se realizó una búsqueda exitosa, podrías refrescar datos si es necesario
+        this.refreshData();
+      }
+    });
   }
 
   /**

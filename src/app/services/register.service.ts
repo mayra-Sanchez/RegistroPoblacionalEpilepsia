@@ -259,25 +259,6 @@ export class ConsolaRegistroService {
         );
     }
 
-    getAllRegisters(pagination: PaginationRequest): Observable<PaginatedResponse> {
-        try {
-            const headers = this.getAuthHeaders();
-            const params = new HttpParams()
-                .set('page', pagination.page.toString())
-                .set('size', pagination.size.toString())
-                .set('sort', pagination.sort)
-                .set('sortDirection', pagination.sortDirection);
-
-            return this.http.get<PaginatedResponse>(this.apiUrl, {
-                headers,
-                params
-            }).pipe(
-                catchError(error => this.handleHttpError(error, 'Failed to fetch registers'))
-            );
-        } catch (error) {
-            return throwError(() => this.createError('Failed to prepare fetch request', 'REQUEST_PREPARATION_ERROR', error));
-        }
-    }
 
     updateRegister(registerId: string, userEmail: string, registerRequest: RegisterRequest): Observable<BasicResponse> {
         try {
@@ -424,35 +405,6 @@ export class ConsolaRegistroService {
         }
     }
 
-    // Método para obtener registros por capa (manteniendo compatibilidad)
-    obtenerRegistrosPorCapa(
-        researchLayerId: string,
-        userEmail: string,
-        patientIdentificationNumber?: number,
-        page: number = 0,
-        size: number = 10,
-        sort: string = 'registerDate',
-        sortDirection: string = 'DESC'
-    ): Observable<PaginatedResponse> {
-        const pagination: PaginationRequest = {
-            page,
-            size,
-            sort,
-            sortDirection: sortDirection as 'ASC' | 'DESC'
-        };
-
-        if (patientIdentificationNumber) {
-            return this.getRegistersByResearchLayer(
-                researchLayerId,
-                userEmail,
-                patientIdentificationNumber,
-                pagination
-            );
-        } else {
-            // Para obtener todos los registros de la capa sin filtrar por paciente
-            return this.getAllRegisters(pagination);
-        }
-    }
 
     // Método para obtener registros por paciente (manteniendo compatibilidad)
     obtenerRegistrosPorPaciente(

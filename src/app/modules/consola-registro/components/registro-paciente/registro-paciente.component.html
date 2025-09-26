@@ -371,75 +371,162 @@
         <div class="form-section" [class.active]="currentSection === 5" *ngIf="variables.length > 0">
             <h3><i class="fas fa-list"></i> Variables de la Capa</h3>
 
-            <div class="variables-container">
-                <div formArrayName="variables">
-                    <div *ngFor="let variable of variablesFormGroups; let i = index" [formGroup]="variable"
-                        class="variable-field">
-                        <div class="form-group">
-                            <label>
-                                {{ variable.get('variableName')?.value }}
-                                <span *ngIf="variable.get('isRequired')?.value" class="required-asterisk">*</span>
-                                <span class="variable-type-badge" [attr.data-type]="variable.get('type')?.value">
-                                    {{ getTypeLabel(variable.get('type')?.value) }}
-                                </span>
-                            </label>
+            <!-- Controles de filtro y progreso -->
+            <div class="variables-controls">
+                <div class="filter-controls">
+                    <label for="filterSelect">Filtrar:</label>
+                    <select id="filterSelect" [(ngModel)]="currentFilter" class="filter-select">
+                        <option *ngFor="let filter of filterOptions" [value]="filter.value">
+                            {{ filter.label }}
+                        </option>
+                    </select>
+                </div>
 
-                            <!-- ENTERO - Número entero -->
-                            <div *ngIf="variable.get('type')?.value === 'Entero'" class="input-container">
-                                <input type="number" formControlName="value" step="1" placeholder="Ej: 1, 2, 3"
-                                    (keypress)="validateNumber($event)" class="form-control" />
-                                <i class="fas fa-hashtag input-icon"></i>
-                            </div>
-
-                            <!-- REAL - Número decimal -->
-                            <div *ngIf="variable.get('type')?.value === 'Real'" class="input-container">
-                                <input type="number" formControlName="value" step="0.01"
-                                    placeholder="Ej: 1.5, 2.75, 3.14" (keypress)="validateDecimal($event)"
-                                    class="form-control" />
-                                <i class="fas fa-divide input-icon"></i>
-                            </div>
-
-                            <!-- TEXTO - Campo de texto -->
-                            <div *ngIf="variable.get('type')?.value === 'Texto'" class="input-container">
-                                <textarea formControlName="value" rows="3" placeholder="Ej: Juan, Azul"
-                                    class="form-control"></textarea>
-                                <i class="fas fa-font input-icon"></i>
-                            </div>
-
-                            <!-- FECHA - Selector de fecha -->
-                            <div *ngIf="variable.get('type')?.value === 'Fecha'" class="input-container">
-                                <input type="date" formControlName="value" class="form-control" />
-                                <i class="fas fa-calendar-alt input-icon"></i>
-                            </div>
-
-                            <!-- LÓGICO - Checkbox booleano -->
-                            <div *ngIf="variable.get('type')?.value === 'Lógico'" class="checkbox-container">
-                                <label class="checkbox-label large">
-                                    <input type="checkbox" formControlName="value"
-                                        (change)="onCheckboxChange(variable, $event)" class="checkbox-input" />
-                                    <span class="checkmark"></span>
-                                    <span class="checkbox-text">
-                                        {{ variable.get('value')?.value ? 'Sí' : 'No' }}
-                                    </span>
-                                </label>
-                                <i class="fas fa-check-double input-icon"></i>
-                            </div>
-
-                            <!-- Mensajes de error -->
-                            <div *ngIf="variable.get('value')?.invalid && variable.get('value')?.touched"
-                                class="error-message">
-                                {{ getErrorMessage(variable) }}
-                            </div>
-
-                            <!-- Texto de ayuda -->
-                            <div *ngIf="variable.get('value')?.valid && variable.get('value')?.value" class="help-text">
-                                {{ getTypeDescription(variable.get('type')?.value) }}
-                            </div>
-                        </div>
+                <div class="progress-info">
+                    <span>
+                        <i class="fas fa-check-circle"></i>
+                        {{ completedCount }} / {{ totalCount }} completadas
+                    </span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="(completedCount / totalCount) * 100"></div>
                     </div>
                 </div>
             </div>
 
+            <!-- Variables -->
+            <div class="variables-container" formArrayName="variables">
+                <div *ngFor="let variable of getFilteredVariables(); let i = index" [formGroup]="variable"
+                    class="variable-field" [class.completed]="isCompleted(variable)">
+
+                    <!-- Encabezado de la variable -->
+                    <label class="variable-title">
+                        <span class="variable-name">
+                            {{ variable.get('variableName')?.value }}
+                            <span *ngIf="variable.get('isRequired')?.value" class="required-asterisk">*</span>
+                        </span>
+
+                        <!-- Badges -->
+                        <span *ngIf="variable.get('hasOptions')?.value" class="options-badge">
+                            <i class="fas fa-list"></i> Con Opciones
+                        </span>
+                        <span class="variable-type-badge" [attr.data-type]="variable.get('type')?.value">
+                            {{ getTypeLabel(variable.get('type')?.value) }}
+                        </span>
+                    </label>
+
+                    <!-- Descripción -->
+                    <div *ngIf="variable.get('description')?.value" class="variable-description">
+                        {{ variable.get('description')?.value }}
+                    </div>
+
+                    <!-- VARIABLES CON OPCIONES -->
+                    <ng-container *ngIf="variable.get('hasOptions')?.value">
+                        <!-- Selector tipo selección -->
+                        <div class="selection-type-selector" *ngIf="variable.get('options')?.value?.length > 0">
+                            <label>Tipo de selección:</label>
+                            <select [value]="variable.get('selectionType')?.value"
+                                (change)="onSelectionTypeChange(variable, $event)" class="selection-type-select">
+                                <option *ngFor="let selType of selectionTypes" [value]="selType.value">
+                                    {{ selType.label }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Selección única -->
+                        <div *ngIf="variable.get('selectionType')?.value === 'single'" class="single-selection">
+                            <select formControlName="value" class="form-control">
+                                <option value="">Seleccionar una opción</option>
+                                <option *ngFor="let option of variable.get('options')?.value" [value]="option">
+                                    {{ option }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Selección múltiple -->
+                        <div *ngIf="variable.get('selectionType')?.value === 'multiple'" class="multiple-selection">
+                            <div class="options-grid">
+                                <label *ngFor="let option of variable.get('options')?.value"
+                                    class="option-checkbox-label">
+                                    <input type="checkbox" [checked]="isOptionSelected(variable, option)"
+                                        (change)="onMultipleSelectionChange(variable, option, $event)"
+                                        class="option-checkbox" />
+                                    <span class="checkmark"></span>
+                                    <span class="option-text">{{ option }}</span>
+                                </label>
+                            </div>
+
+                            <!-- Opciones seleccionadas -->
+                            <div *ngIf="variable.get('value')?.value?.length > 0" class="selected-options">
+                                <strong>Seleccionadas:</strong>
+                                <div class="selected-tags">
+                                    <span *ngFor="let selected of variable.get('value')?.value" class="selected-tag">
+                                        {{ selected }} <i class="fas fa-check"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sin opciones -->
+                        <div *ngIf="!variable.get('options')?.value?.length" class="no-options-message">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Esta variable está configurada con opciones, pero no tiene ninguna definida.
+                        </div>
+                    </ng-container>
+
+                    <!-- VARIABLES SIN OPCIONES -->
+                    <ng-container *ngIf="!variable.get('hasOptions')?.value">
+                        <!-- Entero -->
+                        <div *ngIf="variable.get('type')?.value === 'Entero'" class="input-container">
+                            <input type="number" formControlName="value" step="1" placeholder="Ej: 1, 2, 3"
+                                (keypress)="validateNumber($event)" class="form-control" />
+                            <i class="fas fa-hashtag input-icon"></i>
+                        </div>
+
+                        <!-- Real -->
+                        <div *ngIf="variable.get('type')?.value === 'Real'" class="input-container">
+                            <input type="number" formControlName="value" step="0.01" placeholder="Ej: 1.5, 2.75, 3.14"
+                                (keypress)="validateDecimal($event)" class="form-control" />
+                            <i class="fas fa-divide input-icon"></i>
+                        </div>
+
+                        <!-- Texto -->
+                        <div *ngIf="variable.get('type')?.value === 'Texto'" class="input-container">
+                            <textarea formControlName="value" rows="3" placeholder="Ej: Juan, Azul"
+                                class="form-control"></textarea>
+                            <i class="fas fa-font input-icon"></i>
+                        </div>
+
+                        <!-- Fecha -->
+                        <div *ngIf="variable.get('type')?.value === 'Fecha'" class="input-container">
+                            <input type="date" formControlName="value" class="form-control" />
+                            <i class="fas fa-calendar-alt input-icon"></i>
+                        </div>
+
+                        <!-- Lógico -->
+                        <div *ngIf="variable.get('type')?.value === 'Lógico'" class="checkbox-container">
+                            <label class="checkbox-label large">
+                                <input type="checkbox" formControlName="value"
+                                    (change)="onCheckboxChange(variable, $event)" class="checkbox-input" />
+                                <span class="checkmark"></span>
+                                <span class="checkbox-text">{{ variable.get('value')?.value ? 'Sí' : 'No' }}</span>
+                            </label>
+                            <i class="fas fa-check-double input-icon"></i>
+                        </div>
+                    </ng-container>
+
+                    <!-- Error -->
+                    <div *ngIf="variable.get('value')?.invalid && variable.get('value')?.touched" class="error-message">
+                        {{ getErrorMessage(variable) }}
+                    </div>
+
+                    <!-- Texto de ayuda -->
+                    <div *ngIf="variable.get('value')?.valid && variable.get('value')?.value" class="help-text">
+                        {{ getTypeDescription(variable.get('type')?.value) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navegación -->
             <div class="section-navigation-controls">
                 <button type="button" class="btn btn-prev" (click)="prevSection()">
                     <i class="fas fa-arrow-left"></i> Anterior
@@ -450,14 +537,25 @@
     </form>
 
     <!-- Botones de acción globales -->
-    <div class="form-actions" *ngIf="!loadingVariables && currentSection !== 4">
+    <!-- Botones de acción globales -->
+    <div class="form-actions" *ngIf="!loadingVariables">
         <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="loading">
             <i class="fas fa-times"></i> Cancelar
         </button>
-        <button type="submit" class="btn btn-submit" [disabled]="loading || registroForm.invalid" (click)="onSubmit()">
-            <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            <i *ngIf="!loading" class="fas fa-save"></i>
-            {{ loading ? 'Guardando...' : 'Guardar Registro' }}
-        </button>
+
+        <!-- Botón con tooltip cuando está deshabilitado -->
+        <div class="submit-button-container" [class.disabled]="registroForm.invalid">
+            <button type="submit" class="btn btn-submit" [disabled]="loading || registroForm.invalid"
+                (click)="onSubmit()" #submitButton>
+                <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <i *ngIf="!loading" class="fas fa-save"></i>
+                {{ loading ? 'Guardando...' : 'Guardar Registro' }}
+            </button>
+
+            <!-- Tooltip que aparece cuando el formulario es inválido -->
+            <div class="tooltip" *ngIf="registroForm.invalid && !loading">
+                Complete todos los campos requeridos antes de guardar
+            </div>
+        </div>
     </div>
 </div>

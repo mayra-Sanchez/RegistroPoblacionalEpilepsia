@@ -98,20 +98,30 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     this.variablesDeCapa = data.variables || [];
   }
 
-  // En EditRegistroModalComponent - modificar el ngOnInit
   ngOnInit(): void {
     console.log('🎯 Modal de edición iniciado');
     console.log('📦 Datos recibidos:', this.data);
 
-    if (!this.data.registro) {
+    if (!this.data?.registro) {
       console.error('❌ No se recibió registro para editar');
-      Swal.fire('Error', 'No se pudieron cargar los datos del registro', 'error');
-      this.dialogRef.close();
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudieron cargar los datos del registro',
+        icon: 'error'
+      }).then(() => {
+        this.dialogRef.close();
+      });
       return;
     }
 
+    // Verificar que tenemos las variables necesarias
+    if (!this.data.variables || this.data.variables.length === 0) {
+      console.warn('⚠️ No se recibieron variables de la capa');
+      // Podrías intentar cargarlas aquí si es necesario
+    }
+
     console.log('📦 Registro recibido:', this.data.registro);
-    console.log('🔧 Variables de capa:', this.variablesDeCapa);
+    console.log('🔧 Variables de capa:', this.data.variables);
 
     // ✅ Primero crear el formulario con estructura vacía
     this.editForm = this.createForm();

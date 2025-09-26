@@ -1,0 +1,258 @@
+<div class="versionamiento-container">
+    <!-- Header -->
+    <div class="modal-header">
+        <div class="header-content">
+            <mat-icon class="header-icon">history</mat-icon>
+            <h2>Versionamiento de Registros</h2>
+        </div>
+        <button mat-icon-button (click)="close()" class="close-btn" matTooltip="Cerrar">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <!-- Buscador de Paciente -->
+    <div class="search-section">
+        <div class="search-form">
+            <mat-form-field appearance="outline" class="search-input">
+                <mat-label>Número de Identificación del Paciente</mat-label>
+                <input matInput type="number" [(ngModel)]="patientIdentificationNumber" placeholder="Ej: 123456789"
+                    (keyup.enter)="searchPatient()" [disabled]="loading">
+                <mat-icon matSuffix>badge</mat-icon>
+                <mat-hint>Ingrese la cédula del paciente para consultar el historial</mat-hint>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" (click)="searchPatient()"
+                [disabled]="!patientIdentificationNumber || loading" class="search-btn"
+                matTooltip="Buscar historial del paciente">
+                <mat-icon *ngIf="!loading">search</mat-icon>
+                <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+                {{ loading ? 'Buscando...' : 'Buscar' }}
+            </button>
+        </div>
+
+        <!-- Información del Paciente -->
+        <div *ngIf="patientInfo" class="patient-info-card">
+            <mat-card class="patient-card">
+                <mat-card-header class="patient-card-header">
+                    <div class="patient-avatar">
+                        <mat-icon>person</mat-icon>
+                    </div>
+                    <div class="patient-header-content">
+                        <mat-card-title class="patient-name">{{ patientInfo.name }}</mat-card-title>
+                        <mat-card-subtitle class="patient-id">
+                            Documento: {{ patientInfo.identificationNumber }}
+                        </mat-card-subtitle>
+                    </div>
+                    <div class="patient-status">
+                        <span class="status-badge verified" matTooltip="Paciente verificado en el sistema">
+                            <mat-icon>verified</mat-icon>
+                            Verificado
+                        </span>
+                    </div>
+                </mat-card-header>
+
+                <mat-card-content class="patient-card-content">
+                    <div class="patient-meta-info">
+                        <div class="meta-item">
+                            <mat-icon>badge</mat-icon>
+                            <span class="meta-label">Tipo de ID:</span>
+                            <span class="meta-value">Cédula de Ciudadanía</span>
+                        </div>
+                        <div class="meta-item">
+                            <mat-icon>today</mat-icon>
+                            <span class="meta-label">Registrado:</span>
+                            <span class="meta-value">Hoy</span>
+                        </div>
+                        <div class="meta-item">
+                            <mat-icon>history</mat-icon>
+                            <span class="meta-label">Versiones:</span>
+                            <span class="meta-value">{{ versionGroups.length }} registros</span>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+
+    <!-- Vista de Versiones -->
+    <div *ngIf="patientInfo" class="sections-container">
+        <div class="versions-view">
+            <div class="tab-header">
+                <div class="tab-title">
+                    <h3>Historial de Versiones</h3>
+                    <span class="total-records">{{ versionGroups.length }} versiones encontradas</span>
+                </div>
+                <button mat-stroked-button color="primary" (click)="searchPatient()" [disabled]="loading">
+                    <mat-icon>refresh</mat-icon>
+                    Actualizar
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="loading && versionGroups.length === 0" class="loading-section">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Cargando historial de versiones...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!loading && versionGroups.length === 0" class="empty-section">
+                <mat-icon>inventory_2</mat-icon>
+                <h4>No hay historial disponible</h4>
+                <p>No se encontraron registros para este paciente.</p>
+            </div>
+
+            <!-- Lista de Versiones -->
+            <div *ngIf="!loading && versionGroups.length > 0" class="versions-list">
+                <mat-accordion multi>
+                    <mat-expansion-panel *ngFor="let version of versionGroups; let i = index" [expanded]="i === 0"
+                        class="version-item">
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>
+                                <div class="version-title-content">
+                                    <mat-icon [class]="getOperationClass(version.operation)" class="operation-icon">
+                                        {{ getOperationIcon(version.operation) }}
+                                    </mat-icon>
+                                    <span class="operation-text">{{ getOperationText(version.operation) }}</span>
+                                    <div class="version-sections">
+                                        <span *ngIf="version.hasBasicInfo" class="section-badge basic">
+                                            <mat-icon>person</mat-icon>
+                                            Información Básica
+                                        </span>
+                                        <span *ngIf="version.hasCaregiverInfo" class="section-badge caregiver">
+                                            <mat-icon>accessibility</mat-icon>
+                                            Cuidador
+                                        </span>
+                                        <span *ngIf="version.hasResearchVariables" class="section-badge variables">
+                                            <mat-icon>science</mat-icon>
+                                            Variables
+                                        </span>
+                                    </div>
+                                </div>
+                            </mat-panel-title>
+                            <mat-panel-description>
+                                <div class="version-meta">
+                                    <span class="version-date">{{ formatDate(version.changedAt) }}</span>
+                                    <span class="version-author">por {{ version.changedBy }}</span>
+                                </div>
+                            </mat-panel-description>
+                        </mat-expansion-panel-header>
+
+                        <div class="version-details">
+                            <!-- Información Básica -->
+                            <div *ngIf="version.hasBasicInfo" class="section-detail">
+                                <h4 class="section-title">
+                                    <mat-icon>person</mat-icon>
+                                    Información Básica del Paciente
+                                </h4>
+                                <div class="data-grid">
+                                    <div class="data-section" *ngIf="getSectionData(version, 'basic')">
+                                        <div class="data-item"
+                                            *ngFor="let key of getObjectKeys(getSectionData(version, 'basic'))">
+                                            <span class="data-label">{{ formatKeyName(key) }}:</span>
+                                            <span class="data-value">{{ getFormattedValue(getSectionData(version,
+                                                'basic')[key]) }}</span>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="!getSectionData(version, 'basic')" class="no-data">
+                                        <mat-icon>info</mat-icon>
+                                        <span>No hay datos de información básica en esta versión</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Información del Cuidador -->
+                            <div *ngIf="version.hasCaregiverInfo" class="section-detail">
+                                <h4 class="section-title">
+                                    <mat-icon>accessibility</mat-icon>
+                                    Información del Cuidador
+                                </h4>
+                                <div class="data-grid">
+                                    <div class="data-section" *ngIf="getSectionData(version, 'caregiver')">
+                                        <div class="data-item"
+                                            *ngFor="let key of getObjectKeys(getSectionData(version, 'caregiver'))">
+                                            <span class="data-label">{{ formatKeyName(key) }}:</span>
+                                            <span class="data-value">{{ getFormattedValue(getSectionData(version,
+                                                'caregiver')[key]) }}</span>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="!getSectionData(version, 'caregiver')" class="no-data">
+                                        <mat-icon>info</mat-icon>
+                                        <span>No hay datos del cuidador en esta versión</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Variables de Investigación -->
+                            <div *ngIf="version.hasResearchVariables" class="section-detail">
+                                <h4 class="section-title">
+                                    <mat-icon>science</mat-icon>
+                                    Variables de Investigación
+                                </h4>
+                                <div class="data-grid">
+                                    <div class="data-section" *ngIf="getSectionData(version, 'variables')">
+                                        <div class="data-item">
+                                            <span class="data-label">Capa de Investigación:</span>
+                                            <span class="data-value">{{ getSectionData(version,
+                                                'variables').researchLayerName || 'No disponible' }}</span>
+                                        </div>
+                                        <div class="data-item">
+                                            <span class="data-label">ID Capa:</span>
+                                            <span class="data-value">{{ getSectionData(version,
+                                                'variables').researchLayerId || 'No disponible' }}</span>
+                                        </div>
+                                        <div class="data-item"
+                                            *ngIf="getSectionData(version, 'variables').variables && getSectionData(version, 'variables').variables.length > 0">
+                                            <span class="data-label">Variables:</span>
+                                            <div class="variables-list">
+                                                <div *ngFor="let variable of getSectionData(version, 'variables').variables"
+                                                    class="variable-item">
+                                                    <span class="variable-name">{{ variable.name }} ({{ variable.type
+                                                        }}):</span>
+                                                    <span class="variable-value">{{ variable.valueAsNumber ||
+                                                        variable.valueAsString || 'No definido' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="data-item"
+                                            *ngIf="!getSectionData(version, 'variables').variables || getSectionData(version, 'variables').variables.length === 0">
+                                            <span class="data-label">Variables:</span>
+                                            <span class="data-value">No hay variables registradas</span>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="!getSectionData(version, 'variables')" class="no-data">
+                                        <mat-icon>info</mat-icon>
+                                        <span>No hay datos de variables en esta versión</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="version-footer">
+                                <span class="version-id">Register ID: {{ version.registerId }}</span>
+                                <span class="version-changes">{{ version.items.length }} cambio(s) en esta
+                                    versión</span>
+                            </div>
+                        </div>
+                    </mat-expansion-panel>
+                </mat-accordion>
+
+                <!-- Load More Button -->
+                <div *ngIf="hasMore()" class="load-more-section">
+                    <button mat-button color="primary" (click)="loadMore()" [disabled]="loading" class="load-more-btn">
+                        <mat-icon>expand_more</mat-icon>
+                        {{ loading ? 'Cargando...' : 'Cargar más versiones' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer" *ngIf="patientInfo">
+        <div class="footer-info">
+            <mat-icon>info</mat-icon>
+            <span>Mostrando {{ versionGroups.length }} versiones para: {{ patientInfo.name }} ({{
+                patientInfo.identificationNumber }})</span>
+        </div>
+        <button mat-button (click)="close()">Cerrar</button>
+    </div>
+</div>
