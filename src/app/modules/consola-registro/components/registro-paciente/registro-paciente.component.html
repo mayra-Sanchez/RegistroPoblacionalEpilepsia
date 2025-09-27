@@ -375,7 +375,8 @@
             <div class="variables-controls">
                 <div class="filter-controls">
                     <label for="filterSelect">Filtrar:</label>
-                    <select id="filterSelect" [(ngModel)]="currentFilter" class="filter-select">
+                    <select id="filterSelect" [(ngModel)]="currentFilter" [ngModelOptions]="{standalone: true}"
+                        class="filter-select">
                         <option *ngFor="let filter of filterOptions" [value]="filter.value">
                             {{ filter.label }}
                         </option>

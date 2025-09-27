@@ -468,4 +468,26 @@ export class ConsolaAdministradorService {
         catchError(this.handleHttpError('Descarga de documentos'))
       );
   }
+
+  /**
+ * Obtiene el historial de cambios de una capa de investigación
+ */
+  getRegisterHistory(
+    researchLayerId: string,
+    userEmail: string,
+    page: number = 0,
+    size: number = 10,
+    sort: string = 'changedAt',
+    sortDirection: 'ASC' | 'DESC' = 'DESC'
+  ): Observable<any> {
+    const params = new HttpParams()
+      .set('researchLayerId', researchLayerId)
+      .set('userEmail', userEmail)
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sort', sort)
+      .set('sortDirection', sortDirection);
+
+    return this.http.get<any>(`${this.API_REGISTERS}/allResearchLayerHistoryById`, { params });
+  }
 }

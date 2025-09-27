@@ -1,27 +1,50 @@
 import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatCheckboxChange } from '@angular/material/checkbox';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import Swal from 'sweetalert2';
+
+// Services
 import { ConsolaRegistroService } from '../../../../services/register.service';
 import { AuthService } from '../../../../services/auth.service';
-import { Variable, Register, RegisterRequest, RegisterPatient, RegisterCaregiver, RegisterVariable } from '../../interfaces';
-import Swal from 'sweetalert2';
-import { Subject, takeUntil } from 'rxjs';
-import { MatCheckboxChange } from '@angular/material/checkbox';
 
+// Interfaces
+import { Variable, Register, RegisterRequest, RegisterPatient, RegisterCaregiver, RegisterVariable } from '../../interfaces';
+
+/**
+ * Componente modal para editar registros de pacientes
+ * Maneja la edición de información personal, datos del cuidador y variables de investigación
+ */
 @Component({
   selector: 'app-edit-registro-modal',
   templateUrl: './edit-registro-modal.component.html',
   styleUrls: ['./edit-registro-modal.component.css']
 })
 export class EditRegistroModalComponent implements OnInit, OnDestroy {
+  //#region Propiedades del Formulario y Estado
+  /** FormGroup principal del formulario de edición */
   editForm: FormGroup;
+  
+  /** Indica si se está cargando o guardando */
   loading: boolean = false;
+  
+  /** Sección actual del formulario (para navegación por pasos) */
   currentSection: number = 0;
+  
+  /** Indica si el paciente tiene cuidador */
   hasCaregiver: boolean = false;
+  
+  /** Lista de variables de la capa de investigación */
   variablesDeCapa: Variable[] = [];
+  
+  /** Subject para manejar la desuscripción de observables */
   private destroy$ = new Subject<void>();
+  //#endregion
 
-  // Opciones predefinidas
+  //#region Opciones Predefinidas para Selects
+  /** Tipos de identificación disponibles */
   tiposIdentificacion = [
     { value: 'CC', label: 'Cédula de Ciudadanía' },
     { value: 'TI', label: 'Tarjeta de Identidad' },
@@ -30,11 +53,13 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'RC', label: 'Registro Civil' }
   ];
 
+  /** Opciones de género */
   sexos = [
     { value: 'Masculino', label: 'Masculino' },
     { value: 'Femenino', label: 'Femenino' }
   ];
 
+  /** Estados civiles disponibles */
   estadosCiviles = [
     { value: 'Soltero', label: 'Soltero/a' },
     { value: 'Casado', label: 'Casado/a' },
@@ -43,6 +68,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'Unión Libre', label: 'Unión Libre' }
   ];
 
+  /** Niveles de educación */
   nivelesEducacion = [
     { value: 'Primaria', label: 'Primaria' },
     { value: 'Secundaria', label: 'Secundaria' },
@@ -52,6 +78,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'Ninguno', label: 'Ninguno' }
   ];
 
+  /** Niveles económicos */
   nivelesEconomicos = [
     { value: 'Bajo', label: 'Bajo' },
     { value: 'Medio Bajo', label: 'Medio Bajo' },
@@ -60,6 +87,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'Alto', label: 'Alto' }
   ];
 
+  /** Estados de crisis médica */
   estadosCrisis = [
     { value: 'Activa', label: 'Activa' },
     { value: 'Remisión', label: 'Remisión' },
@@ -67,6 +95,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'Crónica', label: 'Crónica' }
   ];
 
+  /** Ocupaciones disponibles */
   ocupaciones = [
     'Ama de casa',
     'Estudiante',
@@ -86,7 +115,17 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     'Fuerzas armadas',
     'Otro'
   ];
+  //#endregion
 
+  //#region Constructor e Inicialización
+  /**
+   * Constructor del componente modal
+   * @param fb FormBuilder para crear formularios reactivos
+   * @param consolaService Servicio de consola de registro
+   * @param authService Servicio de autenticación
+   * @param dialogRef Referencia al modal dialog
+   * @param data Datos inyectados que contienen el registro y variables
+   */
   constructor(
     private fb: FormBuilder,
     private consolaService: ConsolaRegistroService,
@@ -98,52 +137,62 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     this.variablesDeCapa = data.variables || [];
   }
 
+  /**
+   * Inicialización del componente
+   * Configura el formulario con los datos del registro recibido
+   */
   ngOnInit(): void {
     console.log('🎯 Modal de edición iniciado');
     console.log('📦 Datos recibidos:', this.data);
 
+    // Validar que se recibieron los datos necesarios
     if (!this.data?.registro) {
       console.error('❌ No se recibió registro para editar');
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los datos del registro',
-        icon: 'error'
-      }).then(() => {
-        this.dialogRef.close();
-      });
+      this.showErrorAndClose('No se pudieron cargar los datos del registro');
       return;
     }
 
     // Verificar que tenemos las variables necesarias
     if (!this.data.variables || this.data.variables.length === 0) {
       console.warn('⚠️ No se recibieron variables de la capa');
-      // Podrías intentar cargarlas aquí si es necesario
     }
 
     console.log('📦 Registro recibido:', this.data.registro);
     console.log('🔧 Variables de capa:', this.data.variables);
 
-    // ✅ Primero crear el formulario con estructura vacía
+    // Crear el formulario con estructura vacía
     this.editForm = this.createForm();
 
-    // ✅ Luego inicializar con datos
+    // Inicializar con datos del registro
     this.initializeFormWithData();
 
+    // Suscribirse a cambios en la fecha de nacimiento para calcular edad automáticamente
     const birthControl = this.editForm.get('patient.birthDate');
     birthControl?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.onBirthDateChange());
   }
 
+  /**
+   * Limpieza al destruir el componente
+   * Desuscribe todos los observables
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
+  //#endregion
 
+  //#region Creación e Inicialización del Formulario
+  /**
+   * Crea la estructura base del formulario reactivo
+   * @returns FormGroup configurado con validadores
+   */
   createForm(): FormGroup {
     return this.fb.group({
+      // Información de identificación (solo lectura)
       patientIdentificationNumber: [{ value: '', disabled: true }, [Validators.required, Validators.pattern('^[0-9]*$')]],
       patientIdentificationType: [{ value: 'CC', disabled: true }, Validators.required],
 
-      // ✅ Asegurar que el grupo 'patient' esté correctamente definido
+      // Información del paciente
       patient: this.fb.group({
         name: ['', Validators.required],
         sex: ['', Validators.required],
@@ -161,6 +210,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         crisisStatus: ['']
       }),
 
+      // Información del cuidador (opcional)
       caregiver: this.fb.group({
         name: [''],
         identificationType: ['CC'],
@@ -170,6 +220,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         occupation: ['']
       }),
 
+      // Variables de investigación
       variables: this.fb.array([])
     });
   }
@@ -181,38 +232,59 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     const registro = this.data.registro;
 
     if (!registro) {
-      Swal.fire('Error', 'No se pudieron cargar los datos del registro', 'error');
-      this.dialogRef.close();
+      this.showErrorAndClose('No se pudieron cargar los datos del registro');
       return;
     }
 
     console.log('📋 Inicializando formulario con registro:', registro);
 
-    // ✅ Verificar que el formulario esté creado
+    // Validar que el formulario esté creado
     if (!this.editForm) {
       console.error('❌ El formulario no está inicializado');
       return;
     }
 
-    // ✅ Verificar que el grupo 'patient' exista
+    // Validar que el grupo 'patient' exista
     const patientGroup = this.editForm.get('patient') as FormGroup;
     if (!patientGroup) {
       console.error('❌ No se encontró el grupo patient en el formulario');
       return;
     }
 
-    // Datos básicos de identificación
+    // Cargar datos básicos de identificación
+    this.loadIdentificationData(registro);
+
+    // Cargar datos del paciente
+    this.loadPatientData(registro, patientGroup);
+
+    // Cargar datos del cuidador si existen
+    this.loadCaregiverData(registro);
+
+    // Inicializar variables de investigación
+    this.initializeVariablesWithData(registro);
+  }
+
+  /**
+   * Carga los datos de identificación del registro al formulario
+   * @param registro Registro con los datos a cargar
+   */
+  private loadIdentificationData(registro: Register): void {
     this.editForm.patchValue({
       patientIdentificationNumber: registro.patientIdentificationNumber || '',
       patientIdentificationType: this.getShortIdentificationType(registro.patientIdentificationType) || 'CC',
     });
+  }
 
-    // Datos del paciente
+  /**
+   * Carga los datos del paciente al formulario
+   * @param registro Registro con los datos del paciente
+   * @param patientGroup Grupo del formulario para datos del paciente
+   */
+  private loadPatientData(registro: Register, patientGroup: FormGroup): void {
     const patientData = registro.patientBasicInfo;
     if (patientData) {
       console.log('👤 Datos del paciente:', patientData);
 
-      // ✅ Usar patchValue en el grupo patient específicamente
       patientGroup.patchValue({
         name: patientData.name || '',
         sex: patientData.sex || '',
@@ -230,8 +302,13 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         crisisStatus: patientData.crisisStatus || ''
       });
     }
+  }
 
-    // Datos del cuidador
+  /**
+   * Carga los datos del cuidador al formulario si existen
+   * @param registro Registro con los datos del cuidador
+   */
+  private loadCaregiverData(registro: Register): void {
     if (registro.caregiver && registro.caregiver.name) {
       this.hasCaregiver = true;
       console.log('👥 Datos del cuidador:', registro.caregiver);
@@ -248,13 +325,11 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         });
       }
     }
-
-    // Inicializar variables
-    this.initializeVariablesWithData(registro);
   }
 
   /**
-   * Inicializa las variables con los datos del registro
+   * Inicializa las variables de investigación con los datos del registro
+   * @param registro Registro con los datos de variables
    */
   initializeVariablesWithData(registro: Register): void {
     const variablesArray = this.editForm.get('variables') as FormArray;
@@ -266,49 +341,73 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     const registroVariables = this.getVariablesFromRegister(registro);
     console.log('📊 Variables encontradas en registro:', registroVariables);
 
+    // Crear controles para cada variable de la capa
     this.variablesDeCapa.forEach(variable => {
-      // Buscar la variable en los datos del registro
-      const variableData = registroVariables.find(v =>
-        v.variableId === variable.id ||
-        v.variableName === variable.name ||
-        v.name === variable.name
-      );
-
-      const isVariableRequired = variable.isRequired ?? false;
-      const variableName = variable.name || variable.variableName || 'Variable sin nombre';
-      const validators = isVariableRequired ? [Validators.required] : [];
-
-      // Obtener el valor de la variable
-      let variableValue = '';
-      if (variableData) {
-        console.log(`📝 Procesando variable: ${variableName}`, variableData);
-
-        // Manejar diferentes estructuras de datos
-        if (variableData.value !== undefined && variableData.value !== null) {
-          variableValue = variableData.value.toString();
-        } else if (variableData.valueAsString !== undefined && variableData.valueAsString !== null) {
-          variableValue = variableData.valueAsString.toString();
-        } else if (variableData.valueAsNumber !== undefined && variableData.valueAsNumber !== null) {
-          variableValue = variableData.valueAsNumber.toString();
-        }
-      }
-
-      console.log(`✅ Variable ${variableName}: valor = ${variableValue}`);
-
-      variablesArray.push(this.fb.group({
-        variableId: [variable.id],
-        variableName: [variableName],
-        value: [variableValue, validators],
-        type: [variable.type],
-        isRequired: [isVariableRequired]
-      }));
+      this.createVariableControl(variablesArray, variable, registroVariables);
     });
 
     console.log('🎯 Variables inicializadas en formulario:', variablesArray.value);
   }
 
   /**
-   * Obtiene las variables del registro de forma compatible
+   * Crea un control de formulario para una variable específica
+   * @param variablesArray Array de formulario para las variables
+   * @param variable Definición de la variable
+   * @param registroVariables Variables con valores del registro
+   */
+  private createVariableControl(variablesArray: FormArray, variable: Variable, registroVariables: any[]): void {
+    // Buscar la variable en los datos del registro
+    const variableData = registroVariables.find(v =>
+      v.variableId === variable.id ||
+      v.variableName === variable.name ||
+      v.name === variable.name
+    );
+
+    const isVariableRequired = variable.isRequired ?? false;
+    const variableName = variable.name || variable.variableName || 'Variable sin nombre';
+    const validators = isVariableRequired ? [Validators.required] : [];
+
+    // Obtener el valor de la variable
+    const variableValue = this.extractVariableValue(variableData);
+
+    console.log(`✅ Variable ${variableName}: valor = ${variableValue}`);
+
+    // Crear el grupo de formulario para la variable
+    variablesArray.push(this.fb.group({
+      variableId: [variable.id],
+      variableName: [variableName],
+      value: [variableValue, validators],
+      type: [variable.type],
+      isRequired: [isVariableRequired]
+    }));
+  }
+
+  /**
+   * Extrae el valor de una variable desde los datos del registro
+   * @param variableData Datos de la variable del registro
+   * @returns Valor formateado como string
+   */
+  private extractVariableValue(variableData: any): string {
+    if (!variableData) return '';
+
+    // Manejar diferentes estructuras de datos
+    if (variableData.value !== undefined && variableData.value !== null) {
+      return variableData.value.toString();
+    } else if (variableData.valueAsString !== undefined && variableData.valueAsString !== null) {
+      return variableData.valueAsString.toString();
+    } else if (variableData.valueAsNumber !== undefined && variableData.valueAsNumber !== null) {
+      return variableData.valueAsNumber.toString();
+    }
+
+    return '';
+  }
+  //#endregion
+
+  //#region Métodos de Utilidad para Datos
+  /**
+   * Obtiene las variables del registro de forma compatible con diferentes estructuras
+   * @param registro Registro del que extraer las variables
+   * @returns Array de variables
    */
   private getVariablesFromRegister(registro: Register): any[] {
     // Primero intentar con registerInfo[0].variablesInfo (estructura GET)
@@ -334,6 +433,8 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Convierte el tipo de identificación completo al formato abreviado
+   * @param fullType Tipo de identificación completo
+   * @returns Tipo abreviado o 'CC' por defecto
    */
   private getShortIdentificationType(fullType: string): string {
     if (!fullType) return 'CC';
@@ -346,11 +447,29 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       'Registro Civil': 'RC'
     };
 
-    return typeMap[fullType] || fullType; // Si no está en el mapa, devolver el original
+    return typeMap[fullType] || fullType;
+  }
+
+  /**
+   * Convierte el tipo de identificación al formato del backend
+   * @param type Tipo abreviado
+   * @returns Tipo completo para el backend
+   */
+  private getBackendIdentificationType(type: string): string {
+    switch (type) {
+      case 'CC': return 'Cédula de Ciudadanía';
+      case 'TI': return 'Tarjeta de Identidad';
+      case 'CE': return 'Cédula de Extranjería';
+      case 'PA': return 'Pasaporte';
+      case 'RC': return 'Registro Civil';
+      default: return type;
+    }
   }
 
   /**
    * Formatea una fecha para el input type="date" (YYYY-MM-DD)
+   * @param dateValue Valor de fecha a formatear
+   * @returns Fecha formateada o string vacío
    */
   private formatDateForInput(dateValue: any): string {
     if (!dateValue) return '';
@@ -382,33 +501,45 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  onBirthDateChange(): void {
-    const birthDate = this.editForm.get('patient.birthDate')?.value;
-    if (birthDate) {
-      const today = new Date();
-      const birth = new Date(birthDate);
-      let age = today.getFullYear() - birth.getFullYear();
+  /**
+   * Formatea una fecha para el backend (YYYY-MM-DD)
+   * @param dateValue Valor de fecha a formatear
+   * @returns Fecha formateada o null
+   */
+  private formatDateForBackend(dateValue: any): string | null {
+    if (!dateValue) return null;
 
-      const monthDiff = today.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
+    try {
+      if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        return dateValue;
       }
 
-      this.editForm.get('patient.age')?.setValue(age);
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return null;
+
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    } catch {
+      return null;
     }
   }
+  //#endregion
 
-  toggleCaregiver(): void {
-    this.hasCaregiver = !this.hasCaregiver;
-    if (!this.hasCaregiver) {
-      this.editForm.get('caregiver')?.reset();
-    }
-  }
-
+  //#region Métodos de Navegación y Validación
+  /**
+   * Cambia a una sección específica del formulario
+   * @param sectionIndex Índice de la sección a mostrar
+   */
   changeSection(sectionIndex: number): void {
     this.currentSection = sectionIndex;
   }
 
+  /**
+   * Navega a la siguiente sección del formulario
+   */
   nextSection(): void {
     if (this.validateCurrentSection()) {
       const maxSections = this.variables.length > 0 ? 3 : 2;
@@ -418,12 +549,19 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Navega a la sección anterior del formulario
+   */
   prevSection(): void {
     if (this.currentSection > 0) {
       this.currentSection--;
     }
   }
 
+  /**
+   * Valida la sección actual antes de permitir la navegación
+   * @returns true si la sección es válida
+   */
   validateCurrentSection(): boolean {
     switch (this.currentSection) {
       case 1:
@@ -441,6 +579,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  /**
+   * Marca campos como touched para mostrar errores de validación
+   * @param fields Array de campos a marcar como touched
+   */
   markFieldsAsTouched(fields: any[]): void {
     fields.forEach(field => {
       if (field) {
@@ -450,19 +592,36 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Convierte el tipo de identificación al formato del backend
+   * Maneja el cambio en la fecha de nacimiento para calcular la edad automáticamente
    */
-  private getBackendIdentificationType(type: string): string {
-    switch (type) {
-      case 'CC': return 'Cédula de Ciudadanía';
-      case 'TI': return 'Tarjeta de Identidad';
-      case 'CE': return 'Cédula de Extranjería';
-      case 'PA': return 'Pasaporte';
-      case 'RC': return 'Registro Civil';
-      default: return type;
+  onBirthDateChange(): void {
+    const birthDate = this.editForm.get('patient.birthDate')?.value;
+    if (birthDate) {
+      const today = new Date();
+      const birth = new Date(birthDate);
+      let age = today.getFullYear() - birth.getFullYear();
+
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+
+      this.editForm.get('patient.age')?.setValue(age);
     }
   }
 
+  /**
+   * Alterna la visibilidad de la sección de cuidador
+   */
+  toggleCaregiver(): void {
+    this.hasCaregiver = !this.hasCaregiver;
+    if (!this.hasCaregiver) {
+      this.editForm.get('caregiver')?.reset();
+    }
+  }
+  //#endregion
+
+  //#region Métodos de Envío y Procesamiento
   /**
    * Maneja el envío del formulario de edición
    */
@@ -510,23 +669,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
     } catch (error: any) {
       console.error('❌ Error completo al actualizar:', error);
-
-      // Log detallado del error
-      if (error.error) {
-        console.error('📋 Error body:', error.error);
-      }
-      if (error.status) {
-        console.error('🔧 Error status:', error.status);
-      }
-
-      let errorMessage = 'No se pudo actualizar el registro';
-      if (error.error?.message) {
-        errorMessage = error.error.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      Swal.fire('Error', errorMessage, 'error');
+      this.handleUpdateError(error);
     } finally {
       this.loading = false;
     }
@@ -534,6 +677,8 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Prepara el request para la actualización según la interfaz RegisterRequest
+   * @param formValue Valores del formulario
+   * @returns Objeto estructurado para la API
    */
   private prepareUpdateRequest(formValue: any): any {
     const backendIdentificationType = this.getBackendIdentificationType(formValue.patientIdentificationType);
@@ -553,7 +698,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     const researchLayerId = this.data.registro.registerInfo?.[0]?.researchLayerId || '';
     const researchLayerName = this.data.registro.registerInfo?.[0]?.researchLayerName || '';
 
-    // ✅ Preparar datos del cuidador si existen
+    // Preparar datos del cuidador si existen
     let caregiverData: any;
     if (this.hasCaregiver && formValue.caregiver?.name) {
       caregiverData = {
@@ -566,10 +711,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       };
     }
 
-    // ✅ Asegurar que firstCrisisDate nunca sea null - usar string vacío si es null
+    // Asegurar que firstCrisisDate nunca sea null
     const firstCrisisDate = this.formatDateForBackend(formValue.patient.firstCrisisDate) || '';
 
-    // ✅ Crear el objeto completo de una vez
+    // Crear el objeto completo para la API
     const registerRequest = {
       registerInfo: {
         researchLayerId: researchLayerId,
@@ -581,47 +726,32 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       patient: {
         name: formValue.patient.name,
         sex: formValue.patient.sex,
-        birthDate: this.formatDateForBackend(formValue.patient.birthDate) || '', // ✅ Evitar null
+        birthDate: this.formatDateForBackend(formValue.patient.birthDate) || '',
         age: Number(formValue.patient.age) || 0,
         email: formValue.patient.email || '',
         phoneNumber: formValue.patient.phoneNumber || '',
-        deathDate: this.formatDateForBackend(formValue.patient.deathDate) || '', // ✅ Evitar null
+        deathDate: this.formatDateForBackend(formValue.patient.deathDate) || '',
         economicStatus: formValue.patient.economicStatus || '',
         educationLevel: formValue.patient.educationLevel || '',
         maritalStatus: formValue.patient.maritalStatus || '',
         hometown: formValue.patient.hometown || '',
         currentCity: formValue.patient.currentCity || '',
-        firstCrisisDate: firstCrisisDate, // ✅ Ya asegurado que no es null
+        firstCrisisDate: firstCrisisDate,
         crisisStatus: formValue.patient.crisisStatus || ''
       },
-      ...(caregiverData && { caregiver: caregiverData }) // ✅ Spread condicional
+      ...(caregiverData && { caregiver: caregiverData })
     };
 
     console.log('📤 Request final para actualización:', JSON.stringify(registerRequest, null, 2));
     return registerRequest;
   }
 
-  private formatDateForBackend(dateValue: any): string | null {
-    if (!dateValue) return null;
-
-    try {
-      if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-        return dateValue;
-      }
-
-      const date = new Date(dateValue);
-      if (isNaN(date.getTime())) return null;
-
-      const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-
-      return `${year}-${month}-${day}`;
-    } catch {
-      return null;
-    }
-  }
-
+  /**
+   * Convierte valores del formulario al tipo esperado por la API
+   * @param value Valor a convertir
+   * @param originalType Tipo original de la variable
+   * @returns Objeto con valor convertido y tipo final
+   */
   private convertValueForApi(value: any, originalType: string): { value: any, finalType: string } {
     if (value === null || value === undefined || value === '') {
       return { value: null, finalType: 'String' };
@@ -656,6 +786,35 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     return { value: finalValue, finalType: finalType };
   }
 
+  /**
+   * Maneja errores durante la actualización del registro
+   * @param error Error capturado
+   */
+  private handleUpdateError(error: any): void {
+    // Log detallado del error
+    if (error.error) {
+      console.error('📋 Error body:', error.error);
+    }
+    if (error.status) {
+      console.error('🔧 Error status:', error.status);
+    }
+
+    let errorMessage = 'No se pudo actualizar el registro';
+    if (error.error?.message) {
+      errorMessage = error.error.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    Swal.fire('Error', errorMessage, 'error');
+  }
+  //#endregion
+
+  //#region Métodos de Validación y Utilidades de UI
+  /**
+   * Marca recursivamente todos los controles de un FormGroup como touched
+   * @param formGroup Grupo de formulario a marcar
+   */
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
@@ -675,56 +834,11 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     });
   }
 
-  onCancel(): void {
-    if (this.editForm.dirty) {
-      Swal.fire({
-        title: '¿Estás seguro?',
-        text: 'Los cambios no guardados se perderán',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, salir',
-        cancelButtonText: 'No, continuar editando'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.dialogRef.close(false);
-        }
-      });
-    } else {
-      this.dialogRef.close(false);
-    }
-  }
-
-  // Métodos de utilidad para el template
-  getTypeLabel(type: string): string {
-    const typeLabels: { [key: string]: string } = {
-      'Entero': 'Entero',
-      'Real': 'Decimal',
-      'Texto': 'Texto',
-      'Fecha': 'Fecha',
-      'Lógico': 'Sí/No'
-    };
-    return typeLabels[type] || type;
-  }
-
-  getTypeDescription(type: string): string {
-    const typeDescriptions: { [key: string]: string } = {
-      'Entero': 'Número entero sin decimales',
-      'Real': 'Número con decimales',
-      'Texto': 'Texto libre',
-      'Fecha': 'Fecha en formato AAAA-MM-DD',
-      'Lógico': 'Valor verdadero o falso'
-    };
-    return typeDescriptions[type] || '';
-  }
-
-  getErrorMessage(variable: FormGroup): string {
-    const control = variable.get('value');
-    if (control?.errors?.['required']) {
-      return 'Este campo es requerido';
-    }
-    return 'Valor inválido';
-  }
-
+  /**
+   * Valida entrada de teclado para campos numéricos
+   * @param event Evento de teclado
+   * @returns true si la tecla es válida
+   */
   validateNumber(event: KeyboardEvent): boolean {
     const charCode = event.which ? event.which : event.keyCode;
     if (charCode > 31 && (charCode < 48 || charCode > 57) &&
@@ -735,6 +849,11 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  /**
+   * Valida entrada de teclado para campos decimales
+   * @param event Evento de teclado
+   * @returns true si la tecla es válida
+   */
   validateDecimal(event: KeyboardEvent): boolean {
     const charCode = event.which ? event.which : event.keyCode;
     const value = (event.target as HTMLInputElement).value;
@@ -755,20 +874,39 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  /**
+   * Maneja cambios en checkboxes para variables lógicas
+   * @param variable Grupo de formulario de la variable
+   * @param event Evento de cambio del checkbox
+   */
   onCheckboxChange(variable: FormGroup, event: MatCheckboxChange): void {
     const control = this.getVariableControl(variable, 'value');
     control.setValue(event.checked);
     control.updateValueAndValidity();
   }
+  //#endregion
 
+  //#region Getters y Métodos de Acceso
+  /**
+   * Obtiene el FormArray de variables
+   */
   get variables(): FormArray {
     return this.editForm.get('variables') as FormArray;
   }
 
+  /**
+   * Obtiene los grupos de formulario de las variables
+   */
   get variablesFormGroups(): FormGroup[] {
     return this.variables.controls.filter(control => control instanceof FormGroup) as FormGroup[];
   }
 
+  /**
+   * Obtiene un control específico de una variable
+   * @param variable Grupo de formulario de la variable
+   * @param controlName Nombre del control
+   * @returns FormControl solicitado
+   */
   getVariableControl(variable: FormGroup, controlName: string): FormControl {
     const control = variable.get(controlName);
     if (control instanceof FormControl) {
@@ -776,4 +914,120 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     }
     throw new Error(`El control '${controlName}' no existe o no es un FormControl`);
   }
+
+  /**
+   * Obtiene la etiqueta descriptiva para un tipo de variable
+   * @param type Tipo de variable
+   * @returns Etiqueta descriptiva
+   */
+  getTypeLabel(type: string): string {
+    const typeLabels: { [key: string]: string } = {
+      'Entero': 'Entero',
+      'Real': 'Decimal',
+      'Texto': 'Texto',
+      'Fecha': 'Fecha',
+      'Lógico': 'Sí/No'
+    };
+    return typeLabels[type] || type;
+  }
+
+  /**
+   * Obtiene la descripción para un tipo de variable
+   * @param type Tipo de variable
+   * @returns Descripción del tipo
+   */
+  getTypeDescription(type: string): string {
+    const typeDescriptions: { [key: string]: string } = {
+      'Entero': 'Número entero sin decimales',
+      'Real': 'Número con decimales',
+      'Texto': 'Texto libre',
+      'Fecha': 'Fecha en formato AAAA-MM-DD',
+      'Lógico': 'Valor verdadero o falso'
+    };
+    return typeDescriptions[type] || '';
+  }
+
+  /**
+   * Obtiene el mensaje de error para una variable
+   * @param variable Grupo de formulario de la variable
+   * @returns Mensaje de error
+   */
+  getErrorMessage(variable: FormGroup): string {
+    const control = variable.get('value');
+    if (control?.errors?.['required']) {
+      return 'Este campo es requerido';
+    }
+    return 'Valor inválido';
+  }
+  //#endregion
+
+  //#region Métodos de Cierre y Manejo de Modal
+  /**
+   * Maneja el cierre del modal con confirmación si hay cambios sin guardar
+   */
+  onCancel(): void {
+    if (this.editForm.dirty) {
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Los cambios no guardados se perderán',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'No, continuar editando'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.dialogRef.close(false);
+        }
+      });
+    } else {
+      this.dialogRef.close(false);
+    }
+  }
+
+  /**
+   * Muestra un error y cierra el modal
+   * @param message Mensaje de error a mostrar
+   */
+  private showErrorAndClose(message: string): void {
+    Swal.fire('Error', message, 'error');
+    this.dialogRef.close();
+  }
+  //#endregion
+
+  //#region Métodos de Utilidad para Validación de Formulario
+  /**
+   * Verifica si el formulario es válido
+   */
+  get isFormValid(): boolean {
+    return this.editForm.valid;
+  }
+
+  /**
+   * Verifica si la sección actual es válida
+   */
+  get isCurrentSectionValid(): boolean {
+    switch (this.currentSection) {
+      case 0: // Información básica
+        const patientGroup = this.editForm.get('patient') as FormGroup;
+        return patientGroup?.valid || false;
+      case 1: // Cuidador (opcional)
+        return true; // El cuidador es opcional
+      case 2: // Variables
+        return this.variables.valid;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Verifica si hay variables requeridas sin completar
+   */
+  get hasRequiredVariablesIncomplete(): boolean {
+    return this.variablesFormGroups.some(variable => {
+      const isRequired = variable.get('isRequired')?.value;
+      const value = variable.get('value')?.value;
+      return isRequired && (!value || value.toString().trim() === '');
+    });
+  }
+  //#endregion
 }

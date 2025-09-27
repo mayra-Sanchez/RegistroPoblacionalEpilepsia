@@ -215,17 +215,32 @@
 
 
     <!-- Gestión de Registros de Capas (solo para SuperAdmin) -->
-    <div *ngIf="selectedTab === 'gestionRegistrosCapas'">
-      <div class="action-bar">
-        <button class="btn btn-primary" (click)="downloadAllDocuments()">
-          Descargar todos los consentimientos informados
-        </button>
+    <div *ngIf="selectedTab === 'historialRegistros'">
+      <div class="filtro-container">
+        <label for="capaHistorial">Seleccionar Capa:</label>
+        <select id="capaHistorial" [(ngModel)]="capaSeleccionadaHistorial" (change)="onCapaSeleccionadaChange()"
+          class="form-select">
+          <option value="">Seleccione una capa</option>
+          <option *ngFor="let capa of capasData" [value]="capa.id">
+            {{ capa.nombreCapa }}
+          </option>
+        </select>
       </div>
 
-      <app-data-table [data]="registrosCapasData" [columns]="registrosCapasColumns" [itemsPerPageOptions]="[5, 10, 20]"
-        [totalRecords]="totalRegistrosCapas" [loading]="loadingRegistrosCapas" (onView)="handleViewRegistro($event)"
-        (onDelete)="handleDeleteRegistro($event)">
-      </app-data-table>
+      <div *ngIf="capaSeleccionadaHistorial; else noCapaSelected">
+        <app-data-table [data]="historialRegistrosData" [columns]="historialRegistrosColumns"
+          [itemsPerPageOptions]="[5, 10, 20]" [totalRecords]="totalHistorialRegistros"
+          [loading]="loadingHistorialRegistros" (onView)="handleViewHistorial($event)"
+          (onPageChange)="onPageChangeHistorial($event)" (onDelete)="handleDeleteHistorial($event)">
+        </app-data-table>
+      </div>
+
+      <ng-template #noCapaSelected>
+        <div class="alert alert-info">
+          <i class="fa fa-info-circle"></i>
+          Por favor selecciona una capa de investigación para ver su historial de cambios.
+        </div>
+      </ng-template>
     </div>
 
 

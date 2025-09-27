@@ -9,7 +9,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { AuthService } from 'src/app/services/auth.service';
 import { Observable } from 'rxjs';
 import { saveAs } from 'file-saver';
-
+import { ConsolaRegistroService } from 'src/app/services/register.service';
 /**
  * Interfaz para el tipo Registro que representa un item en el historial de actividad
  */
@@ -164,11 +164,32 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   capaToEdit: any = null;
   viewedItem: any = null;
   viewType: string = '';
+  registroToDelete: any = null;
 
   /**
    * Lista completa de usuarios para exportación
    */
   todosLosUsuarios: any[] = [];
+
+  /**
+ * Datos del historial de registros
+ */
+  historialRegistrosData: any[] = [];
+
+  /**
+   * Total de elementos en el historial
+   */
+  totalHistorialRegistros: number = 0;
+
+  /**
+   * Estado de carga para historial
+   */
+  loadingHistorialRegistros: boolean = false;
+
+  /**
+   * Capa seleccionada para filtrar historial
+   */
+  capaSeleccionadaHistorial: string = '';
 
   /* -------------------- Datos de actividad -------------------- */
 
@@ -182,6 +203,37 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    */
   ultimosRegistros: Registro[] = [];
 
+  /**
+   * Configuración de columnas para tabla de historial
+   */
+  historialRegistrosColumns = [
+    {
+      field: 'registerId',
+      header: 'ID Registro',
+      formatter: (value: string) => value ? value.substring(0, 8) + '...' : 'N/A'
+    },
+    { field: 'changedBy', header: 'Modificado Por' },
+    {
+      field: 'changedAt',
+      header: 'Fecha Modificación',
+      formatter: (value: string) => this.formatDate(value)
+    },
+    {
+      field: 'operation',
+      header: 'Operación',
+      formatter: (value: string) => this.translateOperation(value)
+    },
+    { field: 'patientIdentificationNumber', header: 'ID Paciente' },
+    {
+      field: 'isResearchLayerGroup.researchLayerName',
+      header: 'Capa de Investigación'
+    },
+    {
+      field: 'isResearchLayerGroup.variables',
+      header: 'Variables',
+      formatter: (variables: any[]) => variables?.length?.toString() || '0'
+    }
+  ];
   /**
    * Referencia al paginador de la tabla
    */
@@ -276,25 +328,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     { field: 'jefeIdentificacion', header: 'Identificación del Jefe' },
   ];
 
-  /**
-   * Configuración de columnas para tabla de registros de capas
-   */
-  registrosCapasColumns = [
-    { field: 'registerId', header: 'ID Registro' },
-    { field: 'registerDate', header: 'Fecha Registro' },
-    { field: 'patientBasicInfo.name', header: 'Nombre Paciente' },
-    { field: 'patientIdentificationNumber', header: 'ID Paciente' },
-    { field: 'patientBasicInfo.sex', header: 'Sexo' },
-    { field: 'patientBasicInfo.age', header: 'Edad' },
-    { field: 'healthProfessional.name', header: 'Profesional' },
-    {
-      field: 'registerInfo',
-      header: 'Variables',
-      formatter: (registerInfo: any[]) =>
-        registerInfo.reduce((acc, layer) => acc + (layer.variablesInfo?.length || 0), 0).toString()
-    }
-  ];
-
 
   /**
    * Constructor del componente
@@ -307,7 +340,8 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     protected consolaService: ConsolaAdministradorService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private authService: AuthService
+    private authService: AuthService,
+    private registroService: ConsolaRegistroService
   ) { }
 
   /* -------------------- Métodos del ciclo de vida -------------------- */
@@ -545,33 +579,136 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Carga los registros de capas con paginación
-   * @param page Número de página (opcional, default 0)
-   * @param size Tamaño de página (opcional, default 10)
-   */
-  loadRegistrosCapas(page: number = 0, size: number = 10): void {
-    this.loadingRegistrosCapas = true;
-    this.consolaService.getRegistrosCapas(page, size).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
+  loadHistorialRegistros(page: number = 0, size: number = 10): void {
+    if (!this.capaSeleccionadaHistorial) {
+      this.historialRegistrosData = [];
+      this.totalHistorialRegistros = 0;
+      this.loadingHistorialRegistros = false;
+      return;
+    }
+
+    const userEmail = this.authService.getUserEmail();
+
+    if (!userEmail) {
+      this.mostrarMensajeError('No se pudo identificar el email del usuario actual');
+      this.loadingHistorialRegistros = false;
+      return;
+    }
+
+    this.loadingHistorialRegistros = true;
+
+    console.log('🔄 Cargando historial para capa:', this.capaSeleccionadaHistorial);
+    console.log('📧 Usuario que consulta:', userEmail);
+
+    this.consolaService.getRegisterHistory(
+      this.capaSeleccionadaHistorial,
+      userEmail,
+      page,
+      size,
+      'RegisterDate',
+      'DESC'
+    ).pipe(takeUntil(this.destroy$)).subscribe({
       next: (response: any) => {
-        this.registrosCapasData = response.registers.map((register: any) => ({
-          ...register,
-          // Transformaciones adicionales si son necesarias
-        }));
-        this.totalRegistrosCapas = response.totalElements;
-        this.loadingRegistrosCapas = false;
+        console.log('📊 Respuesta completa del servicio:', response);
+
+        if (response && response.data) {
+          this.historialRegistrosData = response.data;
+          this.totalHistorialRegistros = response.totalElements || 0;
+
+          // 🔍 DEBUG: Verificar todas las operaciones que llegan
+          const operacionesUnicas = [...new Set(response.data.map((item: any) => item.operation))];
+          console.log('🔍 Operaciones encontradas en la respuesta:', operacionesUnicas);
+
+          // Mostrar detalles de cada registro
+          response.data.forEach((item: any, index: number) => {
+            console.log(`📝 Registro ${index + 1}:`, {
+              operation: item.operation,
+              registerId: item.registerId,
+              patientId: item.patientIdentificationNumber,
+              timestamp: item.changedAt
+            });
+          });
+
+          if (this.historialRegistrosData.length === 0) {
+            this.mostrarMensajeInfo('No se encontraron registros en el historial para esta capa');
+          }
+        } else {
+          console.warn('⚠️ Respuesta sin datos:', response);
+          this.historialRegistrosData = [];
+          this.totalHistorialRegistros = 0;
+          this.mostrarMensajeInfo('No hay datos de historial disponibles');
+        }
+
+        this.loadingHistorialRegistros = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error al obtener registros de capas:', err);
-        this.mostrarMensajeError('No se pudo cargar la información de registros de capas');
-        this.loadingRegistrosCapas = false;
-        this.registrosCapasData = [];
-        this.totalRegistrosCapas = 0;
+        console.error('❌ Error al obtener historial de registros:', err);
+
+        // 🔍 DEBUG: Mostrar más detalles del error
+        console.error('🔍 Detalles del error:', {
+          status: err.status,
+          statusText: err.statusText,
+          url: err.url,
+          message: err.message,
+          error: err.error
+        });
+
+        let mensajeError = 'No se pudo cargar el historial de registros';
+        if (err.message) {
+          mensajeError = err.message;
+        }
+
+        this.mostrarMensajeError(mensajeError);
+        this.loadingHistorialRegistros = false;
+        this.historialRegistrosData = [];
+        this.totalHistorialRegistros = 0;
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  /**
+   * Muestra un mensaje de información
+   */
+  mostrarMensajeInfo(mensaje: string): void {
+    Swal.fire('Información', mensaje, 'info');
+  }
+
+  /**
+  * Formatea la fecha para mejor visualización
+  * @param dateString Fecha en formato string
+  * @returns Fecha formateada
+  */
+  private formatDate(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  }
+
+  /**
+   * Traduce las operaciones al español
+   * @param operation Operación en inglés
+   * @returns Operación traducida
+   */
+  private translateOperation(operation: string): string {
+    const translations: { [key: string]: string } = {
+      'REGISTER_CREATED_SUCCESSFULL': 'Registro Creado',
+      'UPDATE_RESEARCH_LAYER': 'Capa Actualizada',
+      'VARIABLE_UPDATED': 'Variable Actualizada',
+      'PATIENT_INFO_UPDATED': 'Información Paciente Actualizada'
+    };
+
+    return translations[operation] || operation;
   }
 
   /**
@@ -588,8 +725,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       case 'gestionCapas':
         this.loadCapasData();
         break;
-      case 'gestionRegistrosCapas':
-        this.loadRegistrosCapas();
+      case 'historialRegistros':
+        if (this.capaSeleccionadaHistorial) {
+          this.loadHistorialRegistros(); // ← Historial
+        }
         break;
     }
     this.cdr.detectChanges();
@@ -706,24 +845,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   /* -------------------- Métodos para registros de capas -------------------- */
 
   /**
-   * Maneja el cambio de página en la tabla de registros
-   * @param event Evento de paginación
-   */
-  onPageChangeRegistros(event: any): void {
-    this.loadRegistrosCapas(event.page, event.size);
-  }
-
-  /**
-   * Maneja la visualización de un registro
-   * @param event Registro a visualizar
-   */
-  handleViewRegistro(event: any): void {
-    this.viewedItem = event;
-    this.viewType = 'registro';
-    this.isViewing = true;
-  }
-
-  /**
    * Maneja la eliminación de un registro
    * @param event Registro a eliminar
    */
@@ -742,7 +863,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         this.consolaService.deleteRegistroCapa(registro.registerId).subscribe({
           next: () => {
             Swal.fire('¡Eliminado!', 'El registro ha sido eliminado.', 'success');
-            this.loadRegistrosCapas();
+            this.loadHistorialRegistros();
           },
           error: (err) => {
             console.error('Error al eliminar registro:', err);
@@ -846,8 +967,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.loadVariablesData();
     } else if (tab === 'gestionUsuarios') {
       this.loadUsuariosData();
-    } else if (tab === 'gestionRegistrosCapas') {
-      this.loadRegistrosCapas();
+    } else if (tab === 'historialRegistros') {
+      // No cargar automáticamente, esperar selección de capa
+      this.historialRegistrosData = [];
+      this.totalHistorialRegistros = 0;
     }
   }
 
@@ -1512,4 +1635,118 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Maneja la selección de capa para el historial
+   */
+  onCapaSeleccionadaChange(): void {
+    if (this.capaSeleccionadaHistorial) {
+      this.loadHistorialRegistros(0, 10); // ← Cargar HISTORIAL
+    } else {
+      this.historialRegistrosData = [];
+      this.totalHistorialRegistros = 0;
+    }
+  }
+
+  /**
+ * Maneja el cambio de página en la tabla de historial
+ */
+  onPageChangeHistorial(event: any): void {
+    this.loadHistorialRegistros(event.page, event.size);
+  }
+
+
+  handleDeleteHistorial(registro: any): void {
+    this.registroToDelete = registro;
+
+    Swal.fire({
+      title: '¿Eliminar registro del historial?',
+      html: `
+            <p>Estás a punto de eliminar permanentemente este registro del historial:</p>
+            <div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong>ID Registro:</strong> ${registro.registerId}<br>
+                <strong>Paciente:</strong> ${registro.patientIdentificationNumber}<br>
+                <strong>Capa:</strong> ${registro.isResearchLayerGroup?.researchLayerName || 'N/A'}<br>
+                <strong>Fecha:</strong> ${this.formatDate(registro.changedAt)}
+            </div>
+            <p class="text-danger"><strong>⚠️ Advertencia:</strong> Esta acción no se puede deshacer y eliminará permanentemente el registro del historial.</p>
+        `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        popup: 'custom-swal-popup'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ejecutarEliminacionHistorial(registro);
+      }
+    });
+  }
+
+  // Método para ejecutar la eliminación
+  private ejecutarEliminacionHistorial(registro: any): void {
+    this.registroService.deleteRegisterHistory(registro.registerId).subscribe({
+      next: () => {
+        Swal.fire({
+          title: '¡Eliminado!',
+          text: 'El registro ha sido eliminado del historial correctamente.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        // Recargar el historial
+        this.loadHistorialRegistros();
+      },
+      error: (error) => {
+        console.error('Error al eliminar registro del historial:', error);
+
+        let mensajeError = 'No se pudo eliminar el registro del historial';
+        if (error.error?.message) {
+          mensajeError = error.error.message;
+        } else if (error.message) {
+          mensajeError = error.message;
+        }
+
+        Swal.fire('Error', mensajeError, 'error');
+      }
+    });
+  }
+
+  // Método para manejar la visualización de detalles del historial
+  handleViewHistorial(event: any): void {
+    this.viewedItem = {
+      ...event,
+      tipo: 'historial',
+      detallesCompletos: this.prepararDetallesHistorial(event)
+    };
+    this.viewType = 'historial';
+    this.isViewing = true;
+  }
+
+  // Método para preparar los detalles del historial para visualización
+  private prepararDetallesHistorial(registro: any): any {
+    return {
+      id: registro.registerId,
+      paciente: {
+        identificacion: registro.patientIdentificationNumber,
+        tipoIdentificacion: registro.patientIdentificationType || 'No especificado' // ← AQUÍ ESTABA EL PROBLEMA
+      },
+      capa: {
+        id: registro.isResearchLayerGroup?.researchLayerId,
+        nombre: registro.isResearchLayerGroup?.researchLayerName || 'N/A'
+      },
+      operacion: this.translateOperation(registro.operation),
+      modificadoPor: registro.changedBy,
+      fechaModificacion: this.formatDate(registro.changedAt),
+      variables: registro.isResearchLayerGroup?.variables?.map((variable: any) => ({
+        nombre: variable.name,
+        tipo: variable.type,
+        valor: variable.valueAsString || variable.valueAsNumber || 'N/A'
+      })) || []
+    };
+  }
 }

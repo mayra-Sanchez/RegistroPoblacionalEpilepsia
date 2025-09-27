@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { ConsolaAdministradorService } from '../../../../services/consola-administrador.service';
-
+import { ConsolaRegistroService } from 'src/app/services/register.service';
 /**
  * Componente para visualización detallada de elementos
  */
@@ -24,6 +24,11 @@ export class HandleViewComponent implements OnInit, OnChanges {
   currentPage: number = 1;
   pageSize: number = 10;
   totalPages: number = 1;
+  activeTab: string = 'basic';
+
+  // Para el historial de registros
+  registroCompleto: any = null;
+  loadingRegistroCompleto: boolean = false;
 
   tiposIdentificacion = [
     { value: 'cc', label: 'Cédula de Ciudadanía' },
@@ -61,19 +66,68 @@ export class HandleViewComponent implements OnInit, OnChanges {
     { value: 'alto', label: 'Alto' }
   ];
 
-  constructor(private consolaService: ConsolaAdministradorService) { }
+  constructor(private consolaService: ConsolaAdministradorService, private registerService: ConsolaRegistroService) { }
 
   ngOnInit(): void {
     this.cargarCapas();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['viewedItem'] && this.viewType === 'capa') {
-      const capaId = this.viewedItem?.id || this.viewedItem?.capaId || this.viewedItem?.researchLayerId;
-      if (capaId) {
-        this.loadVariablesPorCapa(capaId);
+    if (changes['viewType']) {
+      console.log('🎯 ViewType recibido:', this.viewType);
+      console.log('📦 ViewedItem recibido:', this.viewedItem);
+    }
+
+    if (changes['viewedItem'] && this.viewedItem) {
+      console.log('🔄 Cambios en viewedItem - ViewType actual:', this.viewType);
+
+      if (this.viewType === 'historial') {
+        console.log('✅ Cargando registro completo para historial');
+        this.loadRegistroCompleto();
+      } else if (this.viewType === 'capa') {
+        const capaId = this.viewedItem?.id || this.viewedItem?.capaId || this.viewedItem?.researchLayerId;
+        if (capaId) {
+          this.loadVariablesPorCapa(capaId);
+        }
       }
     }
+  }
+
+  /**
+   * Carga la información completa del registro para el historial
+   */
+  loadRegistroCompleto(): void {
+    if (!this.viewedItem?.registerId) {
+      console.warn('No hay registerId para cargar el registro completo');
+      return;
+    }
+
+    // Necesitamos el patientIdentificationNumber y researchLayerId del historial
+    const patientIdentificationNumber = this.viewedItem?.patientIdentificationNumber;
+    const researchLayerId = this.viewedItem?.isResearchLayerGroup?.researchLayerId;
+
+    if (!patientIdentificationNumber || !researchLayerId) {
+      console.warn('Faltan datos necesarios para cargar el registro completo:', {
+        patientIdentificationNumber,
+        researchLayerId
+      });
+      return;
+    }
+
+    this.loadingRegistroCompleto = true;
+
+    this.registerService.getActualRegisterByPatient(patientIdentificationNumber, researchLayerId).subscribe({
+      next: (registro) => {
+        this.registroCompleto = registro;
+        this.loadingRegistroCompleto = false;
+        console.log('✅ Registro completo cargado:', registro);
+      },
+      error: (err) => {
+        console.error('Error al cargar registro completo:', err);
+        this.registroCompleto = null;
+        this.loadingRegistroCompleto = false;
+      }
+    });
   }
 
   loadVariablesPorCapa(capaId: string): void {
@@ -178,10 +232,10 @@ export class HandleViewComponent implements OnInit, OnChanges {
 
   getTipoDocumento(tipo: string): string {
     const tipos: { [key: string]: string } = {
-      'CC': 'Cédula de Ciudadanía',
-      'TI': 'Tarjeta de Identidad',
-      'CE': 'Cédula de Extranjería',
-      'PA': 'Pasaporte'
+      'Cédula de Ciudadanía': 'Cédula de Ciudadanía',
+      'Tarjeta de Identidad': 'Tarjeta de Identidad',
+      'Cédula de Extranjería': 'Cédula de Extranjería',
+      'Pasaporte': 'Pasaporte'
     };
     return tipos[tipo] || tipo;
   }
@@ -208,18 +262,173 @@ export class HandleViewComponent implements OnInit, OnChanges {
     return option ? option.label : value;
   }
 
-  hasCaregiverData(caregiver: any): boolean {
-    return caregiver && (
-      caregiver.name ||
-      caregiver.identificationType ||
-      caregiver.identificationNumber ||
-      caregiver.age ||
-      caregiver.educationLevel ||
-      caregiver.occupation
-    );
-  }
 
   public esArray(valor: any): boolean {
     return Array.isArray(valor);
+  }
+
+  /**
+ * Obtiene la información del paciente (compatible con historial y registro completo)
+ */
+  getPatientInfo(): any {
+    if (this.viewType === 'historial') {
+      // Para historial, usar el registro completo si está cargado, sino los datos básicos del historial
+      return this.registroCompleto?.patientBasicInfo || {};
+    } else {
+      return this.viewedItem?.patientBasicInfo || {};
+    }
+  }
+
+  /**
+   * Obtiene las variables de investigación (compatible con ambos formatos)
+   */
+  getVariables(): any[] {
+    if (this.viewType === 'historial') {
+      // Para historial, usar las variables del grupo de investigación
+      return this.viewedItem?.isResearchLayerGroup?.variables || [];
+    } else {
+      // Para registro normal
+      const mainInfo = this.viewedItem?.registerInfo && this.viewedItem.registerInfo.length > 0
+        ? this.viewedItem.registerInfo[0]
+        : null;
+      return mainInfo?.variablesInfo || [];
+    }
+  }
+
+  /**
+   * Obtiene información de la capa de investigación
+   */
+  getLayerInfo(): any {
+    if (this.viewType === 'historial') {
+      return {
+        researchLayerId: this.viewedItem?.isResearchLayerGroup?.researchLayerId,
+        researchLayerName: this.viewedItem?.isResearchLayerGroup?.researchLayerName
+      };
+    } else {
+      const mainInfo = this.viewedItem?.registerInfo && this.viewedItem.registerInfo.length > 0
+        ? this.viewedItem.registerInfo[0]
+        : null;
+      return {
+        researchLayerId: mainInfo?.researchLayerId,
+        researchLayerName: mainInfo?.researchLayerName
+      };
+    }
+  }
+
+  /**
+   * Obtiene información del cuidador
+   */
+  getCaregiver(): any {
+    if (this.viewType === 'historial') {
+      return this.registroCompleto?.caregiver || null;
+    } else {
+      return this.viewedItem?.caregiver || null;
+    }
+  }
+
+  /**
+   * Obtiene información del profesional de salud
+   */
+  getHealthProfessional(): any {
+    if (this.viewType === 'historial') {
+      return this.registroCompleto?.healthProfessional || null;
+    } else {
+      return this.viewedItem?.healthProfessional || null;
+    }
+  }
+
+  /**
+   * Verifica si hay datos del cuidador
+   */
+  hasCaregiverData(): boolean {
+    const caregiver = this.getCaregiver();
+    return caregiver && (
+      caregiver.name ||
+      caregiver.identificationType ||
+      caregiver.identificationNumber
+    );
+  }
+
+  /**
+   * Formatea el valor de una variable para mostrar
+   */
+  formatVariableValue(variable: any): string {
+    if (!variable) return 'No definido';
+
+    // Para el formato del historial
+    if (variable.valueAsNumber !== null && variable.valueAsNumber !== undefined) {
+      return variable.valueAsNumber.toString();
+    }
+    if (variable.valueAsString !== null && variable.valueAsString !== undefined) {
+      return variable.valueAsString;
+    }
+
+    // Para el formato normal de registro
+    if (variable.value !== null && variable.value !== undefined) {
+      return variable.value.toString();
+    }
+
+    return 'No definido';
+  }
+
+  /**
+   * Obtiene el nombre de la variable (compatible con ambos formatos)
+   */
+  getVariableName(variable: any): string {
+    return variable.variableName || variable.name || 'Variable sin nombre';
+  }
+
+  /**
+   * Obtiene el tipo de variable (compatible con ambos formatos)
+   */
+  getVariableType(variable: any): string {
+    return variable.type || 'Tipo no especificado';
+  }
+
+  /**
+   * Obtiene la operación formateada para el historial
+   */
+  getOperationDisplay(): string {
+    if (this.viewType !== 'historial') return '';
+
+    const operations: { [key: string]: string } = {
+      'REGISTER_CREATED_SUCCESSFULL': 'Registro Creado',
+      'UPDATE_RESEARCH_LAYER': 'Capa Actualizada',
+      'VARIABLE_UPDATED': 'Variable Actualizada',
+      'PATIENT_INFO_UPDATED': 'Información Paciente Actualizada'
+    };
+
+    return operations[this.viewedItem?.operation] || this.viewedItem?.operation;
+  }
+
+  /**
+   * Verifica si la información del paciente está vacía
+   */
+  isPatientInfoEmpty(): boolean {
+    if (this.viewType === 'historial') {
+      // Para historial, verificar si tenemos datos del registro completo o básicos
+      const hasBasicInfo = this.registroCompleto?.patientBasicInfo &&
+        Object.keys(this.registroCompleto.patientBasicInfo).length > 0;
+      const hasHistorialInfo = this.viewedItem?.patientIdentificationNumber;
+
+      return !hasBasicInfo && !hasHistorialInfo;
+    } else {
+      // Para registro normal
+      const patientInfo = this.getPatientInfo();
+      if (!patientInfo) return true;
+
+      if (typeof patientInfo === 'object' && patientInfo !== null) {
+        return Object.keys(patientInfo).length === 0;
+      }
+
+      return !patientInfo;
+    }
+  }
+
+  /**
+ * Método para usar Math.min en el template
+ */
+  min(a: number, b: number): number {
+    return Math.min(a, b);
   }
 }

@@ -1,324 +1,568 @@
 <div class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">
-                <ng-container [ngSwitch]="viewType">
-                    <i *ngSwitchCase="'usuario'" class="fas fa-user-circle"></i>
-                    <i *ngSwitchCase="'variable'" class="fas fa-list-alt"></i>
-                    <i *ngSwitchCase="'capa'" class="fas fa-layer-group"></i>
-                    <i *ngSwitchDefault class="fas fa-eye"></i>
-                </ng-container>
-                Detalles de {{viewType}}
-            </h5>
+    <div class="modal-content" [class.historial-modal]="viewType === 'historial'">
+        
+        <!-- Header unificado -->
+        <div class="modal-header" [class.patient-header]="viewType === 'historial'">
+            <div class="header-content">
+                <div *ngIf="viewType === 'historial'" class="patient-header-info">
+                    <div class="patient-avatar">
+                        <mat-icon>person</mat-icon>
+                    </div>
+                    <div class="patient-title">
+                        <h2>
+                            Información del Paciente
+                            <span class="historial-badge">(Historial)</span>
+                        </h2>
+                        <p *ngIf="viewedItem">
+                            {{getPatientInfo()?.name || 'No especificado'}} • 
+                            {{viewedItem.patientIdentificationNumber || 'No especificado'}}
+                        </p>
+                    </div>
+                </div>
+                
+                <div *ngIf="viewType !== 'historial'" class="standard-header-info">
+                    <h5 class="modal-title">
+                        <ng-container [ngSwitch]="viewType">
+                            <i *ngSwitchCase="'usuario'" class="fas fa-user-circle"></i>
+                            <i *ngSwitchCase="'variable'" class="fas fa-list-alt"></i>
+                            <i *ngSwitchCase="'capa'" class="fas fa-layer-group"></i>
+                            <i *ngSwitchDefault class="fas fa-eye"></i>
+                        </ng-container>
+                        Detalles de {{viewType}}
+                    </h5>
+                </div>
+            </div>
+            
+            <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
+
         <div class="modal-body">
+            <!-- Información específica del historial -->
+            <div *ngIf="viewType === 'historial'" class="historial-metadata">
+                <div class="metadata-grid">
+                    <div class="metadata-item">
+                        <strong>Operación:</strong> 
+                        <span class="operation-badge">{{getOperationDisplay()}}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <strong>Modificado por:</strong> 
+                        <span>{{viewedItem.changedBy}}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <strong>Fecha:</strong> 
+                        <span>{{formatDate(viewedItem.changedAt)}}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div *ngIf="viewType === 'historial' && loadingRegistroCompleto" class="loading-section">
+                <div class="loading-content">
+                    <mat-spinner diameter="40"></mat-spinner>
+                    <p>Cargando información completa del registro...</p>
+                </div>
+            </div>
+
             <ng-container [ngSwitch]="viewType">
-                <!-- Vista para Usuarios -->
-                <div *ngSwitchCase="'usuario'" class="user-details">
-                    <div class="detail-row">
-                        <span class="detail-label">Nombre:</span>
-                        <span>{{viewedItem.nombre}} {{viewedItem.apellido}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Usuario:</span>
-                        <span>{{viewedItem.usuario || viewedItem.username}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Email:</span>
-                        <span>{{viewedItem.email}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Documento:</span>
-                        <span>{{getTipoDocumento(viewedItem.tipoDocumento)}} {{viewedItem.documento}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Fecha de Nacimiento:</span>
-                        <span>{{viewedItem.fechaNacimiento || 'No especificada'}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Capas de Investigación:</span>
-                        <span *ngIf="getCapaIds().length > 0">
-                            <ng-container *ngFor="let id of getCapaIds(); let last = last">
-                                {{ getNombreCapa(id) }}<span *ngIf="!last">, </span>
-                            </ng-container>
-                        </span>
-                        <span *ngIf="getCapaIds().length === 0">
-                            Sin capas asignadas
-                        </span>
-                    </div>
-
-                    <div class="detail-row">
-                        <span class="detail-label">Rol:</span>
-                        <span>{{getRolFormateado(viewedItem.rol || viewedItem.role)}}</span>
-                    </div>
-                </div>
-
-                <!-- Vista para Variables -->
-                <div *ngSwitchCase="'variable'" class="variable-details">
-                    <div class="detail-row">
-                        <span class="detail-label">Nombre:</span>
-                        <span>{{viewedItem.variableName}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Descripción:</span>
-                        <span>{{viewedItem.description}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Tipo:</span>
-                        <span>{{viewedItem.type}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Capa:</span>
-                        <span>{{viewedItem.capaNombre}}</span>
-                    </div>
-                    <div *ngIf="viewedItem.options && viewedItem.options.length > 0" class="detail-row">
-                        <span class="detail-label">Opciones:</span>
-                        <ul>
-                            <li *ngFor="let option of viewedItem.options">{{option}}</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Vista para Capas -->
-                <div *ngSwitchCase="'capa'" class="capa-details">
-                    <div class="detail-row">
-                        <span class="detail-label">Nombre:</span>
-                        <span>{{viewedItem.nombreCapa || viewedItem.layerName}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Descripción:</span>
-                        <span>{{viewedItem.descripcion || viewedItem.description}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Jefe de Capa:</span>
-                        <span>{{viewedItem.jefeCapaNombre || (viewedItem.layerBoss?.name || 'Sin asignar')}}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Documento Jefe:</span>
-                        <span>{{viewedItem.jefeIdentificacion || (viewedItem.layerBoss?.identificationNumber || 'Sin
-                            asignar')}}</span>
-                    </div>
-                    <div *ngIf="variablesAsociadas.length > 0" class="detail-row">
-                        <div class="variables-section">
-                            <span class="detail-label">Variables Asociadas ({{filteredVariables.length}}):</span>
-
-                            <!-- Barra de búsqueda -->
-                            <div class="search-container">
-                                <input type="text" [(ngModel)]="searchTerm" (input)="filterVariables()"
-                                    placeholder="Buscar variables..." class="search-input">
-                                <i class="fas fa-search search-icon"></i>
+                
+                <!-- VISTA PARA USUARIOS -->
+                <div *ngSwitchCase="'usuario'" class="detail-view user-view">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-user"></i>
                             </div>
+                            <div class="detail-content">
+                                <label>Nombre completo</label>
+                                <span>{{viewedItem.nombre}} {{viewedItem.apellido}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-at"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Usuario</label>
+                                <span>{{viewedItem.usuario || viewedItem.username}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Email</label>
+                                <span>{{viewedItem.email}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Documento</label>
+                                <span>{{getTipoDocumento(viewedItem.tipoDocumento)}} {{viewedItem.documento}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-birthday-cake"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Fecha de Nacimiento</label>
+                                <span>{{viewedItem.fechaNacimiento || 'No especificada'}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Capas de Investigación</label>
+                                <div class="capas-list">
+                                    <span *ngIf="getCapaIds().length > 0; else noCapas">
+                                        <span *ngFor="let id of getCapaIds()" class="capa-badge">
+                                            {{ getNombreCapa(id) }}
+                                        </span>
+                                    </span>
+                                    <ng-template #noCapas>
+                                        <span class="no-data">Sin capas asignadas</span>
+                                    </ng-template>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-user-tag"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Rol</label>
+                                <span class="role-badge">{{getRolFormateado(viewedItem.rol || viewedItem.role)}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-power-off"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Estado</label>
+                                <span [class]="viewedItem.enabled ? 'status-active' : 'status-inactive'">
+                                    {{viewedItem.enabled ? 'Activo' : 'Inactivo'}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <div class="variables-container">
-                                <div *ngFor="let variable of paginatedVariables" class="variable-card">
-                                    <div class="variable-header">
-                                        <span class="variable-name">{{ variable.variableName }}</span>
-                                        <span class="variable-type">{{ variable.type }}</span>
+                <!-- VISTA PARA VARIABLES -->
+                <div *ngSwitchCase="'variable'" class="detail-view variable-view">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-tag"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Nombre</label>
+                                <span>{{viewedItem.variableName}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-align-left"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Descripción</label>
+                                <span>{{viewedItem.description || 'Sin descripción'}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Tipo de dato</label>
+                                <span class="type-badge">{{viewedItem.type}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Capa asociada</label>
+                                <span>{{viewedItem.capaNombre}}</span>
+                            </div>
+                        </div>
+                        
+                        <div *ngIf="viewedItem.options && viewedItem.options.length > 0" class="detail-item full-width">
+                            <div class="detail-icon">
+                                <i class="fas fa-list"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Opciones disponibles</label>
+                                <div class="options-grid">
+                                    <span *ngFor="let option of viewedItem.options" class="option-chip">
+                                        {{option}}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA PARA CAPAS -->
+                <div *ngSwitchCase="'capa'" class="detail-view capa-view">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-tag"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Nombre de la capa</label>
+                                <span>{{viewedItem.nombreCapa || viewedItem.layerName}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item full-width">
+                            <div class="detail-icon">
+                                <i class="fas fa-align-left"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Descripción</label>
+                                <span>{{viewedItem.descripcion || viewedItem.description || 'Sin descripción'}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Jefe de Capa</label>
+                                <span>{{viewedItem.jefeCapaNombre || (viewedItem.layerBoss?.name || 'Sin asignar')}}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <div class="detail-content">
+                                <label>Documento del Jefe</label>
+                                <span>{{viewedItem.jefeIdentificacion || (viewedItem.layerBoss?.identificationNumber || 'Sin asignar')}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de variables asociadas -->
+                    <div *ngIf="variablesAsociadas.length > 0" class="variables-section">
+                        <div class="section-header">
+                            <h3>
+                                <i class="fas fa-list-alt"></i>
+                                Variables Asociadas
+                                <span class="count-badge">{{filteredVariables.length}}</span>
+                            </h3>
+                            
+                            <div class="search-container">
+                                <div class="search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" [(ngModel)]="searchTerm" (input)="filterVariables()"
+                                        placeholder="Buscar variables..." class="search-input">
+                                    <button *ngIf="searchTerm" (click)="searchTerm = ''; filterVariables()" 
+                                            class="clear-search">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="variables-grid">
+                            <div *ngFor="let variable of paginatedVariables" class="variable-card">
+                                <div class="variable-header">
+                                    <span class="variable-name">{{ variable.variableName }}</span>
+                                    <span class="variable-type">{{ variable.type }}</span>
+                                </div>
+                                <div *ngIf="variable.description" class="variable-description">
+                                    {{ variable.description }}
+                                </div>
+                                <div *ngIf="variable.options && variable.options.length > 0" class="variable-options">
+                                    <span class="options-label">Opciones:</span>
+                                    <div class="options-container">
+                                        <span *ngFor="let option of variable.options" class="option-tag">
+                                            {{ option }}
+                                        </span>
                                     </div>
-                                    <div *ngIf="variable.description" class="variable-description">
-                                        {{ variable.description }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paginación -->
+                        <div class="pagination-controls" *ngIf="filteredVariables.length > pageSize">
+                            <div class="pagination-info">
+                                Mostrando {{(currentPage - 1) * pageSize + 1}} - 
+                               {{min(currentPage * pageSize, filteredVariables.length)}}
+                                de {{filteredVariables.length}} variables
+                            </div>
+                            <div class="pagination-buttons">
+                                <button (click)="previousPage()" [disabled]="currentPage === 1" 
+                                        class="pagination-btn prev-btn">
+                                    <i class="fas fa-chevron-left"></i> Anterior
+                                </button>
+                                
+                                <span class="page-indicator">
+                                    Página {{currentPage}} de {{totalPages}}
+                                </span>
+                                
+                                <button (click)="nextPage()" [disabled]="currentPage === totalPages" 
+                                        class="pagination-btn next-btn">
+                                    Siguiente <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-selector">
+                                <option value="5">5 por página</option>
+                                <option value="10">10 por página</option>
+                                <option value="20">20 por página</option>
+                                <option value="50">50 por página</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div *ngIf="variablesAsociadas.length === 0" class="empty-variables">
+                        <i class="fas fa-inbox"></i>
+                        <p>No hay variables asociadas a esta capa</p>
+                    </div>
+                </div>
+
+                <!-- VISTA PARA HISTORIAL -->
+                <div *ngSwitchCase="'historial'" class="detail-view historial-view">
+                    <div *ngIf="!loadingRegistroCompleto" class="historial-content">
+                        
+                        <!-- Navegación por pestañas -->
+                        <nav class="detail-tabs">
+                            <button class="tab-button" [class.active]="activeTab === 'basic'" 
+                                    (click)="activeTab = 'basic'">
+                                <i class="fas fa-user"></i>
+                                Información Básica
+                            </button>
+                            <button class="tab-button" [class.active]="activeTab === 'caregiver'" 
+                                    (click)="activeTab = 'caregiver'" *ngIf="hasCaregiverData()">
+                                <i class="fas fa-user-friends"></i>
+                                Cuidador
+                            </button>
+                            <button class="tab-button" [class.active]="activeTab === 'research'" 
+                                    (click)="activeTab = 'research'" *ngIf="getVariables().length > 0">
+                                <i class="fas fa-flask"></i>
+                                Investigación
+                            </button>
+                            <button class="tab-button" [class.active]="activeTab === 'layer'" 
+                                    (click)="activeTab = 'layer'" *ngIf="getLayerInfo().researchLayerName">
+                                <i class="fas fa-layer-group"></i>
+                                Capa
+                            </button>
+                        </nav>
+
+                        <!-- Contenido de pestañas -->
+                        <div class="tab-content-wrapper">
+                            
+                            <!-- Pestaña Información Básica -->
+                            <div class="tab-pane" [class.active]="activeTab === 'basic'">
+                                <div class="info-section">
+                                    <h4><i class="fas fa-id-card"></i> Datos de Identificación</h4>
+                                    <div class="info-grid">
+                                        <div class="info-field">
+                                            <label>Número de documento:</label>
+                                            <span>{{viewedItem.patientIdentificationNumber || 'No disponible'}}</span>
+                                        </div>
+                                        <div class="info-field">
+                                            <label>Tipo de documento:</label>
+                                            <span>{{getLabel(tiposIdentificacion, viewedItem.patientIdentificationType) || 'No especificado'}}</span>
+                                        </div>
                                     </div>
-                                    <div *ngIf="variable.options && variable.options.length > 0"
-                                        class="variable-options">
-                                        <span class="options-label">Opciones:</span>
-                                        <div class="options-container">
-                                            <span *ngFor="let option of variable.options" class="option-pill">{{ option
-                                                }}</span>
+                                </div>
+
+                                <div class="info-section" *ngIf="getPatientInfo()">
+                                    <h4><i class="fas fa-user"></i> Datos Personales</h4>
+                                    <div class="info-grid">
+                                        <div class="info-field" *ngIf="getPatientInfo().name">
+                                            <label>Nombre completo:</label>
+                                            <span>{{getPatientInfo().name}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().sex">
+                                            <label>Sexo:</label>
+                                            <span>{{getLabel(generos, getPatientInfo().sex) || getPatientInfo().sex}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().age">
+                                            <label>Edad:</label>
+                                            <span>{{getPatientInfo().age}} años</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().birthDate">
+                                            <label>Fecha de nacimiento:</label>
+                                            <span>{{formatDate(getPatientInfo().birthDate)}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().email">
+                                            <label>Email:</label>
+                                            <span>{{getPatientInfo().email}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().phoneNumber">
+                                            <label>Teléfono:</label>
+                                            <span>{{getPatientInfo().phoneNumber}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().maritalStatus">
+                                            <label>Estado civil:</label>
+                                            <span>{{getLabel(estadosCiviles, getPatientInfo().maritalStatus) || getPatientInfo().maritalStatus}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().educationLevel">
+                                            <label>Nivel educativo:</label>
+                                            <span>{{getLabel(nivelesEducacion, getPatientInfo().educationLevel) || getPatientInfo().educationLevel}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="info-section" *ngIf="getPatientInfo()?.hometown || getPatientInfo()?.currentCity">
+                                    <h4><i class="fas fa-map-marker-alt"></i> Información Geográfica</h4>
+                                    <div class="info-grid">
+                                        <div class="info-field" *ngIf="getPatientInfo().hometown">
+                                            <label>Ciudad de origen:</label>
+                                            <span>{{getPatientInfo().hometown}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().currentCity">
+                                            <label>Ciudad actual:</label>
+                                            <span>{{getPatientInfo().currentCity}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="info-section" *ngIf="getPatientInfo()?.economicStatus || getPatientInfo()?.firstCrisisDate || getPatientInfo()?.crisisStatus">
+                                    <h4><i class="fas fa-chart-line"></i> Estado y Situación</h4>
+                                    <div class="info-grid">
+                                        <div class="info-field" *ngIf="getPatientInfo().economicStatus">
+                                            <label>Nivel económico:</label>
+                                            <span>{{getLabel(estadosEconomicos, getPatientInfo().economicStatus) || getPatientInfo().economicStatus}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().firstCrisisDate">
+                                            <label>Primera crisis:</label>
+                                            <span>{{formatDate(getPatientInfo().firstCrisisDate)}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().crisisStatus">
+                                            <label>Estado de crisis:</label>
+                                            <span class="crisis-status">{{getPatientInfo().crisisStatus}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getPatientInfo().deathDate">
+                                            <label>Fecha de fallecimiento:</label>
+                                            <span>{{formatDate(getPatientInfo().deathDate)}}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Paginación -->
-                            <div class="pagination-container" *ngIf="filteredVariables.length > pageSize">
-                                <button (click)="previousPage()" [disabled]="currentPage === 1"
-                                    class="pagination-button">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
+                            <!-- Pestaña Cuidador -->
+                            <div class="tab-pane" [class.active]="activeTab === 'caregiver'" *ngIf="hasCaregiverData()">
+                                <div class="info-section">
+                                    <h4><i class="fas fa-user-friends"></i> Información del Cuidador</h4>
+                                    <div class="info-grid">
+                                        <div class="info-field" *ngIf="getCaregiver()?.name">
+                                            <label>Nombre:</label>
+                                            <span>{{getCaregiver().name}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getCaregiver()?.identificationNumber">
+                                            <label>Documento:</label>
+                                            <span>{{getCaregiver().identificationNumber}} 
+                                                ({{getLabel(tiposIdentificacion, getCaregiver()?.identificationType) || 'No especificado'}})
+                                            </span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getCaregiver()?.age">
+                                            <label>Edad:</label>
+                                            <span>{{getCaregiver().age}} años</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getCaregiver()?.educationLevel">
+                                            <label>Nivel educativo:</label>
+                                            <span>{{getCaregiver().educationLevel}}</span>
+                                        </div>
+                                        <div class="info-field" *ngIf="getCaregiver()?.occupation">
+                                            <label>Ocupación:</label>
+                                            <span>{{getCaregiver().occupation}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <span class="page-info">
-                                    Página {{currentPage}} de {{totalPages}}
-                                </span>
+                            <!-- Pestaña Investigación -->
+                            <div class="tab-pane" [class.active]="activeTab === 'research'" *ngIf="getVariables().length > 0">
+                                <div class="info-section">
+                                    <h4><i class="fas fa-flask"></i> Variables de Investigación</h4>
+                                    <div class="variables-research-grid">
+                                        <div *ngFor="let variable of getVariables()" class="research-variable">
+                                            <div class="variable-header">
+                                                <span class="variable-name">{{getVariableName(variable)}}</span>
+                                                <span class="variable-type">{{getVariableType(variable)}}</span>
+                                            </div>
+                                            <div class="variable-value">
+                                                {{formatVariableValue(variable)}}
+                                            </div>
+                                            <div *ngIf="variable.description" class="variable-description">
+                                                {{variable.description}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <button (click)="nextPage()" [disabled]="currentPage === totalPages"
-                                    class="pagination-button">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
+                            <!-- Pestaña Capa -->
+                            <div class="tab-pane" [class.active]="activeTab === 'layer'" *ngIf="getLayerInfo().researchLayerName">
+                                <div class="info-section">
+                                    <h4><i class="fas fa-layer-group"></i> Información de la Capa</h4>
+                                    <div class="info-grid">
+                                        <div class="info-field">
+                                            <label>Nombre de la capa:</label>
+                                            <span>{{getLayerInfo().researchLayerName}}</span>
+                                        </div>
+                                        <div class="info-field">
+                                            <label>ID de la capa:</label>
+                                            <span class="layer-id">{{getLayerInfo().researchLayerId}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-select">
-                                    <option value="5">5 por página</option>
-                                    <option value="10">10 por página</option>
-                                    <option value="20">20 por página</option>
-                                    <option value="50">50 por página</option>
-                                </select>
+                        <!-- Mensaje si no hay información -->
+                        <div *ngIf="isPatientInfoEmpty()" class="empty-state">
+                            <div class="empty-content">
+                                <i class="fas fa-info-circle"></i>
+                                <p>No se encontró información detallada del paciente en el historial.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div *ngSwitchCase="'registro'" class="reg-container">
-                    <!-- Sección Identificación -->
-                    <div class="reg-card">
-                        <h6 class="reg-header">Identificación</h6>
-                        <div class="reg-fields">
-                            <div class="reg-field">
-                                <span class="reg-key">Tipo de Documento:</span>
-                                <span class="reg-val">{{getLabel(tiposIdentificacion,
-                                    viewedItem.patientIdentificationType) || 'No especificado'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Número de Documento:</span>
-                                <span class="reg-val">{{viewedItem.patientIdentificationNumber || 'No
-                                    especificado'}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección Datos Básicos -->
-                    <div class="reg-card">
-                        <h6 class="reg-header">Datos Básicos</h6>
-                        <div class="reg-fields">
-                            <div class="reg-field">
-                                <span class="reg-key">Nombre:</span>
-                                <span class="reg-val">{{viewedItem.patientBasicInfo?.name || 'No
-                                    especificado'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Género:</span>
-                                <span class="reg-val">{{getLabel(generos, viewedItem.patientBasicInfo?.sex) || 'No
-                                    especificado'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Edad:</span>
-                                <span class="reg-val">{{viewedItem.patientBasicInfo?.age || 'No
-                                    especificada'}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección Contacto -->
-                    <div class="reg-card">
-                        <h6 class="reg-header">Contacto</h6>
-                        <div class="reg-fields">
-                            <div class="reg-field">
-                                <span class="reg-key">Email:</span>
-                                <span class="reg-val">{{viewedItem.patientBasicInfo?.email || 'No
-                                    especificado'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Teléfono:</span>
-                                <span class="reg-val">{{viewedItem.patientBasicInfo?.phoneNumber || 'No
-                                    especificado'}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección Ubicación -->
-                    <div class="reg-card">
-                        <h6 class="reg-header">Ubicación</h6>
-                        <div class="reg-fields">
-                            <div class="reg-field">
-                                <span class="reg-key">Ciudad Actual:</span>
-                                <span class="reg-val">{{viewedItem.patientBasicInfo?.currentCity || 'No
-                                    especificada'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Ciudad de Origen:</span>
-                                <span class="reg-val">{{viewedItem.patientBasicInfo?.hometown || 'No
-                                    especificada'}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección Socioeconómica -->
-                    <div class="reg-card">
-                        <h6 class="reg-header">Información Socioeconómica</h6>
-                        <div class="reg-fields">
-                            <div class="reg-field">
-                                <span class="reg-key">Nivel Educativo:</span>
-                                <span class="reg-val">{{getLabel(nivelesEducacion,
-                                    viewedItem.patientBasicInfo?.educationLevel) || 'No especificado'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Estado Civil:</span>
-                                <span class="reg-val">{{getLabel(estadosCiviles,
-                                    viewedItem.patientBasicInfo?.maritalStatus) || 'No especificado'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Nivel Económico:</span>
-                                <span class="reg-val">{{getLabel(estadosEconomicos,
-                                    viewedItem.patientBasicInfo?.economicStatus) || 'No especificado'}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección Clínica -->
-                    <div class="reg-card">
-                        <h6 class="reg-header">Información Clínica</h6>
-                        <div class="reg-fields">
-                            <div class="reg-field">
-                                <span class="reg-key">Fecha Primera Crisis:</span>
-                                <span class="reg-val">{{formatDate(viewedItem.patientBasicInfo?.firstCrisisDate) ||
-                                    'No especificada'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Estado de Crisis:</span>
-                                <span class="reg-val">{{viewedItem.patientBasicInfo?.crisisStatus || 'No
-                                    especificado'}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección Cuidador -->
-                    <div class="reg-card" *ngIf="hasCaregiverData(viewedItem.caregiver)">
-                        <h6 class="reg-header">Cuidador</h6>
-                        <div class="reg-fields">
-                            <div class="reg-field">
-                                <span class="reg-key">Nombre:</span>
-                                <span class="reg-val">{{viewedItem.caregiver?.name || 'No especificado'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Documento:</span>
-                                <span class="reg-val">{{getLabel(tiposIdentificacion,
-                                    viewedItem.caregiver?.identificationType)}}
-                                    {{viewedItem.caregiver?.identificationNumber || ''}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección Profesional de Salud -->
-                    <div class="reg-card">
-                        <h6 class="reg-header">Profesional de Salud</h6>
-                        <div class="reg-fields">
-                            <div class="reg-field">
-                                <span class="reg-key">Nombre:</span>
-                                <span class="reg-val">{{viewedItem.healthProfessional?.name || 'No
-                                    especificado'}}</span>
-                            </div>
-                            <div class="reg-field">
-                                <span class="reg-key">Documento:</span>
-                                <span class="reg-val">{{viewedItem.healthProfessional?.identificationNumber || 'No
-                                    especificado'}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección Variables -->
-                    <div class="reg-card" *ngIf="viewedItem.variablesRegister?.length > 0">
-                        <h6 class="reg-header">Variables Registradas ({{viewedItem.variablesRegister.length}})</h6>
-                        <div class="reg-vars">
-                            <div *ngFor="let variable of viewedItem.variablesRegister" class="reg-var">
-                                <span class="reg-var-name">{{variable.variableName}}:</span>
-                                <span class="reg-var-val">{{variable.value}}</span>
-                                <span class="reg-var-type">{{variable.type}}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </ng-container>
         </div>
+
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cerrar</button>
+            <button type="button" class="btn btn-secondary" (click)="cerrarModal()">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+            
+            <!-- <div class="footer-actions" *ngIf="viewType === 'historial'">
+                <button type="button" class="btn btn-outline-primary" (click)="exportHistorialData()">
+                    <i class="fas fa-download"></i> Exportar
+                </button>
+                <button type="button" class="btn btn-outline-secondary" (click)="printHistorial()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div> -->
         </div>
     </div>
 </div>

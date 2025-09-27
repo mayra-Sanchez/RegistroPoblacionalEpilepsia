@@ -6,6 +6,9 @@ import { environment } from '../environments/environment';
 import { ResearchLayer, Variable, ErrorWithCode } from './../modules/consola-registro/interfaces';
 import { AuthService } from './auth.service';
 
+/**
+ * Interfaz para solicitudes de paginación
+ */
 export interface PaginationRequest {
     page: number;
     size: number;
@@ -13,6 +16,9 @@ export interface PaginationRequest {
     sortDirection: 'ASC' | 'DESC';
 }
 
+/**
+ * Interfaz para la creación/actualización de registros de pacientes
+ */
 export interface RegisterRequest {
     registerInfo: {
         researchLayerId: string;
@@ -52,6 +58,9 @@ export interface RegisterRequest {
     };
 }
 
+/**
+ * Interfaz para respuestas paginadas
+ */
 export interface PaginatedResponse {
     content: any[];
     totalElements: number;
@@ -60,10 +69,16 @@ export interface PaginatedResponse {
     number: number;
 }
 
+/**
+ * Interfaz para respuestas básicas del servidor
+ */
 export interface BasicResponse {
     message: string;
 }
 
+/**
+ * Interfaz para el historial de cambios en registros
+ */
 interface RegisterHistory {
     id: string;
     registerId: string;
@@ -84,7 +99,9 @@ interface RegisterHistory {
     };
 }
 
-
+/**
+ * Interfaz para la respuesta del historial de registros
+ */
 export interface RegisterHistoryResponse {
     data: RegisterHistory[];
     currentPage: number;
@@ -92,29 +109,62 @@ export interface RegisterHistoryResponse {
     totalElements: number;
 }
 
+/**
+ * Servicio para gestionar operaciones relacionadas con registros de pacientes,
+ * capas de investigación y variables del sistema de consola de registro.
+ * 
+ * Este servicio proporciona métodos para CRUD de registros, obtención de capas de investigación,
+ * variables, historial de cambios y gestión de permisos de usuario.
+ * 
+ * @Injectable Decorador que marca la clase como disponible para inyección de dependencias
+ */
 @Injectable({
     providedIn: 'root'
 })
 export class ConsolaRegistroService {
+    // URLs base para las APIs
     private apiUrl = `${environment.backendUrl}${environment.endpoints.registers}`;
     private readonly API_USERS = `${environment.backendUrl}${environment.endpoints.users}`;
     private readonly API_LAYERS = `${environment.backendUrl}${environment.endpoints.researchLayer}`;
     private readonly API_VARIABLES = `${environment.backendUrl}${environment.endpoints.variables}`;
 
-    constructor(private http: HttpClient, private authService: AuthService) { }
-
     // Subject para notificar cambios en los datos
     private dataChangedSource = new Subject<void>();
+    
+    /**
+     * Observable que emite cuando hay cambios en los datos de registros
+     * Los componentes pueden suscribirse para actualizar vistas cuando los datos cambian
+     */
     dataChanged$ = this.dataChangedSource.asObservable();
 
+    /**
+     * Constructor del servicio
+     * @param http Cliente HTTP para realizar peticiones
+     * @param authService Servicio de autenticación
+     */
+    constructor(private http: HttpClient, private authService: AuthService) { }
+
+    /**
+     * Notifica a los suscriptores que los datos han cambiado
+     * Útil para actualizar componentes que dependen de los datos de registros
+     */
     notifyDataChanged(): void {
         this.dataChangedSource.next();
     }
 
+    /**
+     * Obtiene el token de autenticación del localStorage
+     * @returns Token JWT o null si no existe
+     */
     getToken(): string | null {
         return localStorage.getItem('kc_token');
     }
 
+    /**
+     * Genera los headers de autenticación para las peticiones HTTP
+     * @returns HttpHeaders con el token de autorización
+     * @throws Error si no hay token disponible
+     */
     private getAuthHeaders(): HttpHeaders {
         const token = this.authService.getToken();
         if (!token) {
@@ -126,11 +176,19 @@ export class ConsolaRegistroService {
         });
     }
 
-    // Añadir este método que falta
+    /**
+     * Método alias para obtener headers de autenticación
+     * Mantiene compatibilidad con código existente
+     * @returns HttpHeaders con autenticación
+     */
     private getHeaders(): HttpHeaders {
-        return this.getAuthHeaders(); // Usamos el mismo método de autenticación
+        return this.getAuthHeaders();
     }
 
+    /**
+     * Verifica si el usuario actual tiene rol de Doctor
+     * @returns true si el usuario tiene rol de Doctor, false en caso contrario
+     */
     private isDoctor(): boolean {
         try {
             const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
@@ -141,6 +199,14 @@ export class ConsolaRegistroService {
         }
     }
 
+    // ============================ MÉTODOS DE USUARIOS ============================
+
+    /**
+     * Obtiene información del usuario autenticado por email
+     * @param email Email del usuario a buscar
+     * @param headers Headers HTTP opcionales (usa los por defecto si no se proporcionan)
+     * @returns Observable con la información del usuario
+     */
     obtenerUsuarioAutenticado(email: string, headers?: HttpHeaders): Observable<any> {
         const token = this.getToken();
         if (!token) {
@@ -166,6 +232,13 @@ export class ConsolaRegistroService {
         );
     }
 
+    // ============================ MÉTODOS DE CAPAS DE INVESTIGACIÓN ============================
+
+    /**
+     * Obtiene una capa de investigación por su ID
+     * @param id ID de la capa de investigación
+     * @returns Observable con la información de la capa
+     */
     obtenerCapaPorId(id: string): Observable<ResearchLayer> {
         // Validación robusta del ID
         if (!id || id.trim() === '' || id === 'none' || id === 'undefined' || id === 'null') {
@@ -194,6 +267,13 @@ export class ConsolaRegistroService {
         }
     }
 
+    // ============================ MÉTODOS DE VARIABLES ============================
+
+    /**
+     * Obtiene las variables asociadas a una capa de investigación
+     * @param researchLayerId ID de la capa de investigación
+     * @returns Observable con el array de variables
+     */
     obtenerVariablesPorCapa(researchLayerId: string): Observable<Variable[]> {
         if (!researchLayerId) {
             return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
@@ -203,7 +283,10 @@ export class ConsolaRegistroService {
             const headers = this.getAuthHeaders();
             const params = new HttpParams().set('researchLayerId', researchLayerId);
 
-            return this.http.get<Variable[]>(`${this.API_VARIABLES}/ResearchLayerId`, { headers, params }).pipe(
+            return this.http.get<Variable[]>(`${this.API_VARIABLES}/ResearchLayerId`, { 
+                headers, 
+                params 
+            }).pipe(
                 catchError(error => this.handleHttpError(error, 'Failed to fetch variables for layer'))
             );
         } catch (error) {
@@ -211,7 +294,14 @@ export class ConsolaRegistroService {
         }
     }
 
+    // ============================ MÉTODOS CRUD DE REGISTROS ============================
 
+    /**
+     * Crea un nuevo registro de paciente
+     * @param userEmail Email del usuario que realiza la operación
+     * @param registerData Datos del registro a crear
+     * @returns Observable con la respuesta del servidor
+     */
     saveRegister(userEmail: string, registerData: any): Observable<any> {
         // ✅ VERIFICAR PERMISOS ANTES DE CONTINUAR
         if (!this.isDoctor()) {
@@ -259,7 +349,13 @@ export class ConsolaRegistroService {
         );
     }
 
-
+    /**
+     * Actualiza un registro existente
+     * @param registerId ID del registro a actualizar
+     * @param userEmail Email del usuario que realiza la operación
+     * @param registerRequest Datos actualizados del registro
+     * @returns Observable con la respuesta básica del servidor
+     */
     updateRegister(registerId: string, userEmail: string, registerRequest: RegisterRequest): Observable<BasicResponse> {
         try {
             const headers = this.getAuthHeaders();
@@ -279,6 +375,11 @@ export class ConsolaRegistroService {
         }
     }
 
+    /**
+     * Elimina un registro
+     * @param registerId ID del registro a eliminar
+     * @returns Observable con la respuesta básica del servidor
+     */
     deleteRegister(registerId: string): Observable<BasicResponse> {
         try {
             const headers = this.getAuthHeaders();
@@ -296,6 +397,14 @@ export class ConsolaRegistroService {
         }
     }
 
+    // ============================ MÉTODOS DE CONSULTA DE REGISTROS ============================
+
+    /**
+     * Obtiene registros paginados por paciente
+     * @param patientIdentificationNumber Número de identificación del paciente
+     * @param pagination Configuración de paginación
+     * @returns Observable con la respuesta paginada
+     */
     getRegistersByPatient(patientIdentificationNumber: number, pagination: PaginationRequest): Observable<PaginatedResponse> {
         try {
             const headers = this.getAuthHeaders();
@@ -317,6 +426,14 @@ export class ConsolaRegistroService {
         }
     }
 
+    /**
+     * Obtiene registros paginados por capa de investigación
+     * @param researchLayerId ID de la capa de investigación
+     * @param userEmail Email del usuario
+     * @param patientIdentificationNumber Número de identificación del paciente
+     * @param pagination Configuración de paginación
+     * @returns Observable con la respuesta paginada
+     */
     getRegistersByResearchLayer(
         researchLayerId: string,
         userEmail: string,
@@ -345,6 +462,12 @@ export class ConsolaRegistroService {
         }
     }
 
+    /**
+     * Obtiene registros de cuidadores por paciente
+     * @param patientIdentificationNumber Número de identificación del paciente
+     * @param pagination Configuración de paginación
+     * @returns Observable con la respuesta paginada
+     */
     getCaregiverRegisters(patientIdentificationNumber: number, pagination: PaginationRequest): Observable<PaginatedResponse> {
         try {
             const headers = this.getAuthHeaders();
@@ -366,6 +489,12 @@ export class ConsolaRegistroService {
         }
     }
 
+    /**
+     * Obtiene registros de información básica del paciente
+     * @param patientIdentificationNumber Número de identificación del paciente
+     * @param pagination Configuración de paginación
+     * @returns Observable con la respuesta paginada
+     */
     getPatientBasicInfoRegisters(patientIdentificationNumber: number, pagination: PaginationRequest): Observable<PaginatedResponse> {
         try {
             const headers = this.getAuthHeaders();
@@ -387,6 +516,12 @@ export class ConsolaRegistroService {
         }
     }
 
+    /**
+     * Obtiene el registro actual de un paciente para una capa de investigación específica
+     * @param patientIdentificationNumber Número de identificación del paciente
+     * @param researchLayerId ID de la capa de investigación
+     * @returns Observable con el registro actual
+     */
     getActualRegisterByPatient(patientIdentificationNumber: number, researchLayerId: string): Observable<any> {
         try {
             const headers = this.getAuthHeaders();
@@ -405,8 +540,88 @@ export class ConsolaRegistroService {
         }
     }
 
+    // ============================ MÉTODOS DE HISTORIAL ============================
 
-    // Método para obtener registros por paciente (manteniendo compatibilidad)
+    /**
+     * Obtiene el historial de cambios de registros para una capa de investigación
+     * @param researchLayerId ID de la capa de investigación
+     * @param userEmail Email del usuario
+     * @param page Número de página (por defecto 0)
+     * @param size Tamaño de página (por defecto 10)
+     * @sort Campo de ordenamiento (por defecto 'changedAt')
+     * @sortDirection Dirección de ordenamiento (por defecto 'DESC')
+     * @returns Observable con el historial de registros
+     */
+    getRegisterHistory(
+        researchLayerId: string,
+        userEmail: string,
+        page: number = 0,
+        size: number = 10,
+        sort: string = 'RegisterDate',
+        sortDirection: 'ASC' | 'DESC' = 'DESC'
+    ): Observable<RegisterHistoryResponse> {
+        if (!researchLayerId) {
+            return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
+        }
+
+        if (!userEmail) {
+            return throwError(() => this.createError('User email is required', 'VALIDATION_ERROR'));
+        }
+
+        try {
+            const headers = this.getAuthHeaders();
+            const params = new HttpParams()
+                .set('researchLayerId', researchLayerId)
+                .set('userEmail', userEmail)
+                .set('page', page.toString())
+                .set('size', size.toString())
+                .set('sort', sort)
+                .set('sortDirection', sortDirection);
+
+            return this.http.get<RegisterHistoryResponse>(
+                `${this.apiUrl}/allResearchLayerHistoryById`, 
+                { headers, params }
+            ).pipe(
+                catchError(error => this.handleHttpError(error, 'Failed to fetch register history'))
+            );
+        } catch (error) {
+            return throwError(() => this.createError('Failed to prepare register history request', 'REQUEST_PREPARATION_ERROR', error));
+        }
+    }
+
+    /**
+     * Elimina un registro del historial
+     * @param registerId ID del registro a eliminar del historial
+     * @returns Observable con la respuesta básica del servidor
+     */
+    deleteRegisterHistory(registerId: string): Observable<BasicResponse> {
+        try {
+            const headers = this.getAuthHeaders();
+            const params = new HttpParams().set('registerId', registerId);
+
+            return this.http.delete<BasicResponse>(`${this.apiUrl}`, {
+                headers,
+                params
+            }).pipe(
+                tap(() => this.notifyDataChanged()),
+                catchError(error => this.handleHttpError(error, 'Failed to delete register history'))
+            );
+        } catch (error) {
+            return throwError(() => this.createError('Failed to prepare delete history request', 'REQUEST_PREPARATION_ERROR', error));
+        }
+    }
+
+    // ============================ MÉTODOS DE COMPATIBILIDAD ============================
+
+    /**
+     * Método de compatibilidad para obtener registros por paciente
+     * @param patientIdentificationNumber Número de identificación del paciente
+     * @param page Número de página (por defecto 0)
+     * @param size Tamaño de página (por defecto 10)
+     * @param sort Campo de ordenamiento (por defecto 'registerDate')
+     * @param sortDirection Dirección de ordenamiento (por defecto 'DESC')
+     * @returns Observable con la respuesta paginada
+     */
     obtenerRegistrosPorPaciente(
         patientIdentificationNumber: number,
         page: number = 0,
@@ -424,6 +639,14 @@ export class ConsolaRegistroService {
         return this.getRegistersByPatient(patientIdentificationNumber, pagination);
     }
 
+    // ============================ MÉTODOS PRIVADOS DE UTILIDAD ============================
+
+    /**
+     * Maneja errores HTTP de manera consistente
+     * @param error Error HTTP recibido
+     * @param defaultMessage Mensaje por defecto para el error
+     * @returns Observable que emite un error manejado
+     */
     private handleHttpError(error: HttpErrorResponse, defaultMessage: string): Observable<never> {
         console.error('HTTP Error:', error);
 
@@ -451,43 +674,14 @@ export class ConsolaRegistroService {
         return throwError(() => this.createError(serverMessage, 'API_ERROR', error, error.status));
     }
 
-    getRegisterHistory(
-    researchLayerId: string,
-    userEmail: string,
-    page: number = 0,
-    size: number = 10,
-    sort: string = 'changedAt', // Cambié de 'registerDate' a 'changedAt' según tu response
-    sortDirection: 'ASC' | 'DESC' = 'DESC'
-): Observable<RegisterHistoryResponse> {
-    if (!researchLayerId) {
-        return throwError(() => this.createError('Research layer ID is required', 'VALIDATION_ERROR'));
-    }
-
-    if (!userEmail) {
-        return throwError(() => this.createError('User email is required', 'VALIDATION_ERROR'));
-    }
-
-    try {
-        const headers = this.getAuthHeaders();
-        const params = new HttpParams()
-            .set('researchLayerId', researchLayerId)
-            .set('userEmail', userEmail)
-            .set('page', page.toString())
-            .set('size', size.toString())
-            .set('sort', sort)
-            .set('sortDirection', sortDirection);
-
-        return this.http.get<RegisterHistoryResponse>(
-            `${this.apiUrl}/allResearchLayerHistoryById`, 
-            { headers, params }
-        ).pipe(
-            catchError(error => this.handleHttpError(error, 'Failed to fetch register history'))
-        );
-    } catch (error) {
-        return throwError(() => this.createError('Failed to prepare register history request', 'REQUEST_PREPARATION_ERROR', error));
-    }
-}
-
+    /**
+     * Crea un error personalizado con código y información adicional
+     * @param message Mensaje de error
+     * @param code Código de error personalizado
+     * @param originalError Error original (opcional)
+     * @param status Código de estado HTTP (opcional)
+     * @returns Error personalizado con información extendida
+     */
     private createError(
         message: string,
         code: string,
