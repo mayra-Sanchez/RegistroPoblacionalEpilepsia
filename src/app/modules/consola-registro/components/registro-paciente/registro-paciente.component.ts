@@ -1964,11 +1964,9 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     let completed = 0;
     const formValue = this.registroForm.value;
 
-    // Campos básicos
     if (formValue.patientIdentificationNumber) completed++;
     if (formValue.patientIdentificationType) completed++;
 
-    // Campos del paciente
     const patient = formValue.patient || {};
     if (patient.name) completed++;
     if (patient.sex) completed++;
@@ -1984,7 +1982,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     if (patient.crisisStatus) completed++;
     if (patient.deathDate) completed++;
 
-    // Campos del cuidador si está activo
     if (this.hasCaregiver) {
       const caregiver = formValue.caregiver || {};
       if (caregiver.name) completed++;
@@ -1994,7 +1991,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       if (caregiver.occupation) completed++;
     }
 
-    // Variables completadas
     completed += this.completedCount;
 
     return completed;
@@ -2004,14 +2000,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
    * Obtiene el número total de campos en el formulario
    */
   private getTotalFieldsCount(): number {
-    let total = 2; // patientIdentificationNumber y patientIdentificationType
+    let total = 2; 
+    total += 13;
 
-    // Campos del paciente
-    total += 13; // Todos los campos del paciente
-
-    // Campos del cuidador si está activo
     if (this.hasCaregiver) {
-      total += 5; // Campos del cuidador
+      total += 5; 
     }
 
     // Variables
