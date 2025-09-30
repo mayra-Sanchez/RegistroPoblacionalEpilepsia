@@ -1,6 +1,10 @@
+// inicio-section.component.ts
 import { Component, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import * as L from 'leaflet';
 
+/**
+ * Interfaz que representa una institución en el sistema
+ */
 interface Institucion {
   id: number;
   nombre: string;
@@ -13,6 +17,29 @@ interface Institucion {
   coordenadas: { lat: number; lng: number };
 }
 
+/**
+ * Interfaz que representa las redes sociales de una persona
+ */
+interface RedesSociales {
+  linkedin?: string;
+  researchgate?: string;
+  scholar?: string;
+  twitter?: string;
+  facebook?: string;
+  instagram?: string;
+}
+
+/**
+ * Interfaz que representa la información de contacto de una persona
+ */
+interface Contacto {
+  email: string;
+  oficina: string;
+}
+
+/**
+ * Interfaz que representa una persona en el equipo
+ */
 interface Persona {
   id: string;
   nombre: string;
@@ -21,28 +48,45 @@ interface Persona {
   etiquetas: string[];
   biografia: string;
   formacion: string[];
-  contacto: { email: string; oficina: string };
+  contacto: Contacto;
   proyectos: string[];
-  redesSociales: {
-    linkedin?: string;
-    researchgate?: string;
-    scholar?: string;
-    twitter?: string;
-    facebook?: string;
-    instagram?: string;
-  };
+  redesSociales: RedesSociales;
 }
 
+/**
+ * Componente para la sección de inicio que muestra información sobre instituciones
+ * y miembros del equipo del Registro Poblacional de Epilepsia.
+ * 
+ * Incluye funcionalidades de:
+ * - Mapa interactivo con ubicaciones de instituciones
+ * - Modales detallados para instituciones y personas
+ * - Gestión de datos de contacto y redes sociales
+ * 
+ * @Component Decorador que define el componente Angular
+ */
 @Component({
   selector: 'app-inicio-section',
   templateUrl: './inicio-section.component.html',
   styleUrls: ['./inicio-section.component.css']
 })
 export class InicioSectionComponent implements AfterViewInit {
+  // ============================ PROPIEDADES PÚBLICAS ============================
+
+  /** Persona actualmente seleccionada para mostrar en el modal */
   personaSeleccionada: Persona | null = null;
+
+  /** Institución actualmente seleccionada para mostrar en el modal */
   institucionSeleccionada: Institucion | null = null;
 
+  /** Instancia del mapa de Leaflet */
   private map: any;
+
+  // ============================ DATOS DE INSTITUCIONES ============================
+
+  /**
+   * Lista de instituciones colaboradoras del Registro Poblacional de Epilepsia
+   * Incluye hospitales, clínicas, universidades y laboratorios de investigación
+   */
   instituciones: Institucion[] = [
     {
       id: 1,
@@ -101,6 +145,12 @@ export class InicioSectionComponent implements AfterViewInit {
     }
   ];
 
+  // ============================ DATOS DEL EQUIPO ============================
+
+  /**
+   * Lista de personas que forman parte del equipo del proyecto
+   * Incluye directores, investigadores, médicos y estudiantes
+   */
   personas: Persona[] = [
     {
       id: 'patricia',
@@ -243,13 +293,42 @@ export class InicioSectionComponent implements AfterViewInit {
     }
   ];
 
-  constructor(private cdRef: ChangeDetectorRef) {}
-  animateCardClick(event: MouseEvent) {
+  // ============================ CONSTRUCTOR ============================
+
+  /**
+   * Constructor del componente
+   * @param cdRef Servicio para detección de cambios manual
+   */
+  constructor(private cdRef: ChangeDetectorRef) { }
+
+  // ============================ MÉTODOS DEL CICLO DE VIDA ============================
+
+  /**
+   * Método del ciclo de vida que se ejecuta después de que la vista se inicializa
+   * Carga los estilos de Leaflet necesarios para el mapa
+   */
+  ngAfterViewInit(): void {
+    this.loadLeafletStyles();
+  }
+
+  // ============================ MÉTODOS DE INTERACCIÓN DE USUARIO ============================
+
+  /**
+   * Añade una animación de clic a una tarjeta
+   * @param event Evento de clic del mouse
+   */
+  animateCardClick(event: MouseEvent): void {
     const card = event.currentTarget as HTMLElement;
     card.classList.add('clicked');
     setTimeout(() => card.classList.remove('clicked'), 300);
   }
 
+  // ============================ GESTIÓN DE MODALES ============================
+
+  /**
+   * Abre un modal por su ID
+   * @param modalId ID del elemento modal a abrir
+   */
   openModal(modalId: string): void {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -258,43 +337,10 @@ export class InicioSectionComponent implements AfterViewInit {
     }
   }
 
-  openInstitucionModal(institucion: Institucion): void {
-    this.closeModal('institucionesModal');
-
-    if (this.map) {
-      this.map.remove();
-      this.map = null;
-    }
-    this.institucionSeleccionada = institucion;
-    this.cdRef.detectChanges();
-
-    setTimeout(() => {
-      this.openModal('institucionDetailModal');
-      this.initMap();
-    }, 100);
-  }
-
-  initMap(): void {
-    if (!this.institucionSeleccionada) return;
-    const institucion = this.institucionSeleccionada;
-
-    setTimeout(() => {
-      const mapContainer = document.getElementById('mapContainer');
-      if (!mapContainer) return;
-      mapContainer.innerHTML = '';
-      const coord = institucion.coordenadas;
-      this.map = L.map('mapContainer').setView([coord.lat, coord.lng], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(this.map);
-      L.marker([coord.lat, coord.lng])
-        .addTo(this.map)
-        .bindPopup(`<b>${institucion.nombre}</b><br>${institucion.direccion}`)
-        .openPopup();
-      setTimeout(() => this.map.invalidateSize(), 0);
-    }, 0);
-  }
-
+  /**
+   * Cierra un modal por su ID
+   * @param modalId ID del elemento modal a cerrar
+   */
   closeModal(modalId: string): void {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -312,21 +358,127 @@ export class InicioSectionComponent implements AfterViewInit {
     this.cdRef.detectChanges();
   }
 
+  /**
+   * Abre el modal de detalles de una institución
+   * @param institucion Institución a mostrar en el modal
+   */
+  openInstitucionModal(institucion: Institucion): void {
+    this.closeModal('institucionesModal');
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+
+    this.institucionSeleccionada = institucion;
+    this.cdRef.detectChanges();
+
+    setTimeout(() => {
+      this.openModal('institucionDetailModal');
+      this.initMap();
+    }, 100);
+  }
+
+  /**
+   * Abre el modal de detalles de una persona
+   * @param personaId ID de la persona a mostrar
+   */
   openPersonaModal(personaId: string): void {
     this.personaSeleccionada = this.personas.find(p => p.id === personaId) || null;
     this.cdRef.detectChanges();
+
     setTimeout(() => this.openModal('personaDetailModal'), 10);
   }
 
+  // ============================ GESTIÓN DEL MAPA ============================
+
+  /**
+   * Inicializa el mapa de Leaflet con la ubicación de la institución seleccionada
+   */
+  initMap(): void {
+    if (!this.institucionSeleccionada) return;
+    const institucion = this.institucionSeleccionada;
+
+    setTimeout(() => {
+      const mapContainer = document.getElementById('mapContainer');
+      if (!mapContainer) return;
+
+      mapContainer.innerHTML = '';
+
+      const coord = institucion.coordenadas;
+
+      this.map = L.map('mapContainer').setView([coord.lat, coord.lng], 15);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(this.map);
+
+      L.marker([coord.lat, coord.lng])
+        .addTo(this.map)
+        .bindPopup(`<b>${institucion.nombre}</b><br>${institucion.direccion}`)
+        .openPopup();
+
+      setTimeout(() => this.map.invalidateSize(), 0);
+    }, 0);
+  }
+
+  // ============================ CONFIGURACIÓN DE LEAFLET ============================
+
+  /**
+   * Carga dinámicamente los estilos CSS de Leaflet
+   */
   loadLeafletStyles(): void {
+    const existingStyle = document.querySelector('link[href*="leaflet"]');
+    if (existingStyle) return;
+
     const leafletStyle = document.createElement('link');
     leafletStyle.rel = 'stylesheet';
     leafletStyle.href = 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css';
+    leafletStyle.integrity = 'sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==';
+    leafletStyle.crossOrigin = '';
+
     document.head.appendChild(leafletStyle);
   }
 
-  ngAfterViewInit() {
-    this.loadLeafletStyles();
+  // ============================ MÉTODOS AUXILIARES ============================
+
+  /**
+   * Filtra las personas por rol
+   * @param rol Rol por el cual filtrar
+   * @returns Array de personas que tienen el rol especificado
+   */
+  filtrarPersonasPorRol(rol: string): Persona[] {
+    return this.personas.filter(persona =>
+      persona.rol.toLowerCase().includes(rol.toLowerCase())
+    );
   }
 
+  /**
+   * Obtiene todas las instituciones de un tipo específico
+   * @param tipo Tipo de institución a filtrar
+   * @returns Array de instituciones del tipo especificado
+   */
+  obtenerInstitucionesPorTipo(tipo: string): Institucion[] {
+    return this.instituciones.filter(institucion =>
+      institucion.tipo.toLowerCase() === tipo.toLowerCase()
+    );
+  }
+
+  /**
+   * Verifica si una persona tiene redes sociales
+   * @param persona Persona a verificar
+   * @returns true si la persona tiene al menos una red social, false en caso contrario
+   */
+  tieneRedesSociales(persona: Persona): boolean {
+    return Object.keys(persona.redesSociales).length > 0;
+  }
+
+  /**
+   * Obtiene la URL de una red social específica
+   * @param persona Persona de la cual obtener la red social
+   * @param redSocial Nombre de la red social
+   * @returns URL de la red social o undefined si no existe
+   */
+  obtenerRedSocial(persona: Persona, redSocial: keyof RedesSociales): string | undefined {
+    return persona.redesSociales[redSocial];
+  }
 }

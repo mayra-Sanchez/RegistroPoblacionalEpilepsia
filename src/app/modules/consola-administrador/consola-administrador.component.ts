@@ -10,6 +10,7 @@ import { AuthService } from 'src/app/services/auth.service';
 import { Observable } from 'rxjs';
 import { saveAs } from 'file-saver';
 import { ConsolaRegistroService } from 'src/app/services/register.service';
+
 /**
  * Interfaz para el tipo Registro que representa un item en el historial de actividad
  */
@@ -28,8 +29,10 @@ interface Registro {
  * - Variables de investigación
  * - Capas de investigación
  * - Registros de datos
+ * - Historial de operaciones
  * 
- * Incluye funcionalidades CRUD completas para cada entidad.
+ * Incluye funcionalidades CRUD completas para cada entidad, exportación de datos
+ * y un dashboard con métricas del sistema.
  */
 @Component({
   selector: 'app-consola-administrador',
@@ -38,7 +41,9 @@ interface Registro {
 })
 export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
-  /* -------------------- Configuración de UI -------------------- */
+  // ============================
+  // CONFIGURACIÓN DE INTERFAZ
+  // ============================
 
   /**
    * Pestaña actualmente seleccionada en la interfaz
@@ -48,7 +53,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * - 'gestionUsuarios': Gestión de usuarios
    * - 'gestionVariables': Gestión de variables
    * - 'gestionCapas': Gestión de capas
-   * - 'gestionRegistrosCapas': Gestión de registros
+   * - 'historialRegistros': Gestión de registros
    */
   selectedTab: string = 'inicioAdmin';
 
@@ -58,107 +63,81 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    */
   activeTab: string = 'usuarios';
 
-  /* -------------------- Propiedades de datos -------------------- */
+  // ============================
+  // PROPIEDADES DE DATOS
+  // ============================
 
-  /**
-   * Lista completa de usuarios
-   */
+  /** Lista completa de usuarios */
   usuarios: any[] = [];
 
-  /**
-   * Lista completa de variables
-   */
+  /** Lista completa de variables */
   variables: any[] = [];
 
-  /**
-   * Datos de capas formateados para visualización
-   */
+  /** Datos de capas formateados para visualización */
   capasData: any[] = [];
 
-  /**
-   * Datos de variables formateados para visualización
-   */
+  /** Datos de variables formateados para visualización */
   variablesData: any[] = [];
 
-  /**
-   * Datos de usuarios formateados para visualización
-   */
+  /** Datos de usuarios formateados para visualización */
   usuariosData: any[] = [];
 
-  /**
-   * Lista completa de capas
-   */
+  /** Lista completa de capas */
   capas: any[] = [];
 
-  /**
-   * Datos de registros de capas
-   */
+  /** Datos de registros de capas */
   registrosCapasData: any[] = [];
 
-  /**
-   * Total de registros de capas disponibles
-   */
+  /** Total de registros de capas disponibles */
   totalRegistrosCapas: number = 0;
 
-  /**
-   * Estado de carga para registros de capas
-   */
+  /** Estado de carga para registros de capas */
   loadingRegistrosCapas: boolean = false;
 
-  /**
-   * Datos adicionales de registros
-   */
+  /** Datos adicionales de registros */
   registrosData: any[] = [];
 
-  /**
-   * Estado general de carga
-   */
-  loading = false;
+  /** Datos del historial de registros */
+  historialRegistrosData: any[] = [];
 
-  /**
-   * Nombre de usuario del administrador actual
-   */
-  username: string = '';
+  /** Total de elementos en el historial */
+  totalHistorialRegistros: number = 0;
 
-  /**
-   * Datos para filtrado
-   */
-  estadoSeleccionado: string = '';
-  usuariosDataOriginal: any[] = [];
-  capaSeleccionada: string = '';
-  variablesDataOriginal: any[] = [];
+  /** Estado de carga para historial */
+  loadingHistorialRegistros: boolean = false;
 
+  /** Capa seleccionada para filtrar historial */
+  capaSeleccionadaHistorial: string = '';
 
-  /* -------------------- Estados de UI -------------------- */
+  // ============================
+  // ESTADOS DE UI
+  // ============================
 
-  /**
-   * Indica si se está cargando datos
-   */
+  /** Estado general de carga */
+  loading: boolean = false;
+
+  /** Indica si se está cargando datos */
   isLoading: boolean = false;
 
-  /**
-   * Estados para modales de creación
-   */
+  /** Estados para modales de creación */
   isCreatingUser: boolean = false;
   isCreatingVar: boolean = false;
   isCreatingCapa: boolean = false;
 
-  /**
-   * Estados para modales de edición
-   */
+  /** Estados para modales de edición */
   isEditingUser: boolean = false;
   isEditingVar: boolean = false;
   isEditingCapa: boolean = false;
 
-  /**
-   * Estados para modales de visualización
-   */
+  /** Estados para modales de visualización */
   isViewing: boolean = false;
   isEditingUserModal: boolean = false;
 
-  /**
-   * Datos temporales para edición/visualización
-   */
+  // ============================
+  // DATOS TEMPORALES
+  // ============================
+
+  /** Datos temporales para edición/visualización */
   userToEdit: any = null;
   varToEdit: any = null;
   capaToEdit: any = null;
@@ -166,46 +145,90 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   viewType: string = '';
   registroToDelete: any = null;
 
-  /**
-   * Lista completa de usuarios para exportación
-   */
+  /** Lista completa de usuarios para exportación */
   todosLosUsuarios: any[] = [];
 
-  /**
- * Datos del historial de registros
- */
-  historialRegistrosData: any[] = [];
+  /** Registro completo cargado para el historial */
+  registroCompleto: any = null;
 
-  /**
-   * Total de elementos en el historial
-   */
-  totalHistorialRegistros: number = 0;
+  /** Estado de carga del registro completo */
+  loadingRegistroCompleto: boolean = false;
 
-  /**
-   * Estado de carga para historial
-   */
-  loadingHistorialRegistros: boolean = false;
+  // ============================
+  // DATOS DE ACTIVIDAD
+  // ============================
 
-  /**
-   * Capa seleccionada para filtrar historial
-   */
-  capaSeleccionadaHistorial: string = '';
-
-  /* -------------------- Datos de actividad -------------------- */
-
-  /**
-   * Últimos usuarios registrados
-   */
+  /** Últimos usuarios registrados */
   ultimosUsuarios: any[] = [];
 
-  /**
-   * Historial de actividad reciente
-   */
+  /** Historial de actividad reciente */
   ultimosRegistros: Registro[] = [];
 
-  /**
-   * Configuración de columnas para tabla de historial
-   */
+  /** Nombre de usuario del administrador actual */
+  username: string = '';
+
+  /** Datos para filtrado */
+  estadoSeleccionado: string = '';
+  usuariosDataOriginal: any[] = [];
+  capaSeleccionada: string = '';
+  variablesDataOriginal: any[] = [];
+
+  // ============================
+  // MÉTRICAS DEL SISTEMA
+  // ============================
+
+  /** Total de usuarios registrados */
+  totalUsuarios: number = 0;
+
+  /** Total de capas registradas */
+  totalCapas: number = 0;
+
+  /** Total de variables registradas */
+  totalVariables: number = 0;
+
+  /** Actividad reciente del sistema */
+  actividadReciente: { fecha: string; mensaje: string }[] = [];
+
+  /** Notificaciones del sistema */
+  notificaciones: string[] = [];
+
+  // ============================
+  // CONFIGURACIÓN DE TABLAS
+  // ============================
+
+  /** Configuración de columnas para tabla de usuarios */
+  usuariosColumns = [
+    { field: 'nombre', header: 'NOMBRE' },
+    { field: 'apellido', header: 'APELLIDO' },
+    { field: 'email', header: 'CORREO ELECTRÓNICO' },
+    { field: 'usuario', header: 'USUARIO' },
+    { field: 'capa', header: 'CAPA DE INVESTIGACIÓN' },
+    { field: 'rolDisplay', header: 'ROL' },
+    {
+      field: 'enabled',
+      header: 'ESTADO',
+      formatter: (value: boolean) => value ? 'ACTIVO' : 'INACTIVO'
+    }
+  ];
+
+  /** Configuración de columnas para tabla de variables */
+  variablesColumns = [
+    { field: 'variableName', header: 'Nombre' },
+    { field: 'description', header: 'Descripción' },
+    { field: 'type', header: 'Tipo' },
+    { field: 'capaNombre', header: 'Capa' }
+  ];
+
+  /** Configuración de columnas para tabla de capas */
+  capasColumns = [
+    { field: 'id', header: 'ID' },
+    { field: 'nombreCapa', header: 'Nombre de la Capa' },
+    { field: 'descripcion', header: 'Descripción' },
+    { field: 'jefeCapaNombre', header: 'Jefe de Capa' },
+    { field: 'jefeIdentificacion', header: 'Identificación del Jefe' },
+  ];
+
+  /** Configuración de columnas para tabla de historial */
   historialRegistrosColumns = [
     {
       field: 'registerId',
@@ -234,100 +257,33 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       formatter: (variables: any[]) => variables?.length?.toString() || '0'
     }
   ];
-  /**
-   * Referencia al paginador de la tabla
-   */
+
+  // ============================
+  // COMPONENTES DE UI
+  // ============================
+
+  /** Referencia al paginador de la tabla */
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  /**
-   * Fuente de datos para la tabla de actividad
-   */
+  /** Fuente de datos para la tabla de actividad */
   dataSource: MatTableDataSource<any> = new MatTableDataSource();
 
-  /**
-   * Columnas a mostrar en la tabla de actividad
-   */
+  /** Columnas a mostrar en la tabla de actividad */
   displayedColumns: string[] = ['tipo', 'detalles', 'fecha'];
 
-  /**
-   * Tipos de variables disponibles
-   */
+  /** Tipos de variables disponibles */
   tiposVariables: string[] = ['Entero', 'Real', 'Cadena', 'Fecha', 'Lógico'];
 
-  /* -------------------- Métricas del sistema -------------------- */
+  // ============================
+  // GESTIÓN DE OBSERVABLES
+  // ============================
 
-  /**
-   * Total de usuarios registrados
-   */
-  totalUsuarios: number = 0;
-
-  /**
-   * Total de capas registradas
-   */
-  totalCapas: number = 0;
-
-  /**
-   * Total de variables registradas
-   */
-  totalVariables: number = 0;
-
-  /**
-   * Actividad reciente del sistema
-   */
-  actividadReciente: { fecha: string; mensaje: string }[] = [];
-
-  /**
-   * Notificaciones del sistema
-   */
-  notificaciones: string[] = [];
-
-  /* -------------------- Gestión de observables -------------------- */
-
-  /**
-   * Subject para manejar la desuscripción de observables
-   */
+  /** Subject para manejar la desuscripción de observables */
   private destroy$ = new Subject<void>();
 
-  /* -------------------- Configuración de tablas -------------------- */
-
-  /**
-   * Configuración de columnas para tabla de usuarios
-   */
-  usuariosColumns = [
-    { field: 'nombre', header: 'NOMBRE' },
-    { field: 'apellido', header: 'APELLIDO' },
-    { field: 'email', header: 'CORREO ELECTRÓNICO' },
-    { field: 'usuario', header: 'USUARIO' },
-    { field: 'capa', header: 'CAPA DE INVESTIGACIÓN' },
-    { field: 'rolDisplay', header: 'ROL' },
-    {
-      field: 'enabled',
-      header: 'ESTADO',
-      formatter: (value: boolean) => value ? 'ACTIVO' : 'INACTIVO'
-    }
-  ];
-
-  /**
-   * Configuración de columnas para tabla de variables
-   */
-  variablesColumns = [
-    { field: 'variableName', header: 'Nombre' },
-    { field: 'description', header: 'Descripción' },
-    { field: 'type', header: 'Tipo' },
-    { field: 'capaNombre', header: 'Capa' }
-  ];
-
-  /**
-   * Configuración de columnas para tabla de capas
-   */
-  capasColumns = [
-    { field: 'id', header: 'ID' },
-    { field: 'nombreCapa', header: 'Nombre de la Capa' },
-    { field: 'descripcion', header: 'Descripción' },
-    { field: 'jefeCapaNombre', header: 'Jefe de Capa' },
-    { field: 'jefeIdentificacion', header: 'Identificación del Jefe' },
-  ];
-
+  // ============================
+  // CONSTRUCTOR
+  // ============================
 
   /**
    * Constructor del componente
@@ -335,6 +291,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * @param router Servicio de enrutamiento
    * @param cdr Servicio para detección de cambios
    * @param authService Servicio de autenticación
+   * @param registroService Servicio para operaciones de registro
    */
   constructor(
     protected consolaService: ConsolaAdministradorService,
@@ -344,7 +301,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     private registroService: ConsolaRegistroService
   ) { }
 
-  /* -------------------- Métodos del ciclo de vida -------------------- */
+  // ============================
+  // MÉTODOS DEL CICLO DE VIDA
+  // ============================
 
   /**
    * Inicialización del componente
@@ -385,7 +344,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /* -------------------- Métodos de carga de datos -------------------- */
+  // ============================
+  // MÉTODOS DE CARGA DE DATOS
+  // ============================
 
   /**
    * Carga los datos iniciales del sistema
@@ -425,7 +386,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  obtenerUsuarios() {
+  /**
+   * Obtiene todos los usuarios del sistema
+   */
+  obtenerUsuarios(): void {
     this.consolaService.getAllUsuarios().subscribe({
       next: (usuarios) => {
         this.usuariosDataOriginal = usuarios;
@@ -437,16 +401,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  filtrarUsuariosPorEstado() {
-    if (!this.estadoSeleccionado) {
-      this.usuariosData = [...this.usuariosDataOriginal];
-      return;
-    }
-
-    const esActivo = this.estadoSeleccionado === 'activo';
-    this.usuariosData = this.usuariosDataOriginal.filter(user => user.enabled === esActivo);
-  }
-
   /**
    * Carga los datos de capas desde el servicio
    */
@@ -455,9 +409,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.consolaService.getAllLayers().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any[]) => {
         this.capasData = data.map(capa => {
-          console.log('[loadCapasData] Capa recibida:', capa); // DEBUG
-          console.log('[loadCapasData] Email del jefe:', capa.layerBoss?.email); // DEBUG
-
           return {
             id: capa.id,
             nombreCapa: capa.layerName,
@@ -465,10 +416,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             jefeCapa: capa.layerBoss || {},
             jefeCapaNombre: capa.layerBoss?.name || 'Sin asignar',
             jefeIdentificacion: capa.layerBoss?.identificationNumber || 'Sin asignar',
-            // Asegurarse de incluir el email
             layerBoss: capa.layerBoss ? {
               ...capa.layerBoss,
-              email: capa.layerBoss.email || '' // ← Incluir explícitamente el email
+              email: capa.layerBoss.email || ''
             } : {}
           };
         });
@@ -504,8 +454,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         });
 
         this.variablesData = variables;
-        this.variablesDataOriginal = [...variables]; // 👈 Copia para filtros
-
+        this.variablesDataOriginal = [...variables];
         this.updateDashboard();
         this.cdr.detectChanges();
       },
@@ -518,17 +467,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  filtrarVariablesPorCapa() {
-    if (!this.capaSeleccionada) {
-      this.variablesData = [...this.variablesDataOriginal];
-    } else {
-      this.variablesData = this.variablesDataOriginal.filter(
-        variable => variable.researchLayerId === this.capaSeleccionada
-      );
-    }
-  }
-
-
   /**
    * Carga los datos de usuarios desde el servicio
    */
@@ -538,14 +476,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       next: (data: any[]) => {
         const usuariosProcesados = data.map(user => {
           const attrs = user.attributes || {};
-          const capaValues = attrs.researchLayerId || []; // Ahora es un array
+          const capaValues = attrs.researchLayerId || [];
           const roles = attrs.role || [];
           const mainRole = roles[0] || 'No especificado';
 
-          // Obtener nombres de todas las capas
           const nombresCapas = capaValues.map((capaId: string) =>
             this.getCapaNombreByIdVariables(capaId)
-          ).filter(Boolean); // Filtrar valores nulos/undefined
+          ).filter(Boolean);
 
           return {
             id: user.id,
@@ -556,9 +493,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             tipoDocumento: attrs.identificationType ? attrs.identificationType[0] : 'No especificado',
             documento: attrs.identificationNumber ? attrs.identificationNumber[0] : 'No disponible',
             fechaNacimiento: attrs.birthDate ? attrs.birthDate[0] : 'No especificada',
-            capa: nombresCapas.join(', '), // Mostrar todas las capas separadas por coma
-            capas: nombresCapas, // Guardar como array para posible uso futuro
-            capaRawValue: capaValues, // Guardar los IDs originales
+            capa: nombresCapas.join(', '),
+            capas: nombresCapas,
+            capaRawValue: capaValues,
             rol: mainRole,
             rolDisplay: this.transformarString(mainRole),
             passwordActual: user.password,
@@ -579,6 +516,11 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Carga el historial de registros con paginación
+   * @param page Número de página (por defecto 0)
+   * @param size Tamaño de página (por defecto 10)
+   */
   loadHistorialRegistros(page: number = 0, size: number = 10): void {
     if (!this.capaSeleccionadaHistorial) {
       this.historialRegistrosData = [];
@@ -597,9 +539,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
     this.loadingHistorialRegistros = true;
 
-    console.log('🔄 Cargando historial para capa:', this.capaSeleccionadaHistorial);
-    console.log('📧 Usuario que consulta:', userEmail);
-
     this.consolaService.getRegisterHistory(
       this.capaSeleccionadaHistorial,
       userEmail,
@@ -615,11 +554,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           this.historialRegistrosData = response.data;
           this.totalHistorialRegistros = response.totalElements || 0;
 
-          // 🔍 DEBUG: Verificar todas las operaciones que llegan
-          const operacionesUnicas = [...new Set(response.data.map((item: any) => item.operation))];
-          console.log('🔍 Operaciones encontradas en la respuesta:', operacionesUnicas);
-
-          // Mostrar detalles de cada registro
           response.data.forEach((item: any, index: number) => {
             console.log(`📝 Registro ${index + 1}:`, {
               operation: item.operation,
@@ -645,7 +579,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('❌ Error al obtener historial de registros:', err);
 
-        // 🔍 DEBUG: Mostrar más detalles del error
         console.error('🔍 Detalles del error:', {
           status: err.status,
           statusText: err.statusText,
@@ -669,17 +602,140 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Muestra un mensaje de información
+   * Carga la información completa del registro para el historial
    */
-  mostrarMensajeInfo(mensaje: string): void {
-    Swal.fire('Información', mensaje, 'info');
+  loadRegistroCompleto(): void {
+    if (!this.viewedItem?.registerId) {
+      console.warn('No hay registerId para cargar el registro completo');
+      return;
+    }
+
+    const patientIdentificationNumber = this.viewedItem?.patientIdentificationNumber;
+    const researchLayerId = this.viewedItem?.isResearchLayerGroup?.researchLayerId;
+
+    if (!patientIdentificationNumber || !researchLayerId) {
+      console.warn('Faltan datos necesarios para cargar el registro completo:', {
+        patientIdentificationNumber,
+        researchLayerId
+      });
+      return;
+    }
+
+    this.loadingRegistroCompleto = true;
+
+    this.registroService.getActualRegisterByPatient(patientIdentificationNumber, researchLayerId).subscribe({
+      next: (registro) => {
+        this.registroCompleto = registro;
+        this.loadingRegistroCompleto = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar registro completo:', err);
+        this.registroCompleto = null;
+        this.loadingRegistroCompleto = false;
+      }
+    });
+  }
+
+  // ============================
+  // MÉTODOS DE FILTRADO
+  // ============================
+
+  /**
+   * Filtra usuarios por estado (activo/inactivo)
+   */
+  filtrarUsuariosPorEstado(): void {
+    if (!this.estadoSeleccionado) {
+      this.usuariosData = [...this.usuariosDataOriginal];
+      return;
+    }
+
+    const esActivo = this.estadoSeleccionado === 'activo';
+    this.usuariosData = this.usuariosDataOriginal.filter(user => user.enabled === esActivo);
   }
 
   /**
-  * Formatea la fecha para mejor visualización
-  * @param dateString Fecha en formato string
-  * @returns Fecha formateada
-  */
+   * Filtra variables por capa seleccionada
+   */
+  filtrarVariablesPorCapa(): void {
+    if (!this.capaSeleccionada) {
+      this.variablesData = [...this.variablesDataOriginal];
+    } else {
+      this.variablesData = this.variablesDataOriginal.filter(
+        variable => variable.researchLayerId === this.capaSeleccionada
+      );
+    }
+  }
+
+  // ============================
+  // MÉTODOS DE UTILIDAD
+  // ============================
+
+  /**
+   * Obtiene el nombre de una capa por su ID
+   * @param idOrName ID o nombre de la capa
+   * @returns Nombre de la capa o mensaje predeterminado
+   */
+  getCapaNombreById(idOrName: string): string {
+    if (!idOrName || idOrName === 'undefined' || idOrName === 'null') {
+      return 'Ninguna';
+    }
+
+    const allCapas = [...(this.capas || []), ...(this.capasData || [])];
+    const capa = allCapas.find(c =>
+      c.id === idOrName || c._id === idOrName || c.layerId === idOrName
+    );
+
+    if (capa) {
+      return capa.layerName || capa.nombreCapa || 'Ninguna';
+    }
+
+    return 'Ninguna';
+  }
+
+  /**
+   * Obtiene el nombre de una capa por su ID (para variables)
+   * @param id ID de la capa
+   * @returns Nombre de la capa o mensaje predeterminado
+   */
+  getCapaNombreByIdVariables(id: string | number): string {
+    const idStr = String(id);
+
+    const capa = this.capasData?.find(c =>
+      String(c.id) === idStr || String(c._id) === idStr
+    );
+
+    if (!capa) {
+      const capaAlternativa = this.capas?.find(c =>
+        String(c.id) === idStr || String(c._id) === idStr
+      );
+      return capaAlternativa ? capaAlternativa.nombreCapa || 'Ninguna' : 'Ninguna';
+    }
+
+    return capa.nombreCapa || 'Ninguna';
+  }
+
+  /**
+   * Transforma valores de texto a formatos más legibles
+   * @param value Texto a transformar
+   * @returns Texto transformado o el original si no hay coincidencia
+   */
+  transformarString(value: string): string {
+    const stringMap: { [key: string]: string } = {
+      'ADMIN': 'Administrador',
+      'Admin': 'Administrador',
+      'Doctor': 'Doctor',
+      'Researcher': 'Investigador',
+      'true': 'Activo',
+      'false': 'Inactivo'
+    };
+    return stringMap[value] || value;
+  }
+
+  /**
+   * Formatea la fecha para mejor visualización
+   * @param dateString Fecha en formato string
+   * @returns Fecha formateada
+   */
   private formatDate(dateString: string): string {
     try {
       const date = new Date(dateString);
@@ -711,6 +767,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     return translations[operation] || operation;
   }
 
+  // ============================
+  // MÉTODOS DE ACTUALIZACIÓN
+  // ============================
+
   /**
    * Recarga los datos según la pestaña seleccionada
    */
@@ -727,7 +787,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         break;
       case 'historialRegistros':
         if (this.capaSeleccionadaHistorial) {
-          this.loadHistorialRegistros(); // ← Historial
+          this.loadHistorialRegistros();
         }
         break;
     }
@@ -747,7 +807,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   /**
    * Carga todos los usuarios para el dashboard
    */
-  cargarUsuarios() {
+  cargarUsuarios(): void {
     this.consolaService.getAllUsuarios().subscribe(data => {
       this.todosLosUsuarios = data.map(user => ({
         nombre: `${user.firstName || 'Desconocido'} ${user.lastName || ''}`.trim(),
@@ -782,34 +842,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Exporta los usuarios a un archivo CSV
-   */
-  exportarCSV() {
-    if (!this.todosLosUsuarios.length) {
-      console.warn('⚠️ No hay usuarios para exportar.');
-      return;
-    }
-
-    const encabezados = "Nombre;Rol;Email\n";
-    const filas = this.todosLosUsuarios
-      .map(u => `${u.nombre};${u.rol};${u.email}`)
-      .join("\n");
-
-    const csvContent = encabezados + filas;
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `usuarios_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  /**
    * Carga el historial de actividad reciente
    */
-  cargarUltimosRegistros() {
+  cargarUltimosRegistros(): void {
     this.consolaService.getAllUsuarios().subscribe(usuarios => {
       const ultimosUsuarios: Registro[] = usuarios.map(usuario => ({
         tipo: 'usuario',
@@ -842,114 +877,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* -------------------- Métodos para registros de capas -------------------- */
-
-  /**
-   * Maneja la eliminación de un registro
-   * @param event Registro a eliminar
-   */
-  handleDeleteRegistro(registro: any): void {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: `Estás a punto de eliminar el registro ${registro.registerId}`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.consolaService.deleteRegistroCapa(registro.registerId).subscribe({
-          next: () => {
-            Swal.fire('¡Eliminado!', 'El registro ha sido eliminado.', 'success');
-            this.loadHistorialRegistros();
-          },
-          error: (err) => {
-            console.error('Error al eliminar registro:', err);
-            this.mostrarMensajeError('No se pudo eliminar el registro.');
-          }
-        });
-      }
-    });
-  }
-
-  /* -------------------- Métodos de utilidad -------------------- */
-
-  /**
-   * Obtiene el nombre de una capa por su ID
-   * @param idOrName ID o nombre de la capa
-   * @returns Nombre de la capa o mensaje predeterminado
-   */
-  getCapaNombreById(idOrName: string): string {
-    if (!idOrName || idOrName === 'undefined' || idOrName === 'null') {
-      return 'Ninguna'; // <-- cambiar de "Sin asignar" a "Ninguna"
-    }
-
-    const allCapas = [...(this.capas || []), ...(this.capasData || [])];
-    const capa = allCapas.find(c =>
-      c.id === idOrName || c._id === idOrName || c.layerId === idOrName
-    );
-
-    if (capa) {
-      return capa.layerName || capa.nombreCapa || 'Ninguna'; // <-- aquí también
-    }
-
-    return 'Ninguna'; // <-- y aquí
-  }
-
-
-
-  /**
-   * Obtiene el nombre de una capa por su ID (para variables)
-   * @param id ID de la capa
-   * @returns Nombre de la capa o mensaje predeterminado
-   */
-  getCapaNombreByIdVariables(id: string | number): string {
-    const idStr = String(id);
-
-    const capa = this.capasData?.find(c =>
-      String(c.id) === idStr || String(c._id) === idStr
-    );
-
-    if (!capa) {
-      const capaAlternativa = this.capas?.find(c =>
-        String(c.id) === idStr || String(c._id) === idStr
-      );
-      return capaAlternativa ? capaAlternativa.nombreCapa || 'Ninguna' : 'Ninguna'; // <-- aquí
-    }
-
-    return capa.nombreCapa || 'Ninguna'; // <-- aquí también
-  }
-
-
-  /**
-   * Transforma valores de texto a formatos más legibles
-   * @param value Texto a transformar
-   * @returns Texto transformado o el original si no hay coincidencia
-   */
-  transformarString(value: string): string {
-    const stringMap: { [key: string]: string } = {
-      'ADMIN': 'Administrador',
-      'Admin': 'Administrador',
-      'Doctor': 'Doctor',
-      'Researcher': 'Investigador',
-      'true': 'Activo',
-      'false': 'Inactivo'
-    };
-    return stringMap[value] || value;
-  }
-
-
-  /**
-   * Muestra un mensaje de error usando SweetAlert2
-   * @param mensaje Mensaje a mostrar
-   */
-  mostrarMensajeError(mensaje: string): void {
-    Swal.fire('Error', mensaje, 'error');
-  }
-
-  /* -------------------- Métodos de navegación -------------------- */
+  // ============================
+  // MÉTODOS DE NAVEGACIÓN
+  // ============================
 
   /**
    * Maneja el cambio de pestaña
@@ -968,13 +898,34 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     } else if (tab === 'gestionUsuarios') {
       this.loadUsuariosData();
     } else if (tab === 'historialRegistros') {
-      // No cargar automáticamente, esperar selección de capa
       this.historialRegistrosData = [];
       this.totalHistorialRegistros = 0;
     }
   }
 
-  /* -------------------- Métodos de visualización -------------------- */
+  /**
+   * Maneja la selección de capa para el historial
+   */
+  onCapaSeleccionadaChange(): void {
+    if (this.capaSeleccionadaHistorial) {
+      this.loadHistorialRegistros(0, 10);
+    } else {
+      this.historialRegistrosData = [];
+      this.totalHistorialRegistros = 0;
+    }
+  }
+
+  /**
+   * Maneja el cambio de página en la tabla de historial
+   * @param event Evento de paginación
+   */
+  onPageChangeHistorial(event: any): void {
+    this.loadHistorialRegistros(event.page, event.size);
+  }
+
+  // ============================
+  // MÉTODOS DE VISUALIZACIÓN
+  // ============================
 
   /**
    * Maneja la visualización de un usuario
@@ -1005,7 +956,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         tipoDocumento: event.detalles.tipoDocumento || '',
         documento: event.detalles.documento || '',
         fechaNacimiento: event.detalles.fechaNacimiento || '',
-        attributes: event.detalles.attributes || event.attributes || {} // Make sure attributes are passed
+        attributes: event.detalles.attributes || event.attributes || {}
       };
     } else {
       this.viewedItem = event;
@@ -1015,7 +966,50 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     this.isViewing = true;
   }
 
-  /* -------------------- Métodos de edición -------------------- */
+  /**
+   * Maneja la visualización de detalles del historial
+   * @param event Registro del historial a visualizar
+   */
+  handleViewHistorial(event: any): void {
+    this.viewedItem = {
+      ...event,
+      tipo: 'historial',
+      detallesCompletos: this.prepararDetallesHistorial(event)
+    };
+    this.viewType = 'historial';
+    this.isViewing = true;
+  }
+
+  /**
+   * Prepara los detalles del historial para visualización
+   * @param registro Registro del historial
+   * @returns Detalles formateados del historial
+   */
+  private prepararDetallesHistorial(registro: any): any {
+    return {
+      id: registro.registerId,
+      paciente: {
+        identificacion: registro.patientIdentificationNumber,
+        tipoIdentificacion: registro.patientIdentificationType || 'No especificado'
+      },
+      capa: {
+        id: registro.isResearchLayerGroup?.researchLayerId,
+        nombre: registro.isResearchLayerGroup?.researchLayerName || 'N/A'
+      },
+      operacion: this.translateOperation(registro.operation),
+      modificadoPor: registro.changedBy,
+      fechaModificacion: this.formatDate(registro.changedAt),
+      variables: registro.isResearchLayerGroup?.variables?.map((variable: any) => ({
+        nombre: variable.name,
+        tipo: variable.type,
+        valor: variable.valueAsString || variable.valueAsNumber || 'N/A'
+      })) || []
+    };
+  }
+
+  // ============================
+  // MÉTODOS DE EDICIÓN
+  // ============================
 
   /**
    * Maneja la edición de un elemento
@@ -1026,7 +1020,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     if (tipo === 'usuario') {
       this.isEditingUserModal = true;
 
-      // Normalizar el rol
       let rawRole = row.rol;
       if (Array.isArray(row.attributes?.role)) {
         rawRole = row.attributes.role[0];
@@ -1034,21 +1027,16 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         rawRole = row.rol.split(', ')[0];
       }
 
-      // Asegurar que capaRawValue sea un array
       const capaRawValue = Array.isArray(row.capaRawValue)
         ? row.capaRawValue
         : row.capaRawValue
           ? [row.capaRawValue]
           : [];
 
-      // Obtener lastPasswordUpdate correctamente
       const lastUpdate =
         row.attributes?.lastPasswordUpdate?.[0] ||
         row.lastPasswordUpdate ||
         'No registrada';
-
-      // ✅ FORZAR SIEMPRE A TRUE (solución temporal)
-      const acceptTerms = true;
 
       this.userToEdit = {
         id: row.id,
@@ -1064,7 +1052,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         password: row.passwordActual || '',
         lastPasswordUpdate: lastUpdate,
         attributes: row.attributes || {},
-        acceptTermsAndConditions: true // 👈 Siempre true
+        acceptTermsAndConditions: true
       };
 
     } else if (tipo === 'capa') {
@@ -1095,7 +1083,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.isEditingVar = true;
     }
   }
-
 
   /**
    * Cambia el estado de un usuario (habilitar/deshabilitar)
@@ -1144,33 +1131,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* -------------------- Métodos de cierre de modales -------------------- */
+  // ============================
+  // MÉTODOS DE GUARDADO
+  // ============================
 
-  /**
-   * Cierra los modales abiertos
-   * @param event Evento opcional con información de cierre
-   */
-  cerrarModal(event?: any): void {
-    this.isEditingVar = false;
-    this.isEditingCapa = false;
-    this.isEditingUserModal = false;
-    this.isViewing = false;
-    this.viewedItem = null;
-    this.viewType = '';
-
-    if (event?.success) {
-      this.loadCapasData();
-      this.loadUsuariosData();
-      this.loadVariablesData();
-    }
-  }
-
-  /* -------------------- Métodos de guardado -------------------- */
-
-  /**
-   * Guarda los cambios en una variable
-   * @param variableEditada Variable con los cambios
-   */
   /**
    * Guarda los cambios en una variable
    * @param variableEditada Variable con los cambios
@@ -1220,7 +1184,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * Guarda los cambios en una capa
    * @param updatedCapa Capa con los cambios
    */
-  guardarEdicionCapa(updatedCapa: any) {
+  guardarEdicionCapa(updatedCapa: any): void {
     if (!updatedCapa || !updatedCapa.id) {
       console.error('Datos de capa inválidos:', updatedCapa);
       return;
@@ -1276,7 +1240,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     const userId = usuarioEditado.userId;
     const usuarioPayload = {
       ...usuarioEditado.payload,
-      // Si viene password, actualizamos lastPasswordUpdate
       ...(usuarioEditado.payload.password && {
         attributes: {
           ...usuarioEditado.payload.attributes,
@@ -1301,7 +1264,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
             Swal.fire('Éxito', 'Usuario actualizado con éxito.', 'success');
             this.isEditingUserModal = false;
 
-            // Refrescar campo lastPasswordUpdate local
             if (usuarioPayload.password) {
               usuarioPayload.lastPasswordUpdate = new Date().toISOString();
             }
@@ -1338,42 +1300,9 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-
-  /* -------------------- Métodos de eliminación -------------------- */
-  obtenerTipoElemento(): string {
-    switch (this.selectedTab) {
-      case 'gestionUsuarios': return 'usuario';
-      case 'gestionVariables': return 'variable';
-      case 'gestionCapas': return 'capa de investigación';
-      default: return 'elemento';
-    }
-  }
-
-  obtenerNombreElemento(row: any): string {
-    return row.username || row.variableName || row.nombreCapa || 'sin nombre';
-  }
-
-  mostrarSwalConfirmacion(row: any, advertenciaHtml: string, onConfirm: () => void): void {
-    Swal.fire({
-      title: `¿Eliminar ${this.obtenerTipoElemento()}?`,
-      html: `
-      <p>¿Deseas eliminar <strong>${this.obtenerNombreElemento(row)}</strong>?</p>
-      ${advertenciaHtml}
-      <p class="text-danger">Esta acción no se puede deshacer.</p>
-    `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        onConfirm();
-      }
-    });
-  }
-
+  // ============================
+  // MÉTODOS DE ELIMINACIÓN
+  // ============================
 
   /**
    * Maneja la eliminación de un elemento
@@ -1419,7 +1348,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       });
     };
 
-    // Casos por pestaña
     switch (this.selectedTab) {
       case 'gestionUsuarios':
         eliminarObservable = this.consolaService.eliminarUsuario(id);
@@ -1433,7 +1361,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         this.consolaService.getVariableById(id).subscribe({
           next: (variable) => {
             if (variable?.researchLayerId) {
-              // Si tenemos el ID de la capa, buscamos sus detalles
               this.consolaService.getLayerById(variable.researchLayerId).subscribe({
                 next: (capa) => {
                   const nombreCapa = capa?.layerName || 'una capa';
@@ -1461,7 +1388,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         eliminarObservable = this.consolaService.eliminarCapa(id);
         titulo = '¿Eliminar capa?';
 
-        // Buscar variables asociadas
         this.consolaService.getAllVariables().subscribe({
           next: (vars) => {
             const asociadas = vars.filter(v => v.researchLayerId === id);
@@ -1470,7 +1396,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
               advertencias.push(`Variables asociadas: ${nombresVars}`);
             }
 
-            // Buscar usuarios asignados
             this.consolaService.getAllUsuarios().subscribe({
               next: (users) => {
                 const usuariosConCapa = users.filter(u => u.researchLayer === id);
@@ -1499,162 +1424,13 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
         return;
     }
 
-    // Ejecutar si no hay llamadas asíncronas
     ejecutarEliminacion();
   }
 
-
-  mostrarExito(): void {
-    Swal.fire('¡Eliminado!', 'El elemento ha sido eliminado con éxito.', 'success');
-  }
-
-  mostrarError(error: any): void {
-    console.error('Error al eliminar:', error);
-    let mensaje = 'Hubo un error inesperado.';
-
-    if (error?.error?.message) {
-      mensaje = error.error.message;
-    } else if (typeof error?.error === 'string') {
-      mensaje = error.error;
-    }
-
-    Swal.fire('Error', mensaje, 'error');
-  }
-
-
-
-  /* -------------------- Métodos de creación -------------------- */
-
   /**
-   * Abre el modal para crear nueva variable
+   * Maneja la eliminación de un registro del historial
+   * @param registro Registro a eliminar
    */
-  crearNuevaVariable(): void {
-    this.selectedTab = 'gestionVariables';
-    this.isCreatingVar = true;
-  }
-
-  /**
-   * Abre el modal para crear nuevo usuario
-   */
-  crearNuevoUsuario(): void {
-    this.selectedTab = 'gestionUsuarios';
-    this.isCreatingUser = true;
-  }
-
-  /**
-   * Abre el modal para crear nueva capa
-   */
-  crearNuevaCapa(): void {
-    this.selectedTab = 'gestionCapas';
-    this.isCreatingCapa = true;
-  }
-
-  // Método para manejar cuando se crea un usuario exitosamente
-  onUsuarioCreado() {
-    this.volverAGestionUsuarios();
-    this.loadUsuariosData(); // Recargar la lista de usuarios
-    this.updateDashboard(); // Actualizar métricas
-  }
-
-  // Método para volver a la vista principal
-  volverAGestionUsuarios() {
-    this.isCreatingUser = false;
-    this.isEditingUser = false;
-    this.isEditingUserModal = false;
-  }
-
-  onVariableCreado() {
-    this.volverAGestionVariables();
-    this.loadVariablesData(); // Recargar la lista de usuarios
-    this.updateDashboard(); // Actualizar métricas
-  }
-
-  // Método para volver a la vista principal
-  volverAGestionVariables() {
-    this.isCreatingVar = false;
-    this.isEditingCapa = false;
-  }
-
-  onCapaCreado() {
-    this.volverAGestionCapa();
-    this.loadCapasData(); // Recargar la lista de usuarios
-    this.updateDashboard(); // Actualizar métricas
-  }
-
-  // Método para volver a la vista principal
-  volverAGestionCapa() {
-    this.isCreatingCapa = false;
-    this.isEditingCapa = false;
-  }
-
-  exportarUsuarios() {
-    // Lógica de exportación de usuarios
-    const csv = this.convertToCSV(this.usuariosData);
-    this.downloadCSV(csv, 'usuarios.csv');
-  }
-
-  exportarVariables() {
-    const csv = this.convertToCSV(this.variablesData);
-    this.downloadCSV(csv, 'variables.csv');
-  }
-
-  exportarCapas() {
-    const csv = this.convertToCSV(this.capasData);
-    this.downloadCSV(csv, 'capas.csv');
-  }
-
-  // Utilidades
-  private convertToCSV(data: any[]): string {
-    if (!data || data.length === 0) return '';
-    const headers = Object.keys(data[0]);
-    const csvRows = data.map(row => headers.map(field => `"${row[field] ?? ''}"`).join(','));
-    return [headers.join(','), ...csvRows].join('\r\n');
-  }
-
-  private downloadCSV(csv: string, filename: string): void {
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', filename);
-    link.click();
-  }
-
-  downloadAllDocuments(): void {
-    this.loadingRegistrosCapas = true; // opcional: mostrar spinner
-    this.consolaService.downloadAllDocuments().subscribe({
-      next: (blob: Blob) => {
-        const fileName = `todos_los_documentos_${new Date().toISOString()}.zip`;
-        saveAs(blob, fileName);
-        this.loadingRegistrosCapas = false;
-      },
-      error: (err) => {
-        console.error('Error descargando documentos', err);
-        this.loadingRegistrosCapas = false;
-        alert('No se pudo descargar los documentos');
-      }
-    });
-  }
-
-  /**
-   * Maneja la selección de capa para el historial
-   */
-  onCapaSeleccionadaChange(): void {
-    if (this.capaSeleccionadaHistorial) {
-      this.loadHistorialRegistros(0, 10); // ← Cargar HISTORIAL
-    } else {
-      this.historialRegistrosData = [];
-      this.totalHistorialRegistros = 0;
-    }
-  }
-
-  /**
- * Maneja el cambio de página en la tabla de historial
- */
-  onPageChangeHistorial(event: any): void {
-    this.loadHistorialRegistros(event.page, event.size);
-  }
-
-
   handleDeleteHistorial(registro: any): void {
     this.registroToDelete = registro;
 
@@ -1686,7 +1462,10 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Método para ejecutar la eliminación
+  /**
+   * Ejecuta la eliminación de un registro del historial
+   * @param registro Registro a eliminar
+   */
   private ejecutarEliminacionHistorial(registro: any): void {
     this.registroService.deleteRegisterHistory(registro.registerId).subscribe({
       next: () => {
@@ -1698,7 +1477,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
           showConfirmButton: false
         });
 
-        // Recargar el historial
         this.loadHistorialRegistros();
       },
       error: (error) => {
@@ -1716,37 +1494,275 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Método para manejar la visualización de detalles del historial
-  handleViewHistorial(event: any): void {
-    this.viewedItem = {
-      ...event,
-      tipo: 'historial',
-      detallesCompletos: this.prepararDetallesHistorial(event)
-    };
-    this.viewType = 'historial';
-    this.isViewing = true;
+  /**
+   * Maneja la eliminación de un registro
+   * @param registro Registro a eliminar
+   */
+  handleDeleteRegistro(registro: any): void {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `Estás a punto de eliminar el registro ${registro.registerId}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.consolaService.deleteRegistroCapa(registro.registerId).subscribe({
+          next: () => {
+            Swal.fire('¡Eliminado!', 'El registro ha sido eliminado.', 'success');
+            this.loadHistorialRegistros();
+          },
+          error: (err) => {
+            console.error('Error al eliminar registro:', err);
+            this.mostrarMensajeError('No se pudo eliminar el registro.');
+          }
+        });
+      }
+    });
   }
 
-  // Método para preparar los detalles del historial para visualización
-  private prepararDetallesHistorial(registro: any): any {
-    return {
-      id: registro.registerId,
-      paciente: {
-        identificacion: registro.patientIdentificationNumber,
-        tipoIdentificacion: registro.patientIdentificationType || 'No especificado' // ← AQUÍ ESTABA EL PROBLEMA
+  // ============================
+  // MÉTODOS DE CREACIÓN
+  // ============================
+
+  /**
+   * Abre el modal para crear nueva variable
+   */
+  crearNuevaVariable(): void {
+    this.selectedTab = 'gestionVariables';
+    this.isCreatingVar = true;
+  }
+
+  /**
+   * Abre el modal para crear nuevo usuario
+   */
+  crearNuevoUsuario(): void {
+    this.selectedTab = 'gestionUsuarios';
+    this.isCreatingUser = true;
+  }
+
+  /**
+   * Abre el modal para crear nueva capa
+   */
+  crearNuevaCapa(): void {
+    this.selectedTab = 'gestionCapas';
+    this.isCreatingCapa = true;
+  }
+
+  // ============================
+  // MÉTODOS DE NAVEGACIÓN MODALES
+  // ============================
+
+  /**
+   * Maneja cuando se crea un usuario exitosamente
+   */
+  onUsuarioCreado(): void {
+    this.volverAGestionUsuarios();
+    this.loadUsuariosData();
+    this.updateDashboard();
+  }
+
+  /**
+   * Vuelve a la vista principal de gestión de usuarios
+   */
+  volverAGestionUsuarios(): void {
+    this.isCreatingUser = false;
+    this.isEditingUser = false;
+    this.isEditingUserModal = false;
+  }
+
+  /**
+   * Maneja cuando se crea una variable exitosamente
+   */
+  onVariableCreado(): void {
+    this.volverAGestionVariables();
+    this.loadVariablesData();
+    this.updateDashboard();
+  }
+
+  /**
+   * Vuelve a la vista principal de gestión de variables
+   */
+  volverAGestionVariables(): void {
+    this.isCreatingVar = false;
+    this.isEditingCapa = false;
+  }
+
+  /**
+   * Maneja cuando se crea una capa exitosamente
+   */
+  onCapaCreado(): void {
+    this.volverAGestionCapa();
+    this.loadCapasData();
+    this.updateDashboard();
+  }
+
+  /**
+   * Vuelve a la vista principal de gestión de capas
+   */
+  volverAGestionCapa(): void {
+    this.isCreatingCapa = false;
+    this.isEditingCapa = false;
+  }
+
+  /**
+   * Cierra los modales abiertos
+   * @param event Evento opcional con información de cierre
+   */
+  cerrarModal(event?: any): void {
+    this.isEditingVar = false;
+    this.isEditingCapa = false;
+    this.isEditingUserModal = false;
+    this.isViewing = false;
+    this.viewedItem = null;
+    this.viewType = '';
+
+    if (event?.success) {
+      this.loadCapasData();
+      this.loadUsuariosData();
+      this.loadVariablesData();
+    }
+  }
+
+  // ============================
+  // MÉTODOS DE EXPORTACIÓN
+  // ============================
+
+  /**
+   * Exporta los usuarios a un archivo CSV
+   */
+  exportarCSV(): void {
+    if (!this.todosLosUsuarios.length) {
+      console.warn('⚠️ No hay usuarios para exportar.');
+      return;
+    }
+
+    const encabezados = "Nombre;Rol;Email\n";
+    const filas = this.todosLosUsuarios
+      .map(u => `${u.nombre};${u.rol};${u.email}`)
+      .join("\n");
+
+    const csvContent = encabezados + filas;
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `usuarios_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Exporta usuarios a CSV
+   */
+  exportarUsuarios(): void {
+    const csv = this.convertToCSV(this.usuariosData);
+    this.downloadCSV(csv, 'usuarios.csv');
+  }
+
+  /**
+   * Exporta variables a CSV
+   */
+  exportarVariables(): void {
+    const csv = this.convertToCSV(this.variablesData);
+    this.downloadCSV(csv, 'variables.csv');
+  }
+
+  /**
+   * Exporta capas a CSV
+   */
+  exportarCapas(): void {
+    const csv = this.convertToCSV(this.capasData);
+    this.downloadCSV(csv, 'capas.csv');
+  }
+
+  /**
+   * Descarga todos los documentos del sistema
+   */
+  downloadAllDocuments(): void {
+    this.loadingRegistrosCapas = true;
+    this.consolaService.downloadAllDocuments().subscribe({
+      next: (blob: Blob) => {
+        const fileName = `todos_los_documentos_${new Date().toISOString()}.zip`;
+        saveAs(blob, fileName);
+        this.loadingRegistrosCapas = false;
       },
-      capa: {
-        id: registro.isResearchLayerGroup?.researchLayerId,
-        nombre: registro.isResearchLayerGroup?.researchLayerName || 'N/A'
-      },
-      operacion: this.translateOperation(registro.operation),
-      modificadoPor: registro.changedBy,
-      fechaModificacion: this.formatDate(registro.changedAt),
-      variables: registro.isResearchLayerGroup?.variables?.map((variable: any) => ({
-        nombre: variable.name,
-        tipo: variable.type,
-        valor: variable.valueAsString || variable.valueAsNumber || 'N/A'
-      })) || []
-    };
+      error: (err) => {
+        console.error('Error descargando documentos', err);
+        this.loadingRegistrosCapas = false;
+        alert('No se pudo descargar los documentos');
+      }
+    });
+  }
+
+  // ============================
+  // MÉTODOS UTILITARIOS
+  // ============================
+
+  /**
+   * Convierte datos a formato CSV
+   * @param data Datos a convertir
+   * @returns String en formato CSV
+   */
+  private convertToCSV(data: any[]): string {
+    if (!data || data.length === 0) return '';
+    const headers = Object.keys(data[0]);
+    const csvRows = data.map(row => headers.map(field => `"${row[field] ?? ''}"`).join(','));
+    return [headers.join(','), ...csvRows].join('\r\n');
+  }
+
+  /**
+   * Descarga un archivo CSV
+   * @param csv Contenido CSV
+   * @param filename Nombre del archivo
+   */
+  private downloadCSV(csv: string, filename: string): void {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', filename);
+    link.click();
+  }
+
+  /**
+   * Muestra un mensaje de información
+   * @param mensaje Mensaje a mostrar
+   */
+  mostrarMensajeInfo(mensaje: string): void {
+    Swal.fire('Información', mensaje, 'info');
+  }
+
+  /**
+   * Muestra un mensaje de error usando SweetAlert2
+   * @param mensaje Mensaje a mostrar
+   */
+  mostrarMensajeError(mensaje: string): void {
+    Swal.fire('Error', mensaje, 'error');
+  }
+
+  /**
+   * Obtiene el tipo de elemento según la pestaña seleccionada
+   * @returns Tipo de elemento
+   */
+  obtenerTipoElemento(): string {
+    switch (this.selectedTab) {
+      case 'gestionUsuarios': return 'usuario';
+      case 'gestionVariables': return 'variable';
+      case 'gestionCapas': return 'capa de investigación';
+      default: return 'elemento';
+    }
+  }
+
+  /**
+   * Obtiene el nombre de un elemento
+   * @param row Fila del elemento
+   * @returns Nombre del elemento
+   */
+  obtenerNombreElemento(row: any): string {
+    return row.username || row.variableName || row.nombreCapa || 'sin nombre';
   }
 }

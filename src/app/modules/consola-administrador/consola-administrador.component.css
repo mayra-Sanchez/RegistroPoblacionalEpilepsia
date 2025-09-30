@@ -361,97 +361,6 @@ button.btn-secondary:hover {
   background-color: #cc0000; /* Rojo más oscuro */
 }
 
-/* ==================== 7. Media Queries Responsive ==================== */
-@media (max-width: 1200px) {
-  .dashboard-container {
-    grid-template-columns: 1fr; /* Una columna */
-  }
-  
-  .left-column, .right-column {
-    width: 100%; /* Ancho completo */
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-metrics {
-    grid-template-columns: 1fr; /* Una columna */
-  }
-  
-  .metric-content {
-    flex-direction: column; /* Disposición vertical */
-    text-align: center; /* Texto centrado */
-  }
-  
-  .metric-text h3, .metric-text p {
-    text-align: center; /* Texto centrado */
-  }
-  
-  .dashboard-actions {
-    grid-template-columns: 1fr; /* Una columna */
-  }
-
-  .user-form-grid {
-    grid-template-columns: 1fr; /* Una columna */
-  }
-
-  .user-form-container {
-    padding: 15px; /* Espaciado reducido */
-  }
-
-  button.btn-primary,
-  button.btn-secondary {
-    width: 100%; /* Ancho completo */
-    font-size: 0.9rem; /* Tamaño pequeño */
-    padding: 10px; /* Espaciado reducido */
-  }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  .user-form-container {
-    padding: 25px; /* Espaciado intermedio */
-  }
-
-  .user-form-row input,
-  .user-form-row select {
-    font-size: 0.9rem; /* Tamaño estándar */
-  }
-}
-
-@media (min-width: 1024px) {
-  .user-form-container {
-    padding: 30px; /* Espaciado generoso */
-  }
-
-  .user-form-row input,
-  .user-form-row select {
-    font-size: 1rem; /* Tamaño grande */
-  }
-
-  button.btn-primary {
-    font-size: 1.1rem; /* Tamaño grande */
-    padding: 15px; /* Espaciado generoso */
-  }
-}
-
-@media (max-width: 480px) {
-  .contentAdmin {
-    padding: 15px; /* Espaciado reducido */
-  }
-  
-  .left-column, .right-column {
-    padding: 15px; /* Espaciado reducido */
-  }
-  
-  .metric-card {
-    padding: 15px; /* Espaciado reducido */
-  }
-  
-  .mat-cell {
-    padding: 8px 10px; /* Espaciado reducido */
-    font-size: 0.8rem; /* Tamaño pequeño */
-  }
-}
-
 /* Botón de acción general */
 .action-button {
   padding: 10px 15px;
@@ -509,3 +418,186 @@ button.btn-secondary:hover {
   font-size: 0.9rem;
 }
 
+/* ==================== 7. Media Queries Responsive ==================== */
+@media (max-width: 1200px) {
+  .dashboard-container {
+    grid-template-columns: 1fr; /* Una columna */
+  }
+  
+  .left-column, .right-column {
+    width: 100%; /* Ancho completo */
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-metrics {
+    grid-template-columns: 1fr; /* Una columna */
+  }
+  
+  .metric-content {
+    flex-direction: column; /* Disposición vertical */
+    text-align: center; /* Texto centrado */
+  }
+  
+  .metric-text h3, .metric-text p {
+    text-align: center; /* Texto centrado */
+  }
+  
+  .dashboard-actions {
+    grid-template-columns: 1fr; /* Una columna */
+  }
+
+  .user-form-grid {
+    grid-template-columns: 1fr; /* Una columna */
+  }
+
+  .user-form-container {
+    padding: 15px; /* Espaciado reducido */
+  }
+
+  button.btn-primary,
+  button.btn-secondary {
+    width: 100%; /* Ancho completo */
+    font-size: 0.9rem; /* Tamaño pequeño */
+    padding: 10px; /* Espaciado reducido */
+  }
+
+  /* Responsive para historial */
+  .filtro-container {
+    padding: 12px;
+  }
+
+  .filtro-container select {
+    max-width: 100%;
+  }
+
+  .historial-container {
+    padding: 15px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .user-form-container {
+    padding: 25px; /* Espaciado intermedio */
+  }
+
+  .user-form-row input,
+  .user-form-row select {
+    font-size: 0.9rem; /* Tamaño estándar */
+  }
+}
+
+@media (min-width: 1024px) {
+  .user-form-container {
+    padding: 30px; /* Espaciado generoso */
+  }
+
+  .user-form-row input,
+  .user-form-row select {
+    font-size: 1rem; /* Tamaño grande */
+  }
+
+  button.btn-primary {
+    font-size: 1.1rem; /* Tamaño grande */
+    padding: 15px; /* Espaciado generoso */
+  }
+}
+
+@media (max-width: 480px) {
+  .contentAdmin {
+    padding: 15px; /* Espaciado reducido */
+  }
+  
+  .left-column, .right-column {
+    padding: 15px; /* Espaciado reducido */
+  }
+  
+  .metric-card {
+    padding: 15px; /* Espaciado reducido */
+  }
+  
+  .mat-cell {
+    padding: 8px 10px; /* Espaciado reducido */
+    font-size: 0.8rem; /* Tamaño pequeño */
+  }
+
+  /* Responsive móvil para historial */
+  .filtro-container {
+    margin-bottom: 15px;
+  }
+
+  .alert {
+    padding: 15px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ==================== 8. Sección Historial de Registros ==================== */
+
+/**
+ * Contenedor principal del historial
+ */
+.filtro-container {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.filtro-container label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.filtro-container select {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: white;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filtro-container select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/**
+ * Alertas informativas
+ */
+.alert {
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border: 1px solid transparent;
+}
+
+.alert-info {
+  color: #055160;
+  background-color: #cff4fc;
+  border-color: #b6effb;
+}
+
+.alert i {
+  margin-right: 10px;
+  font-size: 1.1rem;
+}
+
+/**
+ * Contenedor de la tabla de historial
+ */
+.historial-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-top: 20px;
+}

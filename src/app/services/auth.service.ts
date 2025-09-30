@@ -298,7 +298,6 @@ export class AuthService {
           throw new Error('Respuesta inválida del servidor');
         }
 
-        console.log('🔄 Token refrescado con éxito');
         localStorage.setItem('kc_token', response.access_token);
 
         if (response.refresh_token) {

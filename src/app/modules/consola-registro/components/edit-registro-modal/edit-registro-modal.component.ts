@@ -26,19 +26,20 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   //#region Propiedades del Formulario y Estado
   /** FormGroup principal del formulario de edición */
   editForm: FormGroup;
-  
+
   /** Indica si se está cargando o guardando */
   loading: boolean = false;
-  
+
   /** Sección actual del formulario (para navegación por pasos) */
   currentSection: number = 0;
-  
+
   /** Indica si el paciente tiene cuidador */
   hasCaregiver: boolean = false;
-  
+
   /** Lista de variables de la capa de investigación */
   variablesDeCapa: Variable[] = [];
-  
+  variablesReadOnly: boolean = true;
+
   /** Subject para manejar la desuscripción de observables */
   private destroy$ = new Subject<void>();
   //#endregion
@@ -145,30 +146,65 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     console.log('🎯 Modal de edición iniciado');
     console.log('📦 Datos recibidos:', this.data);
 
-    // Validar que se recibieron los datos necesarios
     if (!this.data?.registro) {
       console.error('❌ No se recibió registro para editar');
       this.showErrorAndClose('No se pudieron cargar los datos del registro');
       return;
     }
 
-    // Verificar que tenemos las variables necesarias
     if (!this.data.variables || this.data.variables.length === 0) {
       console.warn('⚠️ No se recibieron variables de la capa');
     }
 
-    console.log('📦 Registro recibido:', this.data.registro);
-    console.log('🔧 Variables de capa:', this.data.variables);
-
-    // Crear el formulario con estructura vacía
     this.editForm = this.createForm();
 
-    // Inicializar con datos del registro
     this.initializeFormWithData();
 
-    // Suscribirse a cambios en la fecha de nacimiento para calcular edad automáticamente
+    this.disableVariables();
+
     const birthControl = this.editForm.get('patient.birthDate');
     birthControl?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.onBirthDateChange());
+  }
+
+  /**
+  * Deshabilita todos los controles de variables (modo solo lectura)
+  */
+  disableVariables(): void {
+    this.variablesReadOnly = true;
+    const variablesArray = this.editForm.get('variables') as FormArray;
+
+    variablesArray.controls.forEach(control => {
+      const valueControl = control.get('value');
+      if (valueControl) {
+        valueControl.disable({ onlySelf: true, emitEvent: false });
+      }
+    });
+  }
+
+  /**
+   * Habilita todos los controles de variables (modo edición)
+   */
+  enableVariables(): void {
+    this.variablesReadOnly = false;
+    const variablesArray = this.editForm.get('variables') as FormArray;
+
+    variablesArray.controls.forEach(control => {
+      const valueControl = control.get('value');
+      if (valueControl) {
+        valueControl.enable({ onlySelf: true, emitEvent: false });
+      }
+    });
+  }
+
+  /**
+   * Alterna entre modo edición y solo lectura para las variables
+   */
+  toggleVariablesEdit(): void {
+    if (this.variablesReadOnly) {
+      this.enableVariables();
+    } else {
+      this.disableVariables();
+    }
   }
 
   /**
@@ -188,11 +224,9 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
    */
   createForm(): FormGroup {
     return this.fb.group({
-      // Información de identificación (solo lectura)
       patientIdentificationNumber: [{ value: '', disabled: true }, [Validators.required, Validators.pattern('^[0-9]*$')]],
       patientIdentificationType: [{ value: 'CC', disabled: true }, Validators.required],
 
-      // Información del paciente
       patient: this.fb.group({
         name: ['', Validators.required],
         sex: ['', Validators.required],
@@ -210,7 +244,6 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         crisisStatus: ['']
       }),
 
-      // Información del cuidador (opcional)
       caregiver: this.fb.group({
         name: [''],
         identificationType: ['CC'],
@@ -220,7 +253,6 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         occupation: ['']
       }),
 
-      // Variables de investigación
       variables: this.fb.array([])
     });
   }
@@ -236,31 +268,12 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('📋 Inicializando formulario con registro:', registro);
-
-    // Validar que el formulario esté creado
-    if (!this.editForm) {
-      console.error('❌ El formulario no está inicializado');
-      return;
-    }
-
-    // Validar que el grupo 'patient' exista
-    const patientGroup = this.editForm.get('patient') as FormGroup;
-    if (!patientGroup) {
-      console.error('❌ No se encontró el grupo patient en el formulario');
-      return;
-    }
-
-    // Cargar datos básicos de identificación
     this.loadIdentificationData(registro);
 
-    // Cargar datos del paciente
-    this.loadPatientData(registro, patientGroup);
+    this.loadPatientData(registro);
 
-    // Cargar datos del cuidador si existen
     this.loadCaregiverData(registro);
 
-    // Inicializar variables de investigación
     this.initializeVariablesWithData(registro);
   }
 
@@ -278,31 +291,33 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   /**
    * Carga los datos del paciente al formulario
    * @param registro Registro con los datos del paciente
-   * @param patientGroup Grupo del formulario para datos del paciente
    */
-  private loadPatientData(registro: Register, patientGroup: FormGroup): void {
+  private loadPatientData(registro: Register): void {
     const patientData = registro.patientBasicInfo;
     if (patientData) {
-      console.log('👤 Datos del paciente:', patientData);
+      const patientGroup = this.editForm.get('patient') as FormGroup;
+      if (patientGroup) {
+        patientGroup.patchValue({
+          name: patientData.name || '',
+          sex: patientData.sex || '',
+          birthDate: this.formatDateForInput(patientData.birthDate),
+          age: patientData.age || '',
+          email: patientData.email || '',
+          phoneNumber: patientData.phoneNumber || '',
+          deathDate: this.formatDateForInput(patientData.deathDate),
+          economicStatus: patientData.economicStatus || '',
+          educationLevel: patientData.educationLevel || '',
+          maritalStatus: patientData.maritalStatus || '',
+          hometown: patientData.hometown || '',
+          currentCity: patientData.currentCity || '',
+          firstCrisisDate: this.formatDateForInput(patientData.firstCrisisDate),
+          crisisStatus: patientData.crisisStatus || ''
+        });
 
-      patientGroup.patchValue({
-        name: patientData.name || '',
-        sex: patientData.sex || '',
-        birthDate: this.formatDateForInput(patientData.birthDate),
-        age: patientData.age || '',
-        email: patientData.email || '',
-        phoneNumber: patientData.phoneNumber || '',
-        deathDate: this.formatDateForInput(patientData.deathDate),
-        economicStatus: patientData.economicStatus || '',
-        educationLevel: patientData.educationLevel || '',
-        maritalStatus: patientData.maritalStatus || '',
-        hometown: patientData.hometown || '',
-        currentCity: patientData.currentCity || '',
-        firstCrisisDate: this.formatDateForInput(patientData.firstCrisisDate),
-        crisisStatus: patientData.crisisStatus || ''
-      });
+      }
     }
   }
+
 
   /**
    * Carga los datos del cuidador al formulario si existen
@@ -327,36 +342,26 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Inicializa las variables de investigación con los datos del registro
-   * @param registro Registro con los datos de variables
-   */
   initializeVariablesWithData(registro: Register): void {
     const variablesArray = this.editForm.get('variables') as FormArray;
     variablesArray.clear();
 
-    console.log('🔍 Buscando variables en el registro...');
-
-    // Obtener variables del registro
     const registroVariables = this.getVariablesFromRegister(registro);
-    console.log('📊 Variables encontradas en registro:', registroVariables);
 
-    // Crear controles para cada variable de la capa
-    this.variablesDeCapa.forEach(variable => {
-      this.createVariableControl(variablesArray, variable, registroVariables);
+    this.variablesDeCapa.forEach(capaVariable => {
+      const variableData = this.findMatchingVariable(capaVariable, registroVariables);
+      this.createVariableControl(variablesArray, capaVariable, variableData ? [variableData] : []);
     });
 
-    console.log('🎯 Variables inicializadas en formulario:', variablesArray.value);
   }
 
   /**
    * Crea un control de formulario para una variable específica
    * @param variablesArray Array de formulario para las variables
-   * @param variable Definición de la variable
+   * @param variable Definición de la variable de la capa
    * @param registroVariables Variables con valores del registro
    */
   private createVariableControl(variablesArray: FormArray, variable: Variable, registroVariables: any[]): void {
-    // Buscar la variable en los datos del registro
     const variableData = registroVariables.find(v =>
       v.variableId === variable.id ||
       v.variableName === variable.name ||
@@ -365,41 +370,78 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
     const isVariableRequired = variable.isRequired ?? false;
     const variableName = variable.name || variable.variableName || 'Variable sin nombre';
+
+    const variableType = this.getVariableType(variableData, variable);
+
     const validators = isVariableRequired ? [Validators.required] : [];
 
-    // Obtener el valor de la variable
-    const variableValue = this.extractVariableValue(variableData);
+    const variableValue = this.extractVariableValue(variableData, variableType);
 
-    console.log(`✅ Variable ${variableName}: valor = ${variableValue}`);
-
-    // Crear el grupo de formulario para la variable
-    variablesArray.push(this.fb.group({
+    const variableGroup = this.fb.group({
       variableId: [variable.id],
       variableName: [variableName],
       value: [variableValue, validators],
-      type: [variable.type],
-      isRequired: [isVariableRequired]
-    }));
+      type: [variableType],
+      isRequired: [isVariableRequired],
+      originalType: [variableType]
+    });
+
+    variablesArray.push(variableGroup);
+  }
+
+  /**
+ * Encuentra la variable correspondiente en los datos del registro
+ * @param capaVariable Variable de la capa
+ * @param registroVariables Variables del registro
+ * @returns Variable del registro que coincide
+ */
+  private findMatchingVariable(capaVariable: Variable, registroVariables: any[]): any {
+    const matches = registroVariables.filter(v =>
+      v.variableId === capaVariable.id ||
+      v.variableName === capaVariable.name ||
+      v.variableName === capaVariable.variableName ||
+      (capaVariable.name && v.name === capaVariable.name)
+    );
+
+    if (matches.length > 0) {
+      return matches[0];
+    }
+
+    return null;
   }
 
   /**
    * Extrae el valor de una variable desde los datos del registro
    * @param variableData Datos de la variable del registro
+   * @param variableType Tipo de variable (para forzar el correcto)
    * @returns Valor formateado como string
    */
-  private extractVariableValue(variableData: any): string {
-    if (!variableData) return '';
-
-    // Manejar diferentes estructuras de datos
-    if (variableData.value !== undefined && variableData.value !== null) {
-      return variableData.value.toString();
-    } else if (variableData.valueAsString !== undefined && variableData.valueAsString !== null) {
-      return variableData.valueAsString.toString();
-    } else if (variableData.valueAsNumber !== undefined && variableData.valueAsNumber !== null) {
-      return variableData.valueAsNumber.toString();
+  private extractVariableValue(variableData: any, variableType?: string): string {
+    if (!variableData) {
+      return '';
     }
 
-    return '';
+    const finalType = variableType || this.getVariableType(variableData);
+
+    let rawValue: any;
+
+    if (variableData.value !== undefined && variableData.value !== null) {
+      rawValue = variableData.value;
+    } else if (variableData.valueAsString !== undefined && variableData.valueAsString !== null) {
+      rawValue = variableData.valueAsString;
+    } else if (variableData.valueAsNumber !== undefined && variableData.valueAsNumber !== null) {
+      rawValue = variableData.valueAsNumber;
+    } else {
+      return '';
+    }
+
+    if (finalType === 'Fecha') {
+      const formattedDate = this.formatDateForInput(rawValue);
+      return formattedDate;
+    }
+
+    const result = rawValue.toString();
+    return result;
   }
   //#endregion
 
@@ -410,20 +452,17 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
    * @returns Array de variables
    */
   private getVariablesFromRegister(registro: Register): any[] {
-    // Primero intentar con registerInfo[0].variablesInfo (estructura GET)
     if (registro.registerInfo && registro.registerInfo.length > 0) {
       const mainInfo = registro.registerInfo[0];
-      if ((mainInfo as any).variablesInfo) {
-        return (mainInfo as any).variablesInfo;
+      if (mainInfo.variablesInfo && mainInfo.variablesInfo.length > 0) {
+        return mainInfo.variablesInfo;
       }
     }
 
-    // Luego intentar con variablesRegister (estructura alternativa)
-    if (registro.variablesRegister) {
+    if (registro.variablesRegister && registro.variablesRegister.length > 0) {
       return registro.variablesRegister;
     }
 
-    // Finalmente, si el registro tiene variables directamente
     if ((registro as any).variablesInfo) {
       return (registro as any).variablesInfo;
     }
@@ -451,6 +490,28 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   }
 
   /**
+ * Obtiene el tipo de variable de forma segura desde diferentes estructuras
+ * @param variableData Datos de la variable
+ * @param variableDefinition Definición de la variable de la capa (opcional)
+ * @returns Tipo de variable
+ */
+  private getVariableType(variableData: any, variableDefinition?: Variable): string {
+    if (variableDefinition?.type) {
+      return variableDefinition.type;
+    }
+
+    if (variableData?.type) {
+      return variableData.type;
+    }
+
+    if (variableData?.variableType) {
+      return variableData.variableType;
+    }
+
+    return 'Texto';
+  }
+
+  /**
    * Convierte el tipo de identificación al formato del backend
    * @param type Tipo abreviado
    * @returns Tipo completo para el backend
@@ -475,18 +536,29 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     if (!dateValue) return '';
 
     try {
-      // Si ya está en formato YYYY-MM-DD
       if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
         return dateValue;
       }
 
-      // Si está en formato DD-MM-YYYY, convertirlo
-      if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
-        const [day, month, year] = dateValue.split('-');
-        return `${year}-${month}-${day}`;
+      if (typeof dateValue === 'string') {
+        const formats = [
+          /^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/, // DD/MM/YYYY o DD-MM-YYYY
+          /^(\d{4})[\/\-](\d{2})[\/\-](\d{2})$/  // YYYY/MM/DD o YYYY-MM-DD
+        ];
+
+        for (const format of formats) {
+          const match = dateValue.match(format);
+          if (match) {
+            if (format === formats[0]) {
+              const [, day, month, year] = match;
+              return `${year}-${month}-${day}`;
+            } else {
+              return dateValue.replace(/[\/]/g, '-');
+            }
+          }
+        }
       }
 
-      // Para objetos Date o strings ISO
       const date = new Date(dateValue);
       if (!isNaN(date.getTime())) {
         const year = date.getFullYear();
@@ -495,7 +567,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         return `${year}-${month}-${day}`;
       }
     } catch (error) {
-      console.error('Error formateando fecha:', error);
+      console.error('Error formateando fecha:', error, dateValue);
     }
 
     return '';
@@ -636,12 +708,9 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
     try {
       const formValue = this.editForm.getRawValue();
-      console.log('📝 Valores del formulario:', formValue);
 
       const registerRequest = this.prepareUpdateRequest(formValue);
 
-      console.log('🎯 Request estructurado:', registerRequest);
-      console.log('✅ Campo birthDate en request:', registerRequest.patient.birthDate);
 
       const userEmail = this.authService.getUserEmail();
       if (!userEmail) {
@@ -652,9 +721,6 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         throw new Error('No se pudo identificar el registro a actualizar');
       }
 
-      console.log('🔧 Enviando actualización...');
-      console.log('🆔 Register ID:', this.data.registro.registerId);
-      console.log('📧 User Email:', userEmail);
 
       const response = await this.consolaService.updateRegister(
         this.data.registro.registerId,
@@ -662,13 +728,11 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         registerRequest
       ).pipe(takeUntil(this.destroy$)).toPromise();
 
-      console.log('✅ Respuesta del servidor:', response);
 
       Swal.fire('Éxito', 'Registro actualizado correctamente', 'success');
       this.dialogRef.close(true);
 
     } catch (error: any) {
-      console.error('❌ Error completo al actualizar:', error);
       this.handleUpdateError(error);
     } finally {
       this.loading = false;
@@ -683,7 +747,6 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   private prepareUpdateRequest(formValue: any): any {
     const backendIdentificationType = this.getBackendIdentificationType(formValue.patientIdentificationType);
 
-    // Preparar variables según la interfaz RegisterVariable
     const variablesInfo: any[] = formValue.variables.map((v: any) => {
       const converted = this.convertValueForApi(v.value, v.type);
       return {
@@ -694,11 +757,9 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       };
     });
 
-    // Obtener información de la capa de investigación
     const researchLayerId = this.data.registro.registerInfo?.[0]?.researchLayerId || '';
     const researchLayerName = this.data.registro.registerInfo?.[0]?.researchLayerName || '';
 
-    // Preparar datos del cuidador si existen
     let caregiverData: any;
     if (this.hasCaregiver && formValue.caregiver?.name) {
       caregiverData = {
@@ -711,10 +772,8 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       };
     }
 
-    // Asegurar que firstCrisisDate nunca sea null
     const firstCrisisDate = this.formatDateForBackend(formValue.patient.firstCrisisDate) || '';
 
-    // Crear el objeto completo para la API
     const registerRequest = {
       registerInfo: {
         researchLayerId: researchLayerId,
@@ -742,7 +801,6 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       ...(caregiverData && { caregiver: caregiverData })
     };
 
-    console.log('📤 Request final para actualización:', JSON.stringify(registerRequest, null, 2));
     return registerRequest;
   }
 
@@ -770,7 +828,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         finalType = 'Number';
         break;
       case 'Fecha':
-        finalValue = this.formatDateForBackend(value);
+        finalValue = this.formatDateForBackend(value) || value;
         finalType = 'String';
         break;
       case 'Lógico':
@@ -791,7 +849,6 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
    * @param error Error capturado
    */
   private handleUpdateError(error: any): void {
-    // Log detallado del error
     if (error.error) {
       console.error('📋 Error body:', error.error);
     }
@@ -1007,12 +1064,12 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
    */
   get isCurrentSectionValid(): boolean {
     switch (this.currentSection) {
-      case 0: // Información básica
+      case 0:
         const patientGroup = this.editForm.get('patient') as FormGroup;
         return patientGroup?.valid || false;
-      case 1: // Cuidador (opcional)
-        return true; // El cuidador es opcional
-      case 2: // Variables
+      case 1:
+        return true;
+      case 2:
         return this.variables.valid;
       default:
         return false;
@@ -1028,6 +1085,46 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       const value = variable.get('value')?.value;
       return isRequired && (!value || value.toString().trim() === '');
     });
+  }
+
+  onClose(): void {
+    this.dialogRef.close();
+  }
+
+  //#region Métodos para mostrar información del paciente en el header
+  /**
+   * Obtiene el nombre del paciente para mostrar en el header
+   * @returns Nombre del paciente o texto por defecto
+   */
+  getPatientDisplayName(): string {
+    const patientName = this.editForm.get('patient.name')?.value;
+    const identification = this.editForm.get('patientIdentificationNumber')?.value;
+
+    if (patientName && patientName.trim()) {
+      return patientName;
+    } else if (identification) {
+      return `Documento ${identification}`;
+    } else {
+      return 'Paciente';
+    }
+  }
+
+  /**
+   * Obtiene la identificación completa del paciente
+   * @returns Identificación formateada
+   */
+  getPatientIdentification(): string {
+    const identificationType = this.editForm.get('patientIdentificationType')?.value;
+    const identificationNumber = this.editForm.get('patientIdentificationNumber')?.value;
+
+    if (identificationType && identificationNumber) {
+      const typeLabel = this.tiposIdentificacion.find(t => t.value === identificationType)?.label || identificationType;
+      return `${typeLabel}: ${identificationNumber}`;
+    } else if (identificationNumber) {
+      return identificationNumber;
+    } else {
+      return 'No especificado';
+    }
   }
   //#endregion
 }

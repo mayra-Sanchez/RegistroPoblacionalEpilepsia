@@ -240,14 +240,6 @@ describe('ConsultaDinamicaComponent', () => {
     });
   });
 
-  describe('handleFullscreenChange', () => {
-    it('should update isFullscreen based on document.fullscreenElement', () => {
-      spyOnProperty(document, 'fullscreenElement').and.returnValue({} as any);
-      component['handleFullscreenChange']();
-      expect(component.isFullscreen).toBeTrue();
-      expect((component as any).adjustIframeSize).toHaveBeenCalled();
-    });
-  });
 
   // Pruebas de métodos públicos
   describe('refreshDashboard', () => {

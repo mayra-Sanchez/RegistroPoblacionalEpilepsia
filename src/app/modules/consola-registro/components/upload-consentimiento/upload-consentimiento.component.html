@@ -1,0 +1,125 @@
+<div class="upload-consentimiento-modal">
+    <div class="modal-header">
+        <h3>
+            <i class="fas fa-upload"></i>
+            Subir Consentimiento Firmado
+        </h3>
+        <button class="close-btn" (click)="onCancel()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="modal-body">
+        <!-- Búsqueda de paciente -->
+        <div class="form-group">
+            <label for="patientSearch">
+                <i class="fas fa-search"></i>
+                Buscar Paciente *
+            </label>
+            <div class="search-container">
+                <input id="patientSearch" type="number" [(ngModel)]="patientIdentificationNumber"
+                    (input)="onPatientSearch()" placeholder="Ingrese el número de documento del paciente"
+                    class="form-control" [disabled]="loadingPatients">
+                <div class="search-loading" *ngIf="loadingPatients">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+            <small class="help-text">Ingrese el número de documento sin puntos ni comas</small>
+        </div>
+
+        <!-- Información del paciente encontrado -->
+        <div class="patient-info-card" *ngIf="patientInfo && !loadingPatients">
+            <div class="patient-header">
+                <i class="fas fa-user-check"></i>
+                <h4>Paciente Encontrado</h4>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Nombre:</strong> {{ patientInfo.name }}
+                </div>
+                <div class="info-item">
+                    <strong>Documento:</strong> {{ patientIdentificationNumber }}
+                </div>
+                <div class="info-item">
+                    <strong>Sexo:</strong> {{ patientInfo.sex }}
+                </div>
+                <div class="info-item">
+                    <strong>Edad:</strong> {{ patientInfo.age }} años
+                </div>
+                <div class="info-item">
+                    <strong>Email:</strong> {{ patientInfo.email || 'No registrado' }}
+                </div>
+                <div class="info-item">
+                    <strong>Teléfono:</strong> {{ patientInfo.phoneNumber || 'No registrado' }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje cuando no se encuentra paciente -->
+        <div class="warning-message" *ngIf="showPatientNotFound && !loadingPatients">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>No se encontró un paciente con el documento {{ patientIdentificationNumber }}</span>
+        </div>
+
+        <!-- Área de subida de archivo -->
+        <div class="upload-section" *ngIf="patientInfo && !loadingPatients">
+            <div class="section-title">
+                <i class="fas fa-file-upload"></i>
+                <h4>Seleccionar Archivo de Consentimiento</h4>
+            </div>
+
+            <div class="upload-area" [class.active]="isDragOver" [class.has-file]="selectedFile"
+                (click)="fileInput.click()" (drop)="onFileDrop($event)" (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)">
+                <input #fileInput type="file" (change)="onFileSelected($event)" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    hidden>
+
+                <div class="upload-content" *ngIf="!selectedFile">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h4>Arrastra y suelta tu archivo aquí</h4>
+                    <p>o haz clic para seleccionar</p>
+                    <small>Formatos permitidos: PDF, JPG, PNG, DOC (Máx. 10MB)</small>
+                </div>
+
+                <div class="file-preview" *ngIf="selectedFile">
+                    <i class="fas fa-file-pdf" *ngIf="isPdfFile(selectedFile)"></i>
+                    <i class="fas fa-file-image" *ngIf="isImageFile(selectedFile)"></i>
+                    <i class="fas fa-file-word" *ngIf="isWordFile(selectedFile)"></i>
+                    <i class="fas fa-file"
+                        *ngIf="!isPdfFile(selectedFile) && !isImageFile(selectedFile) && !isWordFile(selectedFile)"></i>
+
+                    <div class="file-info">
+                        <h4>{{ selectedFile.name }}</h4>
+                        <p>{{ selectedFile.size | fileSize }}</p>
+                        <span class="file-type">{{ getFileTypeText(selectedFile.type) }}</span>
+                    </div>
+
+                    <button class="remove-file" (click)="removeFile($event)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Mensajes de estado -->
+                <div class="error-message" *ngIf="errorMessage">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{ errorMessage }}
+                </div>
+
+                <div class="success-message" *ngIf="successMessage">
+                    <i class="fas fa-check-circle"></i>
+                    {{ successMessage }}
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="onCancel()" [disabled]="uploading">
+                    Cancelar
+                </button>
+                <button class="btn btn-primary" (click)="onUpload()"
+                    [disabled]="!selectedFile || !patientInfo || uploading">
+                    <i class="fas fa-upload" *ngIf="!uploading"></i>
+                    <i class="fas fa-spinner fa-spin" *ngIf="uploading"></i>
+                    {{ uploading ? 'Subiendo...' : 'Subir Consentimiento' }}
+                </button>
+            </div>
+        </div>

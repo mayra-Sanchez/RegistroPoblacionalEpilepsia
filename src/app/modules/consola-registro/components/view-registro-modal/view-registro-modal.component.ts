@@ -5,29 +5,19 @@ import { saveAs } from 'file-saver';
 import Swal from 'sweetalert2';
 
 /**
- * Interfaz para datos del historial (lo que realmente estás recibiendo)
- */
-interface HistorialData {
-  id: string;
-  registerId: string;
-  changedAt: string;
-  changedBy: string;
-  operation: string;
-  patientIdentificationNumber: number;
-  isResearchLayerGroup?: {
-    researchLayerId: string;
-    researchLayerName: string;
-    variables: any[];
-  };
-  // Datos adicionales que podrían venir del registro completo
-  patientBasicInfo?: any;
-  caregiver?: any;
-  registerInfo?: any[];
-}
-
-/**
  * Componente modal para visualizar registros de pacientes
- * Ahora maneja tanto registros completos como datos del historial
+ * 
+ * Este componente maneja la visualización de:
+ * - Registros completos de pacientes
+ * - Datos del historial de cambios
+ * - Información de consentimientos
+ * - Variables de investigación
+ * 
+ * @example
+ * // Abrir modal desde otro componente
+ * const dialogRef = this.dialog.open(ViewRegistroModalComponent, {
+ *   data: { registro: patientRecord }
+ * });
  */
 @Component({
   selector: 'app-view-registro-modal',
@@ -35,6 +25,11 @@ interface HistorialData {
   styleUrls: ['./view-registro-modal.component.css']
 })
 export class ViewRegistroModalComponent {
+
+  // ============================
+  // PROPIEDADES DEL COMPONENTE
+  // ============================
+
   /** Datos que se están visualizando (pueden ser del historial o registro completo) */
   datos: any;
 
@@ -53,38 +48,52 @@ export class ViewRegistroModalComponent {
   /** URL temporal para visualizar el consentimiento */
   consentimientoUrl: string | null = null;
 
+  // ============================
+  // CONSTRUCTOR
+  // ============================
+
+  /**
+   * Constructor del componente modal
+   * @param dialogRef Referencia al modal dialog
+   * @param data Datos inyectados que contienen el registro
+   * @param signatureUploadService Servicio para manejo de consentimientos
+   */
   constructor(
     public dialogRef: MatDialogRef<ViewRegistroModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { registro: any }, // Cambiado a any para flexibilidad
+    @Inject(MAT_DIALOG_DATA) public data: { registro: any },
     private signatureUploadService: SignatureUploadService
   ) {
     this.datos = data.registro || {};
-    console.log('Datos recibidos en el modal:', this.datos);
-
-    // Determinar el tipo de datos
     this.tipoDatos = this.determinarTipoDatos();
 
-    // Verificar si hay consentimiento al inicializar el modal
     this.checkConsentimiento();
   }
 
+  // ============================
+  // MÉTODOS DE INICIALIZACIÓN
+  // ============================
+
   /**
    * Determina si los datos son del historial o registro completo
+   * @returns Tipo de datos identificado
    */
   private determinarTipoDatos(): 'historial' | 'registro-completo' {
-    // Si tiene changedAt y operation, es del historial
     if (this.datos.changedAt && this.datos.operation) {
       return 'historial';
     }
-    // Si tiene patientBasicInfo completo, es registro completo
     if (this.datos.patientBasicInfo && this.datos.patientIdentificationNumber) {
       return 'registro-completo';
     }
     return 'historial'; // Por defecto
   }
 
+  // ============================
+  // MÉTODOS DE OBTENCIÓN DE DATOS
+  // ============================
+
   /**
    * Obtiene el número de identificación del paciente (común a ambos tipos)
+   * @returns Número de identificación o null si no está disponible
    */
   getPatientId(): number | null {
     return this.datos.patientIdentificationNumber || null;
@@ -92,18 +101,19 @@ export class ViewRegistroModalComponent {
 
   /**
    * Obtiene la información básica del paciente (adaptado para ambos tipos)
+   * @returns Objeto con información básica del paciente
    */
   getPatientBasicInfo(): any {
     if (this.tipoDatos === 'registro-completo') {
       return this.datos.patientBasicInfo || {};
     } else {
-      // Para historial, intentar obtener de _fullData o devolver objeto vacío
       return this.datos.patientBasicInfo || this.datos._fullData?.patientBasicInfo || {};
     }
   }
 
   /**
    * Obtiene las variables de investigación (adaptado para ambos tipos)
+   * @returns Array de variables de investigación
    */
   getVariables(): any[] {
     if (this.tipoDatos === 'registro-completo') {
@@ -112,7 +122,6 @@ export class ViewRegistroModalComponent {
         : null;
       return mainInfo?.variablesInfo || [];
     } else {
-      // Para historial
       return this.datos.isResearchLayerGroup?.variables ||
         this.datos.variables ||
         this.datos._fullData?.isResearchLayerGroup?.variables || [];
@@ -121,6 +130,7 @@ export class ViewRegistroModalComponent {
 
   /**
    * Obtiene la información de la capa de investigación
+   * @returns Objeto con información de la capa
    */
   getLayerInfo(): any {
     if (this.tipoDatos === 'registro-completo') {
@@ -141,16 +151,45 @@ export class ViewRegistroModalComponent {
 
   /**
    * Obtiene la información del cuidador
+   * @returns Objeto con información del cuidador o null si no existe
    */
   getCaregiver(): any {
     return this.datos.caregiver || this.datos._fullData?.caregiver || null;
   }
 
-  // Los demás métodos se mantienen igual pero usan los getters anteriores
+  /**
+   * Obtiene el nombre de la variable (compatible con ambos formatos)
+   * @param variable Variable a obtener nombre
+   * @returns Nombre de la variable
+   */
+  getVariableName(variable: any): string {
+    return variable.variableName || variable.name || 'Variable sin nombre';
+  }
+
+  /**
+   * Obtiene el tipo de variable (compatible con ambos formatos)
+   * @param variable Variable a obtener tipo
+   * @returns Tipo de variable
+   */
+  getVariableType(variable: any): string {
+    return variable.variableType || variable.type || 'Tipo no especificado';
+  }
+
+  // ============================
+  // MÉTODOS DE NAVEGACIÓN Y UI
+  // ============================
+
+  /**
+   * Cierra el modal
+   */
   onClose(): void {
     this.dialogRef.close();
   }
 
+  /**
+   * Establece la pestaña activa
+   * @param tab Identificador de la pestaña a activar
+   */
   setActiveTab(tab: string): void {
     this.activeTab = tab;
     if (tab === 'consentimiento') {
@@ -158,10 +197,24 @@ export class ViewRegistroModalComponent {
     }
   }
 
+  /**
+   * Verifica si una pestaña está activa
+   * @param tab Identificador de la pestaña a verificar
+   * @returns true si la pestaña está activa
+   */
   isTabActive(tab: string): boolean {
     return this.activeTab === tab;
   }
 
+  // ============================
+  // MÉTODOS DE FORMATEO DE DATOS
+  // ============================
+
+  /**
+   * Formatea una fecha para mostrar en la interfaz
+   * @param dateValue Valor de fecha a formatear
+   * @returns Fecha formateada o mensaje de no disponible
+   */
   formatDate(dateValue: string | null): string {
     if (!dateValue) return 'No disponible';
     try {
@@ -172,6 +225,11 @@ export class ViewRegistroModalComponent {
     }
   }
 
+  /**
+   * Formatea el valor de una variable para mostrar
+   * @param variable Variable a formatear
+   * @returns Valor formateado de la variable
+   */
   formatVariableValue(variable: any): string {
     if (!variable) return 'No definido';
 
@@ -187,14 +245,41 @@ export class ViewRegistroModalComponent {
     return 'No definido';
   }
 
-  hasCaregiver(): boolean {
+  /**
+   * Obtiene un valor seguro, evitando valores nulos o undefined
+   * @param value Valor a verificar
+   * @param defaultValue Valor por defecto (opcional)
+   * @returns Valor seguro o valor por defecto
+   */
+  getSafeValue(value: any, defaultValue: string = 'No disponible'): any {
+    return value !== null && value !== undefined ? value : defaultValue;
+  }
+
+  // ============================
+  // MÉTODOS DE VALIDACIÓN
+  // ============================
+
+  /**
+   * Verifica si existe información de cuidador
+   * @returns true si existe información de cuidador
+   */
+  hasCaregiverData(): boolean {
     const caregiver = this.getCaregiver();
     return !!caregiver && Object.keys(caregiver).length > 0;
   }
 
-  getSafeValue(value: any, defaultValue: string = 'No disponible'): any {
-    return value !== null && value !== undefined ? value : defaultValue;
+  /**
+   * Verifica si el objeto de información básica del paciente está vacío
+   * @returns true si la información básica está vacía
+   */
+  isPatientBasicInfoEmpty(): boolean {
+    const basicInfo = this.getPatientBasicInfo();
+    return !basicInfo || Object.keys(basicInfo).length === 0;
   }
+
+  // ============================
+  // MÉTODOS DE GESTIÓN DE CONSENTIMIENTOS
+  // ============================
 
   /**
    * Verifica si existe consentimiento para este paciente
@@ -222,13 +307,10 @@ export class ViewRegistroModalComponent {
       error: (error) => {
         console.error('Error al verificar consentimiento:', error);
 
-        // Manejar específicamente el error 404 (archivo no encontrado)
         if (error.status === 404) {
           this.hasConsentimiento = false;
           this.consentimientoUrl = null;
-          console.log(`No se encontró consentimiento para el paciente ${patientId}`);
         } else {
-          // Para otros errores, podrías mostrar un mensaje al usuario
           console.error('Error inesperado al verificar consentimiento:', error);
         }
 
@@ -237,6 +319,9 @@ export class ViewRegistroModalComponent {
     });
   }
 
+  /**
+   * Descarga el consentimiento del paciente
+   */
   downloadConsentimiento(): void {
     const patientId = this.getPatientId();
     if (!patientId || !this.consentimientoUrl) return;
@@ -256,13 +341,15 @@ export class ViewRegistroModalComponent {
         this.loadingConsentimiento = false;
       },
       error: (error) => {
-        console.error('Error al descargar consentimiento:', error);
         Swal.fire('Error', 'No se pudo descargar el consentimiento', 'error');
         this.loadingConsentimiento = false;
       }
     });
   }
 
+  /**
+   * Abre el consentimiento en una nueva pestaña
+   */
   viewConsentimiento(): void {
     if (this.consentimientoUrl) {
       window.open(this.consentimientoUrl, '_blank');
@@ -270,24 +357,10 @@ export class ViewRegistroModalComponent {
   }
 
   /**
-   * Método para obtener el nombre de la variable (compatible con ambos formatos)
+   * Verifica si tiene cuidador o no
    */
-  getVariableName(variable: any): string {
-    return variable.variableName || variable.name || 'Variable sin nombre';
-  }
-
-  /**
-   * Método para obtener el tipo de variable (compatible con ambos formatos)
-   */
-  getVariableType(variable: any): string {
-    return variable.variableType || variable.type || 'Tipo no especificado';
-  }
-
-  /**
- * Verifica si el objeto de información básica del paciente está vacío
- */
-  isPatientBasicInfoEmpty(): boolean {
-    const basicInfo = this.getPatientBasicInfo();
-    return !basicInfo || Object.keys(basicInfo).length === 0;
+  hasCaregiver(): boolean {
+    const caregiver = this.getCaregiver();
+    return !!caregiver && Object.keys(caregiver).length > 0;
   }
 }

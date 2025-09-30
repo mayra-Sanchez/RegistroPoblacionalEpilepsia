@@ -17,294 +17,483 @@
  */
 
 /* ==================== 1. Controles Superiores ==================== */
-/**
- * Contenedor principal de controles (filtros, búsqueda)
- */
+/* ============ TABLA DE HISTORIAL DE REGISTROS ============ */
+
+/* ============ CONTROLES DE TABLA ============ */
 .table-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem; /* Espaciado entre grupos */
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    background-color: #f8f9fa; /* Fondo gris claro */
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/**
- * Grupos de controles individuales (filtros, selectores)
- */
 .control-group {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem; /* Espaciado interno */
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.control-group label {
-    font-weight: 500;
-    color: #495057; /* Gris oscuro */
-    white-space: nowrap; /* Evita salto de línea */
+.table-controls label {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #4a5568;
+  white-space: nowrap;
 }
 
-/**
- * Estilos base para inputs y selects
- */
-select, input {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ced4da; /* Borde gris */
-    border-radius: 0.375rem; /* Bordes redondeados */
-    font-size: 0.875rem; /* 14px */
-    background-color: white;
-    transition: border-color 0.15s ease-in-out; /* Transición suave */
+.table-controls select {
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  min-width: 120px;
 }
 
-select:focus, input:focus {
-    outline: none;
-    border-color: #86b7fe; /* Azul claro */
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Sombra de foco */
+.table-controls select:hover {
+  border-color: #cbd5e0;
 }
 
-/**
- * Barra de búsqueda con icono
- */
+.table-controls select:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+/* ============ BARRA DE BÚSQUEDA ============ */
 .search-bar {
-    position: relative;
-    flex-grow: 1; /* Crecimiento flexible */
-    min-width: 200px;
-    max-width: 400px;
+  position: relative;
+  flex: 1 1 100%;
+  min-width: 200px;
+  max-width: 400px;
+  margin: 0.5rem 0;
 }
 
 .search-bar input {
-    width: 100%;
-    padding-left: 2.25rem; /* Espacio para icono */
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.search-bar input::placeholder {
+  color: #a0aec0;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
 }
 
 .search-bar i {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6c757d; /* Gris medio */
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  font-size: 0.875rem;
+  pointer-events: none;
 }
 
-/* ==================== 2. Estilos de Tabla ==================== */
-/**
- * Contenedor para scroll horizontal
- */
+/* ============ TABLA HISTORIAL ============ */
 .table-container {
-    width: 100%;
-    overflow-x: auto; /* Scroll horizontal en móviles */
-    margin-bottom: 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: white;
 }
 
-/**
- * Estilos base de tabla
- */
 table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem; /* 14px base */
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 600px;
 }
 
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #dee2e6; /* Borde divisorio */
+thead {
+  background-color: #2D9FEF;
+  color: white;
+  position: sticky;
+  top: 0;
 }
 
-/**
- * Cabeceras de tabla
- */
 th {
-    background-color: #2D9FEF; /* Azul corporativo */
-    color: white;
-    font-weight: 600;
-    position: relative;
-    cursor: pointer; /* Indica que es clickeable */
-    user-select: none; /* Evita selección de texto */
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+th:hover {
+  background-color: #2488d8;
 }
 
 th.sorted {
-    background-color: #2488d8; /* Azul más oscuro al ordenar */
+  background-color: #1c6ea4;
 }
 
-.sort-icon {
-    margin-left: 0.5rem; /* Espaciado para icono */
+th .sort-icon {
+  margin-left: 0.5rem;
+  opacity: 0.7;
 }
 
-/* ==================== 3. Acciones y Botones ==================== */
-/**
- * Contenedor de botones de acción
- */
+th.asc .sort-icon,
+th.desc .sort-icon {
+  opacity: 1;
+}
+
+td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #edf2f7;
+  color: #4a5568;
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* ============ ACCIONES HISTORIAL ============ */
 .actions {
-    display: flex;
-    gap: 0.5rem; /* Espaciado entre botones */
-    justify-content: flex-end; /* Alineado a la derecha */
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
-/**
- * Botones de acción circular
- */
 .action-btn {
-    width: 2rem;
-    height: 2rem;
-    border: none;
-    border-radius: 50%; /* Forma circular */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease; /* Transición suave */
-    background-color: transparent;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: transparent;
 }
 
 .action-btn i {
-    font-size: 0.875rem; /* 14px */
+  font-size: 0.875rem;
 }
 
-/* Colores específicos para cada acción */
-.action-btn.view { color: #17a2b8; } /* Turquesa */
-.action-btn.edit { color: #ffc107; } /* Amarillo */
-.action-btn.delete { color: #dc3545; } /* Rojo */
-
-.action-btn:hover {
-    transform: scale(1.1); /* Efecto de zoom */
-    opacity: 0.9;
+.action-btn.view {
+  color: #3182ce;
 }
 
-/* ==================== 4. Estados Especiales ==================== */
-/**
- * Indicador de carga
- */
-.loading-indicator {
-    padding: 2rem;
-    text-align: center;
-    color: #6c757d; /* Gris medio */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.75rem;
+.action-btn.view:hover {
+  background-color: #ebf8ff;
+  transform: scale(1.1);
 }
 
-.loading-indicator i {
-    font-size: 1.25rem; /* 20px */
-    animation: spin 1s linear infinite; /* Animación de rotación */
+.action-btn.edit {
+  color: #d69e2e;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.action-btn.edit:hover {
+  background-color: #fffaf0;
+  transform: scale(1.1);
 }
 
-/**
- * Estado sin datos
- */
-.no-data {
-    padding: 2rem;
-    text-align: center;
-    color: #6c757d; /* Gris medio */
-    font-style: italic;
+.action-btn.delete {
+  color: #e53e3e;
 }
 
-/* ==================== 5. Paginación ==================== */
+.action-btn.delete:hover {
+  background-color: #fff5f5;
+  transform: scale(1.1);
+}
+
+/* ============ PAGINACIÓN ============ */
 .pagination-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1.5rem;
-    flex-wrap: wrap; /* Ajuste en móviles */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .pagination-controls button {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #dee2e6; /* Borde gris */
-    background-color: white;
-    color: #2D9FEF; /* Azul corporativo */
-    cursor: pointer;
-    border-radius: 0.375rem; /* Bordes redondeados */
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2.5rem; /* Ancho mínimo */
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  color: #4a5568;
+  min-width: 40px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pagination-controls button:hover:not(:disabled) {
-    background-color: #e9ecef; /* Gris muy claro */
+  background-color: #4299e1;
+  color: white;
+  border-color: #4299e1;
+  transform: translateY(-1px);
 }
 
 .pagination-controls button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    color: #6c757d; /* Gris medio */
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.page-info {
-    padding: 0 1rem;
-    color: #495057; /* Gris oscuro */
+.pagination-controls span {
+  font-size: 0.875rem;
+  color: #718096;
+  font-weight: 500;
 }
 
-/* ==================== 6. Media Queries Responsive ==================== */
+/* ============ ESTADOS ADICIONALES ============ */
+.loading-indicator {
+  padding: 2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.95);
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.loading-indicator i {
+  font-size: 1.25rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+  font-style: italic;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* ============ BADGES PARA TIPOS DE DATOS ============ */
+.data-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-date {
+  background-color: #e6fffa;
+  color: #234e52;
+  border: 1px solid #81e6d9;
+}
+
+.badge-count {
+  background-color: #ebf8ff;
+  color: #1a365d;
+  border: 1px solid #90cdf4;
+}
+
+.badge-default {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+/* ============ RESPONSIVE IMPROVEMENTS ============ */
+@media (max-width: 1024px) {
+  .table-controls {
+    gap: 1rem;
+    padding: 0.75rem;
+  }
+
+  .control-group {
+    flex: 1 1 200px;
+  }
+
+  .search-bar {
+    flex: 1 1 100%;
+    max-width: 100%;
+    order: 1;
+  }
+
+  table {
+    min-width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
-    .table-controls {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-    }
-    
-    .control-group {
-        width: 100%;
-    }
-    
-    .search-bar {
-        max-width: 100%;
-    }
-    
-    th, td {
-        padding: 0.75rem;
-        font-size: 0.8125rem; /* 13px */
-    }
-    
-    .actions {
-        gap: 0.25rem;
-    }
-    
-    .action-btn {
-        width: 1.75rem;
-        height: 1.75rem;
-    }
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .control-group {
+    width: 100%;
+    flex: none;
+    justify-content: space-between;
+  }
+
+  .search-bar {
+    order: -1;
+    margin-bottom: 0.5rem;
+  }
+
+  th, td {
+    padding: 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  th {
+    font-size: 0.7rem;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+
+  .action-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .action-btn i {
+    font-size: 0.75rem;
+  }
+
+  .pagination-controls {
+    gap: 0.5rem;
+  }
+
+  .loading-indicator {
+    padding: 1.5rem;
+    font-size: 0.875rem;
+  }
 }
 
-@media (max-width: 576px) {
-    th, td {
-        padding: 0.5rem;
-        font-size: 0.75rem; /* 12px */
-    }
-    
-    .pagination-controls {
-        gap: 0.25rem;
-    }
-    
-    .pagination-controls button {
-        padding: 0.25rem 0.5rem;
-        min-width: 2rem;
-    }
-    
-    .page-info {
-        padding: 0 0.5rem;
-        font-size: 0.875rem; /* 14px */
-    }
-    
-    .control-group label {
-        font-size: 0.875rem; /* 14px */
-    }
-    
-    select, input {
-        padding: 0.375rem 0.75rem;
-    }
+@media (max-width: 480px) {
+  .table-controls {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .table-controls select {
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    min-width: 100px;
+  }
+
+  .search-bar input {
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+  }
+
+  .search-bar i {
+    right: 0.75rem;
+  }
+
+  th, td {
+    padding: 0.5rem;
+  }
+
+  .pagination-controls button {
+    padding: 0.4rem 0.8rem;
+    min-width: 35px;
+  }
+
+  .data-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .pagination-controls {
+    gap: 0.5rem;
+  }
+
+  .pagination-controls button {
+    padding: 0.4rem 0.6rem;
+    min-width: 30px;
+  }
+
+  .pagination-controls span {
+    font-size: 0.8125rem;
+  }
+
+  .table-controls label {
+    font-size: 0.8125rem;
+  }
+}
+
+/* ============ ESTILOS ESPECÍFICOS PARA HISTORIAL ============ */
+.historial-table {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.historial-table thead {
+  background: linear-gradient(135deg, #2D9FEF 0%, #1c6ea4 100%);
+}
+
+.historial-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.historial-table tbody tr:hover {
+  background-color: #f0f7ff;
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.15);
+}
+
+/* Destacar cambios importantes */
+.change-highlight {
+  background-color: #fffaf0;
+  border-left: 3px solid #d69e2e;
+}
+
+.change-critical {
+  background-color: #fff5f5;
+  border-left: 3px solid #e53e3e;
 }

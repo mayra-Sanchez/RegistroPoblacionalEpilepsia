@@ -127,8 +127,13 @@
             </button>
             <button class="action-btn success" (click)="openConsentimientoModal()">
               <i class="fas fa-file-signature"></i>
-              <span>Consentimiento</span>
+              <span>Firma del consentimiento</span>
               <small>Documentación</small>
+            </button>
+            <button class="action-btn dark" (click)="openUploadConsentimientoModal()">
+              <i class="fas fa-upload"></i>
+              <span>Subir Consentimiento</span>
+              <small>Cargar documento</small>
             </button>
             <button class="action-btn warning" (click)="refreshData()">
               <i class="fas fa-sync-alt"></i>
@@ -172,7 +177,6 @@
                     <span class="recent-operation" [ngClass]="getOperacionClass(registro.operacionOriginal)">
                       {{ registro.operacion }}
                     </span>
-                    <span class="recent-date">{{ registro.fechaCambio }}</span>
                   </div>
                   <span class="recent-responsible">Por: {{ registro.realizadoPor }}</span>
                 </div>
@@ -199,10 +203,12 @@
 
     <div *ngIf="selectedTab === 'listadoPacientes'">
       <div class="mb-4">
-        <button class="version-btn" (click)="openVersionamientoModal()" [disabled]="!selectedLayerId">
-          <i class="pi pi-history"></i>
-          <span>Historial de cambios</span>
-          <i class="pi pi-chevron-right"></i>
+        <button class="history-btn modern" (click)="openVersionamientoModal()" [disabled]="!selectedLayerId">
+          <div class="btn-content">
+            <i class="pi pi-history btn-icon"></i>
+            <span class="btn-text">Historial de cambios</span>
+            <i class="pi pi-chevron-right btn-arrow"></i>
+          </div>
         </button>
       </div>
 
@@ -225,4 +231,11 @@
       </app-consentimiento-informado>
     </div>
   </div>
+</div>
+
+
+<div class="modal-overlay-consentimiento" *ngIf="showUploadConsentimientoModal">
+    <app-upload-consentimiento (uploadComplete)="handleUploadComplete($event)"
+      (cancel)="closeUploadConsentimientoModal()">
+    </app-upload-consentimiento>
 </div>

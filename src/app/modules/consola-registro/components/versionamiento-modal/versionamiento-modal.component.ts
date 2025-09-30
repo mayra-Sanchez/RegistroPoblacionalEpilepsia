@@ -2,7 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin, Observable } from 'rxjs';
-
+import { SelectionModel } from '@angular/cdk/collections';
 // Services
 import { ConsolaRegistroService } from 'src/app/services/register.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -68,13 +68,13 @@ export class VersionamientoModalComponent implements OnInit {
   //#region Propiedades de Estado
   /** Indica si se está cargando datos generales */
   loading = false;
-  
+
   /** Número de identificación del paciente */
   patientIdentificationNumber?: number;
-  
+
   /** Información del paciente */
   patientInfo: PatientInfo | null = null;
-  
+
   /** Formulario de búsqueda */
   searchForm: FormGroup;
 
@@ -82,10 +82,10 @@ export class VersionamientoModalComponent implements OnInit {
   loadingBasicInfo = false;
   loadingCaregiver = false;
   loadingVariables = false;
-  
+
   /** Página actual para cargar más versiones */
   private currentVersionPage = 0;
-  
+
   /** Indica si hay más versiones por cargar */
   private hasMoreVersions = true;
 
@@ -116,6 +116,57 @@ export class VersionamientoModalComponent implements OnInit {
     caregiver: 0,
     variables: 0
   };
+
+  //#region Propiedades de Filtros y UI Adicionales
+  /** Mensaje de error */
+  errorMessage: string = '';
+
+  /** Mensaje de éxito */
+  successMessage: string = '';
+
+  /** Modo de vista actual */
+  viewMode: 'timeline' | 'table' | 'summary' = 'timeline';
+
+  /** Versión seleccionada para mostrar detalles */
+  selectedVersion: VersionGroup | null = null;
+  /** Selección para checkboxes */
+  selection = new SelectionModel<VersionGroup>(true, []);
+  /** Indica si se está cargando más versiones */
+  loadingMore: boolean = false;
+
+  /** Filtros aplicados */
+  filters = {
+    sections: {
+      basic: true,
+      caregiver: true,
+      variables: true
+    },
+    operations: [] as string[],
+    searchText: ''
+  };
+
+  /** Operaciones disponibles para filtrar */
+  availableOperations: string[] = [
+    'REGISTER_CREATED_SUCCESSFULL',
+    'UPDATE_PATIENT_BASIC_INFO',
+    'UPDATE_CAREGIVER',
+    'UPDATE_RESEARCH_LAYER'
+  ];
+
+  /** Estadísticas del historial */
+  statistics = {
+    totalVersions: 0,
+    bySection: {
+      basic: 0,
+      caregiver: 0,
+      variables: 0
+    },
+    byOperation: {} as { [key: string]: number }
+  };
+
+  /** Grupos de versiones filtrados */
+  filteredVersionGroups: VersionGroup[] = [];
+  //#endregion
   //#endregion
 
   //#region Propiedades de UI
@@ -139,14 +190,12 @@ export class VersionamientoModalComponent implements OnInit {
     private authService: AuthService,
     private fb: FormBuilder
   ) {
-    // Inicializar datos con valores por defecto
     this.data = data || {
       researchLayerId: '',
       patientIdentificationNumber: undefined,
       pacienteNombre: undefined
     };
 
-    // Crear formulario de búsqueda
     this.searchForm = this.fb.group({
       patientIdentificationNumber: [
         this.data.patientIdentificationNumber || '',
@@ -154,7 +203,6 @@ export class VersionamientoModalComponent implements OnInit {
       ]
     });
 
-    // Pre-cargar número de identificación si está disponible
     if (this.data.patientIdentificationNumber) {
       this.searchForm.patchValue({
         patientIdentificationNumber: this.data.patientIdentificationNumber
@@ -198,9 +246,17 @@ export class VersionamientoModalComponent implements OnInit {
    * Busca y carga los historiales del paciente
    */
   searchPatient(): void {
-    const idNumber = this.getPatientIdentificationNumberFromForm();
-    
-    if (!this.isValidPatientId(idNumber)) {
+    this.searchForm.markAllAsTouched();
+
+    if (this.searchForm.invalid) {
+      this.showError('Por favor corrige los errores en el formulario');
+      return;
+    }
+
+    const idNumber = this.searchForm.get('patientIdentificationNumber')?.value;
+
+    if (!idNumber || idNumber <= 0) {
+      this.showError('El número de identificación debe ser válido');
       return;
     }
 
@@ -208,6 +264,7 @@ export class VersionamientoModalComponent implements OnInit {
     this.loading = true;
     this.patientInfo = null;
     this.versionGroups = [];
+    this.clearAllHistories();
 
     if (!this.data.researchLayerId) {
       this.loading = false;
@@ -216,31 +273,6 @@ export class VersionamientoModalComponent implements OnInit {
     }
 
     this.validateAndLoadPatientData(idNumber);
-  }
-
-  /**
-   * Obtiene el número de identificación del formulario
-   */
-  private getPatientIdentificationNumberFromForm(): number {
-    const value = this.searchForm.get('patientIdentificationNumber')?.value;
-    return Number(value);
-  }
-
-  /**
-   * Valida si el ID del paciente es válido
-   */
-  private isValidPatientId(idNumber: number): boolean {
-    if (!idNumber) {
-      this.showError('Por favor ingresa un número de identificación válido');
-      return false;
-    }
-
-    if (isNaN(idNumber) || idNumber <= 0) {
-      this.showError('El número de identificación debe ser un número válido');
-      return false;
-    }
-
-    return true;
   }
 
   /**
@@ -310,33 +342,55 @@ export class VersionamientoModalComponent implements OnInit {
    * Carga más versiones cuando el usuario hace scroll
    */
   loadMore(): void {
-    if (!this.hasMoreVersions) return;
-    
+    if (!this.hasMoreVersions || this.loadingMore) return;
+
+    this.loadingMore = true;
     this.currentVersionPage++;
-    this.loadAllHistories(this.currentVersionPage);
+
+    forkJoin({
+      basicInfo: this.loadPatientBasicInfoInternal(this.currentVersionPage),
+      caregiver: this.loadCaregiverInfoInternal(this.currentVersionPage),
+      variables: this.loadResearchVariablesInternal(this.currentVersionPage)
+    }).subscribe({
+      next: (results) => {
+        this.updateHistoriesWithPagination(results, this.currentVersionPage);
+        this.groupHistoriesByVersion();
+        this.updateHasMoreVersions(results);
+        this.loadingMore = false;
+      },
+      error: (error) => {
+        this.handleHistoriesError(error);
+        this.loadingMore = false;
+      }
+    });
   }
 
   /**
    * Carga todas las secciones y las agrupa por versión
    */
-  private loadAllHistories(page: number = 0): void {
-    this.loading = page === 0;
+  private loadAllHistories(page: number = 0): Observable<any> {
+    return new Observable(observer => {
+      this.loading = page === 0;
 
-    forkJoin({
-      basicInfo: this.loadPatientBasicInfoInternal(page),
-      caregiver: this.loadCaregiverInfoInternal(page),
-      variables: this.loadResearchVariablesInternal(page)
-    }).subscribe({
-      next: (results) => {
-        this.updateHistoriesWithPagination(results, page);
-        this.groupHistoriesByVersion();
-        this.updateHasMoreVersions(results);
-        this.loading = false;
-      },
-      error: (error) => {
-        this.handleHistoriesError(error);
-        this.loading = false;
-      }
+      forkJoin({
+        basicInfo: this.loadPatientBasicInfoInternal(page),
+        caregiver: this.loadCaregiverInfoInternal(page),
+        variables: this.loadResearchVariablesInternal(page)
+      }).subscribe({
+        next: (results) => {
+          this.updateHistoriesWithPagination(results, page);
+          this.groupHistoriesByVersion();
+          this.updateHasMoreVersions(results);
+          this.loading = false;
+          observer.next(results);
+          observer.complete();
+        },
+        error: (error) => {
+          this.handleHistoriesError(error);
+          this.loading = false;
+          observer.error(error);
+        }
+      });
     });
   }
 
@@ -642,6 +696,10 @@ export class VersionamientoModalComponent implements OnInit {
     });
 
     this.versionGroups = this.sortVersionGroups(groupsMap);
+
+    // Aplicar filtros después de agrupar
+    this.applyFilters();
+    this.updateStatistics();
   }
 
   /**
@@ -669,8 +727,6 @@ export class VersionamientoModalComponent implements OnInit {
     if (item.isPatientBasicInfo) group.hasBasicInfo = true;
     if (item.isCaregiverInfo) group.hasCaregiverInfo = true;
     if (item.isResearchLayerGroup) group.hasResearchVariables = true;
-    
-    // Mantener la operación más reciente o significativa
     if (this.isMoreSignificantOperation(item.operation, group.operation)) {
       group.operation = item.operation;
     }
@@ -690,11 +746,9 @@ export class VersionamientoModalComponent implements OnInit {
   private isMoreSignificantOperation(newOp: string, currentOp: string): boolean {
     const significanceOrder = [
       'REGISTER_CREATED_SUCCESSFULL',
-      'REGISTER_DELETED',
       'UPDATE_PATIENT_BASIC_INFO',
       'UPDATE_CAREGIVER',
-      'UPDATE_RESEARCH_LAYER',
-      'REGISTER_UPDATED'
+      'UPDATE_RESEARCH_LAYER'
     ];
 
     const newIndex = significanceOrder.indexOf(newOp);
@@ -732,7 +786,6 @@ export class VersionamientoModalComponent implements OnInit {
       };
     }
 
-    // Usar el nombre proporcionado si está disponible
     if (this.data.pacienteNombre && this.patientInfo.name.startsWith('Paciente ')) {
       this.patientInfo.name = this.data.pacienteNombre;
     }
@@ -809,8 +862,6 @@ export class VersionamientoModalComponent implements OnInit {
       'UPDATE_PATIENT_BASIC_INFO': 'Información Básica Actualizada',
       'UPDATE_CAREGIVER': 'Cuidador Actualizado',
       'UPDATE_RESEARCH_LAYER': 'Variables Actualizadas',
-      'REGISTER_UPDATED': 'Registro Actualizado',
-      'REGISTER_DELETED': 'Registro Eliminado'
     };
     return operations[operation] || operation;
   }
@@ -823,9 +874,7 @@ export class VersionamientoModalComponent implements OnInit {
       'REGISTER_CREATED_SUCCESSFULL': 'operation-created',
       'UPDATE_PATIENT_BASIC_INFO': 'operation-updated',
       'UPDATE_CAREGIVER': 'operation-updated',
-      'UPDATE_RESEARCH_LAYER': 'operation-updated',
-      'REGISTER_UPDATED': 'operation-updated',
-      'REGISTER_DELETED': 'operation-deleted'
+      'UPDATE_RESEARCH_LAYER': 'operation-updated'
     };
     return classes[operation] || 'operation-default';
   }
@@ -838,9 +887,7 @@ export class VersionamientoModalComponent implements OnInit {
       'REGISTER_CREATED_SUCCESSFULL': 'add_circle',
       'UPDATE_PATIENT_BASIC_INFO': 'edit',
       'UPDATE_CAREGIVER': 'edit',
-      'UPDATE_RESEARCH_LAYER': 'edit',
-      'REGISTER_UPDATED': 'edit',
-      'REGISTER_DELETED': 'delete'
+      'UPDATE_RESEARCH_LAYER': 'edit'
     };
     return icons[operation] || 'history';
   }
@@ -940,19 +987,465 @@ export class VersionamientoModalComponent implements OnInit {
   }
 
   /**
-   * Muestra un mensaje de error
-   */
-  private showError(message: string): void {
-    console.error(message);
-    // En una implementación real, usarías un servicio de notificaciones
-    alert(message);
-  }
-
-  /**
    * Cierra el modal
    */
   close(): void {
     this.dialogRef.close();
   }
+
+  //#region Métodos de Filtrado y Búsqueda
+  /**
+   * Maneja el cambio de filtros
+   */
+  onFilterChange(): void {
+    this.applyFilters();
+  }
+
+  /**
+   * Maneja el cambio de filtros de operación - CORREGIDO
+   */
+  onOperationFilterChange(operation: string, event: any): void {
+    if (event.selected) {
+      if (!this.filters.operations.includes(operation)) {
+        this.filters.operations = [...this.filters.operations, operation];
+      }
+    } else {
+      this.filters.operations = this.filters.operations.filter(op => op !== operation);
+    }
+    this.applyFilters();
+  }
+
+  /**
+   * Maneja el cambio en los checkboxes de secciones - NUEVO MÉTODO
+   */
+  onSectionFilterChange(section: keyof typeof this.filters.sections, event: any): void {
+    this.filters.sections[section] = event.checked;
+    this.applyFilters();
+  }
+
+  /**
+   * Maneja el cambio en la búsqueda rápida - MEJORADO
+   */
+  onSearchChange(searchText: string): void {
+    this.filters.searchText = searchText.trim().toLowerCase();
+    this.applyFilters();
+  }
+
+
+  /**
+ * Aplica todos los filtros a los grupos de versiones - OPTIMIZADO
+ */
+  applyFilters(): void {
+    if (this.versionGroups.length === 0) {
+      this.filteredVersionGroups = [];
+      this.updateStatistics();
+      return;
+    }
+
+    this.filteredVersionGroups = this.versionGroups.filter(group => {
+
+      const sectionMatch = this.checkSectionFilter(group);
+
+
+      const operationMatch = this.checkOperationFilter(group);
+
+
+      const searchMatch = this.checkSearchFilter(group);
+
+      return sectionMatch && operationMatch && searchMatch;
+    });
+
+    this.updateStatistics();
+  }
+
+  /**
+   * Verifica si el grupo pasa el filtro de secciones
+   */
+  private checkSectionFilter(group: VersionGroup): boolean {
+    const { basic, caregiver, variables } = this.filters.sections;
+
+    if (!basic && !caregiver && !variables) {
+      return false;
+    }
+
+    return (basic && group.hasBasicInfo) ||
+      (caregiver && group.hasCaregiverInfo) ||
+      (variables && group.hasResearchVariables);
+  }
+
+  /**
+   * Verifica si el grupo pasa el filtro de operaciones
+   */
+  private checkOperationFilter(group: VersionGroup): boolean {
+    if (this.filters.operations.length === 0) {
+      return true;
+    }
+
+    // Verificar si la operación del grupo está en los filtros
+    return this.filters.operations.includes(group.operation);
+  }
+
+  /**
+   * Verifica si el grupo pasa el filtro de búsqueda
+   */
+  private checkSearchFilter(group: VersionGroup): boolean {
+    if (!this.filters.searchText) {
+      return true;
+    }
+
+    return this.searchInVersionGroup(group, this.filters.searchText);
+  }
+
+  /**
+   * Busca texto en un grupo de versión
+   */
+  private searchInVersionGroup(group: VersionGroup, searchText: string): boolean {
+    const searchTerms = searchText.toLowerCase().split(' ').filter(term => term.length > 0);
+
+    return searchTerms.every(term =>
+      group.changedBy.toLowerCase().includes(term) ||
+      group.operation.toLowerCase().includes(term) ||
+      this.getOperationText(group.operation).toLowerCase().includes(term) ||
+      this.formatDate(group.changedAt).toLowerCase().includes(term) ||
+      group.registerId.toLowerCase().includes(term) ||
+      this.searchInVersionData(group, term)
+    );
+  }
+
+  /**
+   * Busca texto en los datos de la versión
+   */
+  private searchInVersionData(group: VersionGroup, searchText: string): boolean {
+    for (const item of group.items) {
+      if (item.isPatientBasicInfo && this.searchInObject(item.isPatientBasicInfo, searchText)) {
+        return true;
+      }
+      if (item.isCaregiverInfo && this.searchInObject(item.isCaregiverInfo, searchText)) {
+        return true;
+      }
+      if (item.isResearchLayerGroup && this.searchInObject(item.isResearchLayerGroup, searchText)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Busca texto en un objeto
+   */
+  private searchInObject(obj: any, searchText: string): boolean {
+    if (!obj || typeof obj !== 'object') return false;
+
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+
+        if (value !== null && value !== undefined) {
+          const stringValue = Array.isArray(value)
+            ? value.map(v => this.getFormattedValue(v)).join(' ')
+            : this.getFormattedValue(value);
+
+          if (stringValue.toLowerCase().includes(searchText)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Limpia todos los filtros
+   */
+  clearFilters(): void {
+    this.filters = {
+      sections: {
+        basic: true,
+        caregiver: true,
+        variables: true
+      },
+      operations: [],
+      searchText: ''
+    };
+
+    this.applyFilters();
+
+    this.showSuccess('Filtros limpiados correctamente');
+  }
+
+  /**
+   * Verifica si hay filtros activos - MEJORADO
+   */
+  hasActiveFilters(): boolean {
+    const hasSectionFilters =
+      !this.filters.sections.basic ||
+      !this.filters.sections.caregiver ||
+      !this.filters.sections.variables;
+
+    const hasOperationFilters = this.filters.operations.length > 0;
+    const hasSearchFilter = this.filters.searchText !== '';
+
+    return hasSectionFilters || hasOperationFilters || hasSearchFilter;
+  }
+
   //#endregion
+
+  //#region Métodos de Vista y Navegación
+  /**
+   * Cambia el modo de vista
+   */
+  setViewMode(mode: 'timeline' | 'table' | 'summary'): void {
+    this.viewMode = mode;
+  }
+
+  /**
+   * Alterna la visualización de detalles de una versión
+   */
+  toggleVersion(version: VersionGroup): void {
+    this.selectedVersion = this.selectedVersion === version ? null : version;
+  }
+
+  /**
+   * Carga más versiones (para infinite scroll)
+   */
+  loadMoreVersions(): void {
+    if (this.loadingMore || !this.hasMoreVersions) return;
+
+    this.loadingMore = true;
+    this.currentVersionPage++;
+
+    this.loadAllHistories(this.currentVersionPage).subscribe({
+      next: () => {
+        this.loadingMore = false;
+        this.applyFilters(); 
+      },
+      error: () => {
+        this.loadingMore = false;
+      }
+    });
+  }
+  //#endregion
+
+  //#region Métodos de Estadísticas
+  /**
+   * Actualiza las estadísticas
+   */
+  private updateStatistics(): void {
+    const groups = this.filteredVersionGroups;
+
+    this.statistics = {
+      totalVersions: groups.length,
+      bySection: {
+        basic: groups.filter(g => g.hasBasicInfo).length,
+        caregiver: groups.filter(g => g.hasCaregiverInfo).length,
+        variables: groups.filter(g => g.hasResearchVariables).length
+      },
+      byOperation: this.calculateOperationStats(groups)
+    };
+  }
+
+  /**
+   * Calcula estadísticas por operación
+   */
+  private calculateOperationStats(groups: VersionGroup[]): { [key: string]: number } {
+    const stats: { [key: string]: number } = {};
+
+    groups.forEach(group => {
+      stats[group.operation] = (stats[group.operation] || 0) + 1;
+    });
+
+    return stats;
+  }
+
+  /**
+   * Obtiene estadísticas de operaciones para mostrar
+   */
+  getOperationStats(): Array<{ operation: string, count: number, percentage: number }> {
+    const total = this.statistics.totalVersions;
+    if (total === 0) return [];
+
+    return Object.entries(this.statistics.byOperation)
+      .map(([operation, count]) => ({
+        operation,
+        count,
+        percentage: (count / total) * 100
+      }))
+      .sort((a, b) => b.count - a.count);
+  }
+  //#endregion
+
+  //#region Métodos de Utilidad Adicionales
+  /**
+   * Muestra un mensaje de éxito
+   */
+  private showSuccess(message: string): void {
+    this.successMessage = message;
+    this.errorMessage = '';
+
+    setTimeout(() => {
+      this.successMessage = '';
+    }, 5000);
+  }
+
+  /**
+   * Muestra un mensaje de error (sobrescribe el método existente)
+   */
+  private showError(message: string): void {
+    this.errorMessage = message;
+    this.successMessage = '';
+
+    // Auto-ocultar después de 5 segundos
+    setTimeout(() => {
+      this.errorMessage = '';
+    }, 5000);
+  }
+
+  /**
+   * Obtiene el nombre de la clase CSS para la barra de progreso de operación
+   */
+  getOperationProgressBarClass(operation: string): string {
+    const classMap: { [key: string]: string } = {
+      'REGISTER_CREATED_SUCCESSFULL': 'progress-created',
+      'UPDATE_PATIENT_BASIC_INFO': 'progress-updated',
+      'UPDATE_CAREGIVER': 'progress-updated',
+      'UPDATE_RESEARCH_LAYER': 'progress-updated'
+    };
+    return classMap[operation] || 'progress-default';
+  }
+  //#endregion
+  /**
+   * Alterna el filtro de sección
+   */
+  toggleSectionFilter(section: string, event: any): void {
+    this.filters.sections[section as keyof typeof this.filters.sections] = event.selected;
+    this.applyFilters();
+  }
+
+  /**
+   * Alterna el filtro de operación
+   */
+  toggleOperationFilter(operation: string, event: any): void {
+    if (event.selected) {
+      this.filters.operations.push(operation);
+    } else {
+      this.filters.operations = this.filters.operations.filter(op => op !== operation);
+    }
+    this.applyFilters();
+  }
+  //#endregion
+
+  //#region Métodos de Selección Múltiple
+  /**
+   * Verifica si todos los elementos están seleccionados
+   */
+  isAllSelected(): boolean {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.filteredVersionGroups.length;
+    return numSelected === numRows && numRows > 0;
+  }
+
+  /**
+   * Alterna la selección de todas las filas
+   */
+  toggleAllVersions(): void {
+    if (this.isAllSelected()) {
+      this.selection.clear();
+      return;
+    }
+    this.selection.select(...this.filteredVersionGroups);
+  }
+
+  /**
+   * Obtiene el tiempo relativo (hace x tiempo)
+   */
+  getTimeAgo(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffSecs = Math.floor(diffMs / 1000);
+      const diffMins = Math.floor(diffSecs / 60);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffDays > 0) {
+        return `hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
+      } else if (diffHours > 0) {
+        return `hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
+      } else if (diffMins > 0) {
+        return `hace ${diffMins} minuto${diffMins !== 1 ? 's' : ''}`;
+      } else {
+        return 'hace unos segundos';
+      }
+    } catch (error) {
+      return '';
+    }
+  }
+  //#endregion
+
+  //#region Métodos de Exportación
+  /**
+   * Exporta el historial a diferentes formatos
+   */
+  exportHistory(): void {
+    if (this.selection.hasValue()) {
+      const dataToExport = this.selection.selected;
+      this.downloadExport(dataToExport, 'versiones-seleccionadas');
+    } else {
+      const dataToExport = this.filteredVersionGroups;
+      this.downloadExport(dataToExport, 'historial-completo');
+    }
+  }
+
+  /**
+   * Descarga el archivo de exportación
+   */
+  private downloadExport(data: VersionGroup[], filename: string): void {
+
+    const csvContent = this.convertToCSV(data);
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${filename}-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      this.showSuccess('Historial exportado correctamente');
+    }
+  }
+
+  /**
+   * Convierte los datos a formato CSV
+   */
+  private convertToCSV(data: VersionGroup[]): string {
+    const headers = ['Fecha', 'Operación', 'Autor', 'Secciones', 'Register ID'];
+    const rows = data.map(version => [
+      this.formatDate(version.changedAt),
+      this.getOperationText(version.operation),
+      version.changedBy,
+      this.getSectionsText(version),
+      version.registerId
+    ]);
+
+    return [headers, ...rows]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+  }
+
+  /**
+   * Obtiene texto de secciones para exportación
+   */
+  private getSectionsText(version: VersionGroup): string {
+    const sections = [];
+    if (version.hasBasicInfo) sections.push('Información Básica');
+    if (version.hasCaregiverInfo) sections.push('Cuidador');
+    if (version.hasResearchVariables) sections.push('Variables');
+    return sections.join(', ');
+  }
 }

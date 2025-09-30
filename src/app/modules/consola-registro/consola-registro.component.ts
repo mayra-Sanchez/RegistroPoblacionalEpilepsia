@@ -82,6 +82,9 @@ export class ConsolaRegistroComponent implements OnInit {
   /** Controla la visibilidad del modal de edición */
   showEditModal: boolean = false;
 
+  /** Variables para controlar el modal */
+  showUploadConsentimientoModal: boolean = false;
+
   /** Registro seleccionado para edición */
   selectedRegistro: Register | null = null;
 
@@ -160,7 +163,6 @@ export class ConsolaRegistroComponent implements OnInit {
         return;
       }
 
-      // Intentar recuperar la capa seleccionada previamente
       const savedLayerId = localStorage.getItem('selectedLayerId');
       let initialLayerId = this.availableLayers[0].id;
 
@@ -169,11 +171,10 @@ export class ConsolaRegistroComponent implements OnInit {
       }
 
       await this.loadCapaInvestigacion(initialLayerId);
-      this.loadHistorial(); // Cargar historial en lugar de registros
+      this.loadHistorial();
       this.loadVariablesDeCapa(initialLayerId);
 
     } catch (error) {
-      console.error('Error en ngOnInit:', error);
       this.selectedLayerId = '';
     } finally {
       this.isLoading = false;
@@ -218,7 +219,6 @@ export class ConsolaRegistroComponent implements OnInit {
     this.refreshData();
     this.lastUpdate = new Date();
 
-    // Mostrar feedback al usuario
     Swal.fire({
       title: '¡Éxito!',
       text: 'Registro guardado correctamente',
@@ -261,7 +261,6 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
-    // Validar que el usuario tenga acceso a la capa seleccionada
     const layerIds = this.userData?.attributes?.researchLayerId;
     if (!layerIds?.includes(layerId)) {
       this.handleError('La capa seleccionada no está asignada a este usuario');
@@ -278,7 +277,7 @@ export class ConsolaRegistroComponent implements OnInit {
 
       this.loadCapaInvestigacion(layerId)
         .then(() => {
-          this.loadHistorial(0, 5); // ← Cargar registros recientes
+          this.loadHistorial(0, 5);
           this.loadVariablesDeCapa(layerId);
           this.refreshData();
 
@@ -294,7 +293,6 @@ export class ConsolaRegistroComponent implements OnInit {
           }
         })
         .catch(error => {
-          console.error('onLayerChange: Error changing layer:', error);
           this.handleError('Error al cambiar de capa de investigación');
           const layerIds = this.userData?.attributes?.researchLayerId;
           this.selectedLayerId = layerIds && layerIds.length > 0 ? layerIds[0] : '';
@@ -340,9 +338,7 @@ export class ConsolaRegistroComponent implements OnInit {
    * @param item Elemento del historial a visualizar
    */
   handleView(item: any): void {
-    console.log('Abriendo modal para:', item);
 
-    // Obtener el patientIdentificationNumber del objeto correcto
     const patientId = item.patientIdentificationNumber ||
       item._fullData?.patientIdentificationNumber ||
       (item.documento && parseInt(item.documento));
@@ -370,7 +366,6 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
-    // Mostrar loading
     Swal.fire({
       title: 'Cargando información...',
       text: 'Por favor espere',
@@ -380,13 +375,12 @@ export class ConsolaRegistroComponent implements OnInit {
       }
     });
 
-    // Cargar datos actuales del paciente
     this.consolaService.getActualRegisterByPatient(patientId, researchLayerId).subscribe({
       next: (registroActual) => {
         Swal.close();
 
         if (!registroActual) {
-          this.mostrarModalConDatosHistorial(item); // Fallback a datos del historial
+          this.mostrarModalConDatosHistorial(item);
           return;
         }
 
@@ -395,8 +389,6 @@ export class ConsolaRegistroComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar datos actuales:', error);
         Swal.close();
-
-        // Fallback: usar datos del historial si no se pueden cargar los actuales
         this.mostrarModalConDatosHistorial(item);
       }
     });
@@ -406,20 +398,14 @@ export class ConsolaRegistroComponent implements OnInit {
    * Maneja la edición de un registro
    * @param item Elemento del historial a editar
    */
-  /**
-   * Maneja la edición de un registro
-   * @param item Elemento del historial a editar
-   */
   handleEdit(item: any): void {
     console.log('🔄 Iniciando edición para:', item);
 
-    // Obtener el ID del paciente del item del historial
     const patientId = item.patientIdentificationNumber ||
       item._fullData?.patientIdentificationNumber ||
       (item.documento && parseInt(item.documento));
 
     if (!patientId) {
-      console.error('❌ No se puede identificar al paciente para editar', item);
       Swal.fire({
         title: 'Error',
         text: 'No se puede identificar al paciente para editar',
@@ -439,7 +425,6 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
-    // Mostrar loading
     Swal.fire({
       title: 'Cargando datos...',
       text: 'Preparando formulario de edición',
@@ -449,7 +434,6 @@ export class ConsolaRegistroComponent implements OnInit {
       }
     });
 
-    // Cargar los datos actuales del paciente para editar
     this.consolaService.getActualRegisterByPatient(patientId, this.selectedLayerId).subscribe({
       next: (registroActual) => {
         Swal.close();
@@ -463,11 +447,9 @@ export class ConsolaRegistroComponent implements OnInit {
           return;
         }
 
-        // Abrir el modal de edición con los datos actuales
         this.abrirModalEdicion(registroActual);
       },
       error: (error) => {
-        console.error('❌ Error al cargar datos para editar:', error);
         Swal.close();
 
         Swal.fire({
@@ -488,20 +470,16 @@ export class ConsolaRegistroComponent implements OnInit {
       const dialogRef = this.dialog.open(EditRegistroModalComponent, {
         width: '95%',
         maxWidth: '1400px',
-        height: '90vh',
         data: {
           registro: registroActual,
-          variables: this.variablesDeCapa // ← Enviar las variables de la capa
+          variables: this.variablesDeCapa
         },
         panelClass: 'custom-modal-container',
         autoFocus: false
       });
 
-      // Suscribirse al resultado del modal
       dialogRef.afterClosed().subscribe((result) => {
         if (result === true) {
-          // Si la edición fue exitosa, refrescar los datos
-          console.log('✅ Edición completada, refrescando datos...');
           this.refreshData();
 
           Swal.fire({
@@ -517,7 +495,6 @@ export class ConsolaRegistroComponent implements OnInit {
       });
 
     } catch (error) {
-      console.error('❌ Error al abrir modal de edición:', error);
       Swal.fire({
         title: 'Error',
         text: 'No se pudo abrir el formulario de edición',
@@ -542,7 +519,6 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
-    // Transformar el Register al formato esperado por la API
     const updateData = this.transformRegisterToApiFormat(updatedRegistro);
 
     this.consolaService.updateRegister(
@@ -585,7 +561,6 @@ export class ConsolaRegistroComponent implements OnInit {
         this.loadHistorial(this.currentPage, this.pageSize);
         break;
       case 'inicioDigitador':
-        // Para el dashboard, cargar solo 5 registros recientes
         this.loadHistorial(0, 5);
         break;
       default:
@@ -593,7 +568,7 @@ export class ConsolaRegistroComponent implements OnInit {
     }
 
     this.loadVariablesDeCapa(this.selectedLayerId);
-    this.lastUpdate = new Date(); // ← Actualizar la fecha
+    this.lastUpdate = new Date();
   }
 
   /**
@@ -610,8 +585,6 @@ export class ConsolaRegistroComponent implements OnInit {
    * Abre el modal de consentimiento informado
    */
   openConsentimientoModal() {
-    // Aquí deberías asignar el paciente seleccionado si es necesario
-    // this.selectedPaciente = ...;
     this.showConsentimientoModal = true;
   }
 
@@ -620,8 +593,6 @@ export class ConsolaRegistroComponent implements OnInit {
    * @param consentimientoData Datos del consentimiento
    */
   handleSubmitConsentimiento(consentimientoData: any) {
-    // Lógica para guardar el consentimiento
-    console.log('Consentimiento enviado:', consentimientoData);
     this.showConsentimientoModal = false;
   }
 
@@ -677,9 +648,6 @@ export class ConsolaRegistroComponent implements OnInit {
     return new Promise((resolve, reject) => {
       const layerIds = this.userData?.attributes?.researchLayerId || [];
 
-      console.log('IDs de capa del usuario:', layerIds);
-
-      // Filtrar IDs válidos
       const validLayerIds = layerIds.filter(id =>
         id &&
         id !== 'none' &&
@@ -699,17 +667,15 @@ export class ConsolaRegistroComponent implements OnInit {
         this.consolaService.obtenerCapaPorId(id).pipe(
           catchError(error => {
             console.warn(`Error al cargar capa ${id}:`, error);
-            return of(null); // Retornar null para manejar errores gracefulmente
+            return of(null);
           })
         )
       );
 
       forkJoin(layerRequests).subscribe({
         next: (layers) => {
-          // Filtrar solo capas válidas
-          this.availableLayers = layers.filter(l => l !== null && l?.id) as ResearchLayer[];
 
-          console.log('Capas disponibles cargadas:', this.availableLayers);
+          this.availableLayers = layers.filter(l => l !== null && l?.id) as ResearchLayer[];
 
           if (this.availableLayers.length === 0) {
             console.warn('No se pudieron cargar ninguna capa válida');
@@ -733,12 +699,10 @@ export class ConsolaRegistroComponent implements OnInit {
    */
   private async loadCapaInvestigacion(researchLayerId?: string): Promise<void> {
     try {
-      // Validar el ID de entrada
       if (!researchLayerId || researchLayerId === 'none' || researchLayerId === 'undefined') {
         throw new Error('ID de capa inválido proporcionado');
       }
 
-      // Verificar que el usuario tenga permiso para esta capa
       const userLayerIds = this.userData?.attributes?.researchLayerId || [];
       if (!userLayerIds.includes(researchLayerId)) {
         throw new Error(`Usuario no tiene acceso a la capa: ${researchLayerId}`);
@@ -758,12 +722,9 @@ export class ConsolaRegistroComponent implements OnInit {
       this.updateDatosCapa(capa);
 
     } catch (error) {
-      console.error('Error en loadCapaInvestigacion:', error);
-
-      // Intentar recuperación con una capa alternativa
       await this.fallbackToAlternativeLayer(researchLayerId);
 
-      throw error; // Re-lanzar el error para manejo superior
+      throw error;
     } finally {
       this.isLoading = false;
       this.cdr.detectChanges();
@@ -788,12 +749,11 @@ export class ConsolaRegistroComponent implements OnInit {
 
     this.consolaService.obtenerVariablesPorCapa(researchLayerId).subscribe({
       next: (variables) => {
-        console.log('Variables recibidas:', variables);
         this.variablesDeCapa = variables.filter(v => v.isEnabled);
         this.loadingVariables = false;
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: () => {
         this.loadingVariables = false;
         this.mostrarErrorVariables('No se pudieron cargar las variables');
         this.cdr.detectChanges();
@@ -821,20 +781,18 @@ export class ConsolaRegistroComponent implements OnInit {
     this.loadingRegistros = true;
     this.currentPage = page;
 
-    // ← CAMBIAR ESTO: Usar el tamaño específico para cada caso
-    const actualSize = this.selectedTab === 'inicioDigitador' ? 5 : size;
+    const actualSize = 1000;
     this.pageSize = actualSize;
 
     this.consolaService.getRegisterHistory(
       this.selectedLayerId,
       userEmail,
       page,
-      actualSize, // ← Usar el tamaño calculado
+      actualSize,
       'changedAt',
       'DESC'
     ).subscribe({
       next: (response) => {
-        console.log('Historial recibido:', response);
         this.procesarRespuestaHistorial(response);
         this.calcularEstadisticas(response);
       },
@@ -859,7 +817,7 @@ export class ConsolaRegistroComponent implements OnInit {
     if (!response || !response.data) {
       console.warn('Respuesta de historial vacía o inválida');
       this.usuariosData = [];
-      this.registrosRecientes = []; // ← Añadir esto
+      this.registrosRecientes = [];
       this.totalElements = 0;
       this.loadingRegistros = false;
       this.cdr.detectChanges();
@@ -918,7 +876,6 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
-    // Calcular total de pacientes únicos (solo registros creados)
     const registrosCreados = response.data.filter(item =>
       item.operation === 'REGISTER_CREATED_SUCCESSFULL'
     );
@@ -928,7 +885,6 @@ export class ConsolaRegistroComponent implements OnInit {
     );
     this.totalPacientes = pacientesUnicos.size;
 
-    // Calcular pacientes de hoy
     this.calcularPacientesHoy(response.data);
 
     console.log('Estadísticas calculadas:', {
@@ -964,105 +920,7 @@ export class ConsolaRegistroComponent implements OnInit {
     this.pacientesHoy = pacientesHoySet.size;
   }
 
-  /**
-   * Calcula el total de pacientes basado solo en registros creados
-   * @param response Respuesta del servicio de historial
-   */
-  private calcularTotalPacientes(response: any): void {
-    if (!response || !response.data) {
-      this.totalPacientes = 0;
-      return;
-    }
 
-    // Filtrar solo las operaciones de creación de registros
-    const registrosCreados = response.data.filter((item: any) =>
-      item.operation === 'REGISTER_CREATED_SUCCESSFULL'
-    );
-
-    // Usar un Set para contar pacientes únicos (por número de identificación)
-    const pacientesUnicos = new Set(
-      registrosCreados.map((item: any) => item.patientIdentificationNumber)
-    );
-
-    this.totalPacientes = pacientesUnicos.size;
-
-    console.log('Estadísticas de pacientes:', {
-      totalRegistros: response.totalElements,
-      registrosCreados: registrosCreados.length,
-      pacientesUnicos: this.totalPacientes
-    });
-  }
-
-  /**
-   * Procesa la respuesta de los registros y actualiza el estado del componente
-   * @param response Respuesta del servicio
-   */
-  private procesarRespuestaRegistros(response: any): void {
-    console.log('Procesando respuesta:', response);
-
-    // Handle null or undefined response
-    if (!response) {
-      console.error('Respuesta nula recibida del servidor');
-      this.resetRegistros();
-      this.showErrorAlert('No se recibieron datos del servidor');
-      return;
-    }
-
-    // La respuesta puede venir de diferentes formas, intentemos todas las posibilidades
-    let registros = [];
-
-    if (response.registers) {
-      registros = response.registers;
-    } else if (response.data) {
-      registros = response.data;
-    } else if (Array.isArray(response)) {
-      registros = response;
-    } else {
-      console.warn('Formato de respuesta no reconocido:', response);
-      this.resetRegistros();
-      return;
-    }
-
-    this.registros = registros;
-    console.log('Registros procesados:', this.registros.length);
-
-    this.usuariosData = this.registros.map(registro => ({
-      nombre: registro.patientBasicInfo?.name || 'No disponible',
-      documento: registro.patientIdentificationNumber?.toString() || 'No disponible',
-      fechaRegistro: this.formatDateForDisplay(registro.updateRegisterDate || registro.registerDate),
-      registradoPor: registro.healthProfessional?.name || 'Desconocido',
-      _fullData: registro
-    }));
-
-    this.currentPage = response.currentPage || 0;
-    this.totalPages = response.totalPages || 0;
-    this.totalElements = response.totalElements || 0;
-    this.totalPacientes = this.totalElements;
-
-    this.registrosRecientes = this.registros
-      .sort((a, b) => {
-        const dateA = a.updateRegisterDate || a.registerDate;
-        const dateB = b.updateRegisterDate || b.registerDate;
-
-        // Verificar que las fechas no sean undefined antes de crear objetos Date
-        if (!dateA && !dateB) return 0;
-        if (!dateA) return 1;
-        if (!dateB) return -1;
-
-        return new Date(dateB).getTime() - new Date(dateA).getTime();
-      })
-      .slice(0, 3)
-      .map(registro => ({
-        nombre: registro.patientBasicInfo?.name || 'No disponible',
-        documento: registro.patientIdentificationNumber?.toString() || 'No disponible',
-        fecha: registro.updateRegisterDate || registro.registerDate,
-        registradoPor: registro.healthProfessional?.name || 'Desconocido',
-        _fullData: registro
-      }));
-
-    this.loadingRegistros = false;
-    this.cdr.detectChanges();
-  }
 
   //#endregion
 
@@ -1135,22 +993,19 @@ export class ConsolaRegistroComponent implements OnInit {
    * @returns Objeto en formato API
    */
   private transformRegisterToApiFormat(registro: Register): any {
-    // Transformar las variables al formato correcto
     const variablesInfo = registro.variablesRegister?.map(v => ({
       id: v.variableId,
-      name: v.variableName,  // Cambiado de variableName a name
+      name: v.variableName,
       value: v.value,
       type: v.type
     })) || [];
 
-    // Crear el objeto registerInfo en el formato correcto
     const registerInfo = {
       researchLayerId: registro.registerInfo?.[0]?.researchLayerId || this.selectedLayerId,
       researchLayerName: registro.registerInfo?.[0]?.researchLayerName || this.currentResearchLayer?.layerName || '',
       variablesInfo: variablesInfo
     };
 
-    // Crear el objeto paciente en el formato correcto
     const patient = {
       name: registro.patientBasicInfo?.name || '',
       sex: registro.patientBasicInfo?.sex || '',
@@ -1168,7 +1023,6 @@ export class ConsolaRegistroComponent implements OnInit {
       crisisStatus: registro.patientBasicInfo?.crisisStatus || ''
     };
 
-    // Crear el objeto cuidador si existe
     let caregiver;
     if (registro.caregiver) {
       caregiver = {
@@ -1181,13 +1035,12 @@ export class ConsolaRegistroComponent implements OnInit {
       };
     }
 
-    // Retornar el objeto en el formato exacto que espera la API
     return {
-      registerInfo: registerInfo,  // Objeto simple, no array
+      registerInfo: registerInfo,
       patientIdentificationNumber: registro.patientIdentificationNumber,
       patientIdentificationType: registro.patientIdentificationType,
       patient: patient,
-      ...(caregiver && { caregiver: caregiver }) // Incluir caregiver solo si existe
+      ...(caregiver && { caregiver: caregiver })
     };
   }
 
@@ -1199,22 +1052,19 @@ export class ConsolaRegistroComponent implements OnInit {
   private formatDateForApi(dateValue: any): string | null {
     if (!dateValue) return null;
 
-    // Si ya está en formato yyyy-MM-dd, retornarlo directamente
     if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
       return dateValue;
     }
 
-    // Si es una fecha de JavaScript o string ISO
     try {
       const date = new Date(dateValue);
       if (!isNaN(date.getTime())) {
-        return date.toISOString().split('T')[0]; // Formato yyyy-MM-dd
+        return date.toISOString().split('T')[0];
       }
     } catch (e) {
       console.error('Error al formatear fecha:', dateValue, e);
     }
 
-    // Si es un string con formato dd-MM-yyyy, convertirlo
     if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
       const [day, month, year] = dateValue.split('-');
       return `${year}-${month}-${day}`;
@@ -1235,21 +1085,21 @@ export class ConsolaRegistroComponent implements OnInit {
         maxWidth: '1400px',
         data: {
           registro: registroActual,
-          esDatoActual: true, // Bandera para indicar que son datos actuales
-          itemHistorial: itemHistorial // Mantener referencia al item del historial
+          esDatoActual: true,
+          itemHistorial: itemHistorial
         },
         panelClass: 'custom-modal-container',
         autoFocus: false,
         disableClose: false
       });
 
-      dialogRef.afterClosed().subscribe(result => {
+      dialogRef.afterClosed().subscribe(() => {
         console.log('Modal de visualización cerrado');
       });
 
     } catch (error) {
       console.error('Error al abrir el modal:', error);
-      this.mostrarModalConDatosHistorial(itemHistorial); // Fallback
+      this.mostrarModalConDatosHistorial(itemHistorial);
     }
   }
 
@@ -1278,7 +1128,7 @@ export class ConsolaRegistroComponent implements OnInit {
         disableClose: false
       });
 
-      dialogRef.afterClosed().subscribe(result => {
+      dialogRef.afterClosed().subscribe(() => {
         console.log('Modal de visualización cerrado');
       });
 
@@ -1298,27 +1148,22 @@ export class ConsolaRegistroComponent implements OnInit {
    */
   private async fallbackToAlternativeLayer(failedLayerId?: string): Promise<void> {
     try {
-      // Buscar una capa alternativa que no sea la que falló
       const alternativeLayer = this.availableLayers.find(layer =>
         layer.id !== failedLayerId && layer.id
       );
 
       if (alternativeLayer) {
-        console.log(`Fallback a capa alternativa: ${alternativeLayer.layerName}`);
         this.currentResearchLayer = alternativeLayer;
         this.selectedLayerId = alternativeLayer.id;
         localStorage.setItem('selectedLayerId', alternativeLayer.id);
         this.updateDatosCapa(alternativeLayer);
       } else if (this.availableLayers.length > 0) {
-        // Usar la primera capa disponible
         const firstLayer = this.availableLayers[0];
-        console.log(`Usando primera capa disponible: ${firstLayer.layerName}`);
         this.currentResearchLayer = firstLayer;
         this.selectedLayerId = firstLayer.id;
         localStorage.setItem('selectedLayerId', firstLayer.id);
         this.updateDatosCapa(firstLayer);
       } else {
-        // No hay capas disponibles
         this.setDefaultCapaValues();
         this.selectedLayerId = '';
         throw new Error('No hay capas alternativas disponibles');
@@ -1330,34 +1175,6 @@ export class ConsolaRegistroComponent implements OnInit {
     }
   }
 
-  /**
-   * Carga solo el conteo total de pacientes (más eficiente para el dashboard)
-   */
-  private cargarConteoTotalPacientes(): void {
-    if (!this.selectedLayerId) return;
-
-    const userEmail = this.authService.getUserEmail();
-    if (!userEmail) return;
-
-    // Cargar una página más grande para contar mejor (pero no todo)
-    this.consolaService.getRegisterHistory(
-      this.selectedLayerId,
-      userEmail,
-      0,
-      100, // Cargar más registros para contar mejor
-      'changedAt',
-      'DESC'
-    ).subscribe({
-      next: (response) => {
-        if (response && response.data) {
-          this.calcularTotalPacientes(response);
-        }
-      },
-      error: (err) => {
-        console.error('Error al cargar conteo de pacientes:', err);
-      }
-    });
-  }
 
   /**
    * Resetea el estado del componente a los valores iniciales
@@ -1390,14 +1207,6 @@ export class ConsolaRegistroComponent implements OnInit {
     this.DescripcionInvestigacion = capa?.description || 'Descripción no disponible';
     this.jefeInvestigacion = capa?.layerBoss?.name || 'Jefe no asignado';
 
-    // Debug info
-    console.log('Capa cargada:', {
-      nombre: capa.layerName,
-      descripcion: this.DescripcionInvestigacion,
-      jefe: this.jefeInvestigacion,
-      jefeCompleto: capa.layerBoss
-    });
-
     this.cdr.detectChanges();
   }
 
@@ -1410,7 +1219,6 @@ export class ConsolaRegistroComponent implements OnInit {
       return;
     }
 
-    // Verificar que tenemos los datos necesarios
     if (!this.selectedLayerId) {
       this.showErrorAlert('No hay una capa de investigación seleccionada');
       return;
@@ -1425,15 +1233,12 @@ export class ConsolaRegistroComponent implements OnInit {
       disableClose: false,
       data: {
         researchLayerId: this.selectedLayerId,
-        // patientIdentificationNumber es opcional, se buscará en el modal
         patientIdentificationNumber: undefined
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('Modal de versionamiento cerrado', result);
       if (result === 'search') {
-        // Si se realizó una búsqueda exitosa, podrías refrescar datos si es necesario
         this.refreshData();
       }
     });
@@ -1467,20 +1272,6 @@ export class ConsolaRegistroComponent implements OnInit {
     this.errorMessage = mensaje;
   }
 
-  /**
-   * Resetea los registros a su estado inicial
-   */
-  private resetRegistros() {
-    this.registros = [];
-    this.usuariosData = [];
-    this.registrosRecientes = [];
-    this.totalElements = 0;
-    this.totalPages = 0;
-    this.currentPage = 0;
-    this.totalPacientes = 0;
-    this.loadingRegistros = false;
-    this.cdr.detectChanges();
-  }
 
   /**
    * Muestra una alerta de error usando SweetAlert2
@@ -1493,6 +1284,42 @@ export class ConsolaRegistroComponent implements OnInit {
         text: message,
         icon: 'error',
         confirmButtonText: 'Entendido'
+      });
+    });
+  }
+
+
+  // Abrir modal de subir consentimiento
+  openUploadConsentimientoModal(): void {
+    this.showUploadConsentimientoModal = true;
+  }
+
+  // Cerrar modal de subir consentimiento
+  closeUploadConsentimientoModal(): void {
+    this.showUploadConsentimientoModal = false;
+  }
+
+  // Manejar cuando se complete la subida
+  handleUploadComplete(result: any): void {
+    console.log('Consentimiento subido exitosamente:', result);
+    this.closeUploadConsentimientoModal();
+
+    this.showSuccessMessage('Consentimiento subido exitosamente');
+    this.refreshData();
+  }
+
+  /**
+ * Muestra un mensaje de éxito usando SweetAlert2
+ * @param message Mensaje de éxito a mostrar
+ */
+  private showSuccessMessage(message: string): void {
+    this.ngZone.run(() => {
+      Swal.fire({
+        title: '¡Éxito!',
+        text: message,
+        icon: 'success',
+        timer: 3000,
+        showConfirmButton: false
       });
     });
   }

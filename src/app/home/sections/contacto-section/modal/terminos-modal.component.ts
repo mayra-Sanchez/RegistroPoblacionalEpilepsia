@@ -32,7 +32,6 @@ export class TerminosModalComponent implements OnInit {
   }
 
   private formatearContenido(contenido: string): string {
-    // Asegurar que el contenido tenga formato HTML básico
     if (!contenido.includes('<')) {
       return `<div class="contenido-simple">${contenido.replace(/\n/g, '<br>')}</div>`;
     }

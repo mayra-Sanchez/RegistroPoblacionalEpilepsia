@@ -63,16 +63,34 @@
                     </select>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group identificacion-con-boton">
                     <label>Número de Identificación *</label>
-                    <input type="text" formControlName="patientIdentificationNumber" placeholder="Ej: 1234567890" />
+                    <div class="input-with-button">
+                        <input type="text" formControlName="patientIdentificationNumber" placeholder="Ej: 1234567890" />
+                        <button type="button" class="btn btn-validate" (click)="validarPaciente()"
+                            [disabled]="validatingPatient">
+                            <i class="fas" [class.fa-search]="!validatingPatient" [class.fa-spinner]="validatingPatient"
+                                [class.fa-spin]="validatingPatient"></i>
+                        </button>
+                    </div>
+
                     <div *ngIf="
-              registroForm.get('patientIdentificationNumber')?.invalid &&
-              registroForm.get('patientIdentificationNumber')?.touched
-            " class="error-message">
+    registroForm.get('patientIdentificationNumber')?.invalid &&
+    registroForm.get('patientIdentificationNumber')?.touched
+  " class="error-message">
                         Número de identificación requerido
                     </div>
+
+                    <div *ngIf="validationMessage" class="validation-message" [ngClass]="validationStatus">
+                        <i class="fas" [ngClass]="{
+      'fa-check-circle': validationStatus === 'success',
+      'fa-exclamation-circle': validationStatus === 'warning',
+      'fa-times-circle': validationStatus === 'error'
+    }"></i>
+                        {{ validationMessage }}
+                    </div>
                 </div>
+
             </div>
 
             <div class="section-navigation-controls">
@@ -537,7 +555,6 @@
 
     </form>
 
-    <!-- Botones de acción globales -->
     <!-- Botones de acción globales -->
     <div class="form-actions" *ngIf="!loadingVariables">
         <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="loading">

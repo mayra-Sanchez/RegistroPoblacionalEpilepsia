@@ -149,13 +149,16 @@ export interface Register {
     educationLevel: string;
     occupation: string;
   };
-  healthProfessional?: {
-    name: string;
-    email: string;
-  };
   registerInfo?: Array<{
     researchLayerId: string;
     researchLayerName: string;
+    variablesInfo?: Array<{  // ← AGREGAR ESTA PROPIEDAD
+      variableId: string;
+      variableName: string;
+      variableType: string;
+      valueAsString?: string | null;
+      valueAsNumber?: number | null;
+    }>;
   }>;
   variablesRegister?: Array<{
     variableId: string;
@@ -318,3 +321,4 @@ export interface RegisterHistoryResponse {
   totalPages: number;
   totalElements: number;
 }
+

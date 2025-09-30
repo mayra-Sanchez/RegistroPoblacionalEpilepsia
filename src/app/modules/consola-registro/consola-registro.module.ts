@@ -36,6 +36,7 @@ import { RegistroPacienteComponent } from './components/registro-paciente/regist
 import { EditRegistroModalComponent } from './components/edit-registro-modal/edit-registro-modal.component';
 import { VersionamientoModalComponent } from './components/versionamiento-modal/versionamiento-modal.component';
 import { MatDialogModule } from '@angular/material/dialog';
+import { UploadConsentimientoComponent } from './components/upload-consentimiento/upload-consentimiento.component';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -48,7 +49,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     RegistroPacienteComponent,
     EditRegistroModalComponent,
     ViewRegistroModalComponent,
-    VersionamientoModalComponent
+    VersionamientoModalComponent,
+    UploadConsentimientoComponent
   ],
   imports: [
     CommonModule,

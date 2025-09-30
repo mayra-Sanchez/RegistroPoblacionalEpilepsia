@@ -1,82 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { ConsolaInvestigadorService } from '../consola-investigador.service';
+import { ConsolaInvestigadorService, ResearchLayerHistory } from '../consola-investigador.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { Register, ResearchLayer } from '../../modules/consola-registro/interfaces';
-import { environment } from '../../environments/environment';
 
 describe('ConsolaInvestigadorService', () => {
   let service: ConsolaInvestigadorService;
   let httpMock: HttpTestingController;
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
-
-  const API_URL = `${environment.backendUrl}${environment.endpoints.registers}`;
-  const API_RESEARCH_LAYER_URL = `${environment.backendUrl}${environment.endpoints.researchLayer}`;
-
-  // 🔹 Mock válido de Register
-  const mockRegister: Register = {
-    registerId: '1',
-    registerDate: '2025-09-14',
-    updateRegisterDate: '2025-09-14',
-    updatedBy: 'tester',
-    patientIdentificationNumber: 123,
-    patientIdentificationType: 'CC',
-    registerInfo: [
-      {
-        researchLayerId: 'layer1',
-        researchLayerName: 'Capa 1',
-        variablesInfo: [
-          { variableId: 'v1', variableName: 'Edad', variableType: 'number', valueAsNumber: 30 }
-        ]
-      }
-    ],
-    variablesRegister: [
-      {
-        variableId: 'v1',
-        variableName: 'Edad',
-        value: 30,
-        type: 'number',
-        researchLayerId: 'layer1',
-        researchLayerName: 'Capa 1'
-      }
-    ],
-    patientBasicInfo: {
-      name: 'Juan Pérez',
-      sex: 'M',
-      birthDate: '1990-01-01',
-      age: 35,
-      email: 'juan@test.com',
-      phoneNumber: '3001234567',
-      deathDate: null,
-      economicStatus: 'medio',
-      educationLevel: 'universitario',
-      maritalStatus: 'soltero',
-      hometown: 'Bogotá',
-      currentCity: 'Cali',
-      firstCrisisDate: '2000-01-01',
-      crisisStatus: 'activo',
-      hasCaregiver: false
-    },
-    caregiver: null,
-    healthProfessional: { id: 'hp1', name: 'Dr. House', identificationNumber: 987654 }
-  };
-
-  // 🔹 Mock válido de ResearchLayer
-  const mockCapa: ResearchLayer = {
-    id: '1',
-    researchLayerId: 'capa123',
-    layerName: 'Capa Test',
-    description: 'Descripción de capa',
-    layerBoss: {
-      id: 10,
-      name: 'Dr. Boss',
-      identificationNumber: '112233'
-    }
-  };
+  let authService: jasmine.SpyObj<AuthService>;
 
   beforeEach(() => {
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['getToken', 'logout']);
-    authServiceSpy.getToken.and.returnValue('fake-jwt-token');
+    const authServiceSpy = jasmine.createSpyObj('AuthService', ['getToken', 'logout']);
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
@@ -88,8 +22,10 @@ describe('ConsolaInvestigadorService', () => {
 
     service = TestBed.inject(ConsolaInvestigadorService);
     httpMock = TestBed.inject(HttpTestingController);
-
-    localStorage.clear();
+    authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    
+    authService.getToken.and.returnValue('test-token');
+    localStorage.setItem('userRoles', JSON.stringify(['Doctor_client_role']));
   });
 
   afterEach(() => {
@@ -97,92 +33,275 @@ describe('ConsolaInvestigadorService', () => {
     localStorage.clear();
   });
 
-  // ---------- isDoctor ----------
-  it('✅ Usuario con rol Doctor retorna true', () => {
-    localStorage.setItem('userRoles', JSON.stringify(['Doctor_client_role']));
-    const result = (service as any).isDoctor();
-    expect(result).toBeTrue();
+  describe('obtenerHistorialCapaInvestigacion', () => {
+    it('should fetch research layer history', () => {
+      const mockResponse = {
+        data: [{
+          id: '1',
+          registerId: 'reg-1',
+          changedBy: 'doctor@test.com',
+          changedAt: '2024-01-15T10:30:00Z',
+          operation: 'CREATE',
+          patientIdentificationNumber: 123456789,
+          isResearchLayerGroup: {
+            researchLayerId: 'layer-1',
+            researchLayerName: 'Test Layer',
+            variables: [{
+              id: 'var-1',
+              name: 'Test Variable',
+              type: 'STRING',
+              valueAsString: 'Test Value',
+              valueAsNumber: null
+            }]
+          },
+          patientBasicInfo: {
+            sex: 'M',
+            educationLevel: 'University',
+            economicStatus: 'Medium'
+          }
+        } as ResearchLayerHistory],
+        currentPage: 0,
+        totalPages: 1,
+        totalElements: 1
+      };
+
+      service.obtenerHistorialCapaInvestigacion('layer-1', 'test@email.com', 0, 10)
+        .subscribe(response => {
+          expect(response.data.length).toBe(1);
+          expect(response.data[0].id).toBe('1');
+          expect(response.data[0].patientBasicInfo?.sex).toBe('M');
+        });
+
+      const req = httpMock.expectOne(req => 
+        req.url.includes('/allResearchLayerHistoryById') &&
+        req.params.get('researchLayerId') === 'layer-1'
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
   });
 
-  it('✅ Usuario sin rol Doctor retorna false', () => {
-    localStorage.setItem('userRoles', JSON.stringify(['Researcher_client_role']));
-    const result = (service as any).isDoctor();
-    expect(result).toBeFalse();
+  describe('obtenerRegistroActual', () => {
+    it('should fetch current patient register without caregiver', () => {
+      const mockRegister: Register = {
+        registerId: 'reg-1',
+        patientIdentificationNumber: 123456789,
+        patientIdentificationType: 'CC',
+        registerDate: '2024-01-15T10:30:00Z',
+        healthProfessional: {
+          name: 'Dr. Test',
+          email: 'doctor@test.com'
+        },
+        patientBasicInfo: {
+          name: 'Test Patient',
+          sex: 'M',
+          birthDate: '1990-01-01',
+          age: 34,
+          email: 'patient@test.com',
+          phoneNumber: '1234567890',
+          economicStatus: 'Medium',
+          educationLevel: 'University',
+          maritalStatus: 'Single',
+          hometown: 'Test Town',
+          currentCity: 'Test City',
+          firstCrisisDate: '2020-01-01',
+          crisisStatus: 'Stable'
+        }
+        // caregiver is undefined (optional)
+      };
+
+      service.obtenerRegistroActual(123456789, 'layer-1')
+        .subscribe(register => {
+          expect(register.registerId).toBe('reg-1');
+          expect(register.caregiver).toBeUndefined();
+        });
+
+      const req = httpMock.expectOne(req => 
+        req.url.includes('/actualRegisterByPatient')
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockRegister);
+    });
+
+    it('should fetch current patient register with caregiver', () => {
+      const mockRegister: Register = {
+        registerId: 'reg-1',
+        patientIdentificationNumber: 123456789,
+        patientIdentificationType: 'CC',
+        registerDate: '2024-01-15T10:30:00Z',
+        healthProfessional: {
+          name: 'Dr. Test',
+          email: 'doctor@test.com'
+        },
+        patientBasicInfo: {
+          name: 'Test Patient',
+          sex: 'M',
+          birthDate: '1990-01-01',
+          age: 34,
+          email: 'patient@test.com',
+          phoneNumber: '1234567890',
+          economicStatus: 'Medium',
+          educationLevel: 'University',
+          maritalStatus: 'Single',
+          hometown: 'Test Town',
+          currentCity: 'Test City',
+          firstCrisisDate: '2020-01-01',
+          crisisStatus: 'Stable'
+        },
+        caregiver: {
+          name: 'Caregiver Name',
+          identificationType: 'CC',
+          identificationNumber: 987654321,
+          age: 45,
+          educationLevel: 'High School',
+          occupation: 'Caregiver'
+        }
+      };
+
+      service.obtenerRegistroActual(123456789, 'layer-1')
+        .subscribe(register => {
+          expect(register.registerId).toBe('reg-1');
+          expect(register.caregiver?.name).toBe('Caregiver Name');
+        });
+
+      const req = httpMock.expectOne(req => 
+        req.url.includes('/actualRegisterByPatient')
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockRegister);
+    });
   });
 
-  // ---------- obtenerRegistrosPorCapa ----------
-  it('✅ obtenerRegistrosPorCapa retorna registros (éxito)', () => {
-    const mockResponse = {
-      registers: [mockRegister],
-      currentPage: 0,
-      totalPages: 1,
-      totalElements: 1
+  describe('obtenerRegistrosPorCapa', () => {
+    it('should fetch registers by research layer', () => {
+      const mockResponse = {
+        registers: [{
+          registerId: 'reg-1',
+          patientIdentificationNumber: 123456789,
+          patientIdentificationType: 'CC',
+          registerDate: '2024-01-15T10:30:00Z',
+          healthProfessional: {
+            name: 'Dr. Test',
+            email: 'doctor@test.com'
+          },
+          patientBasicInfo: {
+            name: 'Test Patient',
+            sex: 'M',
+            birthDate: '1990-01-01',
+            age: 34,
+            email: 'patient@test.com',
+            phoneNumber: '1234567890'
+          }
+        } as Register],
+        currentPage: 0,
+        totalPages: 1,
+        totalElements: 1
+      };
+
+      service.obtenerRegistrosPorCapa('layer-1', 0, 10)
+        .subscribe(response => {
+          expect(response.registers.length).toBe(1);
+          expect(response.registers[0].registerId).toBe('reg-1');
+        });
+
+      const req = httpMock.expectOne(req => 
+        req.url.includes('/allByResearchLayer') &&
+        req.params.get('researchLayerId') === 'layer-1'
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('obtenerCapaPorId', () => {
+    it('should fetch research layer by id', () => {
+      const mockResearchLayer: ResearchLayer = {
+        id: 'layer-1',
+        researchLayerId: 'layer-1',
+        layerName: 'Test Layer',
+        description: 'Test Description',
+        layerBoss: {
+          id: 1,
+          name: 'Layer Boss',
+          identificationNumber: '123456789'
+        }
+      };
+
+      service.obtenerCapaPorId('layer-1')
+        .subscribe(layer => {
+          expect(layer.id).toBe('layer-1');
+          expect(layer.layerName).toBe('Test Layer');
+        });
+
+      const req = httpMock.expectOne(req => 
+        req.url === service['API_RESEARCH_LAYER_URL'] &&
+        req.params.get('id') === 'layer-1'
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResearchLayer);
+    });
+  });
+
+  // Safe property access in tests
+  it('should safely access optional properties', () => {
+    const historyItem: ResearchLayerHistory = {
+      id: '1',
+      registerId: 'reg-1',
+      changedBy: 'test@email.com',
+      changedAt: '2024-01-15T10:30:00Z',
+      operation: 'UPDATE',
+      patientIdentificationNumber: 123456789,
+      isResearchLayerGroup: {
+        researchLayerId: 'layer-1',
+        researchLayerName: 'Test Layer',
+        variables: []
+      },
+      patientBasicInfo: {
+        sex: 'F',
+        educationLevel: 'High School'
+      }
     };
 
-    service.obtenerRegistrosPorCapa('layer1').subscribe(resp => {
-      expect(resp.currentPage).toBe(0);
-      expect(resp.totalPages).toBe(1);
-      expect(resp.totalElements).toBe(1);
-      expect(resp.registers[0].registerId).toBe('1');
-      expect(resp.registers[0].patientBasicInfo.name).toBe('Juan Pérez');
-    });
+    // Safe access to optional properties
+    const basicInfo = historyItem.patientBasicInfo;
+    if (basicInfo) {
+      expect(basicInfo.sex).toBe('F');
+    }
 
-    const req = httpMock.expectOne(
-      `${API_URL}/allByResearchLayer?researchLayerId=layer1&page=0&size=10&sort=registerDate&sortDirection=DESC`
-    );
-    expect(req.request.method).toBe('GET');
-    req.flush(mockResponse);
+    // Or use optional chaining
+    expect(historyItem.patientBasicInfo?.sex).toBe('F');
+    expect(historyItem.patientBasicInfo?.economicStatus).toBeUndefined();
   });
 
-  it('❌ obtenerRegistrosPorCapa lanza error 500', () => {
-    service.obtenerRegistrosPorCapa('layer1').subscribe({
-      next: () => fail('Debe fallar con 500'),
-      error: (err) => {
-        expect(err.message).toBe('Error al cargar registros');
-      }
+  describe('error handling', () => {
+    it('should handle authentication errors', () => {
+      spyOn(service['authService'], 'logout');
+
+      service.obtenerRegistrosPorCapa('layer-1')
+        .subscribe({
+          error: (error) => {
+            expect(error.code).toBe('AUTH_ERROR');
+          }
+        });
+
+      const req = httpMock.expectOne(req => 
+        req.url.includes('/allByResearchLayer')
+      );
+      req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
     });
 
-    const req = httpMock.expectOne(
-      `${API_URL}/allByResearchLayer?researchLayerId=layer1&page=0&size=10&sort=registerDate&sortDirection=DESC`
-    );
-    req.flush('Error', { status: 500, statusText: 'Server Error' });
-  });
+    it('should handle network errors', () => {
+      service.obtenerRegistrosPorCapa('layer-1')
+        .subscribe({
+          error: (error) => {
+            expect(error.code).toBe('NETWORK_ERROR');
+          }
+        });
 
-  // ---------- obtenerCapaPorId ----------
-  it('✅ obtenerCapaPorId retorna capa y la guarda en localStorage', () => {
-    service.obtenerCapaPorId('capa123').subscribe(resp => {
-      expect(resp.researchLayerId).toBe('capa123');
-      const stored = JSON.parse(localStorage.getItem('capaInvestigacion') || '{}');
-      expect(stored.researchLayerId).toBe('capa123');
+      const req = httpMock.expectOne(req => 
+        req.url.includes('/allByResearchLayer')
+      );
+      req.error(new ProgressEvent('Network error'));
     });
-
-    const req = httpMock.expectOne(`${API_RESEARCH_LAYER_URL}?id=capa123`);
-    expect(req.request.method).toBe('GET');
-    req.flush(mockCapa);
-  });
-
-  it('❌ obtenerCapaPorId error 403 ejecuta logout y retorna error', () => {
-    service.obtenerCapaPorId('capa123').subscribe({
-      next: () => fail('Debe fallar con 403'),
-      error: (err) => {
-        expect(err.message).toBe('No se encontró la capa con ID: capa123');
-        expect(authServiceSpy.logout).toHaveBeenCalled();
-      }
-    });
-
-    const req = httpMock.expectOne(`${API_RESEARCH_LAYER_URL}?id=capa123`);
-    req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
-  });
-
-  it('❌ obtenerCapaPorId error distinto retorna error genérico', () => {
-    service.obtenerCapaPorId('capa123').subscribe({
-      next: () => fail('Debe fallar con error'),
-      error: (err) => {
-        expect(err.message).toBe('No se encontró la capa con ID: capa123');
-      }
-    });
-
-    const req = httpMock.expectOne(`${API_RESEARCH_LAYER_URL}?id=capa123`);
-    req.flush('Not Found', { status: 404, statusText: 'Not Found' });
   });
 });

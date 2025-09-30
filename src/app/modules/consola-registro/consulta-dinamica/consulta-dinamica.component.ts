@@ -105,7 +105,6 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
     this.hasError = false;
     this.isIframeLoaded = false;
 
-    // Nueva URL con timestamp para evitar caché
     const timestamp = new Date().getTime();
     const updatedUrl = `${this.baseUrl}?${new URLSearchParams({
       ...this.urlParams,
@@ -209,15 +208,6 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
     this.hasError = true;
     this.errorMessage = 'Error al cargar el dashboard. Verifique su conexión.';
     this.isIframeLoaded = false;
-  }
-
-  /**
-   * Listener para cambios de estado en pantalla completa
-   */
-  @HostListener('document:fullscreenchange')
-  private handleFullscreenChange(): void {
-    this.isFullscreen = !!document.fullscreenElement;
-    this.adjustIframeSize();
   }
 
   // === Métodos públicos ===

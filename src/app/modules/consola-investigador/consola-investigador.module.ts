@@ -33,6 +33,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
+import { GraficasInicioComponent } from './components/graficas-inicio/graficas-inicio.component';
 
 @NgModule({
   declarations: [
@@ -40,6 +41,7 @@ import { MatDialogModule } from '@angular/material/dialog';
     NavbarInvestigadorComponent,
     TableVerConsultasComponent,
     ConsultaDatosComponent,
+    GraficasInicioComponent,
   ],
   imports: [
     CommonModule,
