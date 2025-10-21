@@ -17,9 +17,9 @@
                 Buscar Paciente *
             </label>
             <div class="search-container">
-                <input id="patientSearch" type="number" [(ngModel)]="patientIdentificationNumber"
-                    (input)="onPatientSearch()" placeholder="Ingrese el número de documento del paciente"
-                    class="form-control" [disabled]="loadingPatients">
+                <input id="patientSearch" type="text" [(ngModel)]="patientIdentificationNumber"
+                    (input)="onPatientInput($event)" placeholder="Ingrese el número de documento del paciente"
+                    class="form-control" [class.loading]="loadingPatients">
                 <div class="search-loading" *ngIf="loadingPatients">
                     <i class="fas fa-spinner fa-spin"></i>
                 </div>
@@ -98,17 +98,17 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
+            </div>
 
-                <!-- Mensajes de estado -->
-                <div class="error-message" *ngIf="errorMessage">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    {{ errorMessage }}
-                </div>
+            <!-- Mensajes de estado -->
+            <div class="error-message" *ngIf="errorMessage">
+                <i class="fas fa-exclamation-triangle"></i>
+                {{ errorMessage }}
+            </div>
 
-                <div class="success-message" *ngIf="successMessage">
-                    <i class="fas fa-check-circle"></i>
-                    {{ successMessage }}
-                </div>
+            <div class="success-message" *ngIf="successMessage">
+                <i class="fas fa-check-circle"></i>
+                {{ successMessage }}
             </div>
 
             <div class="modal-footer">
@@ -123,3 +123,5 @@
                 </button>
             </div>
         </div>
+    </div>
+</div>

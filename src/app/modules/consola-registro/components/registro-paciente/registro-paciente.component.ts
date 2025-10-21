@@ -6,7 +6,7 @@ import { Variable } from '../../interfaces';
 import Swal from 'sweetalert2';
 import { Subject, takeUntil } from 'rxjs';
 import { SignatureUploadService } from 'src/app/services/signature-upload.service';
-
+import { saveAs } from 'file-saver';
 /**
  * Componente para el registro de pacientes en el sistema
  * 
@@ -58,6 +58,12 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
 
   /** Array de variables de investigación de la capa */
   variablesDeCapa: Variable[] = [];
+
+  /** URL para visualizar el consentimiento existente */
+  existingConsentimientoUrl: string | null = null;
+
+  /** Indica si se está cargando la verificación del consentimiento */
+  loadingExistingConsentimiento: boolean = false;
 
   // ============================
   // ESTADOS DE UI Y CARGA
@@ -199,6 +205,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     { value: 'pending', label: 'Pendientes' }
   ];
 
+  
   // ============================
   // GESTIÓN DE SUSCRIPCIONES
   // ============================
@@ -411,8 +418,16 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
    * Avanza a la siguiente sección del formulario si la actual es válida
    */
   nextSection(): void {
+    // Validación especial para la sección 0 (identificación)
+    if (this.currentSection === 0) {
+      if (!this.validationFlag) {
+        this.showValidationRequiredAlert();
+        return;
+      }
+    }
+
     if (this.validateCurrentSection()) {
-      const maxSections = this.variables.length > 0 ? 5 : 4; // Ahora 6 secciones en total (0-5)
+      const maxSections = this.variables.length > 0 ? 5 : 4;
       if (this.currentSection < maxSections) {
         this.currentSection++;
       }
@@ -428,6 +443,51 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     }
   }
 
+
+  /**
+ * Muestra alerta cuando se intenta avanzar sin validar el paciente
+ */
+  private showValidationRequiredAlert(): void {
+    const idType = this.registroForm.get('patientIdentificationType')?.value;
+    const idNumber = this.registroForm.get('patientIdentificationNumber')?.value;
+
+    // Verificar que los campos de identificación estén llenos
+    if (!idType || !idNumber) {
+      Swal.fire({
+        title: 'Campos incompletos',
+        text: 'Debe completar el tipo y número de identificación antes de validar',
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: 'Validación requerida',
+      html: `
+      <div style="text-align: left;">
+        <p>Debe <strong>validar el paciente</strong> antes de continuar con el registro.</p>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+          <strong>Información a validar:</strong><br>
+          <span style="color: #666;">Tipo: ${this.getTipoIdentificacionLabel(idType)}</span><br>
+          <span style="color: #666;">Número: ${idNumber}</span>
+        </div>
+        <p>La validación determina si el paciente es nuevo o ya existe en el sistema.</p>
+      </div>
+    `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Validar ahora',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.validarPaciente();
+      }
+    });
+  }
+
   /**
    * Valida la sección actual del formulario
    * @returns boolean indicando si la sección es válida
@@ -438,9 +498,16 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
         const idType = this.registroForm.get('patientIdentificationType');
         const idNumber = this.registroForm.get('patientIdentificationNumber');
 
+        // Validar que los campos estén llenos
         if (idType?.invalid || idNumber?.invalid) {
           this.markFieldsAsTouched([idType, idNumber]);
           Swal.fire('Error', 'Por favor complete los campos de identificación correctamente', 'error');
+          return false;
+        }
+
+        // Validar que se haya realizado la validación del paciente
+        if (!this.validationFlag) {
+          this.showValidationRequiredAlert();
           return false;
         }
         break;
@@ -536,40 +603,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
           console.error('Error validating patient:', error);
         }
       });
-  }
-
-  /**
-   * Maneja el CASE1: Paciente existe en la misma capa
-   * @param res Respuesta de validación
-   */
-  private handleCase1(res: ValidatePatientResponse): void {
-    this.validationMessage = 'El paciente ya existe en esta capa (duplicado) puede continuar pero se actualizará el registro';
-    this.validationStatus = 'warning';
-    this.validationFlag = 'CASE1';
-
-    this.registroForm.patchValue({
-      patient: res.patientBasicInfo,
-      caregiver: res.caregiver
-    });
-
-    this.cargarVariablesExistentes(res);
-  }
-
-  /**
-   * Maneja el CASE2: Paciente existe en otra capa
-   * @param res Respuesta de validación
-   */
-  private handleCase2(res: ValidatePatientResponse): void {
-    this.validationMessage = 'El paciente ya tiene un registro en otra capa';
-    this.validationStatus = 'warning';
-    this.validationFlag = 'CASE2';
-
-    this.registroForm.patchValue({
-      patient: res.patientBasicInfo,
-      caregiver: res.caregiver
-    });
-
-    this.calcularEdadDesdeFechaNacimiento();
   }
 
   /**
@@ -1140,26 +1173,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   // MÉTODOS DE INTERACCIÓN DE USUARIO
   // ============================
 
-  /**
-   * Alterna la visibilidad de la sección de cuidador
-   */
-  toggleCaregiver(): void {
-    this.hasCaregiver = !this.hasCaregiver;
-    if (!this.hasCaregiver) {
-      const caregiverGroup = this.registroForm.get('caregiver') as FormGroup;
-      caregiverGroup.patchValue({
-        name: '',
-        identificationType: 'CC',
-        identificationNumber: '',
-        age: '',
-        educationLevel: '',
-        occupation: ''
-      });
-
-      caregiverGroup.markAsPristine();
-      caregiverGroup.markAsUntouched();
-    }
-  }
 
   /**
    * Maneja el cambio en un checkbox de variable lógica
@@ -1230,15 +1243,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     if (file) {
       this.processFile(file);
     }
-  }
-
-  /**
-   * Elimina el archivo de consentimiento seleccionado
-   */
-  removeFile(): void {
-    this.consentimientoFile = null;
-    this.registroForm.patchValue({ consentimientoFile: null });
-    this.consentimientoSubido = false;
   }
 
   /**
@@ -1459,29 +1463,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   /**
    * Resetea el formulario a su estado inicial
    */
-  private resetForm(): void {
-
-    this.registroForm.reset({
-      patientIdentificationType: 'CC',
-      patientIdentificationNumber: ''
-    });
-
-    this.initializeVariables();
-
-    this.hasCaregiver = false;
-    this.consentimientoFile = null;
-    this.consentimientoSubido = false;
-    this.currentSection = 0;
-
-    this.validationMessage = null;
-    this.validationStatus = null;
-    this.validationFlag = null;
-    this.lastValidationResponse = null;
-
-    this.registroGuardado.emit();
-
-    console.log('✅ Formulario reseteado completamente');
-  }
 
   /**
    * Maneja la cancelación del formulario con confirmación
@@ -1494,17 +1475,145 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'No, continuar editando'
+        cancelButtonText: 'No, continuar editando',
+        reverseButtons: true
       }).then((result) => {
         if (result.isConfirmed) {
-          this.registroForm.reset();
-          this.initializeVariables();
-          this.hasCaregiver = false;
-          this.currentSection = 0;
+          this.resetForm();
+          console.log('✅ Formulario cancelado por el usuario');
+        } else {
+          console.log('✅ Usuario decidió continuar editando');
+          // No hacer nada - el usuario quiere seguir editando
         }
       });
+    } else {
+      this.resetForm();
+      console.log('✅ Formulario limpio - reseteado directamente');
     }
   }
+
+  /**
+   * Verifica si existe un consentimiento para el paciente actual
+   */
+  private checkExistingConsentimiento(patientId: number): void {
+    this.loadingExistingConsentimiento = true;
+    this.existingConsentimientoUrl = null;
+
+    this.consentimiento.downloadConsentFile(patientId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          this.loadingExistingConsentimiento = false;
+          if (blob && blob.size > 0) {
+            // Crear URL para el blob y actualizar el estado
+            this.existingConsentimientoUrl = URL.createObjectURL(blob);
+            this.consentimientoSubido = true;
+            this.registroForm.patchValue({
+              hasConsentimiento: true
+            });
+
+            console.log('✅ Consentimiento existente encontrado para el paciente:', patientId);
+          } else {
+            console.log('ℹ️ No se encontró consentimiento existente para el paciente:', patientId);
+            this.resetConsentimientoState();
+          }
+        },
+        error: (error) => {
+          this.loadingExistingConsentimiento = false;
+          if (error.status === 404) {
+            console.log('ℹ️ No se encontró consentimiento existente (404):', patientId);
+            this.resetConsentimientoState();
+          } else {
+            console.error('❌ Error al verificar consentimiento existente:', error);
+            // No resetear el estado en caso de error diferente a 404
+            // para no perder información si hay un problema temporal
+          }
+        }
+      });
+  }
+
+  /**
+   * Resetea el estado del consentimiento a valores por defecto
+   */
+  private resetConsentimientoState(): void {
+    this.existingConsentimientoUrl = null;
+    this.consentimientoSubido = false;
+    this.consentimientoFile = null;
+    // No resetear hasConsentimiento aquí porque el usuario podría querer subir uno nuevo
+  }
+
+
+
+  /**
+   * Maneja la visualización del consentimiento existente
+   */
+  viewExistingConsentimiento(): void {
+    if (this.existingConsentimientoUrl) {
+      window.open(this.existingConsentimientoUrl, '_blank');
+    }
+  }
+
+  /**
+   * Descarga el consentimiento existente
+   */
+  downloadExistingConsentimiento(): void {
+    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
+    if (!patientId) return;
+
+    this.consentimiento.downloadConsentFile(parseInt(patientId, 10))
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          if (blob && blob.size > 0) {
+            const patientInfo = this.registroForm.get('patient')?.value;
+            const patientName = patientInfo?.name || 'paciente';
+            const fileName = `consentimiento_${patientName.replace(/\s+/g, '_')}.pdf`;
+
+            // Usar file-saver para descargar
+            saveAs(blob, fileName);
+          } else {
+            Swal.fire('Error', 'No se pudo descargar el consentimiento', 'error');
+          }
+        },
+        error: (error) => {
+          Swal.fire('Error', 'No se pudo descargar el consentimiento', 'error');
+        }
+      });
+  }
+
+  /**
+   * Maneja cuando el usuario sube un nuevo archivo (reemplaza el existente)
+   */
+  onNewFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      // Si hay un consentimiento existente, limpiar la URL
+      if (this.existingConsentimientoUrl) {
+        URL.revokeObjectURL(this.existingConsentimientoUrl);
+        this.existingConsentimientoUrl = null;
+      }
+      this.processFile(file);
+    }
+  }
+
+  /**
+   * Sobrescribe el método removeFile para manejar también consentimientos existentes
+   */
+  removeFile(): void {
+    // Si estamos removiendo un consentimiento existente, revocar la URL
+    if (this.existingConsentimientoUrl) {
+      URL.revokeObjectURL(this.existingConsentimientoUrl);
+      this.existingConsentimientoUrl = null;
+    }
+
+    this.consentimientoFile = null;
+    this.registroForm.patchValue({ consentimientoFile: null });
+    this.consentimientoSubido = false;
+
+    // Mantener el estado de hasConsentimiento según la lógica de negocio
+    // this.registroForm.patchValue({ hasConsentimiento: false });
+  }
+
 
   // ============================
   // MÉTODOS DE VERIFICACIÓN
@@ -2000,11 +2109,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
    * Obtiene el número total de campos en el formulario
    */
   private getTotalFieldsCount(): number {
-    let total = 2; 
+    let total = 2;
     total += 13;
 
     if (this.hasCaregiver) {
-      total += 5; 
+      total += 5;
     }
 
     // Variables
@@ -2028,16 +2137,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       default:
         return 'No validado';
     }
-  }
-
-  /**
-   * Obtiene la etiqueta del tipo de identificación
-   * @param tipo Tipo de identificación
-   * @returns Etiqueta descriptiva
-   */
-  private getTipoIdentificacionLabel(tipo: string): string {
-    const tipoObj = this.tiposIdentificacion.find(t => t.value === tipo);
-    return tipoObj ? tipoObj.label : tipo;
   }
 
   /**
@@ -2069,4 +2168,167 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     const str = String(value);
     return str.length > 30 ? str.substring(0, 30) + '...' : str;
   }
+
+  /**
+ * Obtiene la etiqueta del tipo de identificación
+ * @param tipo Tipo de identificación
+ * @returns Etiqueta descriptiva
+ */
+  private getTipoIdentificacionLabel(tipo: string): string {
+    const tipoObj = this.tiposIdentificacion.find(t => t.value === tipo);
+    return tipoObj ? tipoObj.label : tipo;
+  }
+
+
+  /**
+ * Actualiza el manejo de CASE1 para incluir verificación del cuidador
+ */
+  private handleCase1(res: ValidatePatientResponse): void {
+    this.validationMessage = 'El paciente ya existe en esta capa (duplicado) puede continuar pero se actualizará el registro';
+    this.validationStatus = 'warning';
+    this.validationFlag = 'CASE1';
+
+    this.registroForm.patchValue({
+      patient: res.patientBasicInfo,
+      caregiver: res.caregiver
+    });
+
+    // Verificar y activar el cuidador si existe
+    this.checkAndActivateCaregiver(res.caregiver);
+
+    this.cargarVariablesExistentes(res);
+
+    // Verificar consentimiento existente
+    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
+    if (patientId) {
+      this.checkExistingConsentimiento(parseInt(patientId, 10));
+    }
+  }
+
+  /**
+   * Actualiza el manejo de CASE2 para incluir verificación del cuidador
+   */
+  private handleCase2(res: ValidatePatientResponse): void {
+    this.validationMessage = 'El paciente ya tiene un registro en otra capa';
+    this.validationStatus = 'warning';
+    this.validationFlag = 'CASE2';
+
+    this.registroForm.patchValue({
+      patient: res.patientBasicInfo,
+      caregiver: res.caregiver
+    });
+
+    // Verificar y activar el cuidador si existe
+    this.checkAndActivateCaregiver(res.caregiver);
+
+    this.calcularEdadDesdeFechaNacimiento();
+
+    // Verificar consentimiento existente
+    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
+    if (patientId) {
+      this.checkExistingConsentimiento(parseInt(patientId, 10));
+    }
+  }
+
+  /**
+   * Verifica si hay datos de cuidador y activa el switch automáticamente
+   */
+  private checkAndActivateCaregiver(caregiverData: any): void {
+    if (caregiverData && this.hasCaregiverData(caregiverData)) {
+      this.hasCaregiver = true;
+      console.log('✅ Cuidador detectado y activado automáticamente');
+    } else {
+      this.hasCaregiver = false;
+      console.log('ℹ️ No se detectó información de cuidador');
+    }
+  }
+
+  /**
+   * Verifica si los datos del cuidador son válidos y contienen información
+   */
+  hasCaregiverData(caregiverData: any): boolean {
+    if (!caregiverData) return false;
+
+    // Verificar si hay al menos un campo con datos significativos
+    return (
+      (caregiverData.name && caregiverData.name.trim() !== '') ||
+      (caregiverData.identificationNumber && caregiverData.identificationNumber.toString().trim() !== '') ||
+      (caregiverData.age && caregiverData.age.toString().trim() !== '') ||
+      (caregiverData.educationLevel && caregiverData.educationLevel.trim() !== '') ||
+      (caregiverData.occupation && caregiverData.occupation.trim() !== '')
+    );
+  }
+
+  /**
+   * Sobrescribe el método toggleCaregiver para mejor manejo
+   */
+  toggleCaregiver(): void {
+    this.hasCaregiver = !this.hasCaregiver;
+
+    if (!this.hasCaregiver) {
+      // Solo limpiar si el usuario desactiva explícitamente
+      this.clearCaregiverData();
+    } else {
+      console.log('✅ Switch de cuidador activado');
+    }
+  }
+
+  /**
+   * Limpia los datos del cuidador
+   */
+  private clearCaregiverData(): void {
+    const caregiverGroup = this.registroForm.get('caregiver') as FormGroup;
+    caregiverGroup.patchValue({
+      name: '',
+      identificationType: 'CC',
+      identificationNumber: '',
+      age: '',
+      educationLevel: '',
+      occupation: ''
+    });
+
+    caregiverGroup.markAsPristine();
+    caregiverGroup.markAsUntouched();
+
+    console.log('✅ Datos del cuidador limpiados');
+  }
+
+  /**
+   * Maneja el reset del formulario para incluir el estado del cuidador
+   */
+  private resetForm(): void {
+    console.log('🔄 Iniciando reset del formulario...');
+
+    // Guardar el tipo de identificación por defecto
+    const defaultIdType = 'CC';
+
+    // Resetear el formulario preservando el tipo de identificación por defecto
+    this.registroForm.reset({
+      patientIdentificationType: defaultIdType,
+      patientIdentificationNumber: ''
+    });
+
+    // Reinicializar variables
+    this.initializeVariables();
+
+    // Resetear otros estados
+    this.hasCaregiver = false; // ← Asegurar que se resetee
+    this.consentimientoFile = null;
+    this.consentimientoSubido = false;
+    this.existingConsentimientoUrl = null;
+    this.currentSection = 0;
+
+    // Resetear estados de validación
+    this.validationMessage = null;
+    this.validationStatus = null;
+    this.validationFlag = null;
+    this.lastValidationResponse = null;
+
+    // Emitir evento
+    this.registroGuardado.emit();
+
+    console.log('✅ Formulario reseteado completamente');
+  }
+
+  
 }

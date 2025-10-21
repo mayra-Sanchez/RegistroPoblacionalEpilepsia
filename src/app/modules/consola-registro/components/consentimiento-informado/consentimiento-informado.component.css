@@ -1,10 +1,11 @@
-
 .consentimiento-container {
   margin: 2rem auto;
   background: white;
   border-radius: 10px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  max-width: 1200px;
+  position: relative; /* Añadir esto */
 }
 
 /* Encabezado */
@@ -24,12 +25,12 @@
 .consentimiento-header p {
   font-size: 1.1rem;
   opacity: 0.9;
+  margin: 0;
 }
 
 /* Cuerpo del formulario */
 .consentimiento-body {
   padding: 2rem;
-  display: flex ;
 }
 
 .form-section {
@@ -59,6 +60,7 @@
 .form-section p {
   margin-bottom: 1rem;
   text-align: justify;
+  line-height: 1.6;
 }
 
 .form-section ul {
@@ -68,6 +70,7 @@
 
 .form-section li {
   margin-bottom: 0.5rem;
+  line-height: 1.5;
 }
 
 /* Campos de formulario */
@@ -88,7 +91,8 @@
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 1rem;
-  transition: border-color 0.3s;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .form-control:focus {
@@ -103,20 +107,40 @@
 }
 
 .btn-sign {
-  background-color: #f8f9fa;
-  border: 1px dashed #6c757d;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px dashed #6c757d;
   color: #495057;
-  padding: 0.75rem 1.5rem;
-  border-radius: 5px;
+  padding: 1rem 2rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s;
-  font-weight: 500;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-sign:hover {
-  background-color: #e9ecef;
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
   border-color: #4a90e2;
-  color: #4a90e2;
+  color: #4a90e2; /* Corregido el color */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+}
+
+.btn-sign::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.btn-sign:hover::before {
+  left: 100%;
 }
 
 .signature-pad small {
@@ -127,7 +151,8 @@
 }
 
 /* Secciones de datos */
-.patient-data, .professional-data {
+.patient-data,
+.professional-data {
   background-color: #f8f9fa;
   padding: 1.5rem;
   border-radius: 8px;
@@ -154,11 +179,13 @@
   border-radius: 5px;
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  text-decoration: none;
+  font-size: 0.95rem;
 }
 
 .btn-secondary {
@@ -168,6 +195,8 @@
 
 .btn-secondary:hover {
   background-color: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .btn-download {
@@ -177,74 +206,215 @@
 
 .btn-download:hover {
   background-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
 }
 
-/* Modal de firma */
+/* MODAL DE FIRMA CORREGIDO */
 .signature-modal {
-  position:absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999; /* Z-index muy alto para estar sobre TODO */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  pointer-events: all;
 }
 
+.modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(2px) !important;
+}
 .modal-content-consentimiento {
   background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  width: 90%; 
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+  padding: 0;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90vw;
+  max-height: 90vh;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid #e0e0e0;
+  animation: modalAppear 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
 }
 
-.modal-content-consentimiento h4 {
-  margin-bottom: 1.5rem;
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eaeaea;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h4 {
+  margin: 0;
   color: #2c3e50;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close:hover {
+  background-color: #e9ecef;
+  color: #dc3545;
+}
+
+.signature-instructions {
+  padding: 1rem 1.5rem;
+  background: #e8f4fd;
+  border-bottom: 1px solid #b8daff;
+}
+
+.signature-instructions p {
+  margin: 0;
+  color: #004085;
+  font-size: 0.9rem;
   text-align: center;
-  font-size: 1.4rem;
+  font-weight: 500;
 }
 
 .signature-container {
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  margin-bottom: 1.5rem;
-  background-color: white;
+  height: 200px;
+  margin: 1.5rem;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  background: white;
   position: relative;
+  transition: border-color 0.3s ease;
+}
+
+.signature-container:hover {
+  border-color: #4a90e2;
 }
 
 .signature-canvas {
   width: 100%;
   height: 100%;
   cursor: crosshair;
-  border-radius: 5px;
+  border-radius: 6px;
+  display: block;
+  background: white;
 }
 
 .signature-actions {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem 1.5rem;
   gap: 1rem;
 }
 
 .btn-clear {
   background-color: #dc3545;
   color: white;
+  flex: 1;
 }
 
 .btn-clear:hover {
   background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
 }
 
 .btn-confirm {
   background-color: #28a745;
   color: white;
+  flex: 1;
 }
 
 .btn-confirm:hover {
   background-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Estados de validación */
+.form-control.ng-invalid.ng-touched {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.form-control.ng-valid.ng-touched {
+  border-color: #28a745;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Mejoras visuales adicionales */
+.consentimiento-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.consentimiento-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.consentimiento-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.consentimiento-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Efectos de hover mejorados */
+.form-section {
+  transition: transform 0.2s ease;
+}
+
+.form-section:hover {
+  transform: translateX(5px);
 }
 
 /* Responsive */
@@ -253,25 +423,209 @@
     margin: 1rem;
     border-radius: 8px;
   }
-  
+
   .consentimiento-header {
     padding: 1.5rem 1rem;
   }
-  
+
+  .consentimiento-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .consentimiento-header p {
+    font-size: 1rem;
+  }
+
   .consentimiento-body {
     padding: 1.5rem;
   }
-  
+
+  .form-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+  }
+
+  .form-section h3 {
+    font-size: 1.2rem;
+  }
+
+  .form-section h4 {
+    font-size: 1.1rem;
+  }
+
   .form-actions {
     flex-direction: column;
+    gap: 0.75rem;
   }
-  
+
   .btn {
     width: 100%;
+    padding: 1rem 1.5rem;
   }
-  
+
   .modal-content-consentimiento {
     width: 95%;
-    padding: 1.5rem;
+    margin: 1rem;
   }
+
+  .signature-container {
+    height: 150px;
+    margin: 1rem;
+  }
+
+  .signature-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .patient-data,
+  .professional-data {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .consentimiento-container {
+    margin: 0.5rem;
+    border-radius: 6px;
+  }
+
+  .consentimiento-body {
+    padding: 1rem;
+  }
+
+  .form-section {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .form-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .form-section h4 {
+    font-size: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .btn-sign {
+    padding: 0.875rem 1rem;
+  }
+
+  .modal-content-consentimiento {
+    width: 98%;
+    margin: 0.5rem;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .signature-instructions {
+    padding: 0.75rem 1rem;
+  }
+
+  .signature-container {
+    height: 120px;
+    margin: 0.75rem;
+  }
+
+  .signature-actions {
+    padding: 0.75rem 1rem 1rem;
+  }
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .form-control,
+  .form-section,
+  .modal-content-consentimiento {
+    transition: none;
+  }
+
+  .modal-content-consentimiento {
+    animation: none;
+  }
+}
+
+/* Focus visible para mejor accesibilidad */
+.btn:focus-visible,
+.form-control:focus-visible,
+.btn-close:focus-visible {
+  outline: 2px solid #4a90e2;
+  outline-offset: 2px;
+}
+
+/* Estados de carga */
+.btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.btn.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Asegurar que el contenido principal quede detrás del modal */
+.consentimiento-container:has(~ .signature-modal) {
+  filter: blur(1px); /* Opcional: efecto de desenfoque en el fondo */
+  pointer-events: none; /* Prevenir interacciones con el contenido de fondo */
+  user-select: none; /* Prevenir selección de texto */
+}
+
+/* Estados del botón de descarga */
+.btn-download:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-download.loading {
+  position: relative;
+  color: transparent;
+}
+
+.btn-download.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  width: 100%;
 }

@@ -16,7 +16,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AuthInterceptor } from './Guard/auth.interceptor';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { EditarUsuarioComponent } from './shared/components/header/componenets/editar-usuario/editar-usuario.component';
 import { SafePipe } from './pipes/safe.pipe';
 import { InicioSectionComponent } from './home/sections/inicio-section/inicio-section.component';
 import { SistemaSectionComponent } from './home/sections/sistema-section/sistema-section.component';
@@ -34,7 +33,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     ModalConfirmacionComponent,
     ManualComponent,
     LoginComponent,
-    EditarUsuarioComponent,
     SafePipe,
     InicioSectionComponent,
     SistemaSectionComponent,

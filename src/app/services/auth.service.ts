@@ -344,6 +344,59 @@ export class AuthService {
   }
 
   /**
+   * Obtiene las capas de investigación asociadas al usuario actual
+   * @returns Observable con el array de capas de investigación
+   */
+  getUserResearchLayers(): Observable<string[]> {
+    const email = this.getUserEmail();
+    if (!email) {
+      console.error('No se pudo obtener el email del usuario');
+      return of([]);
+    }
+
+    return this.obtenerUsuarioAutenticado(email).pipe(
+      map((response: any) => {
+        if (!response || !response[0]) {
+          throw new Error('Respuesta inválida del servidor');
+        }
+
+        const userData = response[0];
+        const attributes = userData.attributes || {};
+
+        // ✅ Usar researchLayerId en lugar de researchLayer
+        let researchLayers = attributes.researchLayerId || [];
+
+        console.log('🔍 researchLayerId del usuario:', researchLayers);
+
+        // Procesar researchLayer según el formato
+        if (typeof researchLayers === 'string') {
+          try {
+            researchLayers = JSON.parse(researchLayers);
+          } catch {
+            researchLayers = [researchLayers];
+          }
+        }
+
+        if (!Array.isArray(researchLayers)) {
+          researchLayers = [researchLayers];
+        }
+
+        // ✅ Filtrar 'none' y valores vacíos
+        researchLayers = researchLayers.filter((layer: string) =>
+          layer !== 'none' && layer !== '' && layer != null
+        );
+
+        console.log('🔍 Capas de investigación procesadas:', researchLayers);
+        return researchLayers;
+      }),
+      catchError(error => {
+        console.error('Error obteniendo capas de investigación:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
    * Obtiene el primer nombre del usuario
    * @returns Primer nombre del usuario o cadena vacía si no está disponible
    */
@@ -455,31 +508,104 @@ export class AuthService {
    * Actualiza los datos del usuario en el almacenamiento local
    * @param data Objeto con los datos a actualizar
    */
-  updateUserData(data: { username?: string, role?: string, firstName?: string, lastName?: string }): void {
-    const token = this.getToken();
-    if (!token) return;
+  updateUserData(data: {
+    username?: string;
+    role?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string; // ✅ nuevo campo
+  }) {
+    const user = this.getUserData();
+    const updatedUser = { ...user, ...data };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  }
 
-    try {
-      const decoded: any = jwtDecode(token);
+  updateUsuario(userId: string, usuario: any): Observable<any> {
+    const url = `http://localhost:8080/api/v1/users/update?userId=${userId}`;
 
-      if (data.username) {
-        decoded.preferred_username = data.username;
-        localStorage.setItem('current_username', data.username);
+    const formatDate = (dateStr: string): string | null => {
+      if (!dateStr) return null;
+      try {
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch {
+        return null;
       }
+    };
 
-      if (data.role) {
-        const roles = this.getStoredRoles();
-        if (!roles.includes(data.role)) {
-          localStorage.setItem('userRoles', JSON.stringify([...roles, data.role]));
-        }
-      }
+    const payload: any = {
+      firstName: usuario.firstName || usuario.nombre,
+      lastName: usuario.lastName || usuario.apellido,
+      email: usuario.email,
+      username: usuario.username || usuario.usuario,
+      identificationType: usuario.identificationType || usuario.tipoDocumento,
+      identificationNumber: usuario.identificationNumber || usuario.documento,
+      birthDate: formatDate(usuario.birthDate || usuario.fechaNacimiento) || '',
+      role: usuario.role
+    };
 
-      this.authStatus.next(true);
-      this.userProfile.next(this.getUserData());
-
-    } catch (error) {
-      console.error('Error actualizando datos de usuario:', error);
+    // Solo si el usuario cambió la contraseña
+    if (usuario.password && usuario.password.trim() !== '') {
+      payload.password = usuario.password;
     }
+
+    if (usuario.researchLayer) {
+      payload.researchLayer = Array.isArray(usuario.researchLayer)
+        ? usuario.researchLayer
+        : [usuario.researchLayer];
+    }
+
+    // Limpia campos undefined
+    Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+
+    console.log('➡️ Payload final PUT (AuthService):', payload);
+
+    return this.http.put<any>(url, payload).pipe(
+      catchError((err) => {
+        console.error('❌ Error en actualización:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  updateUser(userId: string, userData: any): Observable<any> {
+    const url = `${this.API_USERS_URL}/update?userId=${userId}`;
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.getToken()}`
+    });
+
+    console.log('🔧 Enviando PUT a:', url);
+    console.log('📦 Datos enviados:', userData);
+    console.log('🔍 Tipos de datos:');
+    console.log('  - identificationNumber:', typeof userData.identificationNumber, userData.identificationNumber);
+    console.log('  - researchLayer:', Array.isArray(userData.researchLayer), userData.researchLayer);
+
+    return this.http.put(url, userData, { headers }).pipe(
+      tap(response => console.log('✅ Respuesta del servidor:', response)),
+      catchError((error) => {
+        console.error('❌ Error completo en actualización:', error);
+        console.error('❌ Error response:', error.error);
+
+        let errorMsg = 'Error desconocido';
+
+        if (error.error && typeof error.error === 'string') {
+          errorMsg = error.error;
+        } else if (error.error?.message) {
+          errorMsg = error.error.message;
+        } else if (error.error?.error) {
+          errorMsg = error.error.error;
+        } else if (error.status === 400) {
+          errorMsg = 'Datos inválidos. Verifica que identificationNumber sea número y researchLayer sea array.';
+        }
+
+        return throwError(() => new Error(errorMsg));
+      })
+    );
   }
 
   /**
@@ -522,42 +648,6 @@ export class AuthService {
     this.userProfile.next(this.getUserData());
   }
 
-  /**
-   * Actualiza los datos de un usuario en el backend
-   * @param userId ID del usuario a actualizar
-   * @param userData Datos nuevos del usuario
-   * @returns Observable con la respuesta del servidor
-   */
-  updateUser(userId: string, userData: any): Observable<any> {
-    const token = this.getToken();
-    if (!token) {
-      return throwError(() => new Error('No hay token disponible'));
-    }
-
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
-
-    const url = `${this.API_USERS_URL}/update?userId=${encodeURIComponent(userId)}`;
-
-    return this.http.put(url, userData, { headers }).pipe(
-      catchError(error => {
-        console.error('Error completo en updateUser:', error);
-        let errorMessage = 'Error al actualizar el usuario';
-
-        if (error.error) {
-          errorMessage = error.error.message ||
-            error.error.error ||
-            JSON.stringify(error.error);
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-
-        return throwError(() => new Error(errorMessage));
-      })
-    );
-  }
 
   /**
    * Obtiene un usuario por su ID
@@ -598,7 +688,12 @@ export class AuthService {
     const url = `${this.API_USERS_URL}`;
     const params = new HttpParams().set('email', email);
 
+    console.log('🔍 SOLICITANDO USUARIO CON EMAIL:', email);
+
     return this.http.get<any>(url, { headers, params }).pipe(
+      tap(response => {
+        console.log('✅ RESPUESTA COMPLETA DE OBTENER USUARIO:', JSON.stringify(response, null, 2));
+      }),
       catchError(error => {
         console.error('❌ Error al obtener usuario:', error);
         return throwError(() => new Error(error.error?.message || 'Ocurrió un error al obtener el usuario.'));

@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 })
 export class HeaderComponent implements OnInit {
   isModalVisible = false;
-  modalType: 'login' | 'manual' | 'edit-user' = 'login';
+  modalType: 'login' | 'manual' = 'login';
   isLoggedIn: boolean = false;
   username: string = '';
   userRole: string = '';
@@ -159,56 +159,6 @@ export class HeaderComponent implements OnInit {
       },
       (error) => {
         console.error('Error al cargar datos del usuario:', error);
-      }
-    );
-  }
-
-  // Método para abrir el modal de edición
-  openEditUserModal(): void {
-    this.modalType = 'edit-user';
-    this.isModalVisible = true;
-    this.isSettingsMenuVisible = false;
-  }
-
-  // Método para manejar la actualización del usuario
-  handleUserUpdate(updatedData: any): void {
-    if (!this.userId) {
-      console.error('No hay ID de usuario disponible');
-      return;
-    }
-
-    const userData = {
-      firstName: updatedData.firstName,
-      lastName: updatedData.lastName,
-      username: updatedData.username,
-      email: updatedData.email,
-      attributes: {
-        identificationType: [updatedData.identificationType],
-        identificationNumber: [updatedData.identificationNumber],
-        birthDate: [updatedData.birthDate],
-        researchLayerId: [updatedData.researchLayer],
-        role: [updatedData.role]
-      }
-    };
-
-    this.adminService.updateUsuario(this.userId, userData).subscribe(
-      (response) => {
-        // Actualizar datos locales
-        this.currentUserData = {
-          ...this.currentUserData,
-          ...userData
-        };
-
-        this.authService.updateUserData({
-          username: updatedData.username,
-          firstName: updatedData.firstName,
-          lastName: updatedData.lastName,
-        });
-
-        this.closeModal();
-      },
-      (error) => {
-        console.error('Error al actualizar usuario:', error);
       }
     );
   }

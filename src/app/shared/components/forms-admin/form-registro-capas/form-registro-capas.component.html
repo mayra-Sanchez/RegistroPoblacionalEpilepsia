@@ -12,10 +12,28 @@
         investigación de epilepsia en niños menores a 10 años", etc.
       </small>
     </div>
+
+    <!-- Advertencia importante sobre el jefe de capa -->
+    <div class="warning-box">
+      <i class="fas fa-exclamation-triangle"></i>
+      <small>
+        <strong>Importante:</strong> El jefe de capa debe ser un usuario registrado en la aplicación. 
+        El sistema validará automáticamente mediante el número de identificación proporcionado.
+      </small>
+    </div>
+
+    <!-- Indicador de estado de validación -->
+    <div *ngIf="formularioValidado" class="validation-status success">
+      <i class="fas fa-check-circle"></i>
+      Formulario validado correctamente - Listo para registrar
+    </div>
+    <div *ngIf="!formularioValidado && form.dirty" class="validation-status warning">
+      <i class="fas fa-exclamation-triangle"></i>
+      Formulario pendiente de validación
+    </div>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="registrarCapa()" class="elegant-form">
-    <!-- Nombre de la Capa -->
     <!-- Nombre de la Capa -->
     <div class="form-group">
       <label for="layerName"><i class="fas fa-tag"></i> Nombre de la capa</label>
@@ -57,57 +75,81 @@
       </div>
     </div>
 
-    <!-- Grupo anidado del jefe de capa -->
-    <div formGroupName="layerBoss">
-      <!-- Nombre del jefe -->
-      <div class="form-group">
-        <label for="bossName"><i class="fas fa-user"></i> Nombre completo del jefe</label>
-        <input type="text" id="bossName" formControlName="name" placeholder="Ej: Juan Pérez González" />
-        <div *ngIf="form.get('layerBoss.name')?.touched && form.get('layerBoss.name')?.invalid" class="error-message">
-          <small *ngIf="form.get('layerBoss.name')?.errors?.['required']">El nombre es obligatorio</small>
-          <small *ngIf="form.get('layerBoss.name')?.errors?.['minlength']">Mínimo 3 caracteres</small>
-          <small *ngIf="form.get('layerBoss.name')?.errors?.['pattern']">Solo se permiten letras y espacios</small>
-        </div>
+    <!-- Sección del Jefe de Capa con advertencia -->
+    <div class="section-header boss-section">
+      <i class="fas fa-user-tie"></i>
+      <h3>Información del Jefe de Capa</h3>
+    </div>
+
+    <div class="boss-info">
+      <div class="boss-warning">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>El jefe de capa debe ser usuario registrado en la aplicación (se valida con número de identificación)</span>
       </div>
 
-      <!-- Email del jefe -->
-      <div class="form-group">
-        <label for="bossEmail"><i class="fas fa-envelope"></i> Correo electrónico</label>
-        <input type="email" id="bossEmail" formControlName="email" placeholder="Ej: jefe@capa.com" />
-        <div *ngIf="form.get('layerBoss.email')?.touched && form.get('layerBoss.email')?.invalid" class="error-message">
-          <small *ngIf="form.get('layerBoss.email')?.errors?.['required']">El correo es obligatorio</small>
-          <small *ngIf="form.get('layerBoss.email')?.errors?.['email']">Ingresa un correo válido</small>
+      <div formGroupName="layerBoss">
+        <!-- Nombre del jefe -->
+        <div class="form-group">
+          <label for="bossName"><i class="fas fa-user"></i> Nombre completo del jefe</label>
+          <input type="text" id="bossName" formControlName="name" placeholder="Ej: Juan Pérez González" />
+          <div *ngIf="form.get('layerBoss.name')?.touched && form.get('layerBoss.name')?.invalid" class="error-message">
+            <small *ngIf="form.get('layerBoss.name')?.errors?.['required']">El nombre es obligatorio</small>
+            <small *ngIf="form.get('layerBoss.name')?.errors?.['minlength']">Mínimo 3 caracteres</small>
+            <small *ngIf="form.get('layerBoss.name')?.errors?.['pattern']">Solo se permiten letras y espacios</small>
+          </div>
         </div>
-      </div>
 
-      <!-- Número de identificación -->
-      <div class="form-group">
-        <label for="identificationNumber"><i class="fas fa-id-card"></i> Número de identificación</label>
-        <input type="text" id="identificationNumber" formControlName="identificationNumber"
-          placeholder="Ej: 123456789" />
-        <div
-          *ngIf="form.get('layerBoss.identificationNumber')?.touched && form.get('layerBoss.identificationNumber')?.invalid"
-          class="error-message">
-          <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['required']">Este campo es
-            obligatorio</small>
-          <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['minlength']">Mínimo 5 dígitos</small>
-          <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['pattern']">Solo se permiten
-            números</small>
+        <!-- Email del jefe -->
+        <div class="form-group">
+          <label for="bossEmail"><i class="fas fa-envelope"></i> Correo electrónico</label>
+          <input type="email" id="bossEmail" formControlName="email" placeholder="Ej: jefe@capa.com" />
+          <div *ngIf="form.get('layerBoss.email')?.touched && form.get('layerBoss.email')?.invalid" class="error-message">
+            <small *ngIf="form.get('layerBoss.email')?.errors?.['required']">El correo es obligatorio</small>
+            <small *ngIf="form.get('layerBoss.email')?.errors?.['email']">Ingresa un correo válido</small>
+          </div>
+        </div>
+
+        <!-- Número de identificación -->
+        <div class="form-group">
+          <label for="identificationNumber"><i class="fas fa-id-card"></i> Número de identificación</label>
+          <input type="text" id="identificationNumber" formControlName="identificationNumber"
+            placeholder="Ej: 123456789" />
+          <div class="hint-message">
+            <small><i class="fas fa-info-circle"></i> Se validará que este número corresponda a un usuario registrado</small>
+          </div>
+          <div
+            *ngIf="form.get('layerBoss.identificationNumber')?.touched && form.get('layerBoss.identificationNumber')?.invalid"
+            class="error-message">
+            <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['required']">Este campo es
+              obligatorio</small>
+            <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['minlength']">Mínimo 5 dígitos</small>
+            <small *ngIf="form.get('layerBoss.identificationNumber')?.errors?.['pattern']">Solo se permiten
+              números</small>
+          </div>
         </div>
       </div>
     </div>
 
-
-    <!-- Botón de envío -->
+    <!-- Botones de acción -->
     <div class="form-footer">
       <button type="button" class="submit-button cancel-button" (click)="onCancel()" [disabled]="isSubmitting">
         <i class="fas fa-times"></i> Cancelar
       </button>
-      <button type="submit" class="submit-button" [disabled]="form.invalid || isSubmitting">
-        <i class="fas" [class.fa-save]="!isSubmitting" [class.fa-spinner]="isSubmitting"
-          [class.fa-spin]="isSubmitting"></i>
-        {{ isSubmitting ? 'Registrando...' : 'Registrar Capa' }}
-      </button>
+      
+      <div class="action-buttons">
+        <button type="button" class="submit-button validate-button" 
+                (click)="validarFormulario()" 
+                [disabled]="!puedeValidar()">
+          <i class="fas fa-check-circle"></i> Validar Formulario
+        </button>
+        
+        <button type="submit" class="submit-button register-button" 
+                [disabled]="!puedeRegistrar()">
+          <i class="fas" [class.fa-save]="!isSubmitting" [class.fa-spinner]="isSubmitting"
+            [class.fa-spin]="isSubmitting"></i>
+          {{ isSubmitting ? 'Registrando...' : 'Registrar Capa' }}
+        </button>
+      </div>
     </div>
   </form>
 </div>

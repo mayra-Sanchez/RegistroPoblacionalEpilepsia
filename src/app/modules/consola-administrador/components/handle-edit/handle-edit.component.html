@@ -13,54 +13,80 @@
                     <form *ngSwitchCase="'usuario'" [formGroup]="editForm" (ngSubmit)="guardarCambios()">
                         <div class="form-group">
                             <label>Nombre</label>
-                            <input type="text" class="form-control" formControlName="nombre" readonly>
+                            <input type="text" class="form-control readonly-field" formControlName="nombre" readonly>
+                            <div class="field-status readonly">
+                                <i class="fas fa-lock"></i> Solo lectura
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Apellido</label>
-                            <input type="text" class="form-control" formControlName="apellido" readonly>
+                            <input type="text" class="form-control readonly-field" formControlName="apellido" readonly>
+                            <div class="field-status readonly">
+                                <i class="fas fa-lock"></i> Solo lectura
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" class="form-control" formControlName="email" required>
+                            <input type="email" class="form-control editable-field" formControlName="email" required>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Usuario</label>
-                            <input type="text" class="form-control" formControlName="usuario" readonly>
+                            <input type="text" class="form-control readonly-field" formControlName="usuario" readonly>
+                            <div class="field-status readonly">
+                                <i class="fas fa-lock"></i> Solo lectura
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Tipo de Documento</label>
-                            <select class="form-control" formControlName="tipoDocumento">
+                            <select class="form-control readonly-field" formControlName="tipoDocumento">
                                 <option value="CC">Cédula de Ciudadanía</option>
                                 <option value="TI">Tarjeta de Identidad</option>
                                 <option value="CE">Cédula de Extranjería</option>
                                 <option value="PA">Pasaporte</option>
                             </select>
+                            <div class="field-status readonly">
+                                <i class="fas fa-lock"></i> Solo lectura
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Documento</label>
-                            <input type="text" class="form-control" formControlName="documento" readonly>
+                            <input type="text" class="form-control readonly-field" formControlName="documento" readonly>
+                            <div class="field-status readonly">
+                                <i class="fas fa-lock"></i> Solo lectura
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Fecha de Nacimiento</label>
-                            <input type="date" class="form-control" formControlName="fechaNacimiento" readonly>
+                            <input type="date" class="form-control readonly-field" formControlName="fechaNacimiento"
+                                readonly>
+                            <div class="field-status readonly">
+                                <i class="fas fa-lock"></i> Solo lectura
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Capas de Investigación</label>
-                            <div class="capas-selection">
+                            <div class="capas-selection editable-container">
                                 <div *ngFor="let capa of capas" class="form-check">
-                                    <input type="checkbox" class="form-check-input" [id]="'capa-' + capa.id"
-                                        [checked]="isCapaSelected(capa.id)" (change)="toggleCapaSelection(capa.id)">
+                                    <input type="checkbox" class="form-check-input editable-field"
+                                        [id]="'capa-' + capa.id" [checked]="isCapaSelected(capa.id)"
+                                        (change)="toggleCapaSelection(capa.id)">
                                     <label class="form-check-label" [for]="'capa-' + capa.id">
                                         {{ capa.nombreCapa }}
                                     </label>
                                 </div>
+                            </div>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Selección editable
                             </div>
                             <small class="form-text text-muted">
                                 Seleccione todas las capas a las que pertenece el usuario
@@ -69,19 +95,22 @@
 
                         <div class="form-group">
                             <label>Rol</label>
-                            <select class="form-control" formControlName="role" required
+                            <select class="form-control editable-field" formControlName="role" required
                                 (change)="confirmarCambioRol()">
                                 <option value="Admin">Administrador</option>
                                 <option value="Doctor">Doctor</option>
                                 <option value="Researcher">Investigador</option>
                                 <option value="SuperAdmin">Super administrador</option>
                             </select>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable (requiere confirmación)
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Contraseña</label>
                             <div class="input-group">
-                                <input [type]="showPassword ? 'text' : 'password'" class="form-control"
+                                <input [type]="showPassword ? 'text' : 'password'" class="form-control editable-field"
                                     formControlName="password">
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button"
@@ -91,19 +120,27 @@
                                     </button>
                                 </div>
                             </div>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable (opcional)
+                            </div>
                             <small class="form-text text-muted">
                                 Dejar en blanco para mantener la contraseña actual
                             </small>
-                            <div class="text-muted small mt-1">
+                            <div class="text-muted small mt-1 readonly-info">
+                                <i class="fas fa-history"></i>
                                 Última actualización: {{ editForm.get('lastPasswordUpdate')?.value || 'No registrada' }}
                             </div>
                         </div>
 
                         <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" formControlName="acceptTermsAndConditions">
+                            <input type="checkbox" class="form-check-input editable-field"
+                                formControlName="acceptTermsAndConditions">
                             <label class="form-check-label">
                                 Acepto los <a (click)="abrirTerminos()">Términos y Condiciones</a>
                             </label>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
 
                         <div class="modal-footer">
@@ -112,51 +149,67 @@
                         </div>
                     </form>
 
-
                     <!-- Edición para Variables -->
                     <form *ngSwitchCase="'variable'" [formGroup]="editForm" (ngSubmit)="guardarCambios()">
                         <div class="form-group">
                             <label>Nombre de la Variable</label>
-                            <input type="text" class="form-control" formControlName="variableName">
+                            <input type="text" class="form-control readonly-field" formControlName="variableName">
+                            <div class="field-status readonly">
+                                <i class="fas fa-lock"></i> Solo lectura
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Descripción</label>
-                            <textarea class="form-control" formControlName="description"></textarea>
+                            <textarea class="form-control editable-field" formControlName="description"></textarea>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Tipo de Variable</label>
-                            <select class="form-control" formControlName="type" required>
+                            <select class="form-control editable-field" formControlName="type" required>
                                 <option value="Entero" title="Ej: 1, 2, 3">Entero</option>
                                 <option value="Real" title="Ej: 1.5, 2.75, 3.14">Real</option>
                                 <option value="Texto" title="Ej: texto como 'Juan', 'Azul'">Texto</option>
-                                <!-- Cambiado de "Cadena" a "Texto" -->
                                 <option value="Fecha" title="Ej: 2023-04-01">Fecha</option>
                                 <option value="Lógico" title="Ej: Verdadero o Falso">Lógico</option>
                             </select>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label>Capa de Investigación</label>
-                            <select class="form-control" formControlName="researchLayerId" required>
+                            <select class="form-control editable-field" formControlName="researchLayerId" required>
                                 <option *ngFor="let capa of capas" [value]="capa.id">{{ capa.nombreCapa }}</option>
                             </select>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
 
                         <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="tieneOpciones" [checked]="tieneOpciones"
-                                (change)="onTieneOpcionesChange($event)">
+                            <input type="checkbox" class="form-check-input editable-field" id="tieneOpciones"
+                                [checked]="tieneOpciones" (change)="onTieneOpcionesChange($event)">
                             <label class="form-check-label" for="tieneOpciones">
                                 Esta variable tiene opciones predefinidas
                             </label>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
 
                         <div *ngIf="tieneOpciones" class="form-group" formArrayName="options">
                             <label>Opciones</label>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Lista editable
+                            </div>
                             <div *ngFor="let control of opcionesArray.controls; let i = index; trackBy: trackByIndex"
                                 class="input-group mb-2">
-                                <input class="form-control" [formControlName]="i" />
+                                <input class="form-control editable-field" [formControlName]="i" />
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-danger" type="button" (click)="eliminarOpcion(i)">
                                         <i class="fa fa-trash"></i>
@@ -179,31 +232,46 @@
                     <form *ngSwitchCase="'capa'" [formGroup]="editForm" (ngSubmit)="guardarCambios()">
                         <div class="form-group">
                             <label>Nombre de la Capa</label>
-                            <input type="text" class="form-control" formControlName="layerName">
+                            <input type="text" class="form-control readonly-field" formControlName="layerName">
+                            <div class="field-status readonly">
+                                <i class="fas fa-lock"></i> Solo lectura
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Descripción</label>
-                            <textarea class="form-control" formControlName="description"></textarea>
+                            <textarea class="form-control editable-field" formControlName="description"></textarea>
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Nombre del Jefe de Capa</label>
-                            <input type="text" class="form-control" formControlName="jefeNombre">
+                            <input type="text" class="form-control editable-field" formControlName="jefeNombre">
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Email del Jefe de Capa</label>
-                            <input type="email" class="form-control" formControlName="jefeEmail">
+                            <input type="email" class="form-control editable-field" formControlName="jefeEmail">
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Documento del Jefe</label>
-                            <input type="text" class="form-control" formControlName="jefeDocumento">
+                            <input type="text" class="form-control editable-field" formControlName="jefeDocumento">
+                            <div class="field-status editable">
+                                <i class="fas fa-edit"></i> Editable
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                         </div>
                     </form>
-
                 </ng-container>
             </div>
         </div>
     </div>
+</div>

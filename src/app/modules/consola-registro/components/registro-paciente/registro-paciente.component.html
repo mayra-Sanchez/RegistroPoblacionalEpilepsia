@@ -53,6 +53,15 @@
         <!-- Sección: Identificación -->
         <div class="form-section" [class.active]="currentSection === 0">
             <h3><i class="fas fa-id-card"></i> Identificación</h3>
+
+            <!-- Indicador de estado de validación -->
+            <div class="validation-status-indicator" *ngIf="!validationFlag">
+                <div class="validation-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Debe validar el paciente para continuar</span>
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label>Tipo de Identificación *</label>
@@ -66,31 +75,37 @@
                 <div class="form-group identificacion-con-boton">
                     <label>Número de Identificación *</label>
                     <div class="input-with-button">
-                        <input type="text" formControlName="patientIdentificationNumber" placeholder="Ej: 1234567890" />
+                        <input type="text" formControlName="patientIdentificationNumber" placeholder="Ej: 1234567890"
+                            [class.not-validated]="!validationFlag" />
                         <button type="button" class="btn btn-validate" (click)="validarPaciente()"
                             [disabled]="validatingPatient">
                             <i class="fas" [class.fa-search]="!validatingPatient" [class.fa-spinner]="validatingPatient"
                                 [class.fa-spin]="validatingPatient"></i>
+                            {{ validatingPatient ? 'Validando...' : 'Validar' }}
                         </button>
                     </div>
 
-                    <div *ngIf="
-    registroForm.get('patientIdentificationNumber')?.invalid &&
-    registroForm.get('patientIdentificationNumber')?.touched
-  " class="error-message">
+                    <div *ngIf="registroForm.get('patientIdentificationNumber')?.invalid && 
+                  registroForm.get('patientIdentificationNumber')?.touched" class="error-message">
                         Número de identificación requerido
                     </div>
 
+                    <!-- Mensaje de validación -->
                     <div *ngIf="validationMessage" class="validation-message" [ngClass]="validationStatus">
                         <i class="fas" [ngClass]="{
-      'fa-check-circle': validationStatus === 'success',
-      'fa-exclamation-circle': validationStatus === 'warning',
-      'fa-times-circle': validationStatus === 'error'
-    }"></i>
+          'fa-check-circle': validationStatus === 'success',
+          'fa-exclamation-circle': validationStatus === 'warning',
+          'fa-times-circle': validationStatus === 'error'
+        }"></i>
                         {{ validationMessage }}
                     </div>
-                </div>
 
+                    <!-- Indicador de próximo paso -->
+                    <div *ngIf="validationFlag" class="next-step-indicator">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Paciente validado. Puede continuar con el registro.</span>
+                    </div>
+                </div>
             </div>
 
             <div class="section-navigation-controls">
@@ -107,7 +122,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nombre Completo *</label>
-                        <input type="text" formControlName="name" placeholder="Nombre completo" />
+                        <input type="text" formControlName="name" placeholder="Nombre completo" appCapitalize />
                         <div *ngIf="registroForm.get('patient')?.get('name')?.invalid && registroForm.get('patient')?.get('name')?.touched"
                             class="error-message">
                             Nombre es requerido
@@ -253,6 +268,7 @@
             </div>
         </div>
 
+        <!-- Sección: Consentimiento -->
         <div class="form-section" [class.active]="currentSection === 3">
             <h3><i class="fas fa-file-signature"></i> Consentimiento Informado</h3>
 
@@ -263,25 +279,74 @@
                         <input type="checkbox" formControlName="hasConsentimiento"
                             (change)="onConsentimientoToggle()" />
                         <span class="slider round"></span>
-                        <span class="switch-label">{{ registroForm.get('hasConsentimiento')?.value ? 'Sí' : 'No'
-                            }}</span>
+                        <span class="switch-label">
+                            {{ registroForm.get('hasConsentimiento')?.value ? 'Sí' : 'No' }}
+                        </span>
                     </label>
                 </div>
 
                 <div *ngIf="registroForm.get('hasConsentimiento')?.value" class="file-upload-section">
+
+                    <!-- Consentimiento Existente -->
+                    <div *ngIf="existingConsentimientoUrl && !consentimientoFile" class="existing-consentimiento">
+                        <div class="existing-file-header">
+                            <i class="fas fa-file-pdf"></i>
+                            <h4>Consentimiento Existente</h4>
+                            <span class="existing-badge">Previamente subido</span>
+                        </div>
+
+                        <div class="existing-file-actions">
+                            <button type="button" class="btn btn-view" (click)="viewExistingConsentimiento()">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                            <button type="button" class="btn btn-download" (click)="downloadExistingConsentimiento()">
+                                <i class="fas fa-download"></i> Descargar
+                            </button>
+                            <button type="button" class="btn btn-replace" (click)="fileInput.click()">
+                                <i class="fas fa-sync"></i> Reemplazar
+                            </button>
+                        </div>
+
+                        <div class="existing-file-note">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Este paciente ya tiene un consentimiento subido. Puede visualizarlo, descargarlo o
+                                reemplazarlo con uno nuevo.</span>
+                        </div>
+                    </div>
+
+                    <!-- Carga de Nuevo Archivo -->
                     <div class="form-group">
-                        <label>Subir consentimiento informado *</label>
-                        <div class="file-upload-container" [class.has-file]="consentimientoFile">
-                            <input type="file" #fileInput (change)="onFileSelected($event)"
+                        <label>
+                            {{ existingConsentimientoUrl ? 'Subir nuevo consentimiento informado' : 'Subir
+                            consentimiento informado' }} *
+                        </label>
+                        <div class="file-upload-container"
+                            [class.has-file]="consentimientoFile || existingConsentimientoUrl"
+                            [class.has-existing]="existingConsentimientoUrl && !consentimientoFile">
+
+                            <input type="file" #fileInput (change)="onNewFileSelected($event)"
                                 accept=".pdf,.jpg,.jpeg,.png" hidden>
 
                             <div class="upload-area" (click)="fileInput.click()" [class.drag-over]="isDraggingOver"
                                 (dragover)="onDragOver($event)" (dragleave)="onDragLeave()" (drop)="onDrop($event)">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Haga clic o arrastre el archivo aquí</p>
-                                <small>Formatos permitidos: PDF, JPG, PNG (Máx. 5MB)</small>
+
+                                <div *ngIf="loadingExistingConsentimiento" class="loading-consentimiento">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Verificando consentimiento existente...</p>
+                                </div>
+
+                                <div *ngIf="!loadingExistingConsentimiento">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>
+                                        {{ existingConsentimientoUrl ?
+                                        'Haga clic o arrastre un nuevo archivo para reemplazar' :
+                                        'Haga clic o arrastre el archivo aquí' }}
+                                    </p>
+                                    <small>Formatos permitidos: PDF, JPG, PNG (Máx. 5MB)</small>
+                                </div>
                             </div>
 
+                            <!-- Preview del nuevo archivo subido -->
                             <div *ngIf="consentimientoFile" class="file-preview">
                                 <div class="file-info">
                                     <i class="fas fa-file-pdf"
@@ -289,15 +354,17 @@
                                     <i class="fas fa-file-image" *ngIf="consentimientoFile.type.includes('image')"></i>
                                     <span class="file-name">{{ consentimientoFile.name }}</span>
                                     <span class="file-size">({{ getFileSize(consentimientoFile.size) }})</span>
+                                    <span class="file-status new">Nuevo</span>
                                 </div>
                                 <button type="button" class="btn-remove" (click)="removeFile()">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
+
                         </div>
 
-                        <div *ngIf="consentimientoSubido" class="success-message">
-                            <i class="fas fa-check-circle"></i> Consentimiento subido correctamente
+                        <div *ngIf="consentimientoSubido && consentimientoFile" class="success-message">
+                            <i class="fas fa-check-circle"></i> Nuevo consentimiento listo para guardar
                         </div>
                     </div>
                 </div>
@@ -318,16 +385,46 @@
             <h3>
                 <i class="fas fa-hands-helping"></i> Cuidador
                 <label class="switch">
-                    <input type="checkbox" [checked]="hasCaregiver" (change)="toggleCaregiver()" />
+                    <input type="checkbox" [checked]="hasCaregiver" (change)="toggleCaregiver()"
+                        [attr.data-has-data]="hasCaregiverData(registroForm.get('caregiver')?.value)" />
                     <span class="slider round"></span>
                 </label>
+                <span class="caregiver-status" *ngIf="hasCaregiver">
+                    <i class="fas fa-check-circle"></i>
+                    <span *ngIf="hasCaregiverData(registroForm.get('caregiver')?.value)">
+                        Cuidador con datos completos
+                    </span>
+                    <span *ngIf="!hasCaregiverData(registroForm.get('caregiver')?.value)">
+                        Cuidador activado - Complete los datos
+                    </span>
+                </span>
             </h3>
 
+            <!-- Indicador cuando hay datos de cuidador pero el switch está off -->
+            <div *ngIf="!hasCaregiver && hasCaregiverData(registroForm.get('caregiver')?.value)"
+                class="caregiver-data-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Existen datos de cuidador guardados. Active el switch para visualizarlos.</span>
+                <button type="button" class="btn-activate-caregiver" (click)="toggleCaregiver()">
+                    <i class="fas fa-toggle-on"></i> Activar cuidador
+                </button>
+            </div>
+
             <div *ngIf="hasCaregiver" class="caregiver-section" formGroupName="caregiver">
+
+                <!-- Indicador de origen de datos -->
+                <div *ngIf="hasCaregiverData(registroForm.get('caregiver')?.value)" class="data-origin-indicator">
+                    <i class="fas fa-database"></i>
+                    <span>Datos cargados desde el sistema</span>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nombre del Cuidador</label>
-                        <input type="text" formControlName="name" placeholder="Nombre completo" />
+                        <input type="text" formControlName="name" placeholder="Nombre completo" appCapitalize />
+                        <div class="field-status" *ngIf="registroForm.get('caregiver.name')?.value">
+                            <i class="fas fa-check"></i> Completado
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -344,11 +441,17 @@
                     <div class="form-group">
                         <label>Número de Identificación</label>
                         <input type="text" formControlName="identificationNumber" placeholder="Ej: 987654321" />
+                        <div class="field-status" *ngIf="registroForm.get('caregiver.identificationNumber')?.value">
+                            <i class="fas fa-check"></i> Completado
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label>Edad</label>
                         <input type="number" formControlName="age" placeholder="Edad" />
+                        <div class="field-status" *ngIf="registroForm.get('caregiver.age')?.value">
+                            <i class="fas fa-check"></i> Completado
+                        </div>
                     </div>
                 </div>
 
@@ -361,6 +464,9 @@
                                 {{ nivel.label }}
                             </option>
                         </select>
+                        <div class="field-status" *ngIf="registroForm.get('caregiver.educationLevel')?.value">
+                            <i class="fas fa-check"></i> Completado
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -371,6 +477,33 @@
                                 {{ ocupacion }}
                             </option>
                         </select>
+                        <div class="field-status" *ngIf="registroForm.get('caregiver.occupation')?.value">
+                            <i class="fas fa-check"></i> Completado
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen del cuidador -->
+                <div *ngIf="hasCaregiverData(registroForm.get('caregiver')?.value)" class="caregiver-summary">
+                    <h4><i class="fas fa-user-check"></i> Resumen del Cuidador</h4>
+                    <div class="summary-grid">
+                        <div class="summary-item" *ngIf="registroForm.get('caregiver.name')?.value">
+                            <strong>Nombre:</strong> {{ registroForm.get('caregiver.name')?.value }}
+                        </div>
+                        <div class="summary-item" *ngIf="registroForm.get('caregiver.identificationNumber')?.value">
+                            <strong>Identificación:</strong>
+                            {{ registroForm.get('caregiver.identificationNumber')?.value }}
+                            ({{ registroForm.get('caregiver.identificationType')?.value }})
+                        </div>
+                        <div class="summary-item" *ngIf="registroForm.get('caregiver.age')?.value">
+                            <strong>Edad:</strong> {{ registroForm.get('caregiver.age')?.value }} años
+                        </div>
+                        <div class="summary-item" *ngIf="registroForm.get('caregiver.educationLevel')?.value">
+                            <strong>Educación:</strong> {{ registroForm.get('caregiver.educationLevel')?.value }}
+                        </div>
+                        <div class="summary-item" *ngIf="registroForm.get('caregiver.occupation')?.value">
+                            <strong>Ocupación:</strong> {{ registroForm.get('caregiver.occupation')?.value }}
+                        </div>
                     </div>
                 </div>
             </div>

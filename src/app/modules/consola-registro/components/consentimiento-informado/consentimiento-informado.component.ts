@@ -24,7 +24,7 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
   //#region Output Events
   /** Evento emitido al enviar el consentimiento */
   @Output() submitConsentimiento = new EventEmitter<any>();
-  
+
   /** Evento emitido al cancelar el proceso */
   @Output() cancel = new EventEmitter<void>();
   //#endregion
@@ -32,27 +32,25 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
   //#region ViewChild References
   /** Referencia al elemento del pad de firma */
   @ViewChild('signaturePad', { static: false }) signaturePadElement!: ElementRef;
+  @ViewChild('signatureModal', { static: false }) signatureModal!: ElementRef;
   //#endregion
 
   //#region Propiedades del Componente
   /** Instancia del SignaturePad para manejar firmas */
   signaturePad!: SignaturePad;
-  
-  /** Indica si el usuario está dibujando */
-  private isDrawing = false;
 
   /** Formulario reactivo para el consentimiento */
   consentimientoForm: FormGroup;
 
   /** Controla la visibilidad del modal de firma del paciente */
   showFirmaPaciente = false;
-  
+
   /** Controla la visibilidad del modal de firma del profesional */
   showFirmaProfesional = false;
-  
+
   /** Tipo de firma actual (paciente o profesional) */
   currentSignatureType: 'paciente' | 'profesional' = 'paciente';
-  
+
   /** Indica si pdfMake está cargado */
   pdfMakeLoaded = false;
   //#endregion
@@ -65,10 +63,10 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
   constructor(private fb: FormBuilder) {
     // Inicializar el formulario con validadores
     this.consentimientoForm = this.createConsentimientoForm();
-    
+
     // Precargar datos del paciente si están disponibles
     this.prefillPacienteData();
-    
+
     // Cargar pdfMake de forma asíncrona
     this.loadPdfMake();
   }
@@ -102,19 +100,43 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
   }
 
   /**
-   * Carga la librería pdfMake de forma asíncrona
+   * Carga la librería pdfMake de forma asíncrona con mejor manejo de errores
    */
   async loadPdfMake(): Promise<void> {
-    if (!this.pdfMakeLoaded) {
-      try {
-        const pdfMakeModule = await import('pdfmake/build/pdfmake');
-        const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
+    if (this.pdfMakeLoaded) return;
+
+    try {
+      console.log('Iniciando carga de pdfMake...');
+
+      const pdfMakeModule = await import('pdfmake/build/pdfmake');
+      const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
+
+      if (pdfMakeModule && pdfMakeModule.default) {
         pdfMake = pdfMakeModule.default;
-        pdfMake.vfs = pdfFontsModule.default;
-        this.pdfMakeLoaded = true;
-      } catch (error) {
-        console.error('Error al cargar pdfMake:', error);
+
+        if (pdfFontsModule && pdfFontsModule.default) {
+          pdfMake.vfs = pdfFontsModule.default;
+          // Configurar fuentes
+          pdfMake.fonts = {
+            Roboto: {
+              normal: 'Roboto-Regular.ttf',
+              bold: 'Roboto-Medium.ttf',
+              italics: 'Roboto-Italic.ttf',
+              bolditalics: 'Roboto-MediumItalic.ttf'
+            }
+          };
+          this.pdfMakeLoaded = true;
+          console.log('pdfMake cargado exitosamente');
+        } else {
+          throw new Error('No se pudieron cargar las fuentes PDF');
+        }
+      } else {
+        throw new Error('No se pudo cargar pdfMake');
       }
+    } catch (error) {
+      console.error('Error crítico al cargar pdfMake:', error);
+      this.pdfMakeLoaded = false;
+      throw error;
     }
   }
   //#endregion
@@ -124,7 +146,7 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
    * Inicialización después de que la vista esté disponible
    */
   ngAfterViewInit(): void {
-    this.setupSignaturePad();
+    // No inicializamos el signature pad aquí porque el modal no está en el DOM
   }
 
   /**
@@ -140,6 +162,11 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
    * Configura el pad de firma con las opciones adecuadas
    */
   setupSignaturePad(): void {
+    if (!this.signaturePadElement?.nativeElement) {
+      console.warn('Signature pad element not available');
+      return;
+    }
+
     const canvas = this.signaturePadElement.nativeElement;
     this.configureCanvasSize(canvas);
     this.initializeSignaturePad(canvas);
@@ -150,9 +177,11 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
    * Configura el tamaño del canvas considerando la densidad de píxeles
    */
   private configureCanvasSize(canvas: HTMLCanvasElement): void {
+    const rect = canvas.getBoundingClientRect();
     const ratio = Math.max(window.devicePixelRatio || 1, 1);
-    canvas.width = canvas.offsetWidth * ratio;
-    canvas.height = canvas.offsetHeight * ratio;
+    
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
     canvas.getContext('2d')?.scale(ratio, ratio);
   }
 
@@ -187,109 +216,15 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
    * Redimensiona el canvas manteniendo la firma actual
    */
   resizeCanvas(): void {
-    const canvas = this.signaturePadElement.nativeElement;
-    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    if (!this.signaturePadElement?.nativeElement || !this.signaturePad) {
+      return;
+    }
 
-    // Guardar la firma actual
+    const canvas = this.signaturePadElement.nativeElement;
     const data = this.signaturePad.toData();
-
-    // Reconfigurar tamaño
+    
     this.configureCanvasSize(canvas);
-
-    // Restaurar la firma
     this.signaturePad.fromData(data);
-  }
-  //#endregion
-
-  //#region Métodos de Manejo de Eventos Táctiles
-  /**
-   * Maneja el inicio del toque en dispositivos táctiles
-   */
-  onTouchStart(e: TouchEvent): void {
-    e.preventDefault();
-    this.simulateMouseEvent(e, 'mousedown');
-  }
-
-  /**
-   * Maneja el movimiento del toque en dispositivos táctiles
-   */
-  onTouchMove(e: TouchEvent): void {
-    e.preventDefault();
-    this.simulateMouseEvent(e, 'mousemove');
-  }
-
-  /**
-   * Maneja el fin del toque en dispositivos táctiles
-   */
-  onTouchEnd(): void {
-    this.simulateMouseEvent(null, 'mouseup');
-  }
-
-  /**
-   * Simula eventos de mouse para dispositivos táctiles
-   */
-  private simulateMouseEvent(e: TouchEvent | null, eventType: string): void {
-    const canvas = this.signaturePadElement.nativeElement;
-    
-    if (e && eventType !== 'mouseup') {
-      const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
-      
-      const mouseEvent = new MouseEvent(eventType, {
-        clientX: touch.clientX - rect.left,
-        clientY: touch.clientY - rect.top
-      });
-      canvas.dispatchEvent(mouseEvent);
-    } else {
-      const mouseEvent = new MouseEvent(eventType);
-      canvas.dispatchEvent(mouseEvent);
-    }
-  }
-  //#endregion
-
-  //#region Métodos de Manejo de Eventos de Mouse
-  /**
-   * Maneja el evento de presionar el mouse
-   */
-  onMouseDown(e: MouseEvent): void {
-    this.isDrawing = true;
-    this.simulateCanvasMouseEvent(e, 'mousedown');
-  }
-
-  /**
-   * Maneja el evento de mover el mouse
-   */
-  onMouseMove(e: MouseEvent): void {
-    if (this.isDrawing) {
-      this.simulateCanvasMouseEvent(e, 'mousemove');
-    }
-  }
-
-  /**
-   * Maneja el evento de soltar el mouse
-   */
-  onMouseUp(): void {
-    this.isDrawing = false;
-    this.simulateCanvasMouseEvent(null, 'mouseup');
-  }
-
-  /**
-   * Simula eventos de mouse en el canvas
-   */
-  private simulateCanvasMouseEvent(e: MouseEvent | null, eventType: string): void {
-    const canvas = this.signaturePadElement.nativeElement;
-    
-    if (e && eventType !== 'mouseup') {
-      const rect = canvas.getBoundingClientRect();
-      const mouseEvent = new MouseEvent(eventType, {
-        clientX: e.clientX - rect.left,
-        clientY: e.clientY - rect.top
-      });
-      canvas.dispatchEvent(mouseEvent);
-    } else {
-      const mouseEvent = new MouseEvent(eventType);
-      canvas.dispatchEvent(mouseEvent);
-    }
   }
   //#endregion
 
@@ -297,29 +232,25 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
   /**
    * Abre el modal para la firma del paciente
    */
-  toggleFirmaPaciente(): void {
+  openFirmaPaciente(event: MouseEvent): void {
     this.currentSignatureType = 'paciente';
     this.showFirmaPaciente = true;
     this.showFirmaProfesional = false;
-    this.reinitializeSignaturePad();
+    // Esperar a que el modal se renderice y luego inicializar el pad
+    setTimeout(() => {
+      this.setupSignaturePad();
+    }, 0);
   }
 
   /**
    * Abre el modal para la firma del profesional
    */
-  toggleFirmaProfesional(): void {
+  openFirmaProfesional(event: MouseEvent): void {
     this.currentSignatureType = 'profesional';
     this.showFirmaProfesional = true;
     this.showFirmaPaciente = false;
-    this.reinitializeSignaturePad();
-  }
-
-  /**
-   * Reinicializa el pad de firma después de un cambio de modal
-   */
-  private reinitializeSignaturePad(): void {
+    // Esperar a que el modal se renderice y luego inicializar el pad
     setTimeout(() => {
-      this.clearSignaturePad();
       this.setupSignaturePad();
     }, 0);
   }
@@ -410,34 +341,54 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
    * Genera y descarga el PDF del consentimiento
    */
   async generatePDF(): Promise<void> {
-    if (!this.pdfMakeLoaded) {
-      await this.loadPdfMake();
-    }
+    try {
+      // Validar que el formulario esté completo
+      if (!this.consentimientoForm.valid) {
+        console.warn('El formulario no es válido. Complete todos los campos requeridos.');
+        this.markAllFieldsAsTouched();
 
-    if (this.consentimientoForm.valid) {
+        // Mostrar alerta al usuario
+        alert('Por favor, complete todos los campos requeridos antes de generar el PDF.');
+        return;
+      }
+
+      // Asegurar que pdfMake esté cargado
+      if (!this.pdfMakeLoaded) {
+        console.log('Cargando pdfMake...');
+        await this.loadPdfMake();
+
+        if (!this.pdfMakeLoaded) {
+          throw new Error('No se pudo cargar la librería PDF');
+        }
+      }
+
+      const formValue = this.consentimientoForm.value;
       const fechaActual = formatDate(new Date(), 'yyyy-MM-dd', 'en-US');
       const nombreArchivo = `Consentimiento_Informado_${fechaActual}.pdf`;
 
+      console.log('Generando PDF...', formValue);
+
       const docDefinition = this.getDocDefinition();
-      pdfMake.createPdf(docDefinition).download(nombreArchivo);
-    } else {
-      console.warn('El formulario no es válido. Complete todos los campos requeridos.');
-    }
-  }
 
-  /**
-   * Genera la definición del documento PDF
-   */
-  private getDocDefinition(): any {
-    const formValue = this.consentimientoForm.value;
-
-    return {
-      content: this.getPdfContent(formValue),
-      styles: this.getPdfStyles(),
-      defaultStyle: {
-        fontSize: 12
+      // Verificar que la definición del documento sea válida
+      if (!docDefinition) {
+        throw new Error('Error en la definición del documento PDF');
       }
-    };
+
+      // Generar y descargar PDF
+      pdfMake.createPdf(docDefinition).download(nombreArchivo);
+
+      console.log('PDF generado exitosamente');
+
+    } catch (error) {
+      console.error('Error al generar el PDF:', error);
+
+      // Mostrar mensaje de error al usuario
+      alert('Error al generar el PDF. Por favor, intente nuevamente.');
+
+      // Intentar cargar pdfMake nuevamente en caso de error
+      this.pdfMakeLoaded = false;
+    }
   }
 
   /**
@@ -445,34 +396,126 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
    */
   private getPdfContent(formValue: any): any[] {
     return [
-      this.getHeaderContent(),
+      this.getPdfTitle(),
+      this.getPdfDivider(),
       this.getContactInfoContent(),
       this.getPurposeContent(),
       this.getRightsContent(),
       this.getConsentDeclarationContent(),
+      this.getPdfDivider(),
       this.getPatientDataContent(formValue),
+      { text: '', pageBreak: 'before' },
       this.getProfessionalDataContent(formValue),
       this.getNoteContent()
     ];
   }
 
-  /**
-   * Genera el contenido del encabezado del PDF
-   */
-  private getHeaderContent(): any {
-    return [
-      {
-        text: 'CONSENTIMIENTO INFORMADO PARA EL TRATAMIENTO DE DATOS PERSONALES',
-        style: 'header',
-        alignment: 'center'
+  private getPdfTitle(): any {
+    return {
+      stack: [
+        {
+          text: 'CONSENTIMIENTO INFORMADO',
+          style: 'title',
+          alignment: 'center',
+          margin: [0, 0, 0, 10]
+        },
+        {
+          text: 'PARA EL TRATAMIENTO DE DATOS PERSONALES',
+          style: 'subtitle',
+          alignment: 'center',
+          margin: [0, 0, 0, 5]
+        },
+        {
+          text: 'Proyecto: Registro de Pacientes con Epilepsia (RPE) – Piloto',
+          style: 'project',
+          alignment: 'center',
+          margin: [0, 0, 0, 20]
+        }
+      ]
+    };
+  }
+
+  private getPdfDivider(): any {
+    return {
+      canvas: [
+        {
+          type: 'line',
+          x1: 0, y1: 5,
+          x2: 515, y2: 5,
+          lineWidth: 1,
+          lineColor: '#cccccc'
+        }
+      ],
+      margin: [0, 10, 0, 10]
+    };
+  }
+
+  private getPdfHeader(): any {
+    return {
+      columns: [
+        {
+          text: 'Universidad del Valle',
+          alignment: 'left',
+          fontSize: 9,
+          color: '#666666',
+          margin: [40, 20, 0, 0]
+        },
+        {
+          text: 'Registro de Pacientes con Epilepsia',
+          alignment: 'right',
+          fontSize: 9,
+          color: '#666666',
+          margin: [0, 20, 40, 0]
+        }
+      ]
+    };
+  }
+
+  private getDocDefinition(): any {
+    const formValue = this.consentimientoForm.value;
+
+    // Validar datos requeridos
+    if (!formValue.nombrePaciente || !formValue.documentoPaciente) {
+      console.error('Faltan datos requeridos para generar el PDF');
+      return null;
+    }
+
+    return {
+      pageSize: 'A4',
+      pageMargins: [40, 60, 40, 60],
+      content: this.getPdfContent(formValue),
+      styles: this.getPdfStyles(),
+      defaultStyle: {
+        font: 'Roboto', // Cambiado de Helvetica a Roboto
+        fontSize: 10,
+        lineHeight: 1.3
       },
-      {
-        text: 'Proyecto: Registro de Pacientes con Epilepsia (RPE) – Piloto',
-        style: 'subheader',
-        alignment: 'center',
-        margin: [0, 0, 0, 10]
-      }
-    ];
+      header: this.getPdfHeader(),
+      footer: this.getPdfFooter()
+    };
+  }
+
+  private getPdfFooter(): any {
+    return (currentPage: number, pageCount: number) => {
+      return {
+        columns: [
+          {
+            text: `Generado el ${formatDate(new Date(), 'dd/MM/yyyy HH:mm', 'en-US')}`,
+            alignment: 'left',
+            fontSize: 8,
+            color: '#999999',
+            margin: [40, 0, 0, 20]
+          },
+          {
+            text: `Página ${currentPage} de ${pageCount}`,
+            alignment: 'right',
+            fontSize: 8,
+            color: '#999999',
+            margin: [0, 0, 40, 20]
+          }
+        ]
+      };
+    };
   }
 
   /**
@@ -573,29 +616,57 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
   private getPatientDataContent(formValue: any): any {
     return [
       {
-        text: 'Datos del paciente o representante legal',
+        text: 'DATOS DEL PACIENTE O REPRESENTANTE LEGAL',
         style: 'sectionHeader'
       },
       {
-        text: `Nombre completo: ${formValue.nombrePaciente}`,
-        margin: [0, 0, 0, 5]
-      },
-      {
-        text: `Tipo y número de documento: ${formValue.documentoPaciente}`,
-        margin: [0, 0, 0, 5]
-      },
-      {
-        text: 'Firma:',
-        margin: [0, 10, 0, 5]
-      },
-      {
-        image: formValue.firmaPaciente,
-        width: 150,
-        margin: [0, 0, 0, 5]
-      },
-      {
-        text: `Fecha: ${formatDate(formValue.fechaPaciente, 'dd/MM/yyyy', 'en-US')}`,
-        margin: [0, 0, 0, 20]
+        columns: [
+          {
+            width: '50%',
+            stack: [
+              {
+                text: 'Nombre completo:',
+                style: 'signatureLabel'
+              },
+              {
+                text: formValue.nombrePaciente || 'No proporcionado',
+                margin: [0, 0, 0, 10]
+              },
+              {
+                text: 'Documento de identidad:',
+                style: 'signatureLabel'
+              },
+              {
+                text: formValue.documentoPaciente || 'No proporcionado',
+                margin: [0, 0, 0, 10]
+              }
+            ]
+          },
+          {
+            width: '50%',
+            stack: [
+              {
+                text: 'Firma:',
+                style: 'signatureLabel'
+              },
+              formValue.firmaPaciente ?
+                {
+                  image: formValue.firmaPaciente,
+                  width: 120,
+                  height: 60,
+                  margin: [0, 0, 0, 5]
+                } : {
+                  text: 'No firmado',
+                  italics: true,
+                  color: '#e74c3c'
+                },
+              {
+                text: `Fecha: ${formValue.fechaPaciente ? formatDate(formValue.fechaPaciente, 'dd/MM/yyyy HH:mm', 'en-US') : 'No registrada'}`,
+                style: 'signatureDate'
+              }
+            ]
+          }
+        ]
       }
     ];
   }
@@ -606,29 +677,57 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
   private getProfessionalDataContent(formValue: any): any {
     return [
       {
-        text: 'Datos del profesional de salud',
+        text: 'DATOS DEL PROFESIONAL DE SALUD',
         style: 'sectionHeader'
       },
       {
-        text: `Nombre completo: ${formValue.nombreProfesional}`,
-        margin: [0, 0, 0, 5]
-      },
-      {
-        text: `Cargo / Especialidad: ${formValue.cargoProfesional}`,
-        margin: [0, 0, 0, 5]
-      },
-      {
-        text: 'Firma:',
-        margin: [0, 10, 0, 5]
-      },
-      {
-        image: formValue.firmaProfesional,
-        width: 150,
-        margin: [0, 0, 0, 5]
-      },
-      {
-        text: `Fecha: ${formatDate(formValue.fechaProfesional, 'dd/MM/yyyy', 'en-US')}`,
-        margin: [0, 0, 0, 20]
+        columns: [
+          {
+            width: '50%',
+            stack: [
+              {
+                text: 'Nombre completo:',
+                style: 'signatureLabel'
+              },
+              {
+                text: formValue.nombreProfesional || 'No proporcionado',
+                margin: [0, 0, 0, 10]
+              },
+              {
+                text: 'Cargo / Especialidad:',
+                style: 'signatureLabel'
+              },
+              {
+                text: formValue.cargoProfesional || 'No proporcionado',
+                margin: [0, 0, 0, 10]
+              }
+            ]
+          },
+          {
+            width: '50%',
+            stack: [
+              {
+                text: 'Firma:',
+                style: 'signatureLabel'
+              },
+              formValue.firmaProfesional ?
+                {
+                  image: formValue.firmaProfesional,
+                  width: 120,
+                  height: 60,
+                  margin: [0, 0, 0, 5]
+                } : {
+                  text: 'No firmado',
+                  italics: true,
+                  color: '#e74c3c'
+                },
+              {
+                text: `Fecha: ${formValue.fechaProfesional ? formatDate(formValue.fechaProfesional, 'dd/MM/yyyy HH:mm', 'en-US') : 'No registrada'}`,
+                style: 'signatureDate'
+              }
+            ]
+          }
+        ]
       }
     ];
   }
@@ -649,22 +748,47 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
    */
   private getPdfStyles(): any {
     return {
-      header: {
-        fontSize: 18,
-        bold: true
+      title: {
+        fontSize: 16,
+        bold: true,
+        color: '#2c3e50'
       },
-      subheader: {
+      subtitle: {
         fontSize: 14,
-        bold: true
+        bold: true,
+        color: '#2c3e50'
+      },
+      project: {
+        fontSize: 11,
+        bold: true,
+        color: '#34495e'
       },
       sectionHeader: {
-        fontSize: 14,
+        fontSize: 12,
+        bold: true,
+        color: '#2c3e50',
+        margin: [0, 15, 0, 8],
+        background: '#f8f9fa',
+        padding: [8, 8, 8, 8],
+        borderRadius: 4
+      },
+      note: {
+        fontSize: 9,
+        italics: true,
+        color: '#7f8c8d',
+        background: '#ecf0f1',
+        padding: [10, 10, 10, 10],
+        borderRadius: 4
+      },
+      signatureLabel: {
+        fontSize: 10,
         bold: true,
         margin: [0, 10, 0, 5]
       },
-      note: {
-        fontSize: 10,
-        italics: true
+      signatureDate: {
+        fontSize: 9,
+        color: '#666666',
+        margin: [0, 5, 0, 0]
       }
     };
   }
@@ -697,6 +821,15 @@ export class ConsentimientoInformadoComponent implements AfterViewInit, OnDestro
    */
   get isSignaturePadEmpty(): boolean {
     return this.signaturePad ? this.signaturePad.isEmpty() : true;
+  }
+
+  // Getter para el estilo del modal
+  get modalStyle(): any {
+    return {
+      'position': 'fixed',
+      'transform': 'none',
+      'z-index': 1000
+    };
   }
   //#endregion
 }

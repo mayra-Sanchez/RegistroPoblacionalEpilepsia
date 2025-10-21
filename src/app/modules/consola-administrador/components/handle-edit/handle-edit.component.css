@@ -386,3 +386,63 @@ textarea.form-control {
 .mt-1 {
     margin-top: 0.25rem;
 }
+
+
+/* Campos de solo lectura */
+.readonly-field {
+  background-color: var(--readonly-bg);
+  border-color: #e2e8f0;
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.readonly-field:focus {
+  border-color: #e2e8f0;
+  box-shadow: none;
+  background-color: var(--readonly-bg);
+}
+
+/* Campos editables */
+.editable-field {
+  background-color: var(--editable-bg);
+  border-color: var(--border-color);
+}
+
+.editable-field:focus {
+  border-color: #0f5ead;
+  box-shadow: 0 0 0 3px rgba(15, 94, 173, 0.1);
+}
+
+/* Indicadores de estado de campo */
+.field-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.field-status.readonly {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.field-status.editable {
+  background-color: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.readonly-info {
+  background-color: #f8fafc;
+  color: #64748b;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  border: 1px solid #e2e8f0;
+}

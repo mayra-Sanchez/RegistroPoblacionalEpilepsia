@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, OnDestroy } from '@angular/core';
 import { SignatureUploadService } from 'src/app/services/signature-upload.service';
 import { ConsolaRegistroService } from 'src/app/services/register.service';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 
 interface PatientBasicInfo {
   name: string;
@@ -25,11 +25,11 @@ interface PatientBasicInfo {
   templateUrl: './upload-consentimiento.component.html',
   styleUrls: ['./upload-consentimiento.component.css']
 })
-export class UploadConsentimientoComponent implements OnInit {
+export class UploadConsentimientoComponent implements OnInit, OnDestroy {
   @Output() uploadComplete = new EventEmitter<any>();
   @Output() cancel = new EventEmitter<void>();
 
-  patientIdentificationNumber: number | null = null;
+  patientIdentificationNumber: string = ''; // Cambiado a string
   patientInfo: PatientBasicInfo | null = null;
   selectedFile: File | null = null;
   loadingPatients = false;
@@ -39,7 +39,8 @@ export class UploadConsentimientoComponent implements OnInit {
   isDragOver = false;
   showPatientNotFound = false;
 
-  private searchSubject = new Subject<number>();
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   constructor(
     private signatureUploadService: SignatureUploadService,
@@ -49,26 +50,62 @@ export class UploadConsentimientoComponent implements OnInit {
   ngOnInit() {
     // Configurar búsqueda con debounce
     this.searchSubject.pipe(
-      debounceTime(500),
-      distinctUntilChanged()
+      debounceTime(800), // Aumentado a 800ms para dar más tiempo de escritura
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
     ).subscribe(documentNumber => {
-      this.searchPatient(documentNumber);
+      if (documentNumber && documentNumber.length >= 4) {
+        this.searchPatient(documentNumber);
+      } else {
+        this.clearPatientInfo();
+        this.loadingPatients = false;
+      }
     });
   }
 
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   onPatientSearch() {
-    if (this.patientIdentificationNumber && this.patientIdentificationNumber.toString().length >= 4) {
+    this.loadingPatients = true;
+    this.showPatientNotFound = false;
+    this.clearMessages();
+
+    // Solo buscar si tiene al menos 4 caracteres
+    if (this.patientIdentificationNumber && this.patientIdentificationNumber.length >= 4) {
       this.searchSubject.next(this.patientIdentificationNumber);
     } else {
       this.clearPatientInfo();
+      this.loadingPatients = false;
     }
   }
 
-  searchPatient(documentNumber: number) {
+  onPatientInput(event: any) {
+    // Limpiar solo números y permitir seguir escribiendo
+    const value = event.target.value.replace(/[^0-9]/g, '');
+    this.patientIdentificationNumber = value;
+
+    // No deshabilitar el campo durante la búsqueda
     this.loadingPatients = true;
     this.showPatientNotFound = false;
-    this.clearPatientInfo();
-    this.clearMessages();
+
+    if (value.length >= 4) {
+      this.searchSubject.next(value);
+    } else {
+      this.clearPatientInfo();
+      this.loadingPatients = false;
+    }
+  }
+  searchPatient(documentNumber: string) {
+    const numericDocument = parseInt(documentNumber, 10);
+
+    if (isNaN(numericDocument)) {
+      this.loadingPatients = false;
+      this.errorMessage = 'Por favor ingrese un número de documento válido';
+      return;
+    }
 
     // Obtener la capa de investigación del componente padre
     const researchLayerId = (this as any).researchLayerId ||
@@ -81,7 +118,7 @@ export class UploadConsentimientoComponent implements OnInit {
       return;
     }
 
-    this.consolaService.validarPaciente(documentNumber, researchLayerId)
+    this.consolaService.validarPaciente(numericDocument, researchLayerId)
       .subscribe({
         next: (response) => {
           this.loadingPatients = false;
@@ -89,14 +126,17 @@ export class UploadConsentimientoComponent implements OnInit {
           if (response.patientBasicInfo) {
             this.patientInfo = response.patientBasicInfo;
             this.showPatientNotFound = false;
+            this.errorMessage = '';
           } else {
             this.showPatientNotFound = true;
+            this.patientInfo = null;
             this.errorMessage = 'Paciente no encontrado en el sistema';
           }
         },
         error: (error) => {
           this.loadingPatients = false;
           this.showPatientNotFound = true;
+          this.patientInfo = null;
 
           // Manejar diferentes tipos de errores
           if (error.status === 400) {
@@ -111,7 +151,6 @@ export class UploadConsentimientoComponent implements OnInit {
         }
       });
   }
-
   onFileSelected(event: any) {
     const file = event.target.files[0];
     this.validateAndSetFile(file);
@@ -177,10 +216,17 @@ export class UploadConsentimientoComponent implements OnInit {
       return;
     }
 
+    const numericDocument = parseInt(this.patientIdentificationNumber, 10);
+
+    if (isNaN(numericDocument)) {
+      this.errorMessage = 'Número de documento inválido';
+      return;
+    }
+
     this.uploading = true;
     this.clearMessages();
 
-    this.signatureUploadService.uploadConsentFile(this.patientIdentificationNumber, this.selectedFile)
+    this.signatureUploadService.uploadConsentFile(numericDocument, this.selectedFile)
       .subscribe({
         next: (response) => {
           this.uploading = false;
@@ -189,7 +235,7 @@ export class UploadConsentimientoComponent implements OnInit {
           // Emitir el resultado después de un breve delay
           setTimeout(() => {
             this.uploadComplete.emit({
-              patientId: this.patientIdentificationNumber,
+              patientId: numericDocument,
               patientName: this.patientInfo?.name,
               fileName: this.selectedFile?.name,
               response: response

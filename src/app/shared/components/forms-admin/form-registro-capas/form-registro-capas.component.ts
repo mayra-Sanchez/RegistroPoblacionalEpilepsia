@@ -34,6 +34,12 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
    */
   private capasSubscription: Subscription = Subscription.EMPTY;
   isSubmitting: boolean = false;
+  
+  /**
+   * Controla si se ha validado el formulario antes de proceder al registro
+   */
+  formularioValidado: boolean = false;
+
   /**
    * Constructor del componente
    * @param fb Servicio FormBuilder para crear formularios reactivos
@@ -56,7 +62,6 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
 
       // Descripción de la capa con validación de requerido y mínimo 5 caracteres
       description: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
-
 
       // Grupo anidado para la información del jefe de capa
       layerBoss: this.fb.group({
@@ -92,12 +97,105 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Método para validar el formulario antes del registro
+   * Muestra confirmación y marca el formulario como validado
+   */
+  validarFormulario(): void {
+    if (this.form.invalid) {
+      Swal.fire({
+        title: 'Formulario incompleto',
+        html: `
+          <p>Por favor, completa todos los campos requeridos correctamente antes de continuar.</p>
+          <div class="warning-box" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin-top: 10px;">
+            <i class="fas fa-exclamation-triangle" style="color: #856404;"></i>
+            <strong style="color: #856404;"> Importante:</strong> 
+            <span style="color: #856404;">El jefe de capa debe ser usuario registrado en la aplicación.</span>
+          </div>
+        `,
+        icon: 'warning',
+        confirmButtonText: 'Aceptar'
+      });
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    // Mostrar resumen de la información antes de proceder
+    const formData = this.form.value;
+    
+    Swal.fire({
+      title: '¿Confirmar datos?',
+      html: `
+        <div style="text-align: left; font-size: 14px;">
+          <p><strong>Nombre de la capa:</strong><br>${formData.layerName}</p>
+          <p><strong>Descripción:</strong><br>${formData.description}</p>
+          <p><strong>Jefe de capa:</strong><br>${formData.layerBoss.name}</p>
+          <p><strong>Email:</strong><br>${formData.layerBoss.email}</p>
+          <p><strong>N° Identificación:</strong><br>${formData.layerBoss.identificationNumber}</p>
+        </div>
+        <br>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin: 10px 0;">
+          <i class="fas fa-exclamation-triangle" style="color: #856404;"></i>
+          <strong style="color: #856404;"> Verificación requerida:</strong> 
+          <span style="color: #856404;">El jefe de capa debe ser usuario registrado en la aplicación (se valida con el número de identificación).</span>
+        </div>
+        <p style="color: #d33; font-weight: bold;">
+          ⚠️ Una vez creada, no se podrá editar algunos campos cómo el nombre de la capa.
+        </p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, los datos son correctos',
+      cancelButtonText: 'Revisar nuevamente',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      width: 600
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.formularioValidado = true;
+        Swal.fire({
+          title: '¡Validación exitosa!',
+          text: 'El formulario ha sido validado correctamente. Ahora puedes proceder con el registro.',
+          icon: 'success',
+          confirmButtonText: 'Continuar',
+          timer: 3000,
+          timerProgressBar: true
+        });
+      }
+    });
+  }
+
+  /**
    * Método para registrar una nueva capa
    * 
-   * Valida el formulario y, si es válido, muestra confirmación antes de proceder con el registro.
-   * Si el formulario es inválido, marca todos los controles como touched y muestra alerta.
+   * Verifica que el formulario haya sido validado antes de proceder con el registro.
+   * Si no está validado, muestra alerta y reinicia el proceso.
    */
   registrarCapa(): void {
+    // Verificar si el formulario ha sido validado
+    if (!this.formularioValidado) {
+      Swal.fire({
+        title: 'Validación requerida',
+        html: `
+          <p>Debes validar el formulario primero antes de proceder con el registro.</p>
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin: 10px 0;">
+            <i class="fas fa-exclamation-triangle" style="color: #856404;"></i>
+            <strong style="color: #856404;"> Recordatorio:</strong> 
+            <span style="color: #856404;">El jefe de capa debe ser usuario registrado en la aplicación.</span>
+          </div>
+          <p style="color: #d33; font-weight: bold;">
+            ⚠️ Por favor, haz clic en "Validar Formulario" para confirmar que los datos son correctos.
+          </p>
+        `,
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#3085d6'
+      }).then(() => {
+        // Reiniciar el estado de validación
+        this.formularioValidado = false;
+      });
+      return;
+    }
+
     // Prevenir múltiples envíos simultáneos
     if (this.isSubmitting) {
       return;
@@ -106,10 +204,18 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     if (this.form.invalid) {
       Swal.fire({
         title: 'Formulario inválido',
-        text: 'Por favor, completa todos los campos correctamente.',
-        icon: 'warning',
+        html: `
+          <p>El formulario ha cambiado y ya no es válido. Por favor, valida nuevamente.</p>
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin: 10px 0;">
+            <i class="fas fa-exclamation-triangle" style="color: #856404;"></i>
+            <strong style="color: #856404;"> Importante:</strong> 
+            <span style="color: #856404;">Verifica que el jefe de capa sea usuario registrado.</span>
+          </div>
+        `,
+        icon: 'error',
         confirmButtonText: 'Aceptar'
       });
+      this.formularioValidado = false;
       this.form.markAllAsTouched();
       return;
     }
@@ -125,12 +231,20 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       },
     };
 
+    // Confirmación final antes del registro
     Swal.fire({
-      title: '¿Confirmar registro?',
+      title: '¿Proceder con el registro?',
       html: `
-      <p>¿Estás seguro de registrar esta capa?</p>
-      <strong style="color: #d33;">⚠️ Una vez creada, no se podrá editar algunos campos cómo el nombre de la capa.</strong>
-    `,
+        <p>Estás a punto de registrar la capa en el sistema.</p>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin: 10px 0;">
+          <i class="fas fa-exclamation-triangle" style="color: #856404;"></i>
+          <strong style="color: #856404;"> Verificación final:</strong> 
+          <span style="color: #856404;">Se validará que el jefe de capa sea usuario registrado mediante el número de identificación.</span>
+        </div>
+        <p style="color: #d33; font-weight: bold;">
+          ⚠️ Esta acción no se puede deshacer.
+        </p>
+      `,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, registrar',
@@ -153,7 +267,10 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     this.capasSubscription = this.consolaAdministradorService.registrarCapa(capaData).subscribe({
       next: () => this.mostrarExito(),
       error: (error) => this.mostrarError(error),
-      complete: () => this.isSubmitting = false // Aseguramos que se resetee el estado
+      complete: () => {
+        this.isSubmitting = false;
+        this.formularioValidado = false; // Resetear validación después del registro
+      }
     });
   }
 
@@ -165,7 +282,8 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       title: '¡Registro exitoso! 🎉',
       html: `
       <div style="text-align: center;">
-        <p>La capa ha sido registrada correctamente.</p>
+        <p>La capa ha sido registrada correctamente en el sistema.</p>
+        <p><strong>Jefe de capa verificado exitosamente.</strong></p>
         <img src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" 
           alt="Éxito" style="width: 150px; margin-top: 10px;">
       </div>
@@ -183,14 +301,15 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
   }
 
   /**
- * Resetea el formulario completamente
- */
+   * Resetea el formulario completamente
+   */
   private resetearFormulario(): void {
     this.form.reset({
       layerBoss: { id: 1 } // Mantener el ID por defecto
     });
 
     // Resetear el estado de validación
+    this.formularioValidado = false;
     this.form.markAsPristine();
     this.form.markAsUntouched();
 
@@ -207,7 +326,7 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
    * Maneja la acción de cancelar el registro
    * Muestra confirmación antes de emitir el evento de cancelación
    */
-  onCancel() {
+  onCancel(): void {
     // Si hay un envío en proceso, prevenir cancelación accidental
     if (this.isSubmitting) {
       Swal.fire({
@@ -219,24 +338,33 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Si el formulario tiene cambios sin guardar
-    if (this.form.dirty) {
+    // Si el formulario tiene cambios sin guardar o está validado
+    if (this.form.dirty || this.formularioValidado) {
       Swal.fire({
         title: '¿Cancelar registro?',
-        text: 'Tienes cambios sin guardar. ¿Estás seguro de que deseas cancelar?',
+        html: `
+          <p>Tienes cambios sin guardar ${this.formularioValidado ? 'y el formulario ya fue validado' : ''}.</p>
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin: 10px 0;">
+            <i class="fas fa-info-circle" style="color: #856404;"></i>
+            <span style="color: #856404;">Recuerda que el jefe de capa debe ser usuario registrado.</span>
+          </div>
+          <p>¿Estás seguro de que deseas cancelar?</p>
+        `,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'Continuar editando',
+        cancelButtonText: 'Continuar',
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6'
       }).then((result) => {
         if (result.isConfirmed) {
+          this.formularioValidado = false;
           this.cancelar.emit();
         }
       });
     } else {
       // Si no hay cambios, cancelar directamente
+      this.formularioValidado = false;
       this.cancelar.emit();
     }
   }
@@ -247,11 +375,18 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
    */
   private mostrarError(error: any): void {
     this.isSubmitting = false;
+    this.formularioValidado = false; // Resetear validación en caso de error
     console.error('Error al registrar capa:', error);
 
     let mensaje = 'Hubo un problema inesperado al registrar la capa.';
+    let titulo = 'Error al registrar';
 
-    if (error?.error?.message) {
+    // Manejar errores específicos de validación del jefe de capa
+    if (error?.error?.message?.includes('jefe') || error?.error?.message?.includes('usuario') || 
+        error?.error?.message?.includes('identificación') || error?.error?.message?.includes('registrado')) {
+      titulo = 'Error: Jefe de capa no encontrado';
+      mensaje = 'El jefe de capa debe ser un usuario registrado en la aplicación. Verifique el número de identificación.';
+    } else if (error?.error?.message) {
       mensaje = error.error.message;
     } else if (error?.error?.errors && Array.isArray(error.error.errors)) {
       mensaje = error.error.errors
@@ -262,11 +397,31 @@ export class FormRegistroCapasComponent implements OnInit, OnDestroy {
     }
 
     Swal.fire({
-      title: 'Error al registrar',
-      text: mensaje,
+      title: titulo,
+      html: `
+        <p>${mensaje}</p>
+        <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 10px; margin: 10px 0;">
+          <i class="fas fa-exclamation-circle" style="color: #721c24;"></i>
+          <strong style="color: #721c24;"> Solución:</strong> 
+          <span style="color: #721c24;">Asegúrese de que el jefe de capa esté registrado como usuario en la aplicación con el número de identificación proporcionado.</span>
+        </div>
+      `,
       icon: 'error',
-      confirmButtonText: 'Aceptar'
+      confirmButtonText: 'Entendido'
     });
   }
 
+  /**
+   * Verifica si se puede habilitar el botón de registro
+   */
+  puedeRegistrar(): boolean {
+    return this.formularioValidado && !this.isSubmitting;
+  }
+
+  /**
+   * Verifica si se puede habilitar el botón de validación
+   */
+  puedeValidar(): boolean {
+    return this.form.valid && !this.isSubmitting && !this.formularioValidado;
+  }
 }

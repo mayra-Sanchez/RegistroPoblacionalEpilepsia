@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, FormControl, AbstractControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { Subject } from 'rxjs';
@@ -15,7 +15,17 @@ import { Variable, Register, RegisterRequest, RegisterPatient, RegisterCaregiver
 
 /**
  * Componente modal para editar registros de pacientes
- * Maneja la edición de información personal, datos del cuidador y variables de investigación
+ * 
+ * Este componente maneja la edición completa de registros médicos incluyendo:
+ * - Información personal del paciente
+ * - Datos del cuidador (opcional)
+ * - Variables de investigación de la capa
+ * 
+ * @component
+ * @selector app-edit-registro-modal
+ * @example
+ * // Uso en template:
+ * <app-edit-registro-modal></app-edit-registro-modal>
  */
 @Component({
   selector: 'app-edit-registro-modal',
@@ -23,29 +33,100 @@ import { Variable, Register, RegisterRequest, RegisterPatient, RegisterCaregiver
   styleUrls: ['./edit-registro-modal.component.css']
 })
 export class EditRegistroModalComponent implements OnInit, OnDestroy {
+  
   //#region Propiedades del Formulario y Estado
-  /** FormGroup principal del formulario de edición */
+  
+  /**
+   * FormGroup principal que contiene todos los controles del formulario de edición
+   * @type {FormGroup}
+   */
   editForm: FormGroup;
 
-  /** Indica si se está cargando o guardando */
+  /**
+   * Indica si la sección de cuidador está expandida o colapsada
+   * @type {boolean}
+   */
+  caregiverExpanded: boolean = false;
+
+  /**
+   * Indica si se está realizando una operación de carga o guardado
+   * @type {boolean}
+   */
   loading: boolean = false;
 
-  /** Sección actual del formulario (para navegación por pasos) */
+  /**
+   * Sección actual del formulario para navegación por pasos
+   * 0: Información personal, 1: Cuidador, 2: Variables
+   * @type {number}
+   */
   currentSection: number = 0;
 
-  /** Indica si el paciente tiene cuidador */
+  /**
+   * Indica si el paciente tiene cuidador asignado
+   * @type {boolean}
+   */
   hasCaregiver: boolean = false;
 
-  /** Lista de variables de la capa de investigación */
+  /**
+   * Lista de variables de investigación obtenidas de la capa
+   * @type {Variable[]}
+   */
   variablesDeCapa: Variable[] = [];
+
+  /**
+   * Indica si las variables están en modo solo lectura
+   * @type {boolean}
+   */
   variablesReadOnly: boolean = true;
 
-  /** Subject para manejar la desuscripción de observables */
+  /**
+   * Filtro actual aplicado a la lista de variables
+   * @type {string}
+   */
+  currentFilter: string = 'all';
+
+  /**
+   * Opciones disponibles para filtrar variables
+   * @type {Array<{value: string, label: string}>}
+   */
+  filterOptions = [
+    { value: 'all', label: 'Todas' },
+    { value: 'completed', label: 'Completadas' },
+    { value: 'pending', label: 'Pendientes' },
+    { value: 'required', label: 'Requeridas' }
+  ];
+
+  /**
+   * Tipos de selección disponibles para variables con opciones
+   * @type {Array<{value: string, label: string}>}
+   */
+  selectionTypes = [
+    { value: 'single', label: 'Selección única' },
+    { value: 'multiple', label: 'Selección múltiple' }
+  ];
+
+  /**
+   * Mapa que almacena el tipo de selección por variable ID
+   * @private
+   * @type {Map<string, string>}
+   */
+  private selectionTypeMap = new Map<string, string>();
+
+  /**
+   * Subject para manejar la desuscripción de observables y prevenir memory leaks
+   * @private
+   * @type {Subject<void>}
+   */
   private destroy$ = new Subject<void>();
+
   //#endregion
 
   //#region Opciones Predefinidas para Selects
-  /** Tipos de identificación disponibles */
+
+  /**
+   * Tipos de identificación disponibles para paciente y cuidador
+   * @type {Array<{value: string, label: string}>}
+   */
   tiposIdentificacion = [
     { value: 'CC', label: 'Cédula de Ciudadanía' },
     { value: 'TI', label: 'Tarjeta de Identidad' },
@@ -54,13 +135,19 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'RC', label: 'Registro Civil' }
   ];
 
-  /** Opciones de género */
+  /**
+   * Opciones de género para el paciente
+   * @type {Array<{value: string, label: string}>}
+   */
   sexos = [
     { value: 'Masculino', label: 'Masculino' },
     { value: 'Femenino', label: 'Femenino' }
   ];
 
-  /** Estados civiles disponibles */
+  /**
+   * Estados civiles disponibles para el paciente
+   * @type {Array<{value: string, label: string}>}
+   */
   estadosCiviles = [
     { value: 'Soltero', label: 'Soltero/a' },
     { value: 'Casado', label: 'Casado/a' },
@@ -69,7 +156,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'Unión Libre', label: 'Unión Libre' }
   ];
 
-  /** Niveles de educación */
+  /**
+   * Niveles de educación para paciente y cuidador
+   * @type {Array<{value: string, label: string}>}
+   */
   nivelesEducacion = [
     { value: 'Primaria', label: 'Primaria' },
     { value: 'Secundaria', label: 'Secundaria' },
@@ -79,7 +169,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'Ninguno', label: 'Ninguno' }
   ];
 
-  /** Niveles económicos */
+  /**
+   * Niveles económicos para clasificación del paciente
+   * @type {Array<{value: string, label: string}>}
+   */
   nivelesEconomicos = [
     { value: 'Bajo', label: 'Bajo' },
     { value: 'Medio Bajo', label: 'Medio Bajo' },
@@ -88,7 +181,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'Alto', label: 'Alto' }
   ];
 
-  /** Estados de crisis médica */
+  /**
+   * Estados de crisis médica para el paciente
+   * @type {Array<{value: string, label: string}>}
+   */
   estadosCrisis = [
     { value: 'Activa', label: 'Activa' },
     { value: 'Remisión', label: 'Remisión' },
@@ -96,7 +192,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     { value: 'Crónica', label: 'Crónica' }
   ];
 
-  /** Ocupaciones disponibles */
+  /**
+   * Ocupaciones disponibles para el cuidador
+   * @type {string[]}
+   */
   ocupaciones = [
     'Ama de casa',
     'Estudiante',
@@ -116,16 +215,21 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     'Fuerzas armadas',
     'Otro'
   ];
+
   //#endregion
 
   //#region Constructor e Inicialización
+
   /**
-   * Constructor del componente modal
-   * @param fb FormBuilder para crear formularios reactivos
-   * @param consolaService Servicio de consola de registro
-   * @param authService Servicio de autenticación
-   * @param dialogRef Referencia al modal dialog
-   * @param data Datos inyectados que contienen el registro y variables
+   * Constructor del componente modal de edición
+   * @constructor
+   * @param {FormBuilder} fb - Servicio para crear formularios reactivos
+   * @param {ConsolaRegistroService} consolaService - Servicio para operaciones de registro
+   * @param {AuthService} authService - Servicio de autenticación
+   * @param {MatDialogRef<EditRegistroModalComponent>} dialogRef - Referencia al diálogo modal
+   * @param {Object} data - Datos inyectados que contienen el registro y variables
+   * @param {Register} data.registro - Registro a editar
+   * @param {Variable[]} data.variables - Variables de la capa de investigación
    */
   constructor(
     private fb: FormBuilder,
@@ -139,8 +243,8 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Inicialización del componente
-   * Configura el formulario con los datos del registro recibido
+   * Inicialización del componente después de que Angular muestra las vistas
+   * @method
    */
   ngOnInit(): void {
     console.log('🎯 Modal de edición iniciado');
@@ -157,18 +261,37 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     }
 
     this.editForm = this.createForm();
-
     this.initializeFormWithData();
-
     this.disableVariables();
 
+    // Inicializar tipos de selección después de cargar datos
+    setTimeout(() => {
+      this.initializeSelectionTypes();
+    }, 100);
+
+    // Suscribirse a cambios en la fecha de nacimiento para calcular edad automáticamente
     const birthControl = this.editForm.get('patient.birthDate');
     birthControl?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.onBirthDateChange());
   }
 
   /**
-  * Deshabilita todos los controles de variables (modo solo lectura)
-  */
+   * Limpieza de recursos al destruir el componente
+   * Desuscribe todos los observables para prevenir memory leaks
+   * @method
+   */
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  //#endregion
+
+  //#region Gestión de Variables (Lectura/Edición)
+
+  /**
+   * Deshabilita todos los controles de variables (modo solo lectura)
+   * @method
+   */
   disableVariables(): void {
     this.variablesReadOnly = true;
     const variablesArray = this.editForm.get('variables') as FormArray;
@@ -183,6 +306,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Habilita todos los controles de variables (modo edición)
+   * @method
    */
   enableVariables(): void {
     this.variablesReadOnly = false;
@@ -198,35 +322,40 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Alterna entre modo edición y solo lectura para las variables
+   * @method
    */
   toggleVariablesEdit(): void {
-    if (this.variablesReadOnly) {
-      this.enableVariables();
-    } else {
-      this.disableVariables();
-    }
+    this.variablesReadOnly = !this.variablesReadOnly;
+    const variablesArray = this.editForm.get('variables') as FormArray;
+
+    variablesArray.controls.forEach(control => {
+      const valueControl = control.get('value');
+      if (valueControl) {
+        if (this.variablesReadOnly) {
+          valueControl.disable({ onlySelf: true, emitEvent: false });
+        } else {
+          valueControl.enable({ onlySelf: true, emitEvent: false });
+        }
+      }
+    });
   }
 
-  /**
-   * Limpieza al destruir el componente
-   * Desuscribe todos los observables
-   */
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
   //#endregion
 
   //#region Creación e Inicialización del Formulario
+
   /**
-   * Crea la estructura base del formulario reactivo
-   * @returns FormGroup configurado con validadores
+   * Crea la estructura base del formulario reactivo con validaciones
+   * @private
+   * @returns {FormGroup} FormGroup configurado con todos los controles y validadores
    */
-  createForm(): FormGroup {
+  private createForm(): FormGroup {
     return this.fb.group({
+      // Información de identificación del paciente (solo lectura)
       patientIdentificationNumber: [{ value: '', disabled: true }, [Validators.required, Validators.pattern('^[0-9]*$')]],
       patientIdentificationType: [{ value: 'CC', disabled: true }, Validators.required],
 
+      // Grupo de información personal del paciente
       patient: this.fb.group({
         name: ['', Validators.required],
         sex: ['', Validators.required],
@@ -244,6 +373,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         crisisStatus: ['']
       }),
 
+      // Grupo de información del cuidador (opcional)
       caregiver: this.fb.group({
         name: [''],
         identificationType: ['CC'],
@@ -253,14 +383,17 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         occupation: ['']
       }),
 
+      // Array de variables de investigación
       variables: this.fb.array([])
     });
   }
 
   /**
-   * Inicializa el formulario con los datos del registro
+   * Inicializa el formulario con los datos del registro existente
+   * @private
+   * @method
    */
-  initializeFormWithData(): void {
+  private initializeFormWithData(): void {
     const registro = this.data.registro;
 
     if (!registro) {
@@ -269,17 +402,15 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     }
 
     this.loadIdentificationData(registro);
-
     this.loadPatientData(registro);
-
     this.loadCaregiverData(registro);
-
     this.initializeVariablesWithData(registro);
   }
 
   /**
    * Carga los datos de identificación del registro al formulario
-   * @param registro Registro con los datos a cargar
+   * @private
+   * @param {Register} registro - Registro con los datos a cargar
    */
   private loadIdentificationData(registro: Register): void {
     this.editForm.patchValue({
@@ -290,7 +421,8 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Carga los datos del paciente al formulario
-   * @param registro Registro con los datos del paciente
+   * @private
+   * @param {Register} registro - Registro con los datos del paciente
    */
   private loadPatientData(registro: Register): void {
     const patientData = registro.patientBasicInfo;
@@ -313,15 +445,14 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
           firstCrisisDate: this.formatDateForInput(patientData.firstCrisisDate),
           crisisStatus: patientData.crisisStatus || ''
         });
-
       }
     }
   }
 
-
   /**
    * Carga los datos del cuidador al formulario si existen
-   * @param registro Registro con los datos del cuidador
+   * @private
+   * @param {Register} registro - Registro con los datos del cuidador
    */
   private loadCaregiverData(registro: Register): void {
     if (registro.caregiver && registro.caregiver.name) {
@@ -342,7 +473,12 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  initializeVariablesWithData(registro: Register): void {
+  /**
+   * Inicializa las variables con datos existentes del registro
+   * @private
+   * @param {Register} registro - Registro con las variables a cargar
+   */
+  private initializeVariablesWithData(registro: Register): void {
     const variablesArray = this.editForm.get('variables') as FormArray;
     variablesArray.clear();
 
@@ -350,106 +486,40 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
     this.variablesDeCapa.forEach(capaVariable => {
       const variableData = this.findMatchingVariable(capaVariable, registroVariables);
-      this.createVariableControl(variablesArray, capaVariable, variableData ? [variableData] : []);
+      this.createVariableControl(variablesArray, capaVariable, variableData);
     });
-
   }
 
   /**
-   * Crea un control de formulario para una variable específica
-   * @param variablesArray Array de formulario para las variables
-   * @param variable Definición de la variable de la capa
-   * @param registroVariables Variables con valores del registro
+   * Inicializa los tipos de selección para variables con opciones
+   * @private
+   * @method
    */
-  private createVariableControl(variablesArray: FormArray, variable: Variable, registroVariables: any[]): void {
-    const variableData = registroVariables.find(v =>
-      v.variableId === variable.id ||
-      v.variableName === variable.name ||
-      v.name === variable.name
-    );
+  private initializeSelectionTypes(): void {
+    this.variablesFormGroups.forEach(variable => {
+      if (this.hasOptions(variable)) {
+        const currentValue = variable.get('value')?.value;
+        const variableId = variable.get('variableId')?.value;
 
-    const isVariableRequired = variable.isRequired ?? false;
-    const variableName = variable.name || variable.variableName || 'Variable sin nombre';
-
-    const variableType = this.getVariableType(variableData, variable);
-
-    const validators = isVariableRequired ? [Validators.required] : [];
-
-    const variableValue = this.extractVariableValue(variableData, variableType);
-
-    const variableGroup = this.fb.group({
-      variableId: [variable.id],
-      variableName: [variableName],
-      value: [variableValue, validators],
-      type: [variableType],
-      isRequired: [isVariableRequired],
-      originalType: [variableType]
+        // Si el valor actual es un array, establecer como múltiple
+        if (Array.isArray(currentValue)) {
+          this.selectionTypeMap.set(variableId, 'multiple');
+        } else {
+          this.selectionTypeMap.set(variableId, 'single');
+        }
+      }
     });
-
-    variablesArray.push(variableGroup);
   }
 
-  /**
- * Encuentra la variable correspondiente en los datos del registro
- * @param capaVariable Variable de la capa
- * @param registroVariables Variables del registro
- * @returns Variable del registro que coincide
- */
-  private findMatchingVariable(capaVariable: Variable, registroVariables: any[]): any {
-    const matches = registroVariables.filter(v =>
-      v.variableId === capaVariable.id ||
-      v.variableName === capaVariable.name ||
-      v.variableName === capaVariable.variableName ||
-      (capaVariable.name && v.name === capaVariable.name)
-    );
-
-    if (matches.length > 0) {
-      return matches[0];
-    }
-
-    return null;
-  }
-
-  /**
-   * Extrae el valor de una variable desde los datos del registro
-   * @param variableData Datos de la variable del registro
-   * @param variableType Tipo de variable (para forzar el correcto)
-   * @returns Valor formateado como string
-   */
-  private extractVariableValue(variableData: any, variableType?: string): string {
-    if (!variableData) {
-      return '';
-    }
-
-    const finalType = variableType || this.getVariableType(variableData);
-
-    let rawValue: any;
-
-    if (variableData.value !== undefined && variableData.value !== null) {
-      rawValue = variableData.value;
-    } else if (variableData.valueAsString !== undefined && variableData.valueAsString !== null) {
-      rawValue = variableData.valueAsString;
-    } else if (variableData.valueAsNumber !== undefined && variableData.valueAsNumber !== null) {
-      rawValue = variableData.valueAsNumber;
-    } else {
-      return '';
-    }
-
-    if (finalType === 'Fecha') {
-      const formattedDate = this.formatDateForInput(rawValue);
-      return formattedDate;
-    }
-
-    const result = rawValue.toString();
-    return result;
-  }
   //#endregion
 
   //#region Métodos de Utilidad para Datos
+
   /**
    * Obtiene las variables del registro de forma compatible con diferentes estructuras
-   * @param registro Registro del que extraer las variables
-   * @returns Array de variables
+   * @private
+   * @param {Register} registro - Registro del que extraer las variables
+   * @returns {any[]} Array de variables del registro
    */
   private getVariablesFromRegister(registro: Register): any[] {
     if (registro.registerInfo && registro.registerInfo.length > 0) {
@@ -471,9 +541,130 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Encuentra la variable correspondiente en los datos del registro
+   * @private
+   * @param {Variable} capaVariable - Variable de la capa
+   * @param {any[]} registroVariables - Variables del registro
+   * @returns {any} Variable del registro que coincide
+   */
+  private findMatchingVariable(capaVariable: Variable, registroVariables: any[]): any {
+    const matches = registroVariables.filter(v =>
+      v.variableId === capaVariable.id ||
+      v.variableName === capaVariable.name ||
+      v.variableName === capaVariable.variableName ||
+      (capaVariable.name && v.name === capaVariable.name)
+    );
+
+    if (matches.length > 0) {
+      return matches[0];
+    }
+
+    return null;
+  }
+
+  /**
+   * Crea un control de variable en el FormArray
+   * @private
+   * @param {FormArray} variablesArray - Array donde agregar el control
+   * @param {Variable} variable - Variable de la capa
+   * @param {any} registroVariable - Datos existentes de la variable
+   */
+  private createVariableControl(variablesArray: FormArray, variable: Variable, registroVariable: any): void {
+    const isVariableRequired = variable.isRequired ?? false;
+    const variableName = variable.variableName || 'Variable sin nombre';
+    const variableType = variable.type || 'Texto';
+
+    // Determinar el valor inicial
+    let variableValue: any = '';
+    if (registroVariable) {
+      variableValue = this.extractVariableValue(registroVariable, variableType);
+    }
+
+    const variableGroup = this.fb.group({
+      variableId: [variable.id],
+      variableName: [variableName],
+      description: [variable.description || ''],
+      type: [variableType],
+      options: [variable.options || []],
+      isRequired: [isVariableRequired],
+      value: [variableValue, isVariableRequired ? [Validators.required] : []]
+    });
+
+    variablesArray.push(variableGroup);
+
+    // Inicialización del tipo de selección
+    if (variable.options && variable.options.length > 0) {
+      const initialValue = variableGroup.get('value')?.value;
+      const selectionType = Array.isArray(initialValue) ? 'multiple' : 'single';
+      this.setSelectionType(variableGroup, selectionType);
+    }
+  }
+
+  /**
+   * Extrae el valor de una variable desde los datos del registro
+   * Maneja correctamente arrays para selección múltiple
+   * @private
+   * @param {any} variableData - Datos de la variable del registro
+   * @param {string} [variableType] - Tipo de la variable
+   * @returns {any} Valor extraído y formateado
+   */
+  private extractVariableValue(variableData: any, variableType?: string): any {
+    if (!variableData) {
+      return '';
+    }
+
+    const finalType = variableType || this.getVariableType(variableData);
+
+    let rawValue: any;
+
+    if (variableData.value !== undefined && variableData.value !== null) {
+      rawValue = variableData.value;
+    } else if (variableData.valueAsString !== undefined && variableData.valueAsString !== null) {
+      rawValue = variableData.valueAsString;
+    } else if (variableData.valueAsNumber !== undefined && variableData.valueAsNumber !== null) {
+      rawValue = variableData.valueAsNumber;
+    } else {
+      return '';
+    }
+
+    // Manejo especial para selección múltiple
+    if (typeof rawValue === 'string' && rawValue.includes(',')) {
+      const valuesArray = rawValue.split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+
+      if (valuesArray.length > 1) {
+        return valuesArray;
+      } else if (valuesArray.length === 1) {
+        return valuesArray[0];
+      }
+    }
+
+    // Para fechas, formatear correctamente
+    if (finalType === 'Fecha') {
+      return this.formatDateForInput(rawValue);
+    }
+
+    // Para valores booleanos
+    if (finalType === 'Lógico') {
+      if (typeof rawValue === 'string') {
+        return rawValue.toLowerCase() === 'true' || rawValue === '1';
+      }
+      return Boolean(rawValue);
+    }
+
+    return rawValue.toString();
+  }
+
+  //#endregion
+
+  //#region Métodos de Conversión y Formateo
+
+  /**
    * Convierte el tipo de identificación completo al formato abreviado
-   * @param fullType Tipo de identificación completo
-   * @returns Tipo abreviado o 'CC' por defecto
+   * @private
+   * @param {string} fullType - Tipo de identificación completo
+   * @returns {string} Tipo abreviado o 'CC' por defecto
    */
   private getShortIdentificationType(fullType: string): string {
     if (!fullType) return 'CC';
@@ -490,31 +681,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   }
 
   /**
- * Obtiene el tipo de variable de forma segura desde diferentes estructuras
- * @param variableData Datos de la variable
- * @param variableDefinition Definición de la variable de la capa (opcional)
- * @returns Tipo de variable
- */
-  private getVariableType(variableData: any, variableDefinition?: Variable): string {
-    if (variableDefinition?.type) {
-      return variableDefinition.type;
-    }
-
-    if (variableData?.type) {
-      return variableData.type;
-    }
-
-    if (variableData?.variableType) {
-      return variableData.variableType;
-    }
-
-    return 'Texto';
-  }
-
-  /**
    * Convierte el tipo de identificación al formato del backend
-   * @param type Tipo abreviado
-   * @returns Tipo completo para el backend
+   * @private
+   * @param {string} type - Tipo abreviado
+   * @returns {string} Tipo completo para el backend
    */
   private getBackendIdentificationType(type: string): string {
     switch (type) {
@@ -529,8 +699,9 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Formatea una fecha para el input type="date" (YYYY-MM-DD)
-   * @param dateValue Valor de fecha a formatear
-   * @returns Fecha formateada o string vacío
+   * @private
+   * @param {any} dateValue - Valor de fecha a formatear
+   * @returns {string} Fecha formateada o string vacío
    */
   private formatDateForInput(dateValue: any): string {
     if (!dateValue) return '';
@@ -574,9 +745,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Formatea una fecha para el backend (YYYY-MM-DD)
-   * @param dateValue Valor de fecha a formatear
-   * @returns Fecha formateada o null
+   * Formatea fecha para backend (YYYY-MM-DD)
+   * @private
+   * @param {any} dateValue - Valor de fecha a formatear
+   * @returns {string | null} Fecha formateada o null
    */
   private formatDateForBackend(dateValue: any): string | null {
     if (!dateValue) return null;
@@ -586,24 +758,47 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         return dateValue;
       }
 
-      const date = new Date(dateValue);
-      if (isNaN(date.getTime())) return null;
+      if (typeof dateValue === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
+        const [day, month, year] = dateValue.split('-');
+        return `${year}-${month}-${day}`;
+      }
+
+      if (typeof dateValue === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
+        const [day, month, year] = dateValue.split('/');
+        return `${year}-${month}-${day}`;
+      }
+
+      let date: Date;
+
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      } else {
+        date = new Date(dateValue);
+      }
+
+      if (isNaN(date.getTime())) {
+        console.warn('⚠️ Fecha inválida no pudo ser formateada:', dateValue);
+        return null;
+      }
 
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const day = date.getDate().toString().padStart(2, '0');
 
       return `${year}-${month}-${day}`;
-    } catch {
+    } catch (error) {
       return null;
     }
   }
+
   //#endregion
 
   //#region Métodos de Navegación y Validación
+
   /**
    * Cambia a una sección específica del formulario
-   * @param sectionIndex Índice de la sección a mostrar
+   * @method
+   * @param {number} sectionIndex - Índice de la sección a mostrar
    */
   changeSection(sectionIndex: number): void {
     this.currentSection = sectionIndex;
@@ -611,6 +806,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Navega a la siguiente sección del formulario
+   * @method
    */
   nextSection(): void {
     if (this.validateCurrentSection()) {
@@ -623,6 +819,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Navega a la sección anterior del formulario
+   * @method
    */
   prevSection(): void {
     if (this.currentSection > 0) {
@@ -632,9 +829,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Valida la sección actual antes de permitir la navegación
-   * @returns true si la sección es válida
+   * @private
+   * @returns {boolean} true si la sección es válida
    */
-  validateCurrentSection(): boolean {
+  private validateCurrentSection(): boolean {
     switch (this.currentSection) {
       case 1:
         const name = this.editForm.get('patient.name');
@@ -653,9 +851,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Marca campos como touched para mostrar errores de validación
-   * @param fields Array de campos a marcar como touched
+   * @private
+   * @param {any[]} fields - Array de campos a marcar como touched
    */
-  markFieldsAsTouched(fields: any[]): void {
+  private markFieldsAsTouched(fields: any[]): void {
     fields.forEach(field => {
       if (field) {
         field.markAsTouched();
@@ -665,6 +864,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Maneja el cambio en la fecha de nacimiento para calcular la edad automáticamente
+   * @method
    */
   onBirthDateChange(): void {
     const birthDate = this.editForm.get('patient.birthDate')?.value;
@@ -684,6 +884,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Alterna la visibilidad de la sección de cuidador
+   * @method
    */
   toggleCaregiver(): void {
     this.hasCaregiver = !this.hasCaregiver;
@@ -691,11 +892,23 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       this.editForm.get('caregiver')?.reset();
     }
   }
+
+  /**
+   * Alterna entre expandir/colapsar la sección de cuidador
+   * @method
+   */
+  toggleCaregiverSection(): void {
+    this.caregiverExpanded = !this.caregiverExpanded;
+  }
+
   //#endregion
 
   //#region Métodos de Envío y Procesamiento
+
   /**
    * Maneja el envío del formulario de edición
+   * @async
+   * @method
    */
   async onSubmit(): Promise<void> {
     if (this.editForm.invalid) {
@@ -708,9 +921,10 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
     try {
       const formValue = this.editForm.getRawValue();
+      console.log('📝 Form values:', formValue);
 
       const registerRequest = this.prepareUpdateRequest(formValue);
-
+      console.log('🚀 Request to send:', JSON.stringify(registerRequest, null, 2));
 
       const userEmail = this.authService.getUserEmail();
       if (!userEmail) {
@@ -721,6 +935,9 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         throw new Error('No se pudo identificar el registro a actualizar');
       }
 
+      console.log('📤 Sending update request...');
+      console.log('🔗 Register ID:', this.data.registro.registerId);
+      console.log('👤 User Email:', userEmail);
 
       const response = await this.consolaService.updateRegister(
         this.data.registro.registerId,
@@ -728,11 +945,16 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
         registerRequest
       ).pipe(takeUntil(this.destroy$)).toPromise();
 
-
+      console.log('✅ Update successful:', response);
       Swal.fire('Éxito', 'Registro actualizado correctamente', 'success');
       this.dialogRef.close(true);
 
     } catch (error: any) {
+      console.error('❌ Update error details:', error);
+      console.error('❌ Error status:', error.status);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error body:', error.error);
+
       this.handleUpdateError(error);
     } finally {
       this.loading = false;
@@ -741,40 +963,79 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Prepara el request para la actualización según la interfaz RegisterRequest
-   * @param formValue Valores del formulario
-   * @returns Objeto estructurado para la API
+   * @private
+   * @param {any} formValue - Valores del formulario
+   * @returns {any} Objeto estructurado para la API
    */
   private prepareUpdateRequest(formValue: any): any {
     const backendIdentificationType = this.getBackendIdentificationType(formValue.patientIdentificationType);
 
-    const variablesInfo: any[] = formValue.variables.map((v: any) => {
-      const converted = this.convertValueForApi(v.value, v.type);
-      return {
-        id: v.variableId,
-        name: v.variableName,
-        value: converted.value,
-        type: converted.finalType || v.type
-      };
-    });
+    // Preparar variablesInfo
+    const variablesInfo = this.variables.controls.map((v: AbstractControl) => {
+      const variableGroup = v as FormGroup;
+      const originalType = variableGroup.get('type')?.value;
+      const originalValue = variableGroup.get('value')?.value;
+      const converted = this.convertValueForApi(originalValue, originalType);
 
+      return {
+        id: variableGroup.get('variableId')?.value,
+        name: variableGroup.get('variableName')?.value,
+        type: converted.type,
+        value: converted.value
+      };
+    }).filter(v => v.value !== null && v.value !== undefined && v.value !== '');
+
+    // Obtener researchLayerId y researchLayerName del registro original
     const researchLayerId = this.data.registro.registerInfo?.[0]?.researchLayerId || '';
     const researchLayerName = this.data.registro.registerInfo?.[0]?.researchLayerName || '';
 
-    let caregiverData: any;
-    if (this.hasCaregiver && formValue.caregiver?.name) {
+    // Preparar datos del paciente
+    const patientData: any = {
+      name: formValue.patient.name?.trim() || '',
+      sex: formValue.patient.sex || '',
+      birthDate: this.formatDateForBackend(formValue.patient.birthDate) || '',
+      age: Number(formValue.patient.age) || 0,
+      email: formValue.patient.email?.trim() || '',
+      phoneNumber: formValue.patient.phoneNumber?.trim() || '',
+      deathDate: this.formatDateForBackend(formValue.patient.deathDate) || null,
+      economicStatus: formValue.patient.economicStatus?.trim() || '',
+      educationLevel: formValue.patient.educationLevel?.trim() || '',
+      maritalStatus: formValue.patient.maritalStatus?.trim() || '',
+      hometown: formValue.patient.hometown?.trim() || '',
+      currentCity: formValue.patient.currentCity?.trim() || '',
+      firstCrisisDate: this.formatDateForBackend(formValue.patient.firstCrisisDate) || '',
+      crisisStatus: formValue.patient.crisisStatus?.trim() || ''
+    };
+
+    // Limpiar campos vacíos
+    Object.keys(patientData).forEach(key => {
+      if (patientData[key] === '' || patientData[key] === null) {
+        patientData[key] = null;
+      }
+    });
+
+    // Preparar datos del cuidador si existe
+    let caregiverData: any = null;
+    if (this.hasCaregiver && formValue.caregiver?.name?.trim()) {
       caregiverData = {
-        name: formValue.caregiver.name,
-        identificationType: this.getBackendIdentificationType(formValue.caregiver.identificationType),
+        name: formValue.caregiver.name.trim(),
+        identificationType: this.getBackendIdentificationType(formValue.caregiver.identificationType) || 'CC',
         identificationNumber: Number(formValue.caregiver.identificationNumber) || 0,
         age: Number(formValue.caregiver.age) || 0,
-        educationLevel: formValue.caregiver.educationLevel || '',
-        occupation: formValue.caregiver.occupation || ''
+        educationLevel: formValue.caregiver.educationLevel?.trim() || '',
+        occupation: formValue.caregiver.occupation?.trim() || ''
       };
+
+      // Limpiar campos vacíos del cuidador
+      Object.keys(caregiverData).forEach(key => {
+        if (caregiverData[key] === '' || caregiverData[key] === null) {
+          caregiverData[key] = null;
+        }
+      });
     }
 
-    const firstCrisisDate = this.formatDateForBackend(formValue.patient.firstCrisisDate) || '';
-
-    const registerRequest = {
+    // Construir el request base
+    const registerRequest: any = {
       registerInfo: {
         researchLayerId: researchLayerId,
         researchLayerName: researchLayerName,
@@ -782,71 +1043,22 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
       },
       patientIdentificationNumber: Number(formValue.patientIdentificationNumber),
       patientIdentificationType: backendIdentificationType,
-      patient: {
-        name: formValue.patient.name,
-        sex: formValue.patient.sex,
-        birthDate: this.formatDateForBackend(formValue.patient.birthDate) || '',
-        age: Number(formValue.patient.age) || 0,
-        email: formValue.patient.email || '',
-        phoneNumber: formValue.patient.phoneNumber || '',
-        deathDate: this.formatDateForBackend(formValue.patient.deathDate) || '',
-        economicStatus: formValue.patient.economicStatus || '',
-        educationLevel: formValue.patient.educationLevel || '',
-        maritalStatus: formValue.patient.maritalStatus || '',
-        hometown: formValue.patient.hometown || '',
-        currentCity: formValue.patient.currentCity || '',
-        firstCrisisDate: firstCrisisDate,
-        crisisStatus: formValue.patient.crisisStatus || ''
-      },
-      ...(caregiverData && { caregiver: caregiverData })
+      patient: patientData
     };
 
+    // Solo agregar caregiver si existe y tiene datos válidos
+    if (caregiverData && caregiverData.name) {
+      registerRequest.caregiver = caregiverData;
+    }
+
+    console.log('📤 Request para actualizar:', JSON.stringify(registerRequest, null, 2));
     return registerRequest;
   }
 
   /**
-   * Convierte valores del formulario al tipo esperado por la API
-   * @param value Valor a convertir
-   * @param originalType Tipo original de la variable
-   * @returns Objeto con valor convertido y tipo final
-   */
-  private convertValueForApi(value: any, originalType: string): { value: any, finalType: string } {
-    if (value === null || value === undefined || value === '') {
-      return { value: null, finalType: 'String' };
-    }
-
-    let finalValue: any;
-    let finalType: string;
-
-    switch (originalType) {
-      case 'Entero':
-        finalValue = typeof value === 'string' ? parseInt(value, 10) : Number(value);
-        finalType = 'Number';
-        break;
-      case 'Real':
-        finalValue = typeof value === 'string' ? parseFloat(value) : Number(value);
-        finalType = 'Number';
-        break;
-      case 'Fecha':
-        finalValue = this.formatDateForBackend(value) || value;
-        finalType = 'String';
-        break;
-      case 'Lógico':
-        finalValue = typeof value === 'string' ? value.toLowerCase() === 'true' || value === '1' : !!value;
-        finalType = 'String';
-        break;
-      default:
-        finalValue = String(value);
-        finalType = 'String';
-        break;
-    }
-
-    return { value: finalValue, finalType: finalType };
-  }
-
-  /**
    * Maneja errores durante la actualización del registro
-   * @param error Error capturado
+   * @private
+   * @param {any} error - Error capturado
    */
   private handleUpdateError(error: any): void {
     if (error.error) {
@@ -865,14 +1077,114 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
     Swal.fire('Error', errorMessage, 'error');
   }
+
+  //#endregion
+
+  //#region Métodos de Conversión de Valores para API
+
+  /**
+   * Convierte valores para la API según el tipo de variable
+   * @private
+   * @param {any} value - Valor a convertir
+   * @param {string} originalType - Tipo original de la variable
+   * @returns {{value: any, type: string}} Objeto con valor convertido y tipo
+   */
+  private convertValueForApi(value: any, originalType: string): { value: any, type: string } {
+    // Si es array, usar conversión especial para arrays
+    if (Array.isArray(value)) {
+      return this.convertArrayValueForApi(value, originalType);
+    }
+
+    // Si no es array, usar conversión normal
+    return this.convertSingleValueForApi(value, originalType);
+  }
+
+  /**
+   * Convierte valores de array para la API
+   * @private
+   * @param {any} value - Valor array a convertir
+   * @param {string} originalType - Tipo original de la variable
+   * @returns {{value: any, type: string}} Objeto con valor convertido y tipo
+   */
+  private convertArrayValueForApi(value: any, originalType: string): { value: any, type: string } {
+    if (Array.isArray(value)) {
+      // Para arrays, unir con coma y espacio
+      const stringValue = value.join(', ');
+      return { value: stringValue, type: 'String' };
+    }
+
+    // Si no es array, usar conversión normal
+    return this.convertSingleValueForApi(value, originalType);
+  }
+
+  /**
+   * Convierte valores simples para la API
+   * @private
+   * @param {any} value - Valor simple a convertir
+   * @param {string} originalType - Tipo original de la variable
+   * @returns {{value: any, type: string}} Objeto con valor convertido y tipo
+   */
+  private convertSingleValueForApi(value: any, originalType: string): { value: any, type: string } {
+    if (value === null || value === undefined || value === '') {
+      return { value: null, type: 'String' };
+    }
+
+    let finalValue: any;
+    let finalType: string;
+
+    try {
+      switch (originalType) {
+        case 'Entero':
+          finalValue = typeof value === 'string' ? parseInt(value, 10) : Number(value);
+          finalType = isNaN(finalValue) ? 'String' : 'Number';
+          if (isNaN(finalValue)) finalValue = String(value);
+          break;
+
+        case 'Real':
+          finalValue = typeof value === 'string' ? parseFloat(value) : Number(value);
+          finalType = isNaN(finalValue) ? 'String' : 'Number';
+          if (isNaN(finalValue)) finalValue = String(value);
+          break;
+
+        case 'Fecha':
+          finalValue = this.formatDateForBackend(value);
+          finalType = 'String';
+          break;
+
+        case 'Lógico':
+          if (typeof value === 'string') {
+            finalValue = value.toLowerCase() === 'true' || value === '1' ? 'true' : 'false';
+          } else {
+            finalValue = value ? 'true' : 'false';
+          }
+          finalType = 'String';
+          break;
+
+        case 'Texto':
+        default:
+          finalValue = String(value);
+          finalType = 'String';
+          break;
+      }
+    } catch (error) {
+      console.error('Error converting value:', error, { value, originalType });
+      finalValue = String(value);
+      finalType = 'String';
+    }
+
+    return { value: finalValue, type: finalType };
+  }
+
   //#endregion
 
   //#region Métodos de Validación y Utilidades de UI
+
   /**
    * Marca recursivamente todos los controles de un FormGroup como touched
-   * @param formGroup Grupo de formulario a marcar
+   * @private
+   * @param {FormGroup} formGroup - Grupo de formulario a marcar
    */
-  private markFormGroupTouched(formGroup: FormGroup): void {
+   public markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
       if (control instanceof FormGroup) {
@@ -893,8 +1205,9 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Valida entrada de teclado para campos numéricos
-   * @param event Evento de teclado
-   * @returns true si la tecla es válida
+   * @method
+   * @param {KeyboardEvent} event - Evento de teclado
+   * @returns {boolean} true si la tecla es válida
    */
   validateNumber(event: KeyboardEvent): boolean {
     const charCode = event.which ? event.which : event.keyCode;
@@ -908,8 +1221,9 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Valida entrada de teclado para campos decimales
-   * @param event Evento de teclado
-   * @returns true si la tecla es válida
+   * @method
+   * @param {KeyboardEvent} event - Evento de teclado
+   * @returns {boolean} true si la tecla es válida
    */
   validateDecimal(event: KeyboardEvent): boolean {
     const charCode = event.which ? event.which : event.keyCode;
@@ -933,19 +1247,24 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Maneja cambios en checkboxes para variables lógicas
-   * @param variable Grupo de formulario de la variable
-   * @param event Evento de cambio del checkbox
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @param {MatCheckboxChange} event - Evento de cambio del checkbox
    */
   onCheckboxChange(variable: FormGroup, event: MatCheckboxChange): void {
     const control = this.getVariableControl(variable, 'value');
     control.setValue(event.checked);
     control.updateValueAndValidity();
   }
+
   //#endregion
 
   //#region Getters y Métodos de Acceso
+
   /**
    * Obtiene el FormArray de variables
+   * @getter
+   * @returns {FormArray} FormArray de variables
    */
   get variables(): FormArray {
     return this.editForm.get('variables') as FormArray;
@@ -953,6 +1272,8 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Obtiene los grupos de formulario de las variables
+   * @getter
+   * @returns {FormGroup[]} Array de FormGroups de variables
    */
   get variablesFormGroups(): FormGroup[] {
     return this.variables.controls.filter(control => control instanceof FormGroup) as FormGroup[];
@@ -960,9 +1281,11 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Obtiene un control específico de una variable
-   * @param variable Grupo de formulario de la variable
-   * @param controlName Nombre del control
-   * @returns FormControl solicitado
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @param {string} controlName - Nombre del control
+   * @returns {FormControl} FormControl solicitado
+   * @throws {Error} Si el control no existe o no es un FormControl
    */
   getVariableControl(variable: FormGroup, controlName: string): FormControl {
     const control = variable.get(controlName);
@@ -973,11 +1296,358 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene la etiqueta descriptiva para un tipo de variable
-   * @param type Tipo de variable
-   * @returns Etiqueta descriptiva
+   * Obtiene el número de variables completadas
+   * @getter
+   * @returns {number} Número de variables completadas
+   */
+  get completedCount(): number {
+    return this.variablesFormGroups.filter(v => this.isCompleted(v)).length;
+  }
+
+  /**
+   * Obtiene el número total de variables
+   * @getter
+   * @returns {number} Número total de variables
+   */
+  get totalCount(): number {
+    return this.variablesFormGroups.length;
+  }
+
+  /**
+   * Verifica si el formulario es válido
+   * @getter
+   * @returns {boolean} true si el formulario es válido
+   */
+  get isFormValid(): boolean {
+    return this.editForm.valid;
+  }
+
+  /**
+   * Verifica si la sección actual es válida
+   * @getter
+   * @returns {boolean} true si la sección actual es válida
+   */
+  get isCurrentSectionValid(): boolean {
+    switch (this.currentSection) {
+      case 0:
+        const patientGroup = this.editForm.get('patient') as FormGroup;
+        return patientGroup?.valid || false;
+      case 1:
+        return true;
+      case 2:
+        return this.variables.valid;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Verifica si hay variables requeridas sin completar
+   * @getter
+   * @returns {boolean} true si hay variables requeridas incompletas
+   */
+  get hasRequiredVariablesIncomplete(): boolean {
+    return this.variablesFormGroups.some(variable => {
+      const isRequired = variable.get('isRequired')?.value;
+      const value = variable.get('value')?.value;
+      return isRequired && (!value || value.toString().trim() === '');
+    });
+  }
+
+  //#endregion
+
+  //#region Métodos para Variables (Getters Seguros)
+
+  /**
+   * Obtiene el nombre de una variable de forma segura
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {string} Nombre de la variable o texto por defecto
+   */
+  getVariableName(variable: FormGroup): string {
+    return variable?.get('variableName')?.value || 'Variable sin nombre';
+  }
+
+  /**
+   * Obtiene el tipo de una variable de forma segura
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {string} Tipo de la variable o 'Texto' por defecto
+   */
+  getVariableType(variable: FormGroup): string {
+    return variable?.get('type')?.value || 'Texto';
+  }
+
+  /**
+   * Obtiene la descripción de una variable de forma segura
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {string} Descripción de la variable o string vacío
+   */
+  getVariableDescription(variable: FormGroup): string {
+    return variable?.get('description')?.value || '';
+  }
+
+  /**
+   * Verifica si una variable es requerida de forma segura
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {boolean} true si la variable es requerida
+   */
+  isVariableRequired(variable: FormGroup): boolean {
+    return !!variable?.get('isRequired')?.value;
+  }
+
+  /**
+   * Verifica si una variable tiene opciones de forma segura
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {boolean} true si la variable tiene opciones
+   */
+  hasOptions(variable: FormGroup): boolean {
+    const options = variable?.get('options')?.value;
+    return Array.isArray(options) && options.length > 0;
+  }
+
+  /**
+   * Obtiene las opciones de una variable de forma segura
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {any[]} Array de opciones o array vacío
+   */
+  getSafeOptions(variable: FormGroup): any[] {
+    return variable?.get('options')?.value || [];
+  }
+
+  /**
+   * Obtiene el número de opciones de una variable
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {number} Número de opciones
+   */
+  getOptionsCount(variable: FormGroup): number {
+    const options = this.getSafeOptions(variable);
+    return options.length;
+  }
+
+  /**
+   * Obtiene el tipo de selección de una variable
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {string} Tipo de selección ('single' o 'multiple')
+   */
+  getSelectionType(variable: FormGroup): string {
+    const variableId = variable?.get('variableId')?.value;
+    return variableId ? this.selectionTypeMap.get(variableId) || 'single' : 'single';
+  }
+
+  /**
+   * Establece el tipo de selección para una variable
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @param {string} selectionType - Tipo de selección ('single' o 'multiple')
+   */
+  setSelectionType(variable: FormGroup, selectionType: string): void {
+    const variableId = variable?.get('variableId')?.value;
+    if (variableId) {
+      this.selectionTypeMap.set(variableId, selectionType);
+      console.log(`🔧 Tipo de selección cambiado para variable ${variableId}: ${selectionType}`);
+    }
+  }
+
+  /**
+   * Obtiene las opciones seleccionadas de forma segura
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {string[]} Array de opciones seleccionadas
+   */
+  getSafeSelectedOptions(variable: FormGroup): string[] {
+    const value = variable?.get('value')?.value;
+    if (Array.isArray(value)) {
+      return value;
+    }
+    return value ? [value] : [];
+  }
+
+  /**
+   * Obtiene el número de opciones seleccionadas
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {number} Número de opciones seleccionadas
+   */
+  getSelectedOptionsCount(variable: FormGroup): number {
+    const selected = this.getSafeSelectedOptions(variable);
+    return selected.length;
+  }
+
+  /**
+   * Obtiene el texto para checkboxes de variables lógicas
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {string} 'Sí' o 'No' según el valor
+   */
+  getCheckboxText(variable: FormGroup): string {
+    const value = variable?.get('value')?.value;
+    return value ? 'Sí' : 'No';
+  }
+
+  /**
+   * Verifica si una variable es inválida
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {boolean} true si la variable es inválida y ha sido tocada
+   */
+  isVariableInvalid(variable: FormGroup): boolean {
+    const control = variable?.get('value');
+    return !!(control?.invalid && control?.touched);
+  }
+
+  /**
+   * Verifica si una variable es válida y tiene valor
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {boolean} true si la variable es válida y tiene valor
+   */
+  isVariableValidAndHasValue(variable: FormGroup): boolean {
+    const control = variable?.get('value');
+    return !!(control?.valid && control?.value);
+  }
+
+  //#endregion
+
+  //#region Métodos para Selección Múltiple
+
+  /**
+   * Verifica si una opción está seleccionada en una variable
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @param {string} option - Opción a verificar
+   * @returns {boolean} true si la opción está seleccionada
+   */
+  isOptionSelected(variable: FormGroup, option: string): boolean {
+    const currentValue = variable?.get('value')?.value;
+    if (Array.isArray(currentValue)) {
+      return currentValue.includes(option);
+    }
+    return currentValue === option;
+  }
+
+  /**
+   * Maneja el cambio en selección múltiple
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @param {string} option - Opción que cambió
+   * @param {any} event - Evento del checkbox
+   */
+  onMultipleSelectionChange(variable: FormGroup, option: string, event: any): void {
+    if (this.variablesReadOnly) return;
+
+    const currentValue = variable?.get('value')?.value || [];
+    let newValue: string[];
+
+    if (event.target.checked) {
+      newValue = Array.isArray(currentValue)
+        ? [...currentValue, option]
+        : [option];
+    } else {
+      newValue = Array.isArray(currentValue)
+        ? currentValue.filter((item: string) => item !== option)
+        : [];
+    }
+
+    variable?.get('value')?.setValue(newValue);
+    variable?.get('value')?.updateValueAndValidity();
+  }
+
+  /**
+   * Maneja el cambio en el tipo de selección
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @param {any} event - Evento del select
+   */
+  onSelectionTypeChange(variable: FormGroup, event: any): void {
+    if (this.variablesReadOnly) return;
+
+    const newType = event.target.value;
+    const currentValue = variable?.get('value')?.value;
+
+    // Preservar los valores al cambiar de tipo
+    if (newType === 'single') {
+      // Cambiando de múltiple a única
+      if (Array.isArray(currentValue) && currentValue.length > 0) {
+        // Tomar el primer valor seleccionado
+        variable?.get('value')?.setValue(currentValue[0]);
+      } else if (Array.isArray(currentValue) && currentValue.length === 0) {
+        // Si no hay valores seleccionados, limpiar
+        variable?.get('value')?.setValue('');
+      }
+      // Si ya es un valor único, mantenerlo
+    } else {
+      // Cambiando de única a múltiple
+      if (currentValue && currentValue !== '' && !Array.isArray(currentValue)) {
+        // Convertir el valor único a array
+        variable?.get('value')?.setValue([currentValue]);
+      } else if (!currentValue || currentValue === '') {
+        // Si no hay valor, inicializar como array vacío
+        variable?.get('value')?.setValue([]);
+      }
+      // Si ya es array, mantenerlo
+    }
+
+    this.setSelectionType(variable, newType);
+  }
+
+  //#endregion
+
+  //#region Métodos para Filtros y Búsqueda
+
+  /**
+   * Obtiene las variables filtradas según el filtro actual
+   * @method
+   * @returns {FormGroup[]} Array de variables filtradas
+   */
+  getFilteredVariables(): FormGroup[] {
+    if (!this.variablesFormGroups || this.variablesFormGroups.length === 0) {
+      return [];
+    }
+
+    switch (this.currentFilter) {
+      case 'completed':
+        return this.variablesFormGroups.filter(v => this.isCompleted(v));
+      case 'pending':
+        return this.variablesFormGroups.filter(v => !this.isCompleted(v));
+      case 'required':
+        return this.variablesFormGroups.filter(v => v?.get('isRequired')?.value);
+      default:
+        return this.variablesFormGroups;
+    }
+  }
+
+  /**
+   * Verifica si una variable está completada
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {boolean} true si la variable está completada
+   */
+  isCompleted(variable: FormGroup): boolean {
+    const value = variable?.get('value')?.value;
+    return value !== null && value !== undefined && value !== '' &&
+      !(Array.isArray(value) && value.length === 0);
+  }
+
+  //#endregion
+
+  //#region Métodos de Utilidad para UI
+
+  /**
+   * Obtiene la etiqueta para un tipo de variable
+   * @method
+   * @param {string} type - Tipo de variable
+   * @returns {string} Etiqueta legible para el tipo
    */
   getTypeLabel(type: string): string {
+    if (!type) return 'Texto';
+
     const typeLabels: { [key: string]: string } = {
       'Entero': 'Entero',
       'Real': 'Decimal',
@@ -990,10 +1660,13 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Obtiene la descripción para un tipo de variable
-   * @param type Tipo de variable
-   * @returns Descripción del tipo
+   * @method
+   * @param {string} type - Tipo de variable
+   * @returns {string} Descripción del tipo
    */
   getTypeDescription(type: string): string {
+    if (!type) return '';
+
     const typeDescriptions: { [key: string]: string } = {
       'Entero': 'Número entero sin decimales',
       'Real': 'Número con decimales',
@@ -1006,21 +1679,76 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
 
   /**
    * Obtiene el mensaje de error para una variable
-   * @param variable Grupo de formulario de la variable
-   * @returns Mensaje de error
+   * @method
+   * @param {FormGroup} variable - Grupo de formulario de la variable
+   * @returns {string} Mensaje de error
    */
   getErrorMessage(variable: FormGroup): string {
-    const control = variable.get('value');
+    const control = variable?.get('value');
     if (control?.errors?.['required']) {
       return 'Este campo es requerido';
     }
     return 'Valor inválido';
   }
+
+  /**
+   * Obtiene la clase CSS para un tipo de variable
+   * @method
+   * @param {string} type - Tipo de variable
+   * @returns {string} Clase CSS
+   */
+  getTypeClass(type: string): string {
+    return type || 'Texto';
+  }
+
+  //#endregion
+
+  //#region Métodos para Información del Paciente en Header
+
+  /**
+   * Obtiene el nombre del paciente para mostrar en el header
+   * @method
+   * @returns {string} Nombre del paciente o texto por defecto
+   */
+  getPatientDisplayName(): string {
+    const patientName = this.editForm.get('patient.name')?.value;
+    const identification = this.editForm.get('patientIdentificationNumber')?.value;
+
+    if (patientName && patientName.trim()) {
+      return patientName;
+    } else if (identification) {
+      return `Documento ${identification}`;
+    } else {
+      return 'Paciente';
+    }
+  }
+
+  /**
+   * Obtiene la identificación completa del paciente
+   * @method
+   * @returns {string} Identificación formateada
+   */
+  getPatientIdentification(): string {
+    const identificationType = this.editForm.get('patientIdentificationType')?.value;
+    const identificationNumber = this.editForm.get('patientIdentificationNumber')?.value;
+
+    if (identificationType && identificationNumber) {
+      const typeLabel = this.tiposIdentificacion.find(t => t.value === identificationType)?.label || identificationType;
+      return `${typeLabel}: ${identificationNumber}`;
+    } else if (identificationNumber) {
+      return identificationNumber;
+    } else {
+      return 'No especificado';
+    }
+  }
+
   //#endregion
 
   //#region Métodos de Cierre y Manejo de Modal
+
   /**
    * Maneja el cierre del modal con confirmación si hay cambios sin guardar
+   * @method
    */
   onCancel(): void {
     if (this.editForm.dirty) {
@@ -1042,89 +1770,23 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Maneja el cierre simple del modal
+   * @method
+   */
+  onClose(): void {
+    this.dialogRef.close();
+  }
+
+  /**
    * Muestra un error y cierra el modal
-   * @param message Mensaje de error a mostrar
+   * @private
+   * @param {string} message - Mensaje de error a mostrar
    */
   private showErrorAndClose(message: string): void {
     Swal.fire('Error', message, 'error');
     this.dialogRef.close();
   }
+
   //#endregion
 
-  //#region Métodos de Utilidad para Validación de Formulario
-  /**
-   * Verifica si el formulario es válido
-   */
-  get isFormValid(): boolean {
-    return this.editForm.valid;
-  }
-
-  /**
-   * Verifica si la sección actual es válida
-   */
-  get isCurrentSectionValid(): boolean {
-    switch (this.currentSection) {
-      case 0:
-        const patientGroup = this.editForm.get('patient') as FormGroup;
-        return patientGroup?.valid || false;
-      case 1:
-        return true;
-      case 2:
-        return this.variables.valid;
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Verifica si hay variables requeridas sin completar
-   */
-  get hasRequiredVariablesIncomplete(): boolean {
-    return this.variablesFormGroups.some(variable => {
-      const isRequired = variable.get('isRequired')?.value;
-      const value = variable.get('value')?.value;
-      return isRequired && (!value || value.toString().trim() === '');
-    });
-  }
-
-  onClose(): void {
-    this.dialogRef.close();
-  }
-
-  //#region Métodos para mostrar información del paciente en el header
-  /**
-   * Obtiene el nombre del paciente para mostrar en el header
-   * @returns Nombre del paciente o texto por defecto
-   */
-  getPatientDisplayName(): string {
-    const patientName = this.editForm.get('patient.name')?.value;
-    const identification = this.editForm.get('patientIdentificationNumber')?.value;
-
-    if (patientName && patientName.trim()) {
-      return patientName;
-    } else if (identification) {
-      return `Documento ${identification}`;
-    } else {
-      return 'Paciente';
-    }
-  }
-
-  /**
-   * Obtiene la identificación completa del paciente
-   * @returns Identificación formateada
-   */
-  getPatientIdentification(): string {
-    const identificationType = this.editForm.get('patientIdentificationType')?.value;
-    const identificationNumber = this.editForm.get('patientIdentificationNumber')?.value;
-
-    if (identificationType && identificationNumber) {
-      const typeLabel = this.tiposIdentificacion.find(t => t.value === identificationType)?.label || identificationType;
-      return `${typeLabel}: ${identificationNumber}`;
-    } else if (identificationNumber) {
-      return identificationNumber;
-    } else {
-      return 'No especificado';
-    }
-  }
-  //#endregion
 }

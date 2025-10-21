@@ -88,10 +88,6 @@ describe('ConsolaInvestigadorService', () => {
         patientIdentificationNumber: 123456789,
         patientIdentificationType: 'CC',
         registerDate: '2024-01-15T10:30:00Z',
-        healthProfessional: {
-          name: 'Dr. Test',
-          email: 'doctor@test.com'
-        },
         patientBasicInfo: {
           name: 'Test Patient',
           sex: 'M',
@@ -129,10 +125,6 @@ describe('ConsolaInvestigadorService', () => {
         patientIdentificationNumber: 123456789,
         patientIdentificationType: 'CC',
         registerDate: '2024-01-15T10:30:00Z',
-        healthProfessional: {
-          name: 'Dr. Test',
-          email: 'doctor@test.com'
-        },
         patientBasicInfo: {
           name: 'Test Patient',
           sex: 'M',

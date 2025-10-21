@@ -339,16 +339,6 @@ export class ConsolaInvestigadorService {
     });
   }
 
-  /**
-   * Verifica si el usuario actual tiene rol de Doctor
-   * @returns true si el usuario tiene rol de Doctor
-   * 
-   * @private
-   */
-  private isDoctor(): boolean {
-    const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-    return userRoles.includes('Doctor_client_role');
-  }
 
   // ============================
   // MÉTODOS PRIVADOS - MANEJO DE ERRORES
@@ -423,18 +413,4 @@ export class ConsolaInvestigadorService {
     return error;
   }
 
-  /**
-   * Método alternativo para manejo de errores (mantenido por compatibilidad)
-   * 
-   * @param operation - Descripción de la operación
-   * @param error - Error capturado
-   * @returns Observable que emite el error procesado
-   * 
-   * @private
-   * @deprecated Use handleHttpError en su lugar
-   */
-  private handleError(operation: string, error: any): Observable<never> {
-    console.warn(`⚠️ handleError está deprecado, use handleHttpError en su lugar para: ${operation}`);
-    return this.handleHttpError(error, operation);
-  }
 }

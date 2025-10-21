@@ -1095,7 +1095,7 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
 
     Swal.fire({
       title: `¿Estás seguro de ${action} este usuario?`,
-      text: `El usuario ${user.nombre} ${user.apellido} será ${action}do.`,
+      text: `El usuario ${user.nombre} ${user.apellido} será ${action}.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',

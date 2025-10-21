@@ -37,6 +37,7 @@ import { EditRegistroModalComponent } from './components/edit-registro-modal/edi
 import { VersionamientoModalComponent } from './components/versionamiento-modal/versionamiento-modal.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { UploadConsentimientoComponent } from './components/upload-consentimiento/upload-consentimiento.component';
+import { CapitalizeDirective } from 'src/app/pipes/capitalize.directive';
 @NgModule({
   declarations: [
     ConsolaRegistroComponent,
@@ -50,7 +51,8 @@ import { UploadConsentimientoComponent } from './components/upload-consentimient
     EditRegistroModalComponent,
     ViewRegistroModalComponent,
     VersionamientoModalComponent,
-    UploadConsentimientoComponent
+    UploadConsentimientoComponent,
+    CapitalizeDirective
   ],
   imports: [
     CommonModule,

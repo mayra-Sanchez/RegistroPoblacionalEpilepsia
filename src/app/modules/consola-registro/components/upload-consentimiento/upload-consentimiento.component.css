@@ -342,3 +342,20 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
+
+/* Agrega esto al CSS existente */
+.form-control.loading {
+  border-color: #1a6fb0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a6fb0'%3E%3Cpath d='M12 2a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 15a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0v-3a1 1 0 0 1 1-1zm10-5a1 1 0 0 1-1 1h-3a1 1 0 1 1 0-2h3a1 1 0 0 1 1 1zM7 12a1 1 0 0 1-1 1H3a1 1 0 1 1 0-2h3a1 1 0 0 1 1 1zm12.071 7.071a1 1 0 0 1-1.414 0l-2.121-2.121a1 1 0 0 1 1.414-1.414l2.121 2.121a1 1 0 0 1 0 1.414zM8.464 8.464a1 1 0 0 1-1.414 0L4.929 6.343a1 1 0 0 1 1.414-1.414l2.121 2.121a1 1 0 0 1 0 1.414zm-1.414 9.9a1 1 0 0 1 0-1.414l2.121-2.121a1 1 0 0 1 1.414 1.414l-2.121 2.121a1 1 0 0 1-1.414 0zM15.536 8.464a1 1 0 0 1 0-1.414l2.121-2.121a1 1 0 1 1 1.414 1.414l-2.121 2.121a1 1 0 0 1-1.414 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.search-loading {
+  position: absolute;
+  right: 12px;
+  color: #1a6fb0;
+  z-index: 2;
+}

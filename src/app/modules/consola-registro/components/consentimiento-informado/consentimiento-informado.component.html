@@ -43,7 +43,7 @@
                 </p>
             </div>
 
-            <div class="form-section patient-data">
+             <div class="form-section patient-data">
                 <h4>Datos del paciente o representante legal</h4>
                 <div class="form-group">
                     <label>Nombre completo</label>
@@ -56,8 +56,8 @@
                 <div class="form-group">
                     <label>Firma</label>
                     <div class="signature-pad">
-                        <button type="button" class="btn btn-sign" (click)="toggleFirmaPaciente()">
-                            {{ consentimientoForm.get('firmaPaciente')?.value ? 'Firma completada' : 'Firmar aquí' }}
+                        <button type="button" class="btn btn-sign" (click)="openFirmaPaciente($event)">
+                            {{ hasPatientSignature ? 'Firma completada' : 'Firmar aquí' }}
                         </button>
                         <small *ngIf="consentimientoForm.get('firmaPaciente')?.value">Firma registrada</small>
                     </div>
@@ -81,8 +81,8 @@
                 <div class="form-group">
                     <label>Firma</label>
                     <div class="signature-pad">
-                        <button type="button" class="btn btn-sign" (click)="toggleFirmaProfesional()">
-                            {{ consentimientoForm.get('firmaProfesional')?.value ? 'Firma completada' : 'Firmar aquí' }}
+                        <button type="button" class="btn btn-sign" (click)="openFirmaProfesional($event)">
+                            {{ hasProfessionalSignature ? 'Firma completada' : 'Firmar aquí' }}
                         </button>
                         <small *ngIf="consentimientoForm.get('firmaProfesional')?.value">Firma registrada</small>
                     </div>
@@ -97,9 +97,16 @@
                 <button type="button" class="btn btn-secondary" (click)="onCancel()">
                     Cancelar
                 </button>
-                <button type="button" class="btn btn-download" (click)="generatePDF()">
-                    <i class="fas fa-download"></i> Descargar PDF
+                <button type="button" class="btn btn-download" (click)="generatePDF()" [disabled]="!isFormValid"
+                    [class.loading]="!pdfMakeLoaded">
+                    <i class="fas fa-download"></i>
+                    {{ !pdfMakeLoaded ? 'Cargando...' : 'Descargar PDF' }}
                 </button>
+
+                <!-- Mensaje de error -->
+                <div *ngIf="!isFormValid" class="error-message">
+                    Complete todos los campos requeridos antes de descargar el PDF.
+                </div>
             </div>
         </form>
     </div>
@@ -107,21 +114,29 @@
 
 <!-- Modal para firma -->
 <div class="signature-modal" *ngIf="showFirmaPaciente || showFirmaProfesional">
-    <div class="modal-content-consentimiento">
-        <h4>{{ currentSignatureType === 'paciente' ? 'Firma del Paciente' : 'Firma del Profesional' }}</h4>
+    <div class="modal-backdrop" (click)="closeModal()"></div>
+    <div class="modal-content-consentimiento" [ngStyle]="modalStyle" #signatureModal>
+        <div class="modal-header">
+            <h4>{{ currentSignatureType === 'paciente' ? 'Firma del Paciente' : 'Firma del Profesional' }}</h4>
+            <button type="button" class="btn-close" (click)="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="signature-instructions">
+            <p>Firme en el área siguiente usando el mouse o touch</p>
+        </div>
 
         <div class="signature-container">
-            <canvas #signaturePad class="signature-canvas" (touchstart)="onTouchStart($event)"
-                (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd()" (mousedown)="onMouseDown($event)"
-                (mousemove)="onMouseMove($event)" (mouseup)="onMouseUp()" (mouseleave)="onMouseUp()">
-            </canvas>
+            <!-- Eliminamos todos los event listeners del canvas -->
+            <canvas #signaturePad class="signature-canvas"></canvas>
         </div>
 
         <div class="signature-actions">
             <button type="button" class="btn btn-clear" (click)="limpiarFirma()">
                 <i class="fas fa-eraser"></i> Limpiar
             </button>
-            <button type="button" class="btn btn-confirm" (click)="confirmarFirma()">
+            <button type="button" class="btn btn-confirm" (click)="confirmarFirma()" [disabled]="isSignaturePadEmpty">
                 <i class="fas fa-check"></i> Confirmar Firma
             </button>
         </div>
