@@ -16,6 +16,7 @@ export class FormRegistroUsuarioComponent implements OnInit {
   capas: any[] = [];
   showPassword: boolean = false;
   sugerenciasUsername: string[] = [];
+  loading: boolean = false;
 
   roles = [
     { valor: 'Admin', label: 'Administrador', descripcion: 'Puede gestionar usuarios, capas y variables.' },
@@ -78,15 +79,81 @@ export class FormRegistroUsuarioComponent implements OnInit {
     );
   }
 
+  
+  /**
+   * Genera sugerencias de username más inteligentes
+   */
   generarSugerenciasUsername(): void {
-    const nombre = this.usuarioForm.get('nombre')?.value;
-    const apellido = this.usuarioForm.get('apellido')?.value;
-    const fechaNacimiento = this.usuarioForm.get('fechaNacimiento')?.value;
-
-    if (nombre && apellido && fechaNacimiento) {
-      this.sugerenciasUsername = this.generarUsernameSugerencias(nombre, apellido, fechaNacimiento);
-      this.usuarioForm.get('username')?.setValue(this.sugerenciasUsername[0]);
+    const nombre = this.usuarioForm.get('nombre')?.value?.toLowerCase() || '';
+    const apellido = this.usuarioForm.get('apellido')?.value?.toLowerCase() || '';
+    const email = this.usuarioForm.get('email')?.value?.split('@')[0] || '';
+    
+    if (!nombre && !apellido && !email) {
+      this.sugerenciasUsername = [];
+      this.usuarioForm.get('username')?.setValue('');
+      return;
     }
+
+    const sugerencias: string[] = [];
+
+    // Combinaciones con nombre y apellido
+    if (nombre && apellido) {
+      sugerencias.push(
+        `${nombre}.${apellido}`.toLowerCase(),
+        `${nombre}${apellido.substring(0, 3)}`.toLowerCase(),
+        `${nombre.charAt(0)}${apellido}`.toLowerCase(),
+        `${nombre}_${apellido}`.toLowerCase(),
+        `${nombre}${apellido.charAt(0)}`.toLowerCase()
+      );
+    }
+
+    // Combinaciones solo con nombre
+    if (nombre) {
+      sugerencias.push(
+        nombre.toLowerCase(),
+        `${nombre}2024`.toLowerCase(),
+        `${nombre}.user`.toLowerCase(),
+        `usr.${nombre}`.toLowerCase()
+      );
+    }
+
+    // Usar email si está disponible
+    if (email && email !== nombre && email !== apellido) {
+      sugerencias.push(email.toLowerCase());
+    }
+
+    // Eliminar duplicados, espacios y caracteres especiales
+    this.sugerenciasUsername = [...new Set(sugerencias)]
+      .map(s => s.replace(/[^a-zA-Z0-9._-]/g, ''))
+      .filter(s => s.length >= 3 && s.length <= 20)
+      .slice(0, 6); // Mostrar hasta 6 sugerencias
+
+    // Si no hay sugerencias, establecer una por defecto
+    if (this.sugerenciasUsername.length === 0 && (nombre || apellido)) {
+      this.sugerenciasUsername = ['usuario.nuevo'];
+    }
+
+    // Auto-seleccionar la primera sugerencia si no hay ninguna seleccionada
+    if (this.sugerenciasUsername.length > 0 && !this.usuarioForm.get('username')?.value) {
+      this.seleccionarUsername(this.sugerenciasUsername[0]);
+    }
+  }
+
+  /**
+   * Selecciona un username de las sugerencias
+   */
+  seleccionarUsername(username: string): void {
+    this.usuarioForm.get('username')?.setValue(username);
+    
+    // Marcar el campo como touched para mostrar validaciones
+    this.usuarioForm.get('username')?.markAsTouched();
+  }
+
+  /**
+   * Verifica si un username está seleccionado
+   */
+  isUsernameSelected(username: string): boolean {
+    return this.usuarioForm.get('username')?.value === username;
   }
 
   generarUsernameSugerencias(nombre: string, apellido: string, fechaNacimiento: string): string[] {
@@ -202,10 +269,6 @@ export class FormRegistroUsuarioComponent implements OnInit {
   campoEsValido(campo: string): boolean {
     const control = this.usuarioForm.get(campo);
     return !!(control && control.invalid && control.touched);
-  }
-
-  seleccionarUsername(sugerencia: string) {
-    this.usuarioForm.get('username')?.setValue(sugerencia);
   }
 
   onToggleCapaSeleccionada(capaId: string): void {

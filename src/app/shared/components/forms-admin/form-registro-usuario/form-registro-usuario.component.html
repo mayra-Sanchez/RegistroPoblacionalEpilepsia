@@ -13,14 +13,16 @@
         <!-- Nombre -->
         <div class="form-group">
           <label for="nombre"><i class="fas fa-user"></i> Nombre</label>
-          <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: Juan" />
+          <input type="text" id="nombre" formControlName="nombre" placeholder="Ej: Juan" 
+                 (input)="generarSugerenciasUsername()" />
           <div *ngIf="campoEsValido('nombre')" class="error-message">Requerido</div>
         </div>
 
         <!-- Apellido -->
         <div class="form-group">
           <label for="apellido"><i class="fas fa-user"></i> Apellido</label>
-          <input type="text" id="apellido" formControlName="apellido" placeholder="Ej: Pérez" />
+          <input type="text" id="apellido" formControlName="apellido" placeholder="Ej: Pérez" 
+                 (input)="generarSugerenciasUsername()" />
           <div *ngIf="campoEsValido('apellido')" class="error-message">Requerido</div>
         </div>
 
@@ -56,46 +58,80 @@
     <!-- Credenciales -->
     <fieldset class="form-section">
       <legend>Credenciales de acceso</legend>
-      <div class="form-grid">
-        <!-- Email -->
-        <div class="form-group">
-          <label for="email"><i class="fas fa-envelope"></i> Email</label>
-          <input type="email" id="email" formControlName="email" placeholder="usuario@mail.com" />
-          <div *ngIf="campoEsValido('email')" class="error-message">Email inválido</div>
+      
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email"><i class="fas fa-envelope"></i> Email</label>
+        <input type="email" id="email" formControlName="email" placeholder="usuario@mail.com" 
+               (input)="generarSugerenciasUsername()" />
+        <div *ngIf="campoEsValido('email')" class="error-message">Email inválido</div>
+      </div>
+
+      <!-- Sugerencias de username - AHORA ES OBLIGATORIO SELECCIONAR -->
+      <div class="form-group">
+        <label><i class="fas fa-at"></i> Nombre de usuario <span class="required-asterisk">*</span></label>
+        
+        <div *ngIf="sugerenciasUsername?.length" class="username-selection">
+          <p class="selection-instruction">Selecciona un nombre de usuario:</p>
+          <div class="suggestions-grid">
+            <button type="button" 
+                    *ngFor="let sugerencia of sugerenciasUsername" 
+                    class="suggestion-chip"
+                    (click)="seleccionarUsername(sugerencia)"
+                    [class.selected]="isUsernameSelected(sugerencia)">
+              <span class="username-text">{{ sugerencia }}</span>
+              <i class="fas fa-check check-icon" *ngIf="isUsernameSelected(sugerencia)"></i>
+            </button>
+          </div>
         </div>
 
-        <!-- Username -->
-        <div class="form-group">
-          <label for="username"><i class="fas fa-at"></i> Username</label>
-          <input type="text" id="username" formControlName="username" readonly />
+        <div *ngIf="!sugerenciasUsername?.length" class="no-suggestions">
+          <i class="fas fa-info-circle"></i>
+          <span>Completa el nombre y apellido para ver sugerencias de username</span>
         </div>
 
-        <!-- Password -->
-        <div class="form-group">
-          <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
-          <div class="password-container">
-            <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" placeholder="Mín. 6 chars" />
-            <i class="fas fa-eye toggle-password" (click)="togglePasswordVisibility()" [class.fa-eye-slash]="showPassword"></i>
-          </div>
-          <div *ngIf="usuarioForm.get('password')?.touched && usuarioForm.get('password')?.errors" class="error-message">
-            <span *ngIf="usuarioForm.get('password')?.errors?.['required']">La contraseña es obligatoria.</span>
-            <span *ngIf="usuarioForm.get('password')?.errors?.['minlength']">Debe tener al menos 6 caracteres.</span>
-            <span *ngIf="usuarioForm.get('password')?.errors?.['pattern']">Debe incluir mayúscula, minúscula y número.</span>
-          </div>
+        <!-- Campo oculto para el username seleccionado -->
+        <input type="hidden" formControlName="username" />
+        
+        <div *ngIf="campoEsValido('username')" class="error-message">
+          Debe seleccionar un nombre de usuario
+        </div>
+
+        <div class="field-hint">
+          <i class="fas fa-info-circle"></i>
+          Este será el nombre de usuario y no podrá ser modificado después.
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password"><i class="fas fa-lock"></i> Contraseña <span class="required-asterisk">*</span></label>
+        <div class="password-container">
+          <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" 
+                 placeholder="Mínimo 6 caracteres" />
+          <i class="fas fa-eye toggle-password" 
+             (click)="togglePasswordVisibility()" 
+             [class.fa-eye-slash]="showPassword"
+             title="Mostrar/ocultar contraseña"></i>
+        </div>
+        <div *ngIf="usuarioForm.get('password')?.touched && usuarioForm.get('password')?.errors" class="error-message">
+          <span *ngIf="usuarioForm.get('password')?.errors?.['required']">La contraseña es obligatoria.</span>
+          <span *ngIf="usuarioForm.get('password')?.errors?.['minlength']">Debe tener al menos 6 caracteres.</span>
+          <span *ngIf="usuarioForm.get('password')?.errors?.['pattern']">Debe incluir mayúscula, minúscula y número.</span>
         </div>
       </div>
     </fieldset>
 
-    <!-- Configuración -->
+    <!-- Configuración de acceso -->
     <fieldset class="form-section">
       <legend>Configuración de acceso</legend>
       <div class="form-grid">
         <!-- Rol -->
         <div class="form-group">
-          <label for="rol"><i class="fas fa-user-tag"></i> Rol</label>
+          <label for="rol"><i class="fas fa-user-tag"></i> Rol <span class="required-asterisk">*</span></label>
           <select id="rol" formControlName="rol">
-            <option value="" disabled selected>Seleccione...</option>
-            <option *ngFor="let rol of roles" [value]="rol.valor" [attr.title]="rol.descripcion">
+            <option value="" disabled selected>Seleccione un rol...</option>
+            <option *ngFor="let rol of roles" [value]="rol.valor">
               {{ rol.label }}
             </option>
           </select>
@@ -103,45 +139,52 @@
         </div>
 
         <!-- Capas -->
-        <div class="form-group">
-          <label>Capas</label>
-          <div class="checkbox-list">
-            <label class="checkbox-option" *ngFor="let capa of capas">
-              <input type="checkbox" [value]="capa.id" (change)="onToggleCapaSeleccionada(capa.id)" [checked]="usuarioForm.get('capaInvestigacion')?.value.includes(capa.id)" />
-              <span>{{ capa.nombreCapa || capa.layerName }}</span>
-            </label>
+        <div class="form-group full-width">
+          <label><i class="fas fa-layer-group"></i> Capas de investigación <span class="required-asterisk">*</span></label>
+          <div class="capas-container">
+            <div class="capas-grid">
+              <label class="capa-option" *ngFor="let capa of capas">
+                <input type="checkbox" 
+                       [value]="capa.id" 
+                       (change)="onToggleCapaSeleccionada(capa.id)" 
+                       [checked]="usuarioForm.get('capaInvestigacion')?.value.includes(capa.id)" />
+                <div class="capa-card">
+                  <strong>{{ capa.nombreCapa || capa.layerName }}</strong>
+                  <small>{{ capa.descripcion || capa.description || 'Sin descripción' }}</small>
+                </div>
+              </label>
+            </div>
           </div>
-          <div *ngIf="campoEsValido('capaInvestigacion')" class="error-message">Debe seleccionar al menos una capa</div>
+          <div *ngIf="campoEsValido('capaInvestigacion')" class="error-message">
+            Debe seleccionar al menos una capa
+          </div>
         </div>
       </div>
     </fieldset>
 
-    <!-- Sugerencias -->
-    <div *ngIf="sugerenciasUsername?.length" class="form-section">
-      <h3><i class="fas fa-lightbulb"></i> Sugerencias de nombre de usuario</h3>
-      <div class="username-suggestions">
-        <label *ngFor="let sugerencia of sugerenciasUsername" class="username-card">
-          <input type="radio" name="usernameSuggestion" [value]="sugerencia" (change)="usuarioForm.get('username')?.setValue(sugerencia)" [checked]="usuarioForm.get('username')?.value === sugerencia" />
-          <span>{{ sugerencia }}</span>
-        </label>
-      </div>
-    </div>
-
     <!-- Términos y condiciones -->
     <div class="form-group terms">
-      <label>
+      <label class="terms-label">
         <input type="checkbox" formControlName="acceptTermsAndConditions" />
-        Acepto los <a target="_blank">términos y condiciones</a>.
+        <span>
+          Acepto los términos y condiciones y la política de privacidad.
+        </span>
       </label>
       <div *ngIf="campoEsValido('acceptTermsAndConditions')" class="error-message">
-        Debe aceptar los términos para continuar.
+        Debe aceptar los términos y condiciones para continuar.
       </div>
     </div>
 
-    <!-- Botones -->
+    <!-- Botones de acción -->
     <div class="form-footer">
-      <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancelar</button>
-      <button type="submit" class="btn btn-primary" [disabled]="usuarioForm.invalid">Registrar</button>
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        <i class="fas fa-times"></i> Cancelar
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="usuarioForm.invalid || loading">
+        <i class="fas fa-user-plus" *ngIf="!loading"></i>
+        <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+        {{ loading ? 'Registrando...' : 'Registrar Usuario' }}
+      </button>
     </div>
   </form>
 </div>

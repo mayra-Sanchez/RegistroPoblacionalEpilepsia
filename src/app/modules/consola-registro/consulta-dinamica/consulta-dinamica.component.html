@@ -1,26 +1,34 @@
-<div #dashboardContainer class="dashboard-container" [class.fullscreen-mode]="isFullscreen">
-  <!-- Barra de controles minimalista -->
+<div #dashboardContainer class="dashboard-container">
+  <!-- Barra de controles simplificada -->
   <div class="controls-bar">
-    <button mat-icon-button (click)="refreshDashboard()" [disabled]="isLoading" matTooltip="Actualizar">
+    <button mat-icon-button 
+            (click)="refreshDashboard()" 
+            [disabled]="isLoading" 
+            matTooltip="Actualizar dashboard">
       <mat-icon>refresh</mat-icon>
     </button>
-    <button mat-icon-button (click)="toggleFullscreen()" matTooltip="Pantalla completa">
-      <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
-    </button>
-    <button mat-icon-button (click)="openInNewTab()" matTooltip="Abrir en nueva pestaña">
+    
+    <button mat-icon-button 
+            (click)="openInNewTab()" 
+            matTooltip="Abrir en nueva pestaña">
       <mat-icon>open_in_new</mat-icon>
     </button>
+
+    <!-- Indicador de estado -->
+    <span class="status-indicator" *ngIf="isLoading">
+      <mat-spinner diameter="20"></mat-spinner>
+      Cargando...
+    </span>
+
+    <span class="last-update" *ngIf="lastLoadTime && !isLoading">
+      Actualizado: {{ lastLoadTime | date:'HH:mm:ss' }}
+    </span>
   </div>
 
-  <!-- Estados de carga/error -->
-  <div *ngIf="isLoading" class="loading-state">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Cargando dashboard...</p>
-  </div>
-
+  <!-- Estado de error -->
   <div *ngIf="hasError" class="error-state">
     <mat-icon color="warn">error_outline</mat-icon>
-    <h3>Error al cargar</h3>
+    <h3>Error al cargar el dashboard</h3>
     <p>{{ errorMessage }}</p>
     <button mat-raised-button color="primary" (click)="refreshDashboard()">
       <mat-icon>refresh</mat-icon>
@@ -28,7 +36,7 @@
     </button>
   </div>
 
-  <!-- Iframe con ajustes específicos -->
+  <!-- Iframe del dashboard -->
   <iframe #dashboardIframe
     [src]="dashboardUrl"
     width="100%"
@@ -36,13 +44,7 @@
     (load)="onIframeLoad()"
     (error)="onIframeError()"
     [hidden]="!isIframeLoaded || hasError"
-    allowfullscreen
     class="superset-iframe"
     title="Dashboard de Superset">
   </iframe>
-
-  <!-- Indicador de carga exitosa -->
-  <div *ngIf="isIframeLoaded && !hasError" class="last-update">
-    Última actualización: {{ lastLoadTime | date:'HH:mm:ss' }}
-  </div>
 </div>

@@ -1,12 +1,18 @@
-<nav class="navbar">
+<nav class="navbar" [class.keyboard-navigation]="isKeyboardMode">
   <ul class="navbar-links">
-    <li (click)="selectTab('inicio')" [class.selected]="selectedTab === 'inicio'">
+    <li (click)="selectTab('inicio')" 
+        [class.selected]="selectedTab === 'inicio' && isKeyboardMode"
+        [class.active]="selectedTab === 'inicio' && !isKeyboardMode">
       <a class="text">Inicio</a>
     </li>
-    <li (click)="selectTab('sistema')" [class.selected]="selectedTab === 'sistema'">
+    <li (click)="selectTab('sistema')" 
+        [class.selected]="selectedTab === 'sistema' && isKeyboardMode"
+        [class.active]="selectedTab === 'sistema' && !isKeyboardMode">
       <a class="text">Sistema de Información</a>
     </li>
-    <li (click)="selectTab('contacto')" [class.selected]="selectedTab === 'contacto'">
+    <li (click)="selectTab('contacto')" 
+        [class.selected]="selectedTab === 'contacto' && isKeyboardMode"
+        [class.active]="selectedTab === 'contacto' && !isKeyboardMode">
       <a class="text">Contacto</a>
     </li>
 
@@ -15,4 +21,9 @@
       <a class="text" (click)="volverAlDashboard()">🏠 Volver al Dashboard</a>
     </li>
   </ul>
+
+  <!-- Indicador de navegación por teclado -->
+  <div class="keyboard-hint" *ngIf="showKeyboardHint">
+    <span class="hint-text">Usa ← → para navegar entre pestañas</span>
+  </div>
 </nav>

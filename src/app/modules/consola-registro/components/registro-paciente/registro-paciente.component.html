@@ -146,19 +146,26 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Fecha de Nacimiento *</label>
-                        <input type="date" formControlName="birthDate" (change)="onBirthDateChange()" />
-                        <div *ngIf="
-                  registroForm.get('patient')?.get('birthDate')?.invalid &&
-                  registroForm.get('patient')?.get('birthDate')?.touched
-                " class="error-message">
-                            Fecha de nacimiento es requerida
+                        <label for="birthDate">Fecha de Nacimiento *</label>
+                        <input type="date" formControlName="birthDate" class="form-control"
+                            [class.is-invalid]="registroForm.get('patient.birthDate')?.invalid && registroForm.get('patient.birthDate')?.touched"
+                            (blur)="onBirthDateBlur()">
+
+                        <div *ngIf="registroForm.get('patient.birthDate')?.invalid && registroForm.get('patient.birthDate')?.touched"
+                            class="invalid-feedback">
+                            La fecha de nacimiento es requerida y debe ser válida
                         </div>
+
+                        <!-- Mostrar edad calculada -->
+                        <small *ngIf="registroForm.get('patient.age')?.value" class="form-text text-muted">
+                            Edad calculada: <strong>{{ registroForm.get('patient.age')?.value }} años</strong>
+                        </small>
                     </div>
 
                     <div class="form-group">
-                        <label>Edad</label>
-                        <input type="text" formControlName="age" readonly />
+                        <label for="age">Edad *</label>
+                        <input type="number" formControlName="age" class="form-control" readonly
+                            [class.is-invalid]="registroForm.get('patient.age')?.invalid">
                     </div>
                 </div>
             </div>

@@ -1,16 +1,24 @@
 <nav class="navbar">
   <ul class="navbar-links">
-    <li (click)="selectTab('inicioDigitador')" [class.selected]="selectedTab === 'inicioDigitador'">
-      <a class="text">Inicio</a>
+    <li (click)="selectTab('inicioDigitador')" 
+        [class.selected]="selectedTab === 'inicioDigitador'"
+        [attr.data-tab-index]="0">
+      <a class="text" title="Inicio (Tecla 1)">Inicio</a>
     </li>
-    <li (click)="selectTab('registroPaciente')" [class.selected]="selectedTab === 'registroPaciente'">
-      <a class="text">Registrar nuevo paciente</a>
+    <li (click)="selectTab('registroPaciente')" 
+        [class.selected]="selectedTab === 'registroPaciente'"
+        [attr.data-tab-index]="1">
+      <a class="text" title="Registrar nuevo paciente (Tecla 2 o Ctrl+R)">Registrar nuevo paciente</a>
     </li>
-    <li (click)="selectTab('listadoPacientes')" [class.selected]="selectedTab === 'listadoPacientes'">
-      <a class="text">Ver listado de registros</a>
+    <li (click)="selectTab('listadoPacientes')" 
+        [class.selected]="selectedTab === 'listadoPacientes'"
+        [attr.data-tab-index]="2">
+      <a class="text" title="Ver listado de registros (Tecla 3 o Ctrl+L)">Ver listado de registros</a>
     </li>
-    <li (click)="selectTab('consultaDatosDigitador')" [class.selected]="selectedTab === 'consultaDatosDigitador'">
-      <a class="text">Consulta de datos</a>
+    <li (click)="selectTab('consultaDatosDigitador')" 
+        [class.selected]="selectedTab === 'consultaDatosDigitador'"
+        [attr.data-tab-index]="3">
+      <a class="text" title="Generación de gráficas (Tecla 4)">Generación de gráficas</a>
     </li>
   </ul>
 </nav>

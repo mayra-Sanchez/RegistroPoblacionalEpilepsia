@@ -1,117 +1,90 @@
-/**
- * dashboard-embed-styles.css
- * 
- * Estilos para componente de dashboard embebido con:
- * - Soporte para modo pantalla completa
- * - Estados de carga y error
- * - Controles de interfaz
- * - Ajustes específicos para iframes de Superset
- * - Correcciones para navegadores específicos
- * 
- * Estructura:
- * 1. Estructura principal
- * 2. Barra de controles
- * 3. Iframe del dashboard
- * 4. Estados del componente
- * 5. Elementos informativos
- * 6. Correcciones específicas
- */
-
 /* ==================== 1. Estructura Principal ==================== */
-/**
- * :host - Contenedor raíz del componente
- */
+
 :host {
   display: block;
   height: 100%;
   width: 100%;
 }
 
-/**
- * .dashboard-container - Contenedor principal del dashboard
- */
 .dashboard-container {
-  position: relative; /* Para posicionamiento absoluto de hijos */
+  position: relative;
   height: 100%;
   width: 100%;
   display: flex;
-  flex-direction: column; /* Disposición vertical */
-  background: #f5f5f5; /* Fondo gris claro */
-  border-radius: 8px; /* Bordes redondeados */
-  overflow: hidden; /* Oculta desbordamientos */
+  flex-direction: column;
+  background: #f5f5f5;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/**
- * Modo pantalla completa
- */
-.dashboard-container.fullscreen-mode {
-  position: fixed; /* Posicionamiento fijo */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0; /* Cubre toda la pantalla */
-  z-index: 1000; /* Por encima de otros elementos */
-  background: white; /* Fondo blanco */
-  border-radius: 0; /* Sin bordes redondeados */
-}
+/* ==================== 2. Barra de Controles Mejorada ==================== */
 
-/* ==================== 2. Barra de Controles ==================== */
-/**
- * .controls-bar - Barra superior de controles
- */
 .controls-bar {
-  padding: 8px 12px; /* Espaciado interno compacto */
-  background: white; /* Fondo blanco */
-  border-bottom: 1px solid #e0e0e0; /* Borde inferior sutil */
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
   display: flex;
-  gap: 4px; /* Espacio entre controles */
-  z-index: 2; /* Por encima del contenido */
+  align-items: center;
+  gap: 12px;
+  z-index: 2;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.status-info {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.last-update {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
 }
 
 /* ==================== 3. Iframe del Dashboard ==================== */
-/**
- * .superset-iframe - Contenedor del dashboard embebido
- */
+
 .superset-iframe {
-  flex: 1; /* Ocupa espacio disponible */
-  border: none; /* Sin bordes */
-  background: white; /* Fondo blanco */
-  min-height: 500px; /* Altura mínima */
-  width: 100%; /* Ancho completo */
+  flex: 1;
+  border: none;
+  background: white;
+  min-height: 500px;
+  width: 100%;
   display: block;
-  transform: scale(1); /* Escala normal */
-  transform-origin: 0 0; /* Punto de origen para transformaciones */
 }
 
-/**
- * Ajustes específicos para Superset
- */
 .superset-iframe {
-  overflow: hidden !important; /* Fuerza ocultamiento de scrollbars */
+  overflow: hidden !important;
 }
 
 /* ==================== 4. Estados del Componente ==================== */
-/**
- * Estado de carga
- */
+
 .loading-state {
   position: absolute;
-  top: 60px; /* Debajo de la barra de controles */
+  top: 60px;
   left: 0;
   right: 0;
   bottom: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Centrado vertical */
-  align-items: center; /* Centrado horizontal */
-  background: rgba(255, 255, 255, 0.95); /* Fondo blanco semi-transparente */
-  z-index: 1; /* Por encima del iframe pero debajo de controles */
-  gap: 16px; /* Espacio entre elementos */
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 1;
+  gap: 16px;
 }
 
-/**
- * Estado de error
- */
 .error-state {
   position: absolute;
   top: 60px;
@@ -124,39 +97,54 @@
   align-items: center;
   background: rgba(255, 255, 255, 0.95);
   z-index: 1;
-  text-align: center; /* Texto centrado */
-  padding: 20px; /* Espaciado interno */
-  
-  mat-icon {
-    font-size: 48px; /* Icono grande */
-    width: 48px;
-    height: 48px;
-  }
-  
-  h3 {
-    margin: 0 0 8px; /* Espaciado inferior */
-    color: #f44336; /* Rojo para indicar error */
-  }
+  text-align: center;
+  padding: 20px;
+  gap: 16px;
 }
 
-/* ==================== 5. Elementos Informativos ==================== */
-/**
- * .last-update - Indicador de última actualización
- */
-.last-update {
-  padding: 4px 8px; /* Espaciado interno compacto */
-  background: rgba(0, 0, 0, 0.05); /* Fondo gris muy claro */
-  font-size: 0.75rem; /* Tamaño pequeño */
-  text-align: right; /* Alineado a la derecha */
-  color: #666; /* Texto gris */
+.error-state  &:is(mat-icon) {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #f44336;
+}
+
+.error-state h3 {
+  margin: 0;
+  color: #f44336;
+  font-size: 1.25rem;
+}
+
+.error-state p {
+  margin: 0 0 16px;
+  color: #666;
+  font-size: 1rem;
+}
+
+/* ==================== 5. Responsive ==================== */
+
+@media (max-width: 768px) {
+  .controls-bar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  
+  .status-info {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+  }
+  
+  .loading-indicator,
+  .last-update {
+    font-size: 0.75rem;
+  }
 }
 
 /* ==================== 6. Correcciones Específicas ==================== */
-/**
- * Corrección específica para Firefox
- */
+
 @-moz-document url-prefix() {
   .superset-iframe {
-    min-height: 600px; /* Altura mínima mayor para Firefox */
+    min-height: 600px;
   }
 }

@@ -1,85 +1,135 @@
-<div class="table-controls">
-    <!-- Control de elementos por página -->
-    <div class="control-group">
-      <label>Elementos por página:</label>
-      <select [(ngModel)]="itemsPerPage" (change)="changePageSize(itemsPerPage)">
-        <option *ngFor="let option of itemsPerPageOptions" [value]="option">
-          {{option}}
-        </option>
-      </select>
+<div class="table-wrapper">
+  <!-- Controles Superiores -->
+  <div class="table-header">
+    <div class="controls-left">
+      <div class="page-size-selector">
+        <label>Mostrar:</label>
+        <select [(ngModel)]="itemsPerPage" (change)="changePageSize(itemsPerPage)">
+          <option *ngFor="let option of itemsPerPageOptions" [value]="option">
+            {{ option }}
+          </option>
+        </select>
+      </div>
     </div>
-  
-    <!-- Búsqueda -->
-    <div class="control-group search-bar">
-      <input type="text" [(ngModel)]="searchQuery" 
-             (input)="filterData()" placeholder="Buscar...">
-      <i class="fas fa-search"></i>
+
+    <div class="controls-right">
+      <div class="search-box">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (input)="filterData()" 
+          placeholder="Buscar en la tabla..."
+          class="search-input"
+        >
+        <i class="fas fa-search search-icon"></i>
+      </div>
     </div>
   </div>
-  
+
+  <!-- Tabla -->
   <div class="table-container">
-    <!-- Indicador de carga -->
-    <div *ngIf="loading" class="loading-indicator">
-      <i class="fas fa-spinner fa-spin"></i> Cargando datos...
-    </div>
-  
-    <!-- Tabla -->
-    <table *ngIf="!loading">
+    <table class="data-table">
       <thead>
         <tr>
-          <th *ngFor="let col of columns" 
-              (click)="sortData(col.field)"
-              [class.sorted]="sortField === col.field"
-              [class.asc]="sortField === col.field && sortDirection === 'asc'"
-              [class.desc]="sortField === col.field && sortDirection === 'desc'">
-            {{col.header}}
-            <i *ngIf="sortField === col.field" class="sort-icon fas"
-               [class.fa-sort-up]="sortDirection === 'asc'"
-               [class.fa-sort-down]="sortDirection === 'desc'"></i>
+          <th *ngFor="let col of columns" class="table-header-cell">
+            {{ col.header }}
           </th>
-          <th>Acciones</th>
+          <th class="actions-header">Acciones</th>
         </tr>
       </thead>
+      
       <tbody>
-        <tr *ngFor="let item of paginatedData">
-          <td *ngFor="let col of columns">
-            {{getCellValue(item, col)}}
-          </td>
-          <td class="actions">
-            <button class="action-btn view" (click)="viewItem(item)" title="Ver">
-              <i class="fas fa-eye"></i>
-            </button>
-            <button class="action-btn delete" (click)="deleteItem(item)" title="Eliminar">
-              <i class="fas fa-trash"></i>
-            </button>
+        <!-- Estado de carga -->
+        <tr *ngIf="loading">
+          <td [colSpan]="columns.length + 1" class="loading-cell">
+            <div class="loading-content">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Cargando datos...</span>
+            </div>
           </td>
         </tr>
-        <tr *ngIf="!loading && paginatedData.length === 0">
-          <td [colSpan]="columns.length + 1" class="no-data">
-            No se encontraron registros
+
+        <!-- Datos -->
+        <tr 
+          *ngFor="let item of data; trackBy: trackByFn" 
+          class="table-row"
+        >
+          <td *ngFor="let col of columns" class="table-cell">
+            <span class="cell-content">{{ getCellValue(item, col) }}</span>
+          </td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button class="btn-action btn-view" (click)="viewItem(item)" title="Ver detalles">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn-action btn-delete" (click)="deleteItem(item)" title="Eliminar">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Sin datos -->
+        <tr *ngIf="!loading && data.length === 0">
+          <td [colSpan]="columns.length + 1" class="empty-cell">
+            <div class="empty-content">
+              <i class="fas fa-inbox"></i>
+              <span>{{ searchQuery ? 'No se encontraron resultados' : 'No hay datos disponibles' }}</span>
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
-  
-  <!-- Paginación -->
-  <div class="pagination-controls" *ngIf="totalPages > 1">
-    <button (click)="goToPage(1)" [disabled]="currentPage === 1">
-      <i class="fas fa-angle-double-left"></i>
-    </button>
-    <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
-      <i class="fas fa-angle-left"></i>
-    </button>
+
+  <!-- Pie de tabla con información y paginación -->
+  <div class="table-footer" *ngIf="!loading && totalPages > 1">
+    <div class="pagination-info">
+      <!-- ✅ Usando el método getDisplayRange() -->
+      Mostrando {{ getDisplayRange() }} registros
+    </div>
     
-    <span class="page-info">
-      Página {{currentPage}} de {{totalPages}}
-    </span>
-    
-    <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
-      <i class="fas fa-angle-right"></i>
-    </button>
-    <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">
-      <i class="fas fa-angle-double-right"></i>
-    </button>
+    <!-- Paginación -->
+    <div class="pagination-controls">
+      <button 
+        class="pagination-btn" 
+        (click)="goToPage(1)" 
+        [disabled]="currentPage === 1"
+        title="Primera página"
+      >
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+      
+      <button 
+        class="pagination-btn" 
+        (click)="goToPage(currentPage - 1)" 
+        [disabled]="currentPage === 1"
+        title="Página anterior"
+      >
+        <i class="fas fa-angle-left"></i>
+      </button>
+
+      <span class="page-indicator">
+        Página {{ currentPage }} de {{ totalPages }}
+      </span>
+
+      <button 
+        class="pagination-btn" 
+        (click)="goToPage(currentPage + 1)" 
+        [disabled]="currentPage === totalPages"
+        title="Página siguiente"
+      >
+        <i class="fas fa-angle-right"></i>
+      </button>
+      
+      <button 
+        class="pagination-btn" 
+        (click)="goToPage(totalPages)" 
+        [disabled]="currentPage === totalPages"
+        title="Última página"
+      >
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+    </div>
   </div>
+</div>

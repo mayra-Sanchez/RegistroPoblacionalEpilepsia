@@ -1,17 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 
-/**
- * Componente de tabla de datos genérica con funcionalidades avanzadas
- * 
- * Este componente proporciona:
- * - Visualización tabular de datos
- * - Paginación
- * - Ordenamiento
- * - Búsqueda/filtrado
- * - Acciones sobre filas (ver, editar, eliminar)
- * 
- * Es altamente configurable mediante propiedades de entrada.
- */
 @Component({
   selector: 'app-data-table',
   templateUrl: './data-table.component.html',
@@ -20,197 +8,126 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 export class DataTableComponent implements OnChanges {
 
   /* -------------------- Propiedades de Entrada -------------------- */
-
-  /**
-   * Datos a mostrar en la tabla
-   */
   @Input() data: any[] = [];
-
-  /**
-   * Configuración de columnas:
-   * - field: Nombre del campo o path anidado (ej: 'user.name')
-   * - header: Título a mostrar
-   * - type: Tipo especial (date, count)
-   * - formatter: Función personalizada para formatear valores
-   */
-  @Input() columns: { 
-    field: string; 
-    header: string; 
-    type?: string; 
-    formatter?: (value: any) => string 
-  }[] = [];
-
-  /**
-   * Opciones de items por página
-   */
-  @Input() itemsPerPageOptions: number[] = [5, 10, 20];
-
-  /**
-   * Total de registros (para paginación server-side)
-   */
+  @Input() columns: { field: string; header: string; type?: string }[] = [];
+  @Input() itemsPerPageOptions: number[] = [10, 20, 50];
   @Input() totalRecords: number = 0;
-
-  /**
-   * Estado de carga
-   */
   @Input() loading: boolean = false;
 
   /* -------------------- Eventos de Salida -------------------- */
-
-  /**
-   * Se emite al ver un item
-   */
   @Output() onView = new EventEmitter<any>();
-
-  /**
-   * Se emite al editar un item
-   */
   @Output() onEdit = new EventEmitter<any>();
-
-  /**
-   * Se emite al eliminar un item
-   */
   @Output() onDelete = new EventEmitter<any>();
-
-  /**
-   * Se emite al cambiar de página o tamaño de página
-   */
   @Output() onPageChange = new EventEmitter<{page: number, size: number}>();
 
   /* -------------------- Estado Interno -------------------- */
-
-  /**
-   * Items mostrados por página
-   */
-  itemsPerPage: number = this.itemsPerPageOptions[0];
-
-  /**
-   * Página actual
-   */
+  itemsPerPage: number = 10;
   currentPage: number = 1;
-
-  /**
-   * Término de búsqueda
-   */
   searchQuery: string = '';
-
-  /**
-   * Campo de ordenamiento
-   */
-  sortField: string = '';
-
-  /**
-   * Dirección de ordenamiento
-   */
-  sortDirection: 'asc' | 'desc' = 'asc';
-
-  /**
-   * Datos filtrados
-   */
+  
+  // ✅ Ya no necesitamos filteredData y paginatedData para datos del servidor
+  // El servidor ya nos envía los datos paginados
   filteredData: any[] = [];
-
-  /**
-   * Datos paginados
-   */
   paginatedData: any[] = [];
-
-  /**
-   * Total de páginas
-   */
   totalPages: number = 1;
 
-  /* -------------------- Métodos del Ciclo de Vida -------------------- */
+  // ✅ Exponer Math para el template
+  Math = Math;
 
-  /**
-   * Detecta cambios en los inputs
-   * @param changes Objeto con los cambios
-   */
+  /* -------------------- Métodos del Ciclo de Vida -------------------- */
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] || changes['totalRecords']) {
+      // ✅ Para datos del servidor, usar los datos tal cual vienen
       this.filteredData = [...this.data];
-      this.totalPages = Math.ceil(this.totalRecords / this.itemsPerPage);
-      this.updatePagination();
+      this.paginatedData = [...this.data];
+      
+      // ✅ Calcular totalPages basado en totalRecords del servidor
+      this.totalPages = Math.ceil(this.totalRecords / this.itemsPerPage) || 1;
+      
+      console.log('📊 Datos recibidos en tabla:', {
+        datosRecibidos: this.data.length,
+        totalRecords: this.totalRecords,
+        itemsPerPage: this.itemsPerPage,
+        totalPages: this.totalPages,
+        currentPage: this.currentPage
+      });
     }
   }
 
   /* -------------------- Métodos de Utilidad -------------------- */
-
-  /**
-   * Obtiene valores anidados usando notación de puntos
-   * @param obj Objeto a inspeccionar
-   * @param path Ruta al valor (ej: 'user.name')
-   * @returns Valor encontrado o 'N/A'
-   */
-  getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((o, p) => o && o[p], obj) || 'N/A';
+  
+  // ✅ Método trackBy para mejor performance
+  trackByFn(index: number, item: any): any {
+    return item.id || item.registerId || index;
   }
 
-  /**
-   * Formatea el valor de la celda según la configuración de columna
-   * @param row Fila completa
-   * @param col Configuración de columna
-   * @returns Valor formateado
-   */
   getCellValue(row: any, col: any): string {
-    const value = col.field.includes('.') 
-      ? this.getNestedValue(row, col.field) 
-      : row[col.field];
-
-    if (col.formatter) {
-      return col.formatter(value);
-    }
-
+    const value = this.getNestedValue(row, col.field);
+    
+    if (value === undefined || value === null) return '-';
+    
     switch (col.type) {
       case 'date':
         return this.formatDate(value);
       case 'count':
         return this.formatCount(value);
       default:
-        return value !== undefined && value !== null ? value.toString() : 'N/A';
+        // ✅ Si es un formatter personalizado, usarlo
+        if (col.formatter) {
+          return col.formatter(value);
+        }
+        return value.toString();
     }
   }
 
-  /**
-   * Formatea fechas
-   * @param dateString Fecha en formato string
-   * @returns Fecha formateada o mensaje de error
-   */
-  formatDate(dateString: string): string {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-  
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-  
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  getNestedValue(obj: any, path: string): any {
+    return path.split('.').reduce((o, p) => o && o[p], obj);
   }
-  
-  /**
-   * Formatea conteos (ej: variablesRegister.length)
-   * @param value Valor a formatear
-   * @returns String formateada con pluralización
-   */
+
+  formatDate(dateString: string): string {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return '-';
+    }
+  }
+
   formatCount(value: any): string {
     const count = Number(value);
-    return isNaN(count) ? 'N/A' : `${count} ${count === 1 ? 'item' : 'items'}`;
+    return isNaN(count) ? '-' : count.toString();
+  }
+
+  // ✅ Método para calcular el rango de registros mostrados (para datos del servidor)
+  getDisplayRange(): string {
+    if (this.totalRecords === 0) {
+      return '0 - 0 de 0';
+    }
+    
+    const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+    const end = Math.min(this.currentPage * this.itemsPerPage, this.totalRecords);
+    return `${start} - ${end} de ${this.totalRecords}`;
   }
 
   /* -------------------- Funcionalidades de Tabla -------------------- */
-
-  /**
-   * Filtra los datos basado en la búsqueda
-   */
+  
+  // ✅ Solo filtrar si es necesario (para datos locales)
   filterData(): void {
-    if (!this.searchQuery) {
+    if (!this.searchQuery.trim()) {
       this.filteredData = [...this.data];
     } else {
+      const query = this.searchQuery.toLowerCase().trim();
       this.filteredData = this.data.filter(item => 
         this.columns.some(col => {
-          const value = this.getCellValue(item, col);
-          return value.toLowerCase().includes(this.searchQuery.toLowerCase());
+          const value = this.getCellValue(item, col).toString().toLowerCase();
+          return value.includes(query);
         })
       );
     }
@@ -218,98 +135,53 @@ export class DataTableComponent implements OnChanges {
     this.updatePagination();
   }
 
-  /**
-   * Ordena los datos por campo
-   * @param field Campo por el que ordenar
-   */
-  sortData(field: string): void {
-    if (this.sortField === field) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortField = field;
-      this.sortDirection = 'asc';
-    }
-
-    this.filteredData.sort((a, b) => {
-      const valueA = this.getNestedValue(a, field);
-      const valueB = this.getNestedValue(b, field);
-      
-      if (valueA == null) return 1;
-      if (valueB == null) return -1;
-      
-      return this.sortDirection === 'asc' 
-        ? String(valueA).localeCompare(String(valueB))
-        : String(valueB).localeCompare(String(valueA));
-    });
-
-    this.updatePagination();
-  }
-
-  /**
-   * Actualiza la paginación
-   */
+  // ✅ Solo para datos locales
   updatePagination(): void {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     this.paginatedData = this.filteredData.slice(startIndex, endIndex);
-    this.totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
+    this.totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage) || 1;
   }
 
-  /**
-   * Cambia el tamaño de página
-   * @param size Nuevo tamaño
-   */
+  // ✅ Cambiar tamaño de página - notificar al componente padre
   changePageSize(size: number): void {
+    console.log('📏 Cambiando tamaño de página a:', size);
     this.itemsPerPage = size;
-    this.currentPage = 1;
-    this.updatePagination();
+    this.currentPage = 1; // ✅ Resetear a primera página
     this.emitPageChange();
   }
 
-  /**
-   * Navega a una página específica
-   * @param page Número de página
-   */
+  // ✅ Navegar a página - notificar al componente padre
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
+      console.log('➡️ Navegando a página:', page);
       this.currentPage = page;
-      this.updatePagination();
       this.emitPageChange();
     }
   }
 
-  /**
-   * Emite el evento de cambio de página
-   */
+  // ✅ Emitir evento de cambio de página
   emitPageChange(): void {
-    this.onPageChange.emit({
+    console.log('🚀 Emitiendo cambio de página:', {
       page: this.currentPage,
+      size: this.itemsPerPage
+    });
+    
+    this.onPageChange.emit({
+      page: this.currentPage,  // ✅ 1-based para el componente padre
       size: this.itemsPerPage
     });
   }
 
   /* -------------------- Manejo de Eventos -------------------- */
-
-  /**
-   * Emite evento para ver un item
-   * @param item Item a visualizar
-   */
   viewItem(item: any): void {
     this.onView.emit(item);
   }
 
-  /**
-   * Emite evento para editar un item
-   * @param item Item a editar
-   */
   editItem(item: any): void {
     this.onEdit.emit(item);
   }
 
-  /**
-   * Emite evento para eliminar un item
-   * @param item Item a eliminar
-   */
   deleteItem(item: any): void {
     this.onDelete.emit(item);
   }

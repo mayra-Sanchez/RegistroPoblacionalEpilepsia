@@ -119,6 +119,8 @@ export class ConsolaRegistroComponent implements OnInit {
   /** Fecha de la última actualización de datos */
   lastUpdate: Date = new Date();
 
+  totalRegistrosCreados: number = 0;
+  totalRegistrosActualizados: number = 0;
   //#endregion
 
   //#region Constructor
@@ -865,63 +867,6 @@ export class ConsolaRegistroComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  /**
-   * Calcula estadísticas basadas en el historial
-   * @param response Respuesta del servicio de historial
-   */
-  private calcularEstadisticas(response: RegisterHistoryResponse): void {
-    if (!response || !response.data) {
-      this.totalPacientes = 0;
-      this.pacientesHoy = 0;
-      return;
-    }
-
-    const registrosCreados = response.data.filter(item =>
-      item.operation === 'REGISTER_CREATED_SUCCESSFULL'
-    );
-
-    const pacientesUnicos = new Set(
-      registrosCreados.map(item => item.patientIdentificationNumber)
-    );
-    this.totalPacientes = pacientesUnicos.size;
-
-    this.calcularPacientesHoy(response.data);
-
-    console.log('Estadísticas calculadas:', {
-      totalRegistros: response.totalElements,
-      registrosCreados: registrosCreados.length,
-      pacientesUnicos: this.totalPacientes,
-      pacientesHoy: this.pacientesHoy
-    });
-  }
-
-  /**
-   * Calcula el número de pacientes registrados hoy
-   * @param historial Lista de elementos del historial
-   */
-  private calcularPacientesHoy(historial: RegisterHistory[]): void {
-    if (!historial || historial.length === 0) {
-      this.pacientesHoy = 0;
-      return;
-    }
-
-    const hoy = new Date().toDateString();
-    const pacientesHoySet = new Set();
-
-    historial.forEach(item => {
-      if (item.operation === 'REGISTER_CREATED_SUCCESSFULL') {
-        const fechaCambio = new Date(item.changedAt).toDateString();
-        if (fechaCambio === hoy) {
-          pacientesHoySet.add(item.patientIdentificationNumber);
-        }
-      }
-    });
-
-    this.pacientesHoy = pacientesHoySet.size;
-  }
-
-
-
   //#endregion
 
   //#region Métodos Privados de Utilidad
@@ -1322,6 +1267,68 @@ export class ConsolaRegistroComponent implements OnInit {
         showConfirmButton: false
       });
     });
+  }
+
+  /**
+ * Calcula estadísticas basadas en el historial
+ * @param response Respuesta del servicio de historial
+ */
+  private calcularEstadisticas(response: RegisterHistoryResponse): void {
+    if (!response || !response.data) {
+      this.totalPacientes = 0;
+      this.pacientesHoy = 0;
+      return;
+    }
+
+    // ✅ CONTAR TANTO REGISTROS CREADOS COMO ACTUALIZADOS
+    const registrosValidos = response.data.filter(item =>
+      item.operation === 'REGISTER_CREATED_SUCCESSFULL' ||
+      item.operation === 'REGISTER_UPDATED' ||
+      item.operation === 'UPDATE_RESEARCH_LAYER'
+    );
+
+    const pacientesUnicos = new Set(
+      registrosValidos.map(item => item.patientIdentificationNumber)
+    );
+    this.totalPacientes = pacientesUnicos.size;
+
+    this.calcularPacientesHoy(response.data);
+
+    console.log('Estadísticas calculadas:', {
+      totalRegistros: response.totalElements,
+      registrosValidos: registrosValidos.length,
+      pacientesUnicos: this.totalPacientes,
+      pacientesHoy: this.pacientesHoy,
+      operacionesIncluidas: ['CREATED', 'UPDATED', 'UPDATE_RESEARCH_LAYER']
+    });
+  }
+
+  /**
+   * Calcula el número de pacientes registrados hoy
+   * @param historial Lista de elementos del historial
+   */
+  private calcularPacientesHoy(historial: RegisterHistory[]): void {
+    if (!historial || historial.length === 0) {
+      this.pacientesHoy = 0;
+      return;
+    }
+
+    const hoy = new Date().toDateString();
+    const pacientesHoySet = new Set();
+
+    historial.forEach(item => {
+      // ✅ INCLUIR TANTO CREACIONES COMO ACTUALIZACIONES DE HOY
+      if (item.operation === 'REGISTER_CREATED_SUCCESSFULL' ||
+        item.operation === 'REGISTER_UPDATED' ||
+        item.operation === 'UPDATE_RESEARCH_LAYER') {
+        const fechaCambio = new Date(item.changedAt).toDateString();
+        if (fechaCambio === hoy) {
+          pacientesHoySet.add(item.patientIdentificationNumber);
+        }
+      }
+    });
+
+    this.pacientesHoy = pacientesHoySet.size;
   }
 
   //#endregion

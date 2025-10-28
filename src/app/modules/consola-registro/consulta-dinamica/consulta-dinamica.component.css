@@ -2,23 +2,12 @@
 /* ESTRUCTURA PRINCIPAL */
 /* ==================== */
 
-/**
- * Estilos para el elemento host del componente
- * - Ocupa todo el espacio disponible del contenedor padre
- * - Se comporta como un elemento de bloque
- */
 :host {
   display: block;
   height: 100%;
   width: 100%;
 }
 
-/**
- * Contenedor principal del dashboard
- * - Diseño flexible en columna
- * - Fondo gris claro con bordes redondeados
- * - Posicionamiento relativo para elementos hijos absolutos
- */
 .dashboard-container {
   position: relative;
   height: 100%;
@@ -28,54 +17,44 @@
   background: #f5f5f5;
   border-radius: 8px;
   overflow: hidden;
-}
-
-/**
- * Modificador para modo pantalla completa
- * - Cubre toda la ventana (posición fija)
- * - Fondo blanco sin bordes redondeados
- * - Alto z-index para asegurar visibilidad
- */
-.dashboard-container.fullscreen-mode {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  background: white;
-  border-radius: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* ================= */
 /* BARRA DE CONTROLES */
 /* ================= */
 
-/**
- * Barra superior de controles
- * - Fondo blanco con borde inferior sutil
- * - Diseño flexible con espacio entre elementos
- * - Pequeño padding interno
- */
 .controls-bar {
-  padding: 8px 12px;
+  padding: 12px 16px;
   background: white;
   border-bottom: 1px solid #e0e0e0;
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 12px;
   z-index: 2;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #666;
+  margin-left: auto;
+}
+
+.last-update {
+  font-size: 0.875rem;
+  color: #666;
+  margin-left: auto;
 }
 
 /* ============== */
 /* IFRAME SUPERSET */
 /* ============== */
 
-/**
- * Estilos base para el iframe que contiene el dashboard
- * - Ocupa todo el espacio disponible (flex: 1)
- * - Sin bordes y fondo blanco
- * - Altura mínima para evitar colapso
- */
 .superset-iframe {
   flex: 1;
   border: none;
@@ -83,14 +62,8 @@
   min-height: 500px;
   width: 100%;
   display: block;
-  transform: scale(1);
-  transform-origin: 0 0;
 }
 
-/**
- * Corrección específica para Superset
- * - Fuerza el ocultamiento de scroll/desbordamiento
- */
 .superset-iframe {
   overflow: hidden !important;
 }
@@ -99,13 +72,7 @@
 /* ESTADOS UI */
 /* ========== */
 
-/**
- * Estilos base para estados de carga y error
- * - Cubre el área del dashboard
- * - Fondo semitransparente
- * - Contenido centrado vertical/horizontalmente
- */
-.loading-state, .error-state {
+.error-state {
   position: absolute;
   top: 60px;
   left: 0;
@@ -118,39 +85,17 @@
   background: rgba(255, 255, 255, 0.95);
   z-index: 1;
   gap: 16px;
-}
-
-/**
- * Estilos específicos para estado de error
- * - Texto centrado con padding
- * - Icono grande (48px)
- * - Título en color rojo
- */
-.error-state {
   text-align: center;
   padding: 20px;
-  
-  h3 {
-    margin: 0 0 8px;
-    color: #f44336;
-  }
 }
 
-/* ====================== */
-/* INDICADOR DE ACTUALIZACIÓN */
-/* ====================== */
+.error-state h3 {
+  margin: 0 0 8px;
+  color: #f44336;
+}
 
-/**
- * Indicador de última actualización
- * - Texto pequeño en gris
- * - Fondo muy sutil
- * - Alineado a la derecha
- */
-.last-update {
-  padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.05);
-  font-size: 0.75rem;
-  text-align: right;
+.error-state p {
+  margin: 0 0 16px;
   color: #666;
 }
 
@@ -158,12 +103,24 @@
 /* HACKS PARA NAVEGADORES */
 /* ====================== */
 
-/**
- * Corrección específica para Firefox
- * - Aumenta la altura mínima del iframe
- */
 @-moz-document url-prefix() {
   .superset-iframe {
     min-height: 600px;
+  }
+}
+
+/* ============== */
+/* RESPONSIVE */
+/* ============== */
+
+@media (max-width: 768px) {
+  .controls-bar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  
+  .status-indicator,
+  .last-update {
+    font-size: 0.75rem;
   }
 }

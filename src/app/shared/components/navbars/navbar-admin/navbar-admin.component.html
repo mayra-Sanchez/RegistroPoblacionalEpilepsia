@@ -1,26 +1,37 @@
 <nav class="navbar">
   <ul class="navbar-links">
     <!-- Common tabs for all admins -->
-    <li (click)="selectTab('inicioAdmin')" [class.selected]="selectedTab === 'inicioAdmin'">
+    <li (click)="selectTab('inicioAdmin')" 
+        [class.selected]="selectedTab === 'inicioAdmin'"
+        [attr.data-tab-index]="0">
       <a class="text">Inicio</a>
     </li>
-    <li (click)="selectTab('gestionUsuarios')" [class.selected]="selectedTab === 'gestionUsuarios'">
+    <li (click)="selectTab('gestionUsuarios')" 
+        [class.selected]="selectedTab === 'gestionUsuarios'"
+        [attr.data-tab-index]="1">
       <a class="text">Gestión de usuarios</a>
     </li>
-    <li (click)="selectTab('gestionVariables')" [class.selected]="selectedTab === 'gestionVariables'">
+    <li (click)="selectTab('gestionVariables')" 
+        [class.selected]="selectedTab === 'gestionVariables'"
+        [attr.data-tab-index]="2">
       <a class="text">Gestión de variables</a>
     </li>
-    <li (click)="selectTab('gestionCapas')" [class.selected]="selectedTab === 'gestionCapas'">
+    <li (click)="selectTab('gestionCapas')" 
+        [class.selected]="selectedTab === 'gestionCapas'"
+        [attr.data-tab-index]="3">
       <a class="text">Gestión de capas de investigación</a>
     </li>
-        <li (click)="selectTab('gestionSuperset')" [class.selected]="selectedTab === 'gestionSuperset'">
+    <li (click)="selectTab('gestionSuperset')" 
+        [class.selected]="selectedTab === 'gestionSuperset'"
+        [attr.data-tab-index]="4">
       <a class="text">Gestión de apache superset</a>
     </li>
     <!-- Tab only for SuperAdmin -->
     <li *ngIf="isSuperAdmin" 
         (click)="selectTab('historialRegistros')" 
-        [class.selected]="selectedTab === 'historialRegistros'">
-      <a class="text">Gestión de registros de capas</a>
+        [class.selected]="selectedTab === 'historialRegistros'"
+        [attr.data-tab-index]="5">
+      <a class="text">Gestión de registros de pacientes</a>
     </li>
   </ul>
 </nav>

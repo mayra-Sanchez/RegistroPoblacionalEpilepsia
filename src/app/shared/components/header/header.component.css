@@ -5,13 +5,17 @@
   align-items: center;
   background-color: white;
   width: 100%;
-  height: 95px;
-  padding: 0 30px;
+  min-height: 70px;
+  padding: 12px 16px;
   box-sizing: border-box;
+  position: sticky;
   top: 0;
   left: 0;
   z-index: 1000;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid #e0e0e0;
 }
 
 /* ========== LOGO Y TÍTULOS ========== */
@@ -19,116 +23,92 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  flex: 1;
-  gap: 20px;
+  flex: 1 1 auto;
+  gap: 16px;
   min-width: 0;
-  /* Permite que el texto se trunque */
+  max-width: 100%;
 }
 
 .uv-logo {
-  width: 50px;
-  height: auto;
+  width: 45px;
+  height: 45px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .logo-text {
   display: flex;
   flex-direction: column;
-  line-height: 0.9;
+  line-height: 1.1;
   min-width: 0;
-  /* Permite que el texto se trunque */
+  flex: 1;
 }
 
 .main-title {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: #1a237e;
+  line-height: 1;
+  margin-bottom: 2px;
 }
 
 .subtitle {
-  font-size: 0.625rem;
+  font-size: clamp(0.5rem, 2vw, 0.625rem);
   color: #616161;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 /* ========== BOTONES DE NAVEGACIÓN ========== */
 .nav-buttons {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+  flex: 0 0 auto;
 }
 
-/* Botón principal */
-button.ingresar {
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
-}
-
-button.ingresar:hover {
-  background-color: #1565c0;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
-}
-
-button.ingresar i {
-  font-size: 1.25rem;
-}
-
-/* Botón principal */
+/* Botones base */
+button.ingresar,
 button.manual {
   background-color: #1976d2;
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 4px;
+  padding: clamp(8px, 3vw, 12px) clamp(16px, 4vw, 24px);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: clamp(0.8rem, 2.5vw, 1rem);
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.25);
+  font-weight: 600;
+  white-space: nowrap;
+  min-height: 44px; /* Tappable area para móviles */
+}
+
+button.ingresar:hover,
+button.manual:hover {
+  background-color: #1565c0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.35);
+}
+
+button.ingresar:active,
+button.manual:active {
+  transform: translateY(0);
   box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
 }
 
-button.manual:hover {
-  background-color: #1565c0;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
-}
-
+button.ingresar i,
 button.manual i {
-  font-size: 1.25rem;
-}
-
-/* Botón de ayuda */
-button.help-icon {
-  background-color: transparent;
-  border: none;
-  color: #424242;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 8px;
-  border-radius: 50%;
-}
-
-button.help-icon:hover {
-  color: #1976d2;
-  background-color: rgba(25, 118, 210, 0.1);
+  font-size: clamp(1rem, 3vw, 1.25rem);
 }
 
 /* ========== USUARIO Y CONFIGURACIÓN ========== */
@@ -136,46 +116,66 @@ button.help-icon:hover {
   display: flex;
   align-items: center;
   gap: 12px;
-  cursor: default;
   position: relative;
-}
-
-.user-icon {
-  font-size: 1.75rem;
-  color: #424242;
+  flex-wrap: wrap;
 }
 
 .username-button {
   background-color: #1976d2;
   color: white;
   border: none;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.2);
+  min-height: 40px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  z-index: 1002; /* Mayor que user-info */
+  position: relative;
 }
 
 .username-button:hover {
   background-color: #1565c0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.username-button i {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  flex-shrink: 0;
 }
 
 .settings-button {
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 1.25rem;
+  font-size: clamp(1.1rem, 3vw, 1.25rem);
   color: #424242;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  padding: 8px;
+  border-radius: 50%;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1003; /* Mayor que username-button */
+  position: relative;
 }
 
 .settings-button:hover {
   color: #1976d2;
-  transform: rotate(30deg);
+  background-color: rgba(25, 118, 210, 0.1);
+  transform: rotate(90deg);
 }
 
 /* ========== MENÚ DESPLEGABLE ========== */
@@ -183,40 +183,48 @@ button.help-icon:hover {
   position: absolute;
   background: white;
   border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   right: 0;
-  top: 50px;
+  top: 100%;
+  margin-top: 8px;
   padding: 8px 0;
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
-  z-index: 1100;
-  min-width: 180px;
-  animation: fadeIn 0.2s ease-out;
+  border-radius: 12px;
+  z-index: 3000; /* AUMENTADO: Mayor que el modal */
+  min-width: 200px;
+  animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.98); /* Más opaco */
 }
 
 .menu-dropdown button {
   background: none;
   border: none;
-  padding: 10px 16px;
+  padding: 12px 20px;
   cursor: pointer;
   text-align: left;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   color: #424242;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.1s ease;
+  gap: 12px;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  z-index: 3001; /* Asegurar que los botones también tengan alto z-index */
+  position: relative;
 }
 
 .menu-dropdown button:hover {
-  background-color: #f5f5f5;
+  background-color: #f0f7ff;
   color: #1976d2;
+  z-index: 3002; /* Aún más alto en hover */
 }
 
 .menu-dropdown button i {
-  font-size: 1rem;
+  font-size: 1.1rem;
   width: 20px;
+  text-align: center;
 }
 
 /* ========== MODALES ========== */
@@ -229,21 +237,35 @@ button.help-icon:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 2000;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2000; /* MENOR que el menú desplegable */
   animation: fadeIn 0.3s ease;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.modal-container {
+  width: 100%;
+  max-width: 600px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2001; /* Dentro del contexto del modal */
 }
 
 .modal-content,
 .manual-content {
   background: white;
   padding: 24px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
   position: relative;
-  animation: modalSlideIn 0.3s ease;
+  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  z-index: 2002; /* Contenido del modal */
 }
 
 .manual-content {
@@ -259,116 +281,761 @@ button.help-icon:hover {
   cursor: pointer;
   color: #757575;
   transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2003; /* Botón cerrar del modal */
 }
 
-.modal-content .close:hover,
-.manual-content .close:hover {
-  color: #212121;
+/* ========== USUARIO Y CONFIGURACIÓN ========== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  flex-wrap: wrap;
+  z-index: 1001; /* Mayor que el header */
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes modalSlideIn {
   from {
-    transform: translateY(-20px);
+    transform: translateY(-30px) scale(0.95);
     opacity: 0;
   }
-
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
 
-/* ========== RESPONSIVIDAD ========== */
-@media (max-width: 1024px) {
-  .header {
-    padding: 0 20px;
-    height: 80px;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-
-  .main-title {
-    font-size: 2rem;
-  }
-
-  .uv-logo {
-    width: 40px;
-  }
-
-  button.ingresar {
-    padding: 10px 18px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 768px) {
+/* ========== MODAL DE INFORMACIÓN DE USUARIO ========== */
+.user-info-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  z-index: 2002; /* Igual que otros modales */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  color: white;
+  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  font-weight: 700;
+}
+
+.close-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 2003; /* Alto z-index para botón cerrar */
+  position: relative;
+}
+
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg) scale(1.1);
+}
+
+.user-info-content {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.info-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-left: 4px solid #1976d2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px 0;
+  font-size: clamp(1rem, 3vw, 1.1rem);
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+.card-title i {
+  color: #1976d2;
+  font-size: 1.1em;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: #495057;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  margin-bottom: 4px;
+}
+
+.info-value {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  word-break: break-word;
+}
+
+/* Badges para estados */
+.role-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: clamp(0.75rem, 2vw, 0.8rem);
+  font-weight: 700;
+  display: inline-block;
+  text-align: center;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: clamp(0.75rem, 2vw, 0.8rem);
+  font-weight: 700;
+  display: inline-block;
+  text-align: center;
+}
+
+.status-badge.active {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-badge.inactive {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-badge.verified {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-badge.unverified {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+/* Capas de investigación */
+.research-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.layer-item:hover {
+  border-color: #1976d2;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
+}
+
+.layer-number {
+  background: #1976d2;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.layer-id {
+  font-family: 'Courier New', monospace;
+  font-size: clamp(0.8rem, 2.5vw, 0.85rem);
+  color: #666;
+  word-break: break-all;
+}
+
+.info-note {
+  margin: 16px 0 0 0;
+  padding: 12px 16px;
+  background: #e3f2fd;
+  border-radius: 8px;
+  font-size: clamp(0.8rem, 2.5vw, 0.85rem);
+  color: #1976d2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.no-data-message {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 24px;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+}
+
+/* Loading state */
+.loading-state {
+  text-align: center;
+  padding: 40px 24px;
+  color: #6c757d;
+}
+
+.loading-state i {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  color: #1976d2;
+}
+
+.loading-state p {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  margin: 0;
+}
+
+/* Footer del modal */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  border-radius: 0 0 16px 16px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  min-height: 44px;
+  flex: 1;
+  justify-content: center;
+  max-width: 200px;
+}
+
+.btn-primary {
+  background: #1976d2;
+  color: white;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+}
+
+.btn-primary:hover {
+  background: #1565c0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.4);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.4);
+}
+
+.modal-open .menu-dropdown {
+  z-index: 3000; /* Forzar alto z-index cuando hay modal */
+}
+
+/* Asegurar que el menú siempre esté por encima */
+.user-info:hover .menu-dropdown,
+.menu-dropdown:not(.hidden) {
+  z-index: 3000 !important; /* !important para forzar por encima de todo */
+}
+
+/* ========== RESPONSIVIDAD MEJORADA ========== */
+
+/* Tablets grandes y laptops pequeños */
+@media (max-width: 1024px) {
   .header {
-    padding: 0 15px;
-    height: 70px;
+    padding: 12px 20px;
+    min-height: 65px;
   }
-
-  .main-title {
-    font-size: 1.5rem;
+  
+  .logo {
+    gap: 14px;
   }
-
-  .subtitle {
-    font-size: 0.5rem;
+  
+  .uv-logo {
+    width: 42px;
+    height: 42px;
   }
-
+  
   .nav-buttons {
     gap: 10px;
   }
+}
 
-  button.ingresar {
-    padding: 8px 14px;
-    font-size: 0.875rem;
+/* Tablets */
+@media (max-width: 768px) {
+  .header {
+    padding: 10px 16px;
+    min-height: 60px;
+    gap: 12px;
+  }
+  
+  .logo {
+    gap: 12px;
+    flex: 1 1 60%;
+  }
+  
+  .uv-logo {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .nav-buttons {
+    flex: 1 1 40%;
+    justify-content: flex-end;
+  }
+  
+  .username-button {
+    max-width: 150px;
+    padding: 6px 12px;
+  }
+  
+  .menu-dropdown {
+    min-width: 180px;
+    right: -8px;
+  }
+  
+  .user-info-content {
+    padding: 20px;
+  }
+  
+  .info-card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .modal-footer {
+    padding: 16px 20px;
   }
 
-  .user-icon {
-    font-size: 1.5rem;
+   .menu-dropdown {
+    min-width: 180px;
+    right: -8px;
+    z-index: 3000; /* Mantener alto en tablets */
+  }
+}
+
+/* Móviles grandes */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    height: auto;
+    min-height: auto;
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .menu-dropdown {
+    z-index: 3000; /* Mantener alto en móviles */
+  }
+  
+  .logo {
+    justify-content: center;
+    text-align: center;
+    flex: 1 1 100%;
+    gap: 12px;
+  }
+  
+  .logo-text {
+    align-items: center;
+  }
+  
+  .nav-buttons {
+    justify-content: center;
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  
+  .username-button {
+    max-width: none;
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .user-info {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .modal {
+    padding: 12px;
+  }
+  
+  .modal-content,
+  .manual-content,
+  .user-info-modal {
+    padding: 20px;
+  }
+  
+  .modal-header {
+    padding: 16px 20px;
+  }
+  
+  .info-item {
+    padding: 10px 0;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  
+  .logo {
+    gap: 10px;
+  }
+  
+  .uv-logo {
+    width: 35px;
+    height: 35px;
+  }
+  
+   .menu-dropdown {
+    min-width: 160px;
+    right: -4px;
+    z-index: 3000; /* Mantener alto en móviles pequeños */
+  }
+
+  .nav-buttons {
+    gap: 8px;
+  }
+  
+  button.ingresar,
+  button.manual {
+    padding: 10px 16px;
+    min-height: 42px;
+  }
+  
+  .username-button {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+  
+  .menu-dropdown {
+    min-width: 160px;
+    right: -4px;
+  }
+  
+  .menu-dropdown button {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .user-info-content {
+    padding: 16px;
+  }
+  
+  .info-card {
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 360px) {
+  .header {
+    padding: 8px 10px;
+  }
+  
+  .logo {
+    gap: 8px;
+  }
+  
+  .uv-logo {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .main-title {
+    font-size: 1.3rem;
+  }
+  
+  .subtitle {
+    font-size: 0.45rem;
+  }
+  
+  .nav-buttons {
+    gap: 6px;
+  }
+  
+  button.ingresar,
+  button.manual {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    min-height: 40px;
+  }
+  
+  .username-button {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+  
+  .settings-button {
+    padding: 6px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+/* Modo landscape en móviles */
+@media (max-height: 500px) and (orientation: landscape) {
+  .header {
+    min-height: 55px;
+    padding: 8px 16px;
+  }
+  
+  .uv-logo {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .main-title {
+    font-size: 1.3rem;
+  }
+  
+  .user-info-modal {
+    max-height: 90vh;
+  }
+}
+
+/* Soporte para dispositivos con notch */
+@supports (padding: max(0px)) {
+  .header {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  
+  .modal {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mejor contraste para modo alto contraste */
+@media (prefers-contrast: high) {
+  .header {
+    border-bottom: 2px solid #000;
+  }
+  
+  .menu-dropdown {
+    border: 2px solid #000;
+  }
+  
+  .info-card {
+    border-left: 4px solid #000;
+  }
+}
+
+/* ========== ESTILOS PARA CAPAS DE INVESTIGACIÓN ========== */
+
+.badge-count {
+  background: #1976d2;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.layer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.layer-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.layer-description {
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.layer-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #999;
+  word-break: break-all;
+}
+
+.loading-layers {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  justify-content: center;
+  color: #6c757d;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.loading-layers i {
+  color: #1976d2;
+}
+
+/* Mejoras responsive para las capas */
+@media (max-width: 768px) {
+  .layer-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .layer-number {
+    align-self: flex-start;
+  }
+  
+  .layer-info {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .header {
-    padding: 0 10px;
-    height: 60px;
+  .layer-name {
+    font-size: 0.85rem;
   }
-
-  .logo {
-    gap: 10px;
-  }
-
-  .main-title {
-    font-size: 1.25rem;
-  }
-
-  .uv-logo {
-    width: 30px;
-  }
-
-  .nav-buttons {
-    gap: 6px;
-  }
-
-  button.ingresar {
-    padding: 6px 10px;
+  
+  .layer-description {
     font-size: 0.75rem;
   }
-
-  .username-button {
-    display: none;
+  
+  .layer-id {
+    font-size: 0.7rem;
   }
-
-  .menu-dropdown {
-    top: 40px;
-    right: -10px;
+  
+  .badge-count {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+  
+  .loading-layers {
+    padding: 12px;
+    font-size: 0.85rem;
   }
 }

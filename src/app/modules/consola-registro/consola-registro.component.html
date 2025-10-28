@@ -45,63 +45,64 @@
         </div>
 
         <!-- Estadísticas -->
-        <div class="dashboard-card stats-card">
-          <div class="card-header">
-            <i class="fas fa-chart-line card-icon"></i>
-            <span class="last-update">Actualizado: {{ lastUpdate | date:'short' }}</span>
-          </div>
-          <div class="stats-grid">
-            <!-- Selector de capa -->
-            <div class="stat-item layer-selector-item">
-              <div class="stat-circle primary">
-                <i class="fas fa-layer-group"></i>
-              </div>
-              <div class="layer-selector-container">
-                <div class="layer-selector">
-                  <label for="researchLayer" class="layer-label">
-                    Capa de investigación activa:
-                  </label>
-                  <div class="layer-selector-modern">
-                    <select id="researchLayer" [(ngModel)]="selectedLayerId" (change)="onLayerChange($event)"
-                      [disabled]="availableLayers.length === 0">
-                      <option value="" disabled *ngIf="availableLayers.length === 0">
-                        No hay capas disponibles
-                      </option>
-                      <option *ngFor="let layer of availableLayers" [value]="layer.id"
-                        [selected]="layer.id === selectedLayerId">
-                        {{ layer.layerName }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Total de pacientes -->
-            <div class="stat-item">
-              <div class="stat-circle success">
-                <i class="fas fa-users"></i>
-              </div>
-              <div class="stat-info">
-                <span class="stat-label">Pacientes registrados</span>
-                <span class="stat-value">{{ totalPacientes }}</span>
-                <span class="stat-subtext">Solo registros creados</span>
-              </div>
-            </div>
-
-            <!-- Total de operaciones -->
-            <div class="stat-item">
-              <div class="stat-circle warning">
-                <i class="fas fa-tasks"></i>
-              </div>
-              <div class="stat-info">
-                <span class="stat-label">Total de actividades</span>
-                <span class="stat-value">{{ totalElements }}</span>
-                <span class="stat-subtext">Todas las operaciones</span>
-              </div>
-            </div>
+<!-- En tu template, modifica la sección de estadísticas -->
+<div class="dashboard-card stats-card">
+  <div class="card-header">
+    <i class="fas fa-chart-line card-icon"></i>
+    <span class="last-update">Actualizado: {{ lastUpdate | date:'short' }}</span>
+  </div>
+  <div class="stats-grid">
+    <!-- Selector de capa (existente) -->
+    <div class="stat-item layer-selector-item">
+      <div class="stat-circle primary">
+        <i class="fas fa-layer-group"></i>
+      </div>
+      <div class="layer-selector-container">
+        <div class="layer-selector">
+          <label for="researchLayer" class="layer-label">
+            Capa de investigación activa:
+          </label>
+          <div class="layer-selector-modern">
+            <select id="researchLayer" [(ngModel)]="selectedLayerId" (change)="onLayerChange($event)"
+              [disabled]="availableLayers.length === 0">
+              <option value="" disabled *ngIf="availableLayers.length === 0">
+                No hay capas disponibles
+              </option>
+              <option *ngFor="let layer of availableLayers" [value]="layer.id"
+                [selected]="layer.id === selectedLayerId">
+                {{ layer.layerName }}
+              </option>
+            </select>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Total de pacientes (incluye creados y actualizados) -->
+    <div class="stat-item">
+      <div class="stat-circle success">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Pacientes registrados</span>
+        <span class="stat-value">{{ totalPacientes }}</span>
+        <span class="stat-subtext">Creados y actualizados</span>
+      </div>
+    </div>
+
+    <!-- Opcional: Mostrar estadísticas detalladas -->
+    <div class="stat-item" *ngIf="totalRegistrosCreados > 0 || totalRegistrosActualizados > 0">
+      <div class="stat-circle info">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Desglose</span>
+        <span class="stat-value">{{ totalRegistrosCreados }}/{{ totalRegistrosActualizados }}</span>
+        <span class="stat-subtext">Creados/Actualizados</span>
+      </div>
+    </div>
+  </div>
+</div>
 
         <!-- Acciones rápidas -->
         <div class="dashboard-card actions-card">

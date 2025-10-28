@@ -1,15 +1,29 @@
-<div #dashboardContainer class="dashboard-container" [class.fullscreen-mode]="isFullscreen">
-  <!-- Barra de controles minimalista -->
+<div #dashboardContainer class="dashboard-container">
+  <!-- Barra de controles simplificada -->
   <div class="controls-bar">
-    <button mat-icon-button (click)="refreshDashboard()" [disabled]="isLoading" matTooltip="Actualizar">
+    <button mat-icon-button 
+            (click)="refreshDashboard()" 
+            [disabled]="isLoading" 
+            matTooltip="Actualizar dashboard">
       <mat-icon>refresh</mat-icon>
     </button>
-    <button mat-icon-button (click)="toggleFullscreen()" matTooltip="Pantalla completa">
-      <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
-    </button>
-    <button mat-icon-button (click)="openInNewTab()" matTooltip="Abrir en nueva pestaña">
+
+    <button mat-icon-button 
+            (click)="openInNewTab()" 
+            matTooltip="Abrir en nueva pestaña">
       <mat-icon>open_in_new</mat-icon>
     </button>
+
+    <!-- Indicador de estado en línea -->
+    <div class="status-info">
+      <span *ngIf="isLoading" class="loading-indicator">
+        <mat-spinner diameter="20"></mat-spinner>
+        Cargando...
+      </span>
+      <span *ngIf="lastLoadTime && !isLoading" class="last-update">
+        Actualizado: {{ lastLoadTime | date:'HH:mm:ss' }}
+      </span>
+    </div>
   </div>
 
   <!-- Estados de carga/error -->
@@ -28,7 +42,7 @@
     </button>
   </div>
 
-  <!-- Iframe con ajustes específicos -->
+  <!-- Iframe del dashboard -->
   <iframe #dashboardIframe
     [src]="dashboardUrl"
     width="100%"
@@ -36,13 +50,7 @@
     (load)="onIframeLoad()"
     (error)="onIframeError()"
     [hidden]="!isIframeLoaded || hasError"
-    allowfullscreen
     class="superset-iframe"
     title="Dashboard de Superset">
   </iframe>
-
-  <!-- Indicador de carga exitosa -->
-  <div *ngIf="isIframeLoaded && !hasError" class="last-update">
-    Última actualización: {{ lastLoadTime | date:'HH:mm:ss' }}
-  </div>
 </div>

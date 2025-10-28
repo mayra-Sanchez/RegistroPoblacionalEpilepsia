@@ -11,9 +11,8 @@
   height: 80px;
   padding: 0 20px;
   box-sizing: border-box;
-  z-index: 10;
+  z-index: 0;
   position: relative;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* ============ ENLACES DE NAVEGACIÓN ============ */
@@ -26,7 +25,7 @@
   padding: 0;
 }
 
-.navbar-links li a {
+.navbar-links li a.text {
   text-decoration: none;
   color: #333;
   background-color: #fff;
@@ -42,26 +41,34 @@
 }
 
 /* Efecto hover mejorado */
-.navbar-links li a:hover {
+.navbar-links li a.text:hover {
   background-color: #0056B3;
   color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-color: transparent;
 }
 
 /* Estado activo/seleccionado */
-.navbar-links li.selected a {
-  background-color: #e6f0ff;
-  color: #0056b3;
+.navbar-links li.selected a.text {
+  background-color: #0056b3;
+  color: #fff;
   font-weight: 600;
-  border-bottom: 3px solid #0056b3;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-bottom: 3px solid #ffd700;
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+  transform: translateY(-2px);
 }
 
 /* Efecto al hacer clic */
-.navbar-links li a:active {
+.navbar-links li a.text:active {
   transform: translateY(0);
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto sutil para navegación por teclado */
+.navbar-links li:focus-within a.text {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
 }
 
 /* ============ DISEÑO RESPONSIVE ============ */
@@ -77,7 +84,7 @@
     gap: 15px;
   }
 
-  .navbar-links li a {
+  .navbar-links li a.text {
     font-size: 14px;
     padding: 8px 14px;
     border-radius: 6px;
@@ -103,9 +110,21 @@
     padding: 0 10px;
   }
 
-  .navbar-links li a {
+  .navbar-links li a.text {
     font-size: 13px;
     padding: 6px 12px;
     white-space: nowrap;
+  }
+}
+
+/* Pantallas muy pequeñas (360px o menos) */
+@media (max-width: 360px) {
+  .navbar-links {
+    gap: 8px;
+  }
+
+  .navbar-links li a.text {
+    font-size: 12px;
+    padding: 5px 10px;
   }
 }

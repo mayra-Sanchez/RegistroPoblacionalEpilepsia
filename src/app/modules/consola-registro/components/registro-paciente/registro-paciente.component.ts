@@ -4,31 +4,10 @@ import { ConsolaRegistroService, RegisterRequest, ValidatePatientResponse } from
 import { AuthService } from '../../../../services/auth.service';
 import { Variable } from '../../interfaces';
 import Swal from 'sweetalert2';
-import { Subject, takeUntil } from 'rxjs';
+import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { SignatureUploadService } from 'src/app/services/signature-upload.service';
 import { saveAs } from 'file-saver';
-/**
- * Componente para el registro de pacientes en el sistema
- * 
- * Este componente proporciona un formulario multi-sección completo para:
- * - Validación de pacientes existentes
- * - Registro de nueva información del paciente
- * - Gestión de cuidadores (opcional)
- * - Captura de variables de investigación
- * - Subida de consentimientos informados
- * 
- * Maneja tres casos principales:
- * - CASE1: Paciente existe en la misma capa (actualización)
- * - CASE2: Paciente existe en otra capa (mover registro)
- * - CASE3: Paciente nuevo (creación)
- * 
- * @example
- * <app-registro-paciente
- *   [researchLayerId]="selectedLayerId"
- *   [researchLayerName]="selectedLayerName"
- *   (registroGuardado)="onRegistroGuardado()">
- * </app-registro-paciente>
- */
+
 @Component({
   selector: 'app-registro-paciente',
   templateUrl: './registro-paciente.component.html',
@@ -205,7 +184,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     { value: 'pending', label: 'Pendientes' }
   ];
 
-  
   // ============================
   // GESTIÓN DE SUSCRIPCIONES
   // ============================
@@ -217,13 +195,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   // CONSTRUCTOR
   // ============================
 
-  /**
-   * Constructor del componente
-   * @param fb Servicio FormBuilder para crear formularios reactivos
-   * @param consolaService Servicio para operaciones de registro
-   * @param authService Servicio de autenticación
-   * @param consentimiento Servicio para subir archivos de consentimiento
-   */
   constructor(
     private fb: FormBuilder,
     private consolaService: ConsolaRegistroService,
@@ -237,16 +208,17 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   // MÉTODOS DEL CICLO DE VIDA
   // ============================
 
-  /**
-   * Inicialización del componente
-   * - Carga variables de la capa
-   * - Configura observables para cambios en fecha de nacimiento
-   */
   ngOnInit(): void {
     this.loadVariablesDeCapa();
 
+    // Un solo listener robusto para cambios en fecha de nacimiento
     const birthControl = this.registroForm.get('patient.birthDate');
-    birthControl?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.onBirthDateChange());
+    birthControl?.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(300)
+    ).subscribe((birthDate) => {
+      this.calcularEdad(birthDate);
+    });
 
     this.consolaService.dataChanged$
       .pipe(takeUntil(this.destroy$))
@@ -255,14 +227,257 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Limpieza al destruir el componente
-   * - Cancela todas las suscripciones activas
-   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  // ============================
+  // MÉTODOS NUEVOS Y CORREGIDOS
+  // ============================
+
+  /**
+   * Maneja el evento blur en el campo de fecha de nacimiento
+   */
+  onBirthDateBlur(): void {
+    const birthDateControl = this.registroForm.get('patient.birthDate');
+    const birthDate = birthDateControl?.value;
+
+    if (birthDate) {
+      this.calcularEdad(birthDate);
+    }
+  }
+
+  /**
+   * Maneja la visualización del consentimiento existente
+   */
+  viewExistingConsentimiento(): void {
+    if (this.existingConsentimientoUrl) {
+      window.open(this.existingConsentimientoUrl, '_blank');
+    }
+  }
+
+  /**
+   * Descarga el consentimiento existente
+   */
+  downloadExistingConsentimiento(): void {
+    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
+    if (!patientId) return;
+
+    this.consentimiento.downloadConsentFile(parseInt(patientId, 10))
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          if (blob && blob.size > 0) {
+            const patientInfo = this.registroForm.get('patient')?.value;
+            const patientName = patientInfo?.name || 'paciente';
+            const fileName = `consentimiento_${patientName.replace(/\s+/g, '_')}.pdf`;
+            saveAs(blob, fileName);
+          } else {
+            Swal.fire('Error', 'No se pudo descargar el consentimiento', 'error');
+          }
+        },
+        error: (error) => {
+          Swal.fire('Error', 'No se pudo descargar el consentimiento', 'error');
+        }
+      });
+  }
+
+  /**
+   * Maneja cuando el usuario sube un nuevo archivo (reemplaza el existente)
+   */
+  onNewFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      if (this.existingConsentimientoUrl) {
+        URL.revokeObjectURL(this.existingConsentimientoUrl);
+        this.existingConsentimientoUrl = null;
+      }
+      this.processFile(file);
+    }
+  }
+
+  /**
+   * Verifica si los datos del cuidador son válidos y contienen información
+   */
+  hasCaregiverData(caregiverData: any): boolean {
+    if (!caregiverData) return false;
+
+    const hasValidData = (
+      (caregiverData.name && caregiverData.name.trim() !== '') ||
+      (caregiverData.identificationNumber && caregiverData.identificationNumber.toString().trim() !== '') ||
+      (caregiverData.age && caregiverData.age.toString().trim() !== '') ||
+      (caregiverData.educationLevel && caregiverData.educationLevel.trim() !== '') ||
+      (caregiverData.occupation && caregiverData.occupation.trim() !== '')
+    );
+
+    return hasValidData;
+  }
+
+  /**
+   * Calcula y establece la edad automáticamente basada en la fecha de nacimiento
+   */
+  private calcularEdad(birthDate: string | Date | null | undefined): void {
+    if (!birthDate) {
+      this.registroForm.get('patient.age')?.setValue('');
+      return;
+    }
+
+    try {
+      const fechaNacimiento = new Date(birthDate);
+
+      if (isNaN(fechaNacimiento.getTime())) {
+        this.registroForm.get('patient.age')?.setValue('');
+        return;
+      }
+
+      const hoy = new Date();
+      let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+      const mesActual = hoy.getMonth();
+      const mesNacimiento = fechaNacimiento.getMonth();
+      const diaActual = hoy.getDate();
+      const diaNacimiento = fechaNacimiento.getDate();
+
+      if (mesActual < mesNacimiento ||
+        (mesActual === mesNacimiento && diaActual < diaNacimiento)) {
+        edad--;
+      }
+
+      if (edad >= 0 && edad <= 150) {
+        this.registroForm.get('patient.age')?.setValue(edad);
+      } else {
+        this.registroForm.get('patient.age')?.setValue('');
+      }
+    } catch (error) {
+      this.registroForm.get('patient.age')?.setValue('');
+    }
+  }
+
+  /**
+   * Formatea una fecha para el input type="date" (YYYY-MM-DD)
+   */
+  private formatDateForInput(dateValue: any): string {
+    if (!dateValue) return '';
+
+    try {
+      if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        return dateValue;
+      }
+
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      return '';
+    }
+  }
+
+  /**
+   * Verifica si hay datos de cuidador y activa el switch automáticamente
+   */
+  private checkAndActivateCaregiver(caregiverData: any): void {
+    if (caregiverData && this.hasCaregiverData(caregiverData)) {
+      this.hasCaregiver = true;
+    } else {
+      this.hasCaregiver = false;
+    }
+  }
+
+  /**
+   * Actualiza el manejo de CASE1 para incluir verificación del cuidador y cálculo de edad
+   */
+  private handleCase1(res: ValidatePatientResponse): void {
+    this.validationMessage = 'El paciente ya existe en esta capa (duplicado) puede continuar pero se actualizará el registro';
+    this.validationStatus = 'warning';
+    this.validationFlag = 'CASE1';
+
+    const patientData = { ...res.patientBasicInfo };
+    if (patientData.birthDate) {
+      patientData.birthDate = this.formatDateForInput(patientData.birthDate);
+    }
+
+    this.registroForm.patchValue({
+      patient: patientData,
+      caregiver: res.caregiver
+    });
+
+    this.calcularEdad(patientData.birthDate);
+    this.checkAndActivateCaregiver(res.caregiver);
+    this.cargarVariablesExistentes(res);
+
+    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
+    if (patientId) {
+      this.checkExistingConsentimiento(parseInt(patientId, 10));
+    }
+  }
+
+  /**
+   * Actualiza el manejo de CASE2 para incluir verificación del cuidador y cálculo de edad
+   */
+  private handleCase2(res: ValidatePatientResponse): void {
+    this.validationMessage = 'El paciente ya tiene un registro en otra capa';
+    this.validationStatus = 'warning';
+    this.validationFlag = 'CASE2';
+
+    const patientData = { ...res.patientBasicInfo };
+    if (patientData.birthDate) {
+      patientData.birthDate = this.formatDateForInput(patientData.birthDate);
+    }
+
+    this.registroForm.patchValue({
+      patient: patientData,
+      caregiver: res.caregiver
+    });
+
+    this.calcularEdad(patientData.birthDate);
+    this.checkAndActivateCaregiver(res.caregiver);
+
+    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
+    if (patientId) {
+      this.checkExistingConsentimiento(parseInt(patientId, 10));
+    }
+  }
+
+
+  get variables(): FormArray {
+    return this.registroForm.get('variables') as FormArray;
+  }
+
+  get variablesFormGroups(): FormGroup[] {
+    return (this.registroForm.get('variables') as FormArray).controls as FormGroup[];
+  }
+
+  changeSection(sectionIndex: number): void {
+    this.currentSection = sectionIndex;
+  }
+
+  nextSection(): void {
+    if (this.currentSection === 0 && !this.validationFlag) {
+      this.showValidationRequiredAlert();
+      return;
+    }
+
+    if (this.validateCurrentSection()) {
+      const maxSections = this.variables.length > 0 ? 5 : 4;
+      if (this.currentSection < maxSections) {
+        this.currentSection++;
+      }
+    }
+  }
+
+  prevSection(): void {
+    if (this.currentSection > 0) {
+      this.currentSection--;
+    }
+  }
+
 
   // ============================
   // CREACIÓN E INICIALIZACIÓN DEL FORMULARIO
@@ -382,68 +597,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ============================
-  // GETTERS PARA ACCESO A CONTROLES
-  // ============================
-
-  /**
-   * Getter para acceder al FormArray de variables
-   * @returns FormArray con las variables del formulario
-   */
-  get variables(): FormArray {
-    return this.registroForm.get('variables') as FormArray;
-  }
-
-  /**
-   * Getter para obtener los grupos de formulario de variables
-   * @returns Array de FormGroups que representan cada variable
-   */
-  get variablesFormGroups(): FormGroup[] {
-    return (this.registroForm.get('variables') as FormArray).controls as FormGroup[];
-  }
-
-  // ============================
-  // NAVEGACIÓN DEL FORMULARIO
-  // ============================
-
-  /**
-   * Cambia la sección actual del formulario
-   * @param sectionIndex Índice de la sección a mostrar
-   */
-  changeSection(sectionIndex: number): void {
-    this.currentSection = sectionIndex;
-  }
-
-  /**
-   * Avanza a la siguiente sección del formulario si la actual es válida
-   */
-  nextSection(): void {
-    // Validación especial para la sección 0 (identificación)
-    if (this.currentSection === 0) {
-      if (!this.validationFlag) {
-        this.showValidationRequiredAlert();
-        return;
-      }
-    }
-
-    if (this.validateCurrentSection()) {
-      const maxSections = this.variables.length > 0 ? 5 : 4;
-      if (this.currentSection < maxSections) {
-        this.currentSection++;
-      }
-    }
-  }
-
-  /**
-   * Retrocede a la sección anterior del formulario
-   */
-  prevSection(): void {
-    if (this.currentSection > 0) {
-      this.currentSection--;
-    }
-  }
-
-
   /**
  * Muestra alerta cuando se intenta avanzar sin validar el paciente
  */
@@ -527,10 +680,28 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       case 3:
         const hasConsentimiento = this.registroForm.get('hasConsentimiento')?.value;
 
-        if (hasConsentimiento && !this.consentimientoFile) {
+        // ✅ CORREGIDO: Solo requerir archivo si no existe consentimiento previo
+        if (hasConsentimiento && !this.consentimientoFile && !this.existingConsentimientoUrl) {
           Swal.fire('Error', 'Debe subir el consentimiento informado', 'error');
           return false;
         }
+
+        // ✅ CASO VÁLIDO: Tiene consentimiento y ya existe uno en el sistema
+        if (hasConsentimiento && this.existingConsentimientoUrl) {
+          console.log('✅ Consentimiento existente detectado, no requiere subir archivo nuevo');
+          return true;
+        }
+
+        // ✅ CASO VÁLIDO: Tiene consentimiento y subió un archivo nuevo
+        if (hasConsentimiento && this.consentimientoFile) {
+          return true;
+        }
+
+        // ✅ CASO VÁLIDO: No requiere consentimiento
+        if (!hasConsentimiento) {
+          return true;
+        }
+
         break;
     }
 
@@ -709,6 +880,17 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
    * @returns RegisterRequest estructurado
    */
   private prepareRegisterRequest(): RegisterRequest {
+    // ✅ SOLUCIÓN: Usar getRawValue() en lugar de value
+    const patientData = this.registroForm.get('patient')?.getRawValue() || {};
+
+    const formattedPatientData = {
+      ...patientData,
+      birthDate: patientData.birthDate ? this.formatDateForBackend(patientData.birthDate) : null,
+      deathDate: patientData.deathDate ? this.formatDateForBackend(patientData.deathDate) : null,
+      firstCrisisDate: patientData.firstCrisisDate ? this.formatDateForBackend(patientData.firstCrisisDate) : null,
+      age: Number(patientData.age) || 0 // ✅ Ahora age estará presente
+    };
+
     const variablesInfo = this.variables.controls.map((v: any) => {
       const originalType = v.get('type')?.value;
       const originalValue = v.get('value')?.value;
@@ -722,17 +904,9 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       };
     });
 
-    const patientData = this.registroForm.get('patient')?.value || {};
     const caregiverData = this.hasCaregiver ? (this.registroForm.get('caregiver')?.value || {}) : undefined;
 
     const patientIdentificationNumber = Number(this.registroForm.get('patientIdentificationNumber')?.value);
-
-    const formattedPatientData = {
-      ...patientData,
-      birthDate: patientData.birthDate ? this.formatDateForBackend(patientData.birthDate) : null,
-      deathDate: patientData.deathDate ? this.formatDateForBackend(patientData.deathDate) : null,
-      firstCrisisDate: patientData.firstCrisisDate ? this.formatDateForBackend(patientData.firstCrisisDate) : null
-    };
 
     let formattedCaregiverData = undefined;
     if (caregiverData && Object.keys(caregiverData).length > 0) {
@@ -788,6 +962,45 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     });
   }
 
+  toggleCaregiver(): void {
+    this.hasCaregiver = !this.hasCaregiver;
+
+    if (!this.hasCaregiver) {
+      this.clearCaregiverData();
+    }
+  }
+
+  private clearCaregiverData(): void {
+    const caregiverGroup = this.registroForm.get('caregiver') as FormGroup;
+    caregiverGroup.patchValue({
+      name: '',
+      identificationType: 'CC',
+      identificationNumber: '',
+      age: '',
+      educationLevel: '',
+      occupation: ''
+    });
+  }
+
+  private resetForm(): void {
+    const defaultIdType = 'CC';
+    this.registroForm.reset({
+      patientIdentificationType: defaultIdType,
+      patientIdentificationNumber: ''
+    });
+
+    this.initializeVariables();
+    this.hasCaregiver = false;
+    this.consentimientoFile = null;
+    this.consentimientoSubido = false;
+    this.existingConsentimientoUrl = null;
+    this.currentSection = 0;
+    this.validationMessage = null;
+    this.validationStatus = null;
+    this.validationFlag = null;
+    this.lastValidationResponse = null;
+    this.registroGuardado.emit();
+  }
   /**
    * Ejecuta el CASE2: Mover registro a nueva capa
    * Incluye formateo completo de variables y fechas
@@ -880,79 +1093,11 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
 
     this.resetForm();
     this.loading = false;
+    window.location.reload();
   }
   // ============================
   // MÉTODOS DE UTILIDAD
   // ============================
-
-  /**
-   * Maneja el cambio en la fecha de nacimiento y calcula la edad automáticamente
-   */
-  onBirthDateChange(): void {
-    const birthDate = this.registroForm.get('patient.birthDate')?.value;
-    this.calcularYEstablecerEdad(birthDate);
-  }
-
-  /**
-   * Calcula y establece la edad basada en la fecha de nacimiento
-   * @param birthDate Fecha de nacimiento
-   */
-  private calcularYEstablecerEdad(birthDate: string): void {
-    if (birthDate) {
-      try {
-        const today = new Date();
-        const birth = new Date(birthDate);
-
-        if (isNaN(birth.getTime())) {
-          console.warn('⚠️ Fecha de nacimiento inválida:', birthDate);
-          this.registroForm.get('patient.age')?.setValue('');
-          return;
-        }
-
-        let age = today.getFullYear() - birth.getFullYear();
-
-        const monthDiff = today.getMonth() - birth.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-          age--;
-        }
-
-        if (age >= 0 && age <= 150) {
-          this.registroForm.get('patient.age')?.setValue(age);
-          console.log('✅ Edad calculada:', age, 'a partir de fecha:', birthDate);
-        } else {
-          console.warn('⚠️ Edad calculada fuera de rango:', age);
-          this.registroForm.get('patient.age')?.setValue('');
-        }
-      } catch (error) {
-        console.error('❌ Error calculando edad:', error);
-        this.registroForm.get('patient.age')?.setValue('');
-      }
-    } else {
-      this.registroForm.get('patient.age')?.setValue('');
-    }
-  }
-
-  /**
-   * Calcula la edad automáticamente a partir de la fecha de nacimiento
-   */
-  private calcularEdadDesdeFechaNacimiento(): void {
-    const birthDate = this.registroForm.get('patient.birthDate')?.value;
-
-    if (birthDate) {
-      const today = new Date();
-      const birth = new Date(birthDate);
-      let age = today.getFullYear() - birth.getFullYear();
-
-      const monthDiff = today.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-      }
-
-      this.registroForm.get('patient.age')?.setValue(age);
-    } else {
-      console.warn('⚠️ No se pudo calcular la edad: fecha de nacimiento no disponible');
-    }
-  }
 
   /**
    * Carga las variables existentes cuando el paciente ya está registrado en la capa
@@ -991,7 +1136,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
       }
 
       const birthDate = this.registroForm.get('patient.birthDate')?.value;
-      this.calcularYEstablecerEdad(birthDate);
+      this.calcularEdad(birthDate);
 
     } catch (error) {
       console.error('❌ Error cargando variables existentes:', error);
@@ -1543,58 +1688,6 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
   }
 
 
-
-  /**
-   * Maneja la visualización del consentimiento existente
-   */
-  viewExistingConsentimiento(): void {
-    if (this.existingConsentimientoUrl) {
-      window.open(this.existingConsentimientoUrl, '_blank');
-    }
-  }
-
-  /**
-   * Descarga el consentimiento existente
-   */
-  downloadExistingConsentimiento(): void {
-    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
-    if (!patientId) return;
-
-    this.consentimiento.downloadConsentFile(parseInt(patientId, 10))
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (blob) => {
-          if (blob && blob.size > 0) {
-            const patientInfo = this.registroForm.get('patient')?.value;
-            const patientName = patientInfo?.name || 'paciente';
-            const fileName = `consentimiento_${patientName.replace(/\s+/g, '_')}.pdf`;
-
-            // Usar file-saver para descargar
-            saveAs(blob, fileName);
-          } else {
-            Swal.fire('Error', 'No se pudo descargar el consentimiento', 'error');
-          }
-        },
-        error: (error) => {
-          Swal.fire('Error', 'No se pudo descargar el consentimiento', 'error');
-        }
-      });
-  }
-
-  /**
-   * Maneja cuando el usuario sube un nuevo archivo (reemplaza el existente)
-   */
-  onNewFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      // Si hay un consentimiento existente, limpiar la URL
-      if (this.existingConsentimientoUrl) {
-        URL.revokeObjectURL(this.existingConsentimientoUrl);
-        this.existingConsentimientoUrl = null;
-      }
-      this.processFile(file);
-    }
-  }
 
   /**
    * Sobrescribe el método removeFile para manejar también consentimientos existentes
@@ -2179,156 +2272,4 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
     return tipoObj ? tipoObj.label : tipo;
   }
 
-
-  /**
- * Actualiza el manejo de CASE1 para incluir verificación del cuidador
- */
-  private handleCase1(res: ValidatePatientResponse): void {
-    this.validationMessage = 'El paciente ya existe en esta capa (duplicado) puede continuar pero se actualizará el registro';
-    this.validationStatus = 'warning';
-    this.validationFlag = 'CASE1';
-
-    this.registroForm.patchValue({
-      patient: res.patientBasicInfo,
-      caregiver: res.caregiver
-    });
-
-    // Verificar y activar el cuidador si existe
-    this.checkAndActivateCaregiver(res.caregiver);
-
-    this.cargarVariablesExistentes(res);
-
-    // Verificar consentimiento existente
-    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
-    if (patientId) {
-      this.checkExistingConsentimiento(parseInt(patientId, 10));
-    }
-  }
-
-  /**
-   * Actualiza el manejo de CASE2 para incluir verificación del cuidador
-   */
-  private handleCase2(res: ValidatePatientResponse): void {
-    this.validationMessage = 'El paciente ya tiene un registro en otra capa';
-    this.validationStatus = 'warning';
-    this.validationFlag = 'CASE2';
-
-    this.registroForm.patchValue({
-      patient: res.patientBasicInfo,
-      caregiver: res.caregiver
-    });
-
-    // Verificar y activar el cuidador si existe
-    this.checkAndActivateCaregiver(res.caregiver);
-
-    this.calcularEdadDesdeFechaNacimiento();
-
-    // Verificar consentimiento existente
-    const patientId = this.registroForm.get('patientIdentificationNumber')?.value;
-    if (patientId) {
-      this.checkExistingConsentimiento(parseInt(patientId, 10));
-    }
-  }
-
-  /**
-   * Verifica si hay datos de cuidador y activa el switch automáticamente
-   */
-  private checkAndActivateCaregiver(caregiverData: any): void {
-    if (caregiverData && this.hasCaregiverData(caregiverData)) {
-      this.hasCaregiver = true;
-      console.log('✅ Cuidador detectado y activado automáticamente');
-    } else {
-      this.hasCaregiver = false;
-      console.log('ℹ️ No se detectó información de cuidador');
-    }
-  }
-
-  /**
-   * Verifica si los datos del cuidador son válidos y contienen información
-   */
-  hasCaregiverData(caregiverData: any): boolean {
-    if (!caregiverData) return false;
-
-    // Verificar si hay al menos un campo con datos significativos
-    return (
-      (caregiverData.name && caregiverData.name.trim() !== '') ||
-      (caregiverData.identificationNumber && caregiverData.identificationNumber.toString().trim() !== '') ||
-      (caregiverData.age && caregiverData.age.toString().trim() !== '') ||
-      (caregiverData.educationLevel && caregiverData.educationLevel.trim() !== '') ||
-      (caregiverData.occupation && caregiverData.occupation.trim() !== '')
-    );
-  }
-
-  /**
-   * Sobrescribe el método toggleCaregiver para mejor manejo
-   */
-  toggleCaregiver(): void {
-    this.hasCaregiver = !this.hasCaregiver;
-
-    if (!this.hasCaregiver) {
-      // Solo limpiar si el usuario desactiva explícitamente
-      this.clearCaregiverData();
-    } else {
-      console.log('✅ Switch de cuidador activado');
-    }
-  }
-
-  /**
-   * Limpia los datos del cuidador
-   */
-  private clearCaregiverData(): void {
-    const caregiverGroup = this.registroForm.get('caregiver') as FormGroup;
-    caregiverGroup.patchValue({
-      name: '',
-      identificationType: 'CC',
-      identificationNumber: '',
-      age: '',
-      educationLevel: '',
-      occupation: ''
-    });
-
-    caregiverGroup.markAsPristine();
-    caregiverGroup.markAsUntouched();
-
-    console.log('✅ Datos del cuidador limpiados');
-  }
-
-  /**
-   * Maneja el reset del formulario para incluir el estado del cuidador
-   */
-  private resetForm(): void {
-    console.log('🔄 Iniciando reset del formulario...');
-
-    // Guardar el tipo de identificación por defecto
-    const defaultIdType = 'CC';
-
-    // Resetear el formulario preservando el tipo de identificación por defecto
-    this.registroForm.reset({
-      patientIdentificationType: defaultIdType,
-      patientIdentificationNumber: ''
-    });
-
-    // Reinicializar variables
-    this.initializeVariables();
-
-    // Resetear otros estados
-    this.hasCaregiver = false; // ← Asegurar que se resetee
-    this.consentimientoFile = null;
-    this.consentimientoSubido = false;
-    this.existingConsentimientoUrl = null;
-    this.currentSection = 0;
-
-    // Resetear estados de validación
-    this.validationMessage = null;
-    this.validationStatus = null;
-    this.validationFlag = null;
-    this.lastValidationResponse = null;
-
-    // Emitir evento
-    this.registroGuardado.emit();
-
-    console.log('✅ Formulario reseteado completamente');
-  }
-
-  
 }

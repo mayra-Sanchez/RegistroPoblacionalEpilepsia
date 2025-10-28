@@ -23,10 +23,9 @@
 
     <!-- Si el usuario está autenticado, mostrar el usuario y ajustes -->
     <div class="user-info" *ngIf="isLoggedIn">
-      <button class="username-button" title="Editar perfil">
+      <button class="username-button" (click)="openModal('userInfo')" title="Ver mi información">
         <i class="fa fa-user"></i> {{ fullName }}
       </button>
-
 
       <button class="settings-button" (click)="toggleSettingsMenu()">
         <i class="fa fa-cog"></i>
@@ -45,15 +44,164 @@
   </div>
 </div>
 
-
-<!-- Modal -->
+<!-- Modal Principal -->
 <div class="modal" *ngIf="isModalVisible">
   <div class="modal-container">
     <ng-container *ngIf="modalType === 'login'">
       <app-login (loginSuccess)="handleLoginSuccess()"></app-login>
     </ng-container>
+    
     <ng-container *ngIf="modalType === 'manual'">
       <app-manual (closeManual)="closeModal()"></app-manual>
+    </ng-container>
+    
+    <!-- Modal de Información de Usuario -->
+    <ng-container *ngIf="modalType === 'userInfo'">
+      <div class="user-info-modal">
+        <div class="modal-header">
+          <h2>Mi Información</h2>
+          <button class="close-button" (click)="closeModal()">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="user-info-content" *ngIf="currentUserData">
+          <!-- Tarjeta de Información Personal -->
+          <div class="info-card">
+            <h3 class="card-title">
+              <i class="fa fa-id-card"></i>
+              Información Personal
+            </h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Nombre completo:</label>
+                <span class="info-value">{{ currentUserData.firstName }} {{ currentUserData.lastName }}</span>
+              </div>
+              
+              <div class="info-item">
+                <label>Usuario:</label>
+                <span class="info-value">{{ currentUserData.username }}</span>
+              </div>
+              
+              <div class="info-item">
+                <label>Email:</label>
+                <span class="info-value">{{ currentUserData.email }}</span>
+              </div>
+              
+              <div class="info-item">
+                <label>Tipo de identificación:</label>
+                <span class="info-value">{{ getIdentificationType(currentUserData.attributes?.identificationType) }}</span>
+              </div>
+              
+              <div class="info-item">
+                <label>Número de identificación:</label>
+                <span class="info-value">{{ currentUserData.attributes?.identificationNumber }}</span>
+              </div>
+              
+              <div class="info-item">
+                <label>Fecha de nacimiento:</label>
+                <span class="info-value">{{ formatBirthDate(currentUserData.attributes?.birthDate) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta de Información de Cuenta -->
+          <div class="info-card">
+            <h3 class="card-title">
+              <i class="fa fa-user-cog"></i>
+              Información de la Cuenta
+            </h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Rol:</label>
+                <span class="info-value role-badge">{{ getRoleName(currentUserData.attributes?.role) }}</span>
+              </div>
+              
+              <div class="info-item">
+                <label>Estado:</label>
+                <span class="info-value status-badge" 
+                      [class.active]="currentUserData.enabled"
+                      [class.inactive]="!currentUserData.enabled">
+                  {{ currentUserData.enabled ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+              
+              <div class="info-item">
+                <label>Email verificado:</label>
+                <span class="info-value status-badge" 
+                      [class.verified]="currentUserData.emailVerified"
+                      [class.unverified]="!currentUserData.emailVerified">
+                  {{ currentUserData.emailVerified ? 'Verificado' : 'No verificado' }}
+                </span>
+              </div>
+              
+              <div class="info-item">
+                <label>Cuenta creada:</label>
+                <span class="info-value">{{ formatCreatedDate(currentUserData.createdTimestamp) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta de Capas de Investigación (solo para investigadores) -->
+          <div class="info-card" *ngIf="hasUserLayers()">
+            <h3 class="card-title">
+              <i class="fa fa-layer-group"></i>
+              Capas de Investigación
+              <span class="badge-count">{{ getUserLayersCount() }}</span>
+            </h3>
+            
+            <div class="research-layers" *ngIf="!isLoadingLayers">
+              <div class="layer-item" *ngFor="let layer of userLayers; let i = index">
+                <span class="layer-number">{{ i + 1 }}</span>
+                <div class="layer-info">
+                  <span class="layer-name">{{ layer.name }}</span>
+                  <span class="layer-description" *ngIf="layer.description">{{ layer.description }}</span>
+                  <span class="layer-id">ID: {{ layer.id }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loading state para capas -->
+            <div class="loading-layers" *ngIf="isLoadingLayers">
+              <i class="fa fa-spinner fa-spin"></i>
+              <span>Cargando información de capas...</span>
+            </div>
+
+            <p class="info-note">
+              <i class="fa fa-info-circle"></i>
+              Tienes acceso a {{ getUserLayersCount() }} capa(s) de investigación
+            </p>
+          </div>
+
+          <!-- Mensaje cuando no hay capas -->
+          <div class="info-card" *ngIf="!hasUserLayers() && currentUserData.attributes?.role === 'Researcher' && !isLoadingLayers">
+            <h3 class="card-title">
+              <i class="fa fa-layer-group"></i>
+              Capas de Investigación
+            </h3>
+            <p class="no-data-message">
+              No tienes capas de investigación asignadas
+            </p>
+          </div>
+        </div>
+
+        <!-- Loading state general -->
+        <div class="loading-state" *ngIf="!currentUserData">
+          <i class="fa fa-spinner fa-spin"></i>
+          <p>Cargando información...</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeModal()">
+            <i class="fa fa-times"></i>
+            Cerrar
+          </button>
+          <button class="btn-primary" (click)="loadUserData()">
+            <i class="fa fa-refresh"></i>
+            Actualizar
+          </button>
+        </div>
+      </div>
     </ng-container>
   </div>
 </div>

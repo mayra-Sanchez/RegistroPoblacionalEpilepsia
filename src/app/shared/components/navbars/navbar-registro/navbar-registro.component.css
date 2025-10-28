@@ -41,7 +41,7 @@
  * - Diseño de tarjeta sutil con bordes redondeados
  * - Transiciones suaves para interacciones
  */
-.navbar-links li a {
+.navbar-links li a.text {
   text-decoration: none;
   color: #333;
   background-color: #fff;
@@ -54,6 +54,7 @@
   transition: all 0.3s ease;
   border: 1px solid #ddd;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 /**
@@ -61,7 +62,7 @@
  * - Cambio de color de fondo y texto
  * - Transformación sutil para feedback visual
  */
-.navbar-links li a:hover {
+.navbar-links li a.text:hover {
   background-color: #0056B3;
   color: #fff;
   transform: translateY(-2px);
@@ -69,22 +70,112 @@
 }
 
 /**
- * Estado seleccionado (activo)
+ * Estado seleccionado (activo) - Mejorado para navegación por teclado
  * - Estilo diferenciado para la página actual
  * - Borde inferior como indicador
  */
-.navbar-links li.selected a {
-  background-color: #f0f4f8;
-  color: #0056b3;
+.navbar-links li.selected a.text {
+  background-color: #0056b3;
+  color: #fff;
   font-weight: 600;
-  border-bottom: 3px solid #0056b3;
+  border-bottom: 3px solid #ffd700;
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+  transform: translateY(-2px);
+}
+
+/**
+ * Efecto sutil para navegación por teclado
+ * - Outline visible para accesibilidad
+ */
+.navbar-links li:focus-within a.text {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
+/**
+ * Indicadores de atajos de teclado (discretos)
+ * - Solo visibles al hacer hover
+ * - Pequeños badges con números/letras
+ */
+.navbar-links li a.text::after {
+  content: attr(data-shortcut);
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ffd700;
+  color: #2d3748;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-links li:hover a.text::after {
+  opacity: 1;
+}
+
+/* Asignar atajos numéricos específicos */
+.navbar-links li[data-tab-index="0"] a.text::after {
+  content: "1";
+}
+.navbar-links li[data-tab-index="1"] a.text {
+  position: relative;
+}
+.navbar-links li[data-tab-index="1"] a.text::before {
+  content: "Ctrl+R";
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #28a745;
+  color: white;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.navbar-links li[data-tab-index="1"]:hover a.text::before {
+  opacity: 1;
+}
+.navbar-links li[data-tab-index="1"] a.text::after {
+  content: "2";
+}
+.navbar-links li[data-tab-index="2"] a.text {
+  position: relative;
+}
+.navbar-links li[data-tab-index="2"] a.text::before {
+  content: "Ctrl+L";
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #28a745;
+  color: white;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.navbar-links li[data-tab-index="2"]:hover a.text::before {
+  opacity: 1;
+}
+.navbar-links li[data-tab-index="2"] a.text::after {
+  content: "3";
+}
+.navbar-links li[data-tab-index="3"] a.text::after {
+  content: "4";
 }
 
 /**
  * Efecto al hacer clic
  * - Efecto de "presionado" sutil
  */
-.navbar-links li a:active {
+.navbar-links li a.text:active {
   transform: translateY(0);
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
 }
@@ -103,10 +194,16 @@
     gap: 15px;
   }
 
-  .navbar-links li a {
+  .navbar-links li a.text {
     font-size: 14px;
     padding: 8px 14px;
     border-radius: 6px;
+  }
+
+  /* Ocultar indicadores de atajos en tablets */
+  .navbar-links li a.text::after,
+  .navbar-links li a.text::before {
+    display: none;
   }
 }
 
@@ -127,14 +224,62 @@
     padding: 0 10px;
   }
 
-  .navbar-links li a {
+  .navbar-links li a.text {
     font-size: 13px;
     padding: 6px 12px;
     white-space: nowrap;
+  }
+
+  /* Ajustar texto largo para móviles */
+  .navbar-links li:nth-child(2) a.text,
+  .navbar-links li:nth-child(3) a.text {
+    font-size: 12px;
+    padding: 6px 10px;
   }
   
   /* Oculta la barra de scroll en navegadores WebKit */
   .navbar::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Ocultar completamente los indicadores en móviles */
+  .navbar-links li a.text::after,
+  .navbar-links li a.text::before {
+    display: none;
+  }
+}
+
+/**
+ * Mejoras para pantallas muy pequeñas
+ */
+@media (max-width: 360px) {
+  .navbar-links {
+    gap: 6px;
+  }
+
+  .navbar-links li a.text {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .navbar-links li:nth-child(2) a.text,
+  .navbar-links li:nth-child(3) a.text {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+}
+
+/**
+ * Estilos para modo alta productividad (sin animaciones)
+ * Útil para usuarios que prefieren máxima velocidad
+ */
+@media (prefers-reduced-motion: reduce) {
+  .navbar-links li a.text {
+    transition: none;
+  }
+  
+  .navbar-links li a.text:hover,
+  .navbar-links li.selected a.text {
+    transform: none;
   }
 }

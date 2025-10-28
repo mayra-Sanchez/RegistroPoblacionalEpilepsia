@@ -27,7 +27,7 @@
 }
 
 /* ============ LINK STYLES ============ */
-.navbar-links li a {
+.navbar-links li a.text {
   text-decoration: none;
   color: #333;
   background-color: #fff;
@@ -43,7 +43,7 @@
 }
 
 /* Hover effect */
-.navbar-links li a:hover {
+.navbar-links li a.text:hover {
   background-color: #0056B3;
   color: #fff;
   transform: translateY(-2px);
@@ -51,8 +51,8 @@
   border-color: transparent;
 }
 
-/* Active/selected state */
-.navbar-links li.selected a {
+/* Active state */
+.navbar-links li a.text.active {
   background-color: #e6f0ff;
   color: #0056b3;
   font-weight: 600;
@@ -60,10 +60,134 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Selected state (para navegación por teclado) */
+.navbar-links li.selected a.text {
+  background-color: #0056b3;
+  color: #fff;
+  font-weight: 600;
+  border-bottom: 3px solid #ffd700;
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Estado para navegación por mouse */
+.navbar-links li.active a.text {
+  background-color: #e6f0ff;
+  color: #0056b3;
+  font-weight: 600;
+  border-bottom: 3px solid #0056b3;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto de pulso para teclado */
+.navbar.keyboard-navigation .navbar-links li.selected a.text {
+  animation: keyboardPulse 0.6s ease;
+}
+
+@keyframes keyboardPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 86, 179, 0.7);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(0, 86, 179, 0.3);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 86, 179, 0);
+  }
+}
+
 /* Click effect */
-.navbar-links li a:active {
+.navbar-links li a.text:active {
   transform: translateY(0);
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus para accesibilidad */
+.navbar-links li a.text:focus {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+  background-color: #e6f0ff;
+}
+
+/* ============ DASHBOARD LINK SPECIAL STYLES ============ */
+.navbar-links li.dashboard-link a.text {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: 1px solid #1e7e34;
+  font-weight: 600;
+  margin-left: 10px;
+}
+
+.navbar-links li.dashboard-link a.text:hover {
+  background: linear-gradient(135deg, #218838, #1ea085);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.navbar-links li.dashboard-link.selected a.text {
+  background: linear-gradient(135deg, #1e7e34, #1a7566);
+  border-bottom: 3px solid #ffd700;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+/* ============ KEYBOARD HINT STYLES ============ */
+.keyboard-hint {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #2c3e50;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  animation: slideInUp 0.3s ease;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.hint-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint-text::before {
+  content: '⌨️';
+  font-size: 14px;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Efecto de desvanecimiento al ocultar */
+.keyboard-hint.ng-leave {
+  animation: slideOutDown 0.3s ease;
+}
+
+@keyframes slideOutDown {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
 }
 
 /* ============ RESPONSIVE ADJUSTMENTS ============ */
@@ -73,16 +197,35 @@
   .navbar {
     height: 70px;
     padding: 0 15px;
-  }
-  
-  .navbar-links {
-    gap: 15px;
+    justify-content: flex-start;
+    overflow-x: auto;
   }
 
-  .navbar-links li a {
+  /* Hide scrollbar */
+  .navbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navbar {
+    scrollbar-width: none;
+  }
+
+  .navbar-links {
+    gap: 15px;
+    padding: 0 10px;
+  }
+
+  .navbar-links li a.text {
     font-size: 14px;
     padding: 8px 14px;
     border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .keyboard-hint {
+    bottom: -35px;
+    font-size: 11px;
+    padding: 6px 12px;
   }
 }
 
@@ -91,24 +234,98 @@
   .navbar {
     height: 60px;
     padding: 0 10px;
-    justify-content: flex-start;
-    overflow-x: auto;
-    scrollbar-width: none; /* Hide scrollbar for Firefox */
-  }
-  
-  /* Hide scrollbar for Chrome/Safari */
-  .navbar::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .navbar-links {
-    gap: 10px;
-    padding: 0 10px;
   }
 
-  .navbar-links li a {
+  .navbar-links {
+    gap: 10px;
+    padding: 0 5px;
+  }
+
+  .navbar-links li a.text {
     font-size: 13px;
     padding: 6px 12px;
+    border-radius: 5px;
+  }
+
+  /* Ocultar texto largo en móviles */
+  .navbar-links li a.text {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .keyboard-hint {
+    bottom: -30px;
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .dashboard-link a.text {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
+
+/* Pantallas muy pequeñas (360px and below) */
+@media (max-width: 360px) {
+  .navbar-links {
+    gap: 8px;
+  }
+
+  .navbar-links li a.text {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .navbar-links li.dashboard-link a.text {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* ============ ESTADOS ESPECIALES ============ */
+
+/* Cuando se usa navegación por teclado */
+.navbar.keyboard-navigation .navbar-links li a.text:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.navbar.keyboard-navigation .navbar-links li.selected a.text {
+  transform: translateY(-2px);
+}
+
+/* Modo alto contraste para accesibilidad */
+@media (prefers-contrast: high) {
+  .navbar-links li a.text {
+    border: 2px solid #000;
+  }
+
+  .navbar-links li.selected a.text {
+    border: 3px solid #000;
+    background-color: #000;
+    color: #fff;
+  }
+
+  .keyboard-hint {
+    border: 2px solid #000;
+  }
+}
+
+/* Modo reducido de movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .navbar-links li a.text {
+    transition: none;
+  }
+
+  .keyboard-hint,
+  .navbar-links li.keyboard-navigated a.text {
+    animation: none;
+  }
+
+  .navbar-links li a.text:hover,
+  .navbar-links li.selected a.text {
+    transform: none;
   }
 }

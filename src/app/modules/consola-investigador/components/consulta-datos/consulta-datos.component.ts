@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -8,7 +8,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
  * Este componente permite mostrar dashboards de Apache Superset dentro de una aplicación Angular,
  * con funcionalidades como:
  * - Ajuste automático de tamaño
- * - Pantalla completa
  * - Recarga controlada
  * - Manejo de errores
  */
@@ -18,67 +17,55 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrls: ['./consulta-datos.component.css']
 })
 export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy {
-  // Referencias a elementos del DOM
+ // Referencias a elementos del DOM
   @ViewChild('dashboardIframe') iframe!: ElementRef<HTMLIFrameElement>;
   @ViewChild('dashboardContainer') container!: ElementRef<HTMLDivElement>;
 
-  // Configuración optimizada de URL para el dashboard de Superset
-  private readonly baseUrl = 'http://localhost/superset/dashboard/1/';
+  // Configuración específica para el dashboard de pacientes (ID: 2)
+  private readonly baseUrl = 'http://localhost:8088/superset/dashboard/2/';
   private readonly urlParams = {
-    native_filters_key: 'FQJrh8mZkCMHkCpQypf0Elfot1_usqt0KOXnIOkTBawwr_Xm3bjq-KDjcsCaC60P',
+    edit: 'true',
+    native_filters_key: 'RGEGuUB_vw40u5Ph9mlXGRRC1tUYo1K0Y28nI5E_AljbC8VlxJnYs7rhs75AS4FC',
     standalone: 'true',        // Modo standalone para ocultar controles de Superset
-    show_filters: '0',        // Ocultar filtros
-    show_title: '0',          // Ocultar título
-    show_edit_button: '0',    // Ocultar botón de edición
-    width: '100%',            // Ancho completo
-    height: '100%'            // Alto completo
+    show_filters: '1',         // Mostrar filtros (puedes cambiar a '0' para ocultar)
+    show_title: '0',           // Ocultar título
+    show_edit_button: '0',     // Ocultar botón de edición
+    width: '100%',             // Ancho completo
+    height: '100%'             // Alto completo
   };
 
   // Propiedades del estado del componente
-  dashboardUrl: SafeResourceUrl;  // URL segura para el iframe
-  isIframeLoaded = false;        // Indica si el iframe ha cargado
-  isLoading = true;              // Estado de carga
-  hasError = false;              // Indica si hay error
-  errorMessage = '';             // Mensaje de error
-  lastLoadTime: Date | null = null; // Último tiempo de carga
-  isFullscreen = false;          // Estado de pantalla completa
+  dashboardUrl: SafeResourceUrl;
+  isIframeLoaded = false;
+  isLoading = true;
+  hasError = false;
+  errorMessage = '';
+  lastLoadTime: Date | null = null;
 
-  private resizeObserver!: ResizeObserver; // Observador de cambios de tamaño
+  private resizeObserver!: ResizeObserver;
 
   constructor(
-    private sanitizer: DomSanitizer, // Para sanitizar URLs
-    private snackBar: MatSnackBar   // Para mostrar notificaciones
+    private sanitizer: DomSanitizer,
+    private snackBar: MatSnackBar
   ) {
-    // Genera la URL segura inicial
     this.dashboardUrl = this.generateSafeUrl();
   }
 
-  /**
-   * Método del ciclo de vida: Inicialización del componente
-   */
   ngOnInit(): void {
     this.initDashboard();
   }
 
-  /**
-   * Método del ciclo de vida: Después de inicializar la vista
-   */
   ngAfterViewInit(): void {
     this.setupResizeObserver();
     this.adjustIframeSize();
   }
 
-  /**
-   * Método del ciclo de vida: Destrucción del componente
-   */
   ngOnDestroy(): void {
     this.cleanupResizeObserver();
-    this.exitFullscreen();
   }
 
   /**
-   * Genera una URL segura para el iframe con los parámetros configurados
-   * @returns URL sanitizada
+   * Genera una URL segura para el iframe
    */
   private generateSafeUrl(): SafeResourceUrl {
     const params = new URLSearchParams(this.urlParams);
@@ -133,10 +120,9 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
     this.lastLoadTime = new Date();
     this.hasError = false;
 
-    // Ajustes post-carga con pequeño retraso para asegurar renderizado
+    // Ajustes post-carga
     setTimeout(() => {
       this.adjustIframeSize();
-      this.forceSupersetResize(); // Solución específica para Superset
     }, 500);
   }
 
@@ -146,7 +132,7 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
   onIframeError(): void {
     this.isLoading = false;
     this.hasError = true;
-    this.errorMessage = 'Error al cargar el dashboard. Verifique su conexión.';
+    this.errorMessage = 'Error al cargar el dashboard de pacientes. Verifique que Superset esté ejecutándose en el puerto 8088.';
     this.isIframeLoaded = false;
   }
 
@@ -155,78 +141,14 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
    */
   private adjustIframeSize(): void {
     requestAnimationFrame(() => {
-      const controlsHeight = 60;
-      const height = this.isFullscreen
-        ? window.innerHeight - controlsHeight
-        : this.container.nativeElement.clientHeight - controlsHeight;
-      this.iframe.nativeElement.style.height = `${height}px`;
-    });
-  }
-
-  /**
-   * Fuerza un reajuste interno del dashboard Superset
-   * Soluciona problemas conocidos de dimensionamiento en Superset embebido
-   */
-  private forceSupersetResize(): void {
-    try {
-      const iframeWindow = this.iframe.nativeElement.contentWindow;
-      if (iframeWindow) {
-        iframeWindow.postMessage({
-          type: 'resize',
-          height: this.iframe.nativeElement.clientHeight
-        }, '*');
-      } else {
-        console.warn('No se pudo ajustar el tamaño interno del dashboard');
+      if (this.iframe && this.iframe.nativeElement && this.container) {
+        const container = this.container.nativeElement;
+        const controlsHeight = 80; // Un poco más alto para el header
+        const height = container.clientHeight - controlsHeight;
+        
+        this.iframe.nativeElement.style.height = `${Math.max(height, 400)}px`;
       }
-    } catch (e) {
-      console.warn('No se pudo ajustar el tamaño interno del dashboard');
-    }
-  }
-
-  /**
-   * Alterna entre modo pantalla completa y normal
-   */
-  toggleFullscreen(): void {
-    this.isFullscreen = !this.isFullscreen;
-
-    if (this.isFullscreen) {
-      this.enterFullscreen();
-    } else {
-      this.exitFullscreen();
-    }
-  }
-
-  /**
-   * Activa el modo pantalla completa
-   */
-  private enterFullscreen(): void {
-    const elem = this.container.nativeElement;
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen().catch(err => {
-        console.error('Error en pantalla completa:', err);
-        this.isFullscreen = false;
-      });
-    }
-  }
-
-  /**
-   * Sale del modo pantalla completa
-   */
-  private exitFullscreen(): void {
-    if (document.exitFullscreen) {
-      document.exitFullscreen().catch(err => {
-        console.error('Error al salir de pantalla completa:', err);
-      });
-    }
-  }
-
-  /**
-   * Listener para cambios en el estado de pantalla completa
-   */
-  @HostListener('document:fullscreenchange')
-  private handleFullscreenChange(): void {
-    this.isFullscreen = !!document.fullscreenElement;
-    this.adjustIframeSize();
+    });
   }
 
   /**
@@ -234,7 +156,10 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
    */
   refreshDashboard(): void {
     this.initDashboard();
-    this.snackBar.open('Dashboard actualizado', 'Cerrar', { duration: 2000 });
+    this.snackBar.open('Dashboard de pacientes actualizado', 'Cerrar', { 
+      duration: 2000,
+      panelClass: ['snackbar-success']
+    });
   }
 
   /**

@@ -521,85 +521,89 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
    * @param page Número de página (por defecto 0)
    * @param size Tamaño de página (por defecto 10)
    */
-  loadHistorialRegistros(page: number = 0, size: number = 10): void {
-    if (!this.capaSeleccionadaHistorial) {
-      this.historialRegistrosData = [];
-      this.totalHistorialRegistros = 0;
-      this.loadingHistorialRegistros = false;
-      return;
-    }
+loadHistorialRegistros(page: number = 0, size: number = 10): void {
+  if (!this.capaSeleccionadaHistorial) {
+    this.historialRegistrosData = [];
+    this.totalHistorialRegistros = 0;
+    this.loadingHistorialRegistros = false;
+    return;
+  }
 
-    const userEmail = this.authService.getUserEmail();
+  const userEmail = this.authService.getUserEmail();
 
-    if (!userEmail) {
-      this.mostrarMensajeError('No se pudo identificar el email del usuario actual');
-      this.loadingHistorialRegistros = false;
-      return;
-    }
+  if (!userEmail) {
+    this.mostrarMensajeError('No se pudo identificar el email del usuario actual');
+    this.loadingHistorialRegistros = false;
+    return;
+  }
 
-    this.loadingHistorialRegistros = true;
+  this.loadingHistorialRegistros = true;
 
-    this.consolaService.getRegisterHistory(
-      this.capaSeleccionadaHistorial,
-      userEmail,
-      page,
-      size,
-      'RegisterDate',
-      'DESC'
-    ).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (response: any) => {
-        console.log('📊 Respuesta completa del servicio:', response);
+  // ✅ Usar los parámetros de paginación correctamente
+  this.consolaService.getRegisterHistory(
+    this.capaSeleccionadaHistorial,
+    userEmail,
+    page,  // ✅ Página actual (0-based)
+    size,  // ✅ Tamaño de página
+    'changedAt',
+    'DESC'
+  ).pipe(takeUntil(this.destroy$)).subscribe({
+    next: (response: any) => {
+      console.log('📊 Respuesta del historial:', {
+        paginaSolicitada: page,
+        tamañoSolicitado: size,
+        datosRecibidos: response.data?.length,
+        totalElementos: response.totalElements
+      });
 
-        if (response && response.data) {
-          this.historialRegistrosData = response.data;
-          this.totalHistorialRegistros = response.totalElements || 0;
+      if (response && response.data) {
+        this.historialRegistrosData = response.data;
+        this.totalHistorialRegistros = response.totalElements || 0;
 
-          response.data.forEach((item: any, index: number) => {
-            console.log(`📝 Registro ${index + 1}:`, {
-              operation: item.operation,
-              registerId: item.registerId,
-              patientId: item.patientIdentificationNumber,
-              timestamp: item.changedAt
-            });
-          });
-
-          if (this.historialRegistrosData.length === 0) {
-            this.mostrarMensajeInfo('No se encontraron registros en el historial para esta capa');
-          }
-        } else {
-          console.warn('⚠️ Respuesta sin datos:', response);
-          this.historialRegistrosData = [];
-          this.totalHistorialRegistros = 0;
-          this.mostrarMensajeInfo('No hay datos de historial disponibles');
+        if (this.historialRegistrosData.length === 0) {
+          this.mostrarMensajeInfo('No se encontraron registros en el historial para esta capa');
         }
-
-        this.loadingHistorialRegistros = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('❌ Error al obtener historial de registros:', err);
-
-        console.error('🔍 Detalles del error:', {
-          status: err.status,
-          statusText: err.statusText,
-          url: err.url,
-          message: err.message,
-          error: err.error
-        });
-
-        let mensajeError = 'No se pudo cargar el historial de registros';
-        if (err.message) {
-          mensajeError = err.message;
-        }
-
-        this.mostrarMensajeError(mensajeError);
-        this.loadingHistorialRegistros = false;
+      } else {
+        console.warn('⚠️ Respuesta sin datos:', response);
         this.historialRegistrosData = [];
         this.totalHistorialRegistros = 0;
-        this.cdr.detectChanges();
       }
-    });
+
+      this.loadingHistorialRegistros = false;
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('❌ Error al obtener historial de registros:', err);
+      this.mostrarMensajeError('No se pudo cargar el historial de registros');
+      this.loadingHistorialRegistros = false;
+      this.historialRegistrosData = [];
+      this.totalHistorialRegistros = 0;
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+// ✅ Método mejorado para manejar cambios de página
+onPageChangeHistorial(event: any): void {
+  console.log('🔄 Cambio de página en historial:', event);
+  
+  // Convertir a página 0-based para el servidor
+  const page = event.page - 1; // ✅ El componente DataTable usa 1-based, el servidor usa 0-based
+  const size = event.size;
+  
+  this.loadHistorialRegistros(page, size);
+}
+
+// ✅ Método para manejar cambio de capa
+onCapaSeleccionadaChange(): void {
+  if (this.capaSeleccionadaHistorial) {
+    // ✅ Resetear a primera página cuando cambia la capa
+    this.loadHistorialRegistros(0, 10);
+  } else {
+    this.historialRegistrosData = [];
+    this.totalHistorialRegistros = 0;
   }
+}
 
   /**
    * Carga la información completa del registro para el historial
@@ -901,26 +905,6 @@ export class ConsolaAdministradorComponent implements OnInit, OnDestroy {
       this.historialRegistrosData = [];
       this.totalHistorialRegistros = 0;
     }
-  }
-
-  /**
-   * Maneja la selección de capa para el historial
-   */
-  onCapaSeleccionadaChange(): void {
-    if (this.capaSeleccionadaHistorial) {
-      this.loadHistorialRegistros(0, 10);
-    } else {
-      this.historialRegistrosData = [];
-      this.totalHistorialRegistros = 0;
-    }
-  }
-
-  /**
-   * Maneja el cambio de página en la tabla de historial
-   * @param event Evento de paginación
-   */
-  onPageChangeHistorial(event: any): void {
-    this.loadHistorialRegistros(event.page, event.size);
   }
 
   // ============================

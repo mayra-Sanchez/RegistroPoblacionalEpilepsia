@@ -121,6 +121,25 @@ form.uniform-form {
   padding-right: 0.5rem;
 }
 
+/* Scrollbar personalizado para checkbox-list */
+.checkbox-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.checkbox-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.checkbox-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.checkbox-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
 .checkbox-option {
   display: flex;
   align-items: center;
@@ -211,6 +230,156 @@ button.btn {
   background: #dcdfe2;
 }
 
+/* ========== USERNAME SELECTION STYLES ========== */
+.username-selection {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.selection-instruction {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.suggestions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.suggestion-chip {
+  background: white;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #495057;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.suggestion-chip:hover {
+  border-color: #007bff;
+  background: #f8f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+}
+
+.suggestion-chip.selected {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.username-text {
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.check-icon {
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.no-suggestions {
+  background: #f8f9fa;
+  border: 1px dashed #dee2e6;
+  border-radius: 6px;
+  padding: 1rem;
+  text-align: center;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.no-suggestions i {
+  color: #6c757d;
+}
+
+/* ========== UTILITY STYLES ========== */
+/* Indicador de campo requerido */
+.required-asterisk {
+  color: #dc3545;
+  margin-left: 2px;
+}
+
+/* Mejoras para los campos */
+.field-hint {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.4;
+}
+
+.field-hint i {
+  margin-top: 0.1rem;
+  color: #6c757d;
+}
+
+/* Estados de validación */
+.error-message {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ========== SCROLL AREAS ========== */
+/* Áreas con scroll habilitado */
+.scroll-area {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Scrollbar personalizado para todas las áreas con scroll */
+.scroll-area::-webkit-scrollbar,
+.checkbox-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-area::-webkit-scrollbar-track,
+.checkbox-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb,
+.checkbox-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb:hover,
+.checkbox-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Para Firefox */
+.scroll-area,
+.checkbox-list {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
   .form-grid {
@@ -224,5 +393,46 @@ button.btn {
 
   button.btn {
     width: 100%;
+  }
+  
+  .suggestions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .suggestion-chip {
+    padding: 1rem;
+  }
+  
+  .username-selection {
+    padding: 1rem;
+  }
+  
+  /* Ajustes de scroll en móviles */
+  .checkbox-list {
+    max-height: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .suggestion-chip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .check-icon {
+    align-self: flex-end;
+  }
+  
+  form.uniform-form {
+    padding: 1.5rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .form-header {
+    padding: 1.5rem 1.5rem;
   }
 }
