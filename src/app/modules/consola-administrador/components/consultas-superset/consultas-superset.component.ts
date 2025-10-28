@@ -8,18 +8,19 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrls: ['./consultas-superset.component.css']
 })
 export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDestroy {
-  // Referencia al iframe que contiene el dashboard
+   // Referencia al iframe que contiene el dashboard
   @ViewChild('dashboardIframe') iframe!: ElementRef<HTMLIFrameElement>;
 
   // Referencia al contenedor padre del iframe
   @ViewChild('dashboardContainer') container!: ElementRef<HTMLDivElement>;
 
-  // Configuración de URL base y parámetros para Superset
-  private readonly baseUrl = 'http://localhost/superset/dashboard/1/';
+  // Configuración específica para el dashboard de estadísticas (ID: 3)
+  private readonly baseUrl = 'http://localhost:8088/superset/dashboard/3/';
   private readonly urlParams = {
-    native_filters_key: 'FQJrh8mZkCMHkCpQypf0Elfot1_usqt0KOXnIOkTBawwr_Xm3bjq-KDjcsCaC60P',
+    edit: 'true',
+    native_filters_key: 'kcii-nGNa_-b4y7mwJaaPHG1wiB5Y6O7i1NjFh8sC_4XkPv-QBRUx721r5TUyjqQ',
     standalone: 'true',       // Modo simplificado sin controles de Superset
-    show_filters: '0',        // Oculta filtros
+    show_filters: '1',        // Mostrar filtros (cambia a '0' para ocultar)
     show_title: '0',          // Oculta título
     show_edit_button: '0',    // Oculta botón de edición
     width: '100%',            // Ancho responsive
@@ -110,12 +111,14 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
    */
   private adjustIframeSize(): void {
     requestAnimationFrame(() => {
-      const container = this.container.nativeElement;
-      const controlsHeight = 60; // Altura fija de controles UI
+      if (this.iframe && this.iframe.nativeElement && this.container) {
+        const container = this.container.nativeElement;
+        const controlsHeight = 80; // Altura fija de controles UI
 
-      this.iframe.nativeElement.style.height = this.isFullscreen
-        ? `${window.innerHeight - controlsHeight}px`
-        : `${container.clientHeight - controlsHeight}px`;
+        this.iframe.nativeElement.style.height = this.isFullscreen
+          ? `${window.innerHeight - controlsHeight}px`
+          : `${container.clientHeight - controlsHeight}px`;
+      }
     });
   }
 
@@ -131,7 +134,7 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
             type: 'resize',
             height: this.iframe.nativeElement.clientHeight
           },
-          { targetOrigin: '*' } // Cambiado de '*' a objeto
+          '*' // Target origin para Superset
         );
       }
     } catch (e) {
@@ -162,6 +165,10 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
     if (elem.requestFullscreen) {
       elem.requestFullscreen().catch(err => {
         console.error('Error en pantalla completa:', err);
+        this.snackBar.open('Error al activar pantalla completa', 'Cerrar', { 
+          duration: 3000,
+          panelClass: ['snackbar-error']
+        });
         this.isFullscreen = false;
       });
     }
@@ -197,7 +204,7 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
   onIframeError(): void {
     this.isLoading = false;
     this.hasError = true;
-    this.errorMessage = 'Error al cargar el dashboard. Verifique su conexión.';
+    this.errorMessage = 'Error al cargar el dashboard de estadísticas. Verifique que Superset esté ejecutándose en el puerto 8088.';
     this.isIframeLoaded = false;
   }
 
@@ -208,6 +215,12 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
   private handleFullscreenChange(): void {
     this.isFullscreen = !!document.fullscreenElement;
     this.adjustIframeSize();
+    
+    // Re-ajustar después del cambio de pantalla completa
+    setTimeout(() => {
+      this.adjustIframeSize();
+      this.forceSupersetResize();
+    }, 300);
   }
 
   // === Métodos públicos ===
@@ -217,7 +230,10 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
    */
   refreshDashboard(): void {
     this.initDashboard();
-    this.snackBar.open('Dashboard actualizado', 'Cerrar', { duration: 2000 });
+    this.snackBar.open('Dashboard de estadísticas actualizado', 'Cerrar', { 
+      duration: 2000,
+      panelClass: ['snackbar-success']
+    });
   }
 
   /**
