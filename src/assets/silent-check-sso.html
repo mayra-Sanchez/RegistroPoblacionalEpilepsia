@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html>
-<head></head>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Silent Check SSO</title>
+</head>
 <body>
-<script>
-  parent.postMessage(location.href, location.origin);
-</script>
+  <script>
+    // Envía la URL actual al contenedor padre para completar el chequeo SSO silencioso de Keycloak
+    parent.postMessage(location.href, location.origin);
+  </script>
 </body>
 </html>

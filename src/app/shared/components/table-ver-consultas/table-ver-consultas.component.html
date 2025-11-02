@@ -18,22 +18,18 @@
     </div>
 
     <div class="search-bar">
-        <input
-          type="text"
-          [(ngModel)]="searchQuery"
-          (input)="filterData()"
-          placeholder="Buscar"
-        />
+        <input type="text" [(ngModel)]="searchQuery" (input)="filterData()" placeholder="Buscar" />
         <i class="fa fa-search"></i>
-      </div>
-      
+    </div>
+
 </div>
 <div class="table-container">
     <table>
+        <caption>Tabla de consultas disponibles con opciones para ver, editar o eliminar registros</caption>
         <thead>
             <tr>
                 <th *ngFor="let col of columns">{{ col.header }}</th>
-                <th> </th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -55,6 +51,7 @@
             </tr>
         </tbody>
     </table>
+
 
 </div>
 

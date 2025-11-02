@@ -1,7 +1,5 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import emailjs, { EmailJSResponseStatus } from 'emailjs-com';
-import { jsPDF } from 'jspdf';
+import { Component } from '@angular/core';
+
 
 
 @Component({

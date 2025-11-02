@@ -240,6 +240,9 @@
 
             <div class="table-container">
                 <table mat-table [dataSource]="filteredVersionGroups" class="versions-table">
+                    <caption>Tabla que muestra las versiones registradas del paciente, incluyendo fecha, autor y
+                        operación realizada.</caption>
+
                     <!-- Columna Índice -->
                     <ng-container matColumnDef="index">
                         <th mat-header-cell *matHeaderCellDef>#</th>

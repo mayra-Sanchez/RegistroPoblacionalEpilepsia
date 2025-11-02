@@ -267,11 +267,6 @@ span, a {
   flex-wrap: wrap;
 }
 
-.form-group {
-  flex: 1 1 100%;
-  margin-bottom: 20px;
-}
-
 .form-group label {
   display: block;
   font-weight: 600;
@@ -382,23 +377,6 @@ textarea:focus {
   height: 50px;
   animation: spin 1s linear infinite;
   margin: 0 auto 1.5rem;
-}
-
-.success-icon i {
-  font-size: 4rem;
-  color: #2ecc71;
-  margin-bottom: 1.5rem;
-}
-
-.success-container h2 {
-  color: #2ecc71;
-  margin-bottom: 1rem;
-}
-
-.success-container p {
-  margin-bottom: 1rem;
-  color: #555;
-  line-height: 1.6;
 }
 
 @keyframes fadeIn {
@@ -550,13 +528,6 @@ form {
   gap: 50px;
 }
 
-.form-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 80px;
-  margin-bottom: 1.5rem;
-}
-
 .form-group {
   flex: 1 1 calc(50% - 1.5rem);
   min-width: 250px;
@@ -608,11 +579,6 @@ input:focus, select:focus, textarea:focus {
   background-color: #fff;
 }
 
-textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
 select {
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -662,7 +628,6 @@ select {
   width: auto;
   margin-right: 0.75rem;
   accent-color: #4a90e2;
-  width: 18px;
   height: 18px;
 }
 
@@ -781,11 +746,6 @@ select {
   font-size: 0.8rem;
 }
 
-.error-message {
-  margin-top: 0.5rem;
-  color: #e74c3c;
-  font-size: 0.8rem;
-}
 
 .error-message small {
   display: flex;
@@ -808,10 +768,6 @@ select {
   color: black;
 }
 
-.info-box i {
-  color: #4a90e2;
-  margin-right: 0.5rem;
-}
 
 .info-box h4 {
   margin-top: 0;
@@ -845,29 +801,11 @@ select {
 }
 
 
-/* Cajas de información */
-.info-box {
-  background: #f0f7ff;
-  border-left: 3px solid #4a90e2;
-  padding: 1rem;
-  border-radius: 0 6px 6px 0;
-  margin: 1.5rem 0;
-  font-size: 0.9rem;
-}
-
 .info-box i {
   color: #4a90e2;
   margin-right: 0.5rem;
 }
 
-.info-box h4 {
-  margin-top: 0;
-  color: #2c3e50;
-}
-
-.info-box p {
-  margin-bottom: 0.5rem;
-}
 
 /* ============================================= */
 /* ============ PIE DEL FORMULARIO ============= */

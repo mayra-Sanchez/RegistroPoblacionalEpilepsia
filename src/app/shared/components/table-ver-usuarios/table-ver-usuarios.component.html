@@ -4,8 +4,8 @@
         <!-- Elementos por página -->
         <div class="control-item">
             <label for="items-per-page-select">Elementos por página</label>
-            <select id="items-per-page-select" class="control-select" 
-                    [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+            <select id="items-per-page-select" class="control-select" [(ngModel)]="itemsPerPage"
+                (change)="onItemsPerPageChange()">
                 <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
             </select>
         </div>
@@ -13,8 +13,8 @@
         <!-- Filtro por operación - MEJORADO -->
         <div class="control-item" *ngIf="availableOperations.length > 0">
             <label for="operation-filter-select">Filtrar por operación</label>
-            <select id="operation-filter-select" class="control-select"
-                    [(ngModel)]="selectedOperation" (change)="onOperationFilterChange()">
+            <select id="operation-filter-select" class="control-select" [(ngModel)]="selectedOperation"
+                (change)="onOperationFilterChange()">
                 <option value="">Todas las operaciones</option>
                 <option *ngFor="let operation of availableOperations" [value]="operation">
                     {{ getOperationLabel(operation) }}
@@ -27,14 +27,11 @@
     <div class="search-container">
         <label for="search-input" class="sr-only">Buscar en historial</label>
         <div class="search-wrapper">
-            <input id="search-input" type="text" class="search-input"
-                   [(ngModel)]="searchQuery" 
-                   (keyup.enter)="onSearch()"
-                   (input)="onSearch()"
-                   placeholder="Buscar por paciente, usuario, variables..." />
+            <input id="search-input" type="text" class="search-input" [(ngModel)]="searchQuery"
+                (keyup.enter)="onSearch()" (input)="onSearch()"
+                placeholder="Buscar por paciente, usuario, variables..." />
             <div class="search-buttons">
-                <button *ngIf="searchQuery" (click)="clearSearch()" class="clear-btn" 
-                        aria-label="Limpiar búsqueda">
+                <button *ngIf="searchQuery" (click)="clearSearch()" class="clear-btn" aria-label="Limpiar búsqueda">
                     <i class="fa fa-times"></i>
                 </button>
                 <button (click)="onSearch()" class="search-btn" aria-label="Buscar">
@@ -45,8 +42,7 @@
     </div>
 
     <!-- Botón reset -->
-    <button *ngIf="searchQuery || selectedOperation" (click)="resetFilters()" 
-            class="reset-filters-btn">
+    <button *ngIf="searchQuery || selectedOperation" (click)="resetFilters()" class="reset-filters-btn">
         <i class="fa fa-refresh"></i> Limpiar Filtros
     </button>
 </div>
@@ -83,6 +79,7 @@
     <!-- Tabla -->
     <div class="table-wrapper">
         <table class="history-table">
+            <caption>Tabla de usuarios registrados con opciones para ver y editar información</caption>
             <thead>
                 <tr>
                     <th *ngFor="let col of columns" [attr.scope]="'col'">
@@ -101,26 +98,25 @@
                                 <i class="fa fa-calendar"></i>
                                 {{ formatDateForDisplay(row[col.field]) }}
                             </span>
-                            
-                            <span *ngSwitchCase="'operation'" 
-                                  [class]="'operation-badge ' + getOperationClass(row.operation)">
-                                <i class="fa" 
-                                   [class.fa-plus]="row.operation === 'REGISTER_CREATED_SUCCESSFULL'"
-                                   [class.fa-edit]="row.operation.includes('UPDATE')"
-                                   [class.fa-trash]="row.operation === 'REGISTER_DELETED'"></i>
+
+                            <span *ngSwitchCase="'operation'"
+                                [class]="'operation-badge ' + getOperationClass(row.operation)">
+                                <i class="fa" [class.fa-plus]="row.operation === 'REGISTER_CREATED_SUCCESSFULL'"
+                                    [class.fa-edit]="row.operation.includes('UPDATE')"
+                                    [class.fa-trash]="row.operation === 'REGISTER_DELETED'"></i>
                                 {{ getOperationLabel(row.operation) }}
                             </span>
-                            
+
                             <span *ngSwitchCase="'patientIdentificationNumber'" class="patient-cell">
                                 <i class="fa fa-user"></i>
                                 #{{ row[col.field] }}
                             </span>
-                            
+
                             <span *ngSwitchCase="'changedBy'" class="user-cell">
                                 <i class="fa fa-user-md"></i>
                                 {{ row[col.field] }}
                             </span>
-                            
+
                             <span *ngSwitchCase="'variables'" class="variables-cell">
                                 <div *ngIf="row.isResearchLayerGroup?.variables">
                                     {{ formatVariablesForDisplay(row.isResearchLayerGroup.variables) }}
@@ -129,13 +125,13 @@
                                     Sin variables
                                 </span>
                             </span>
-                            
+
                             <span *ngSwitchDefault class="text-cell">
                                 {{ row[col.field] || 'N/A' }}
                             </span>
                         </div>
                     </td>
-                    
+
                     <td data-label="Acciones">
                         <div class="actions">
                             <button class="action-btn view" (click)="view(row)" title="Ver detalles">
@@ -155,8 +151,7 @@
     <div *ngIf="noData" class="no-data-message">
         <i class="fa fa-database"></i>
         <h3>{{ noDataMessage }}</h3>
-        <button *ngIf="searchQuery || selectedOperation" (click)="resetFilters()" 
-                class="btn-clear-all">
+        <button *ngIf="searchQuery || selectedOperation" (click)="resetFilters()" class="btn-clear-all">
             Mostrar todos los registros
         </button>
     </div>
@@ -177,7 +172,7 @@
             <span>Página {{ currentPage }} de {{ totalPages }}</span>
             <span class="total-records">{{ filteredTotalRecords }} registros</span>
         </div>
-        
+
         <div class="pagination-buttons">
             <button (click)="goToPage(1)" [disabled]="isFirstPage">
                 <i class="fa fa-angle-double-left"></i>
@@ -185,15 +180,13 @@
             <button (click)="prevPage()" [disabled]="isFirstPage">
                 <i class="fa fa-angle-left"></i>
             </button>
-            
+
             <div class="page-numbers">
-                <button *ngFor="let page of pageNumbers" 
-                        [class.active]="page === currentPage"
-                        (click)="goToPage(page)">
+                <button *ngFor="let page of pageNumbers" [class.active]="page === currentPage" (click)="goToPage(page)">
                     {{ page }}
                 </button>
             </div>
-            
+
             <button (click)="nextPage()" [disabled]="isLastPage">
                 <i class="fa fa-angle-right"></i>
             </button>

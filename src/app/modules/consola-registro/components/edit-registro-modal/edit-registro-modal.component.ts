@@ -854,7 +854,7 @@ export class EditRegistroModalComponent implements OnInit, OnDestroy {
    * @private
    * @param {any[]} fields - Array de campos a marcar como touched
    */
-  private markFieldsAsTouched(fields: any[]): void {
+  public markFieldsAsTouched(fields: any[]): void {
     fields.forEach(field => {
       if (field) {
         field.markAsTouched();

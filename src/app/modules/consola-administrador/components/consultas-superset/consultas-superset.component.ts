@@ -8,7 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrls: ['./consultas-superset.component.css']
 })
 export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDestroy {
-   // Referencia al iframe que contiene el dashboard
+  // Referencia al iframe que contiene el dashboard
   @ViewChild('dashboardIframe') iframe!: ElementRef<HTMLIFrameElement>;
 
   // Referencia al contenedor padre del iframe
@@ -134,8 +134,9 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
             type: 'resize',
             height: this.iframe.nativeElement.clientHeight
           },
-          '*' // Target origin para Superset
+          'http://localhost:8088' // ✅ Origen permitido
         );
+
       }
     } catch (e) {
       console.warn('No se pudo ajustar el tamaño interno del dashboard');
@@ -165,7 +166,7 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
     if (elem.requestFullscreen) {
       elem.requestFullscreen().catch(err => {
         console.error('Error en pantalla completa:', err);
-        this.snackBar.open('Error al activar pantalla completa', 'Cerrar', { 
+        this.snackBar.open('Error al activar pantalla completa', 'Cerrar', {
           duration: 3000,
           panelClass: ['snackbar-error']
         });
@@ -215,7 +216,7 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
   private handleFullscreenChange(): void {
     this.isFullscreen = !!document.fullscreenElement;
     this.adjustIframeSize();
-    
+
     // Re-ajustar después del cambio de pantalla completa
     setTimeout(() => {
       this.adjustIframeSize();
@@ -230,7 +231,7 @@ export class ConsultasSupersetComponent implements OnInit, AfterViewInit, OnDest
    */
   refreshDashboard(): void {
     this.initDashboard();
-    this.snackBar.open('Dashboard de estadísticas actualizado', 'Cerrar', { 
+    this.snackBar.open('Dashboard de estadísticas actualizado', 'Cerrar', {
       duration: 2000,
       panelClass: ['snackbar-success']
     });

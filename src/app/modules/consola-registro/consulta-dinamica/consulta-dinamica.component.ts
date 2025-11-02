@@ -92,7 +92,7 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
       const controlsHeight = 60;
 
       if (this.iframe && this.iframe.nativeElement) {
-        this.iframe.nativeElement.style.height = 
+        this.iframe.nativeElement.style.height =
           `${container.clientHeight - controlsHeight}px`;
       }
     });
@@ -118,7 +118,7 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
 
   refreshDashboard(): void {
     this.initDashboard();
-    this.snackBar.open('Dashboard de doctores actualizado', 'Cerrar', { 
+    this.snackBar.open('Dashboard de doctores actualizado', 'Cerrar', {
       duration: 2000,
       panelClass: ['snackbar-success']
     });
@@ -127,4 +127,11 @@ export class ConsultaDinamicaComponent implements OnInit, AfterViewInit, OnDestr
   openInNewTab(): void {
     window.open(`${this.baseUrl}?${new URLSearchParams(this.urlParams).toString()}`, '_blank');
   }
+
+  isFullscreen = false;
+
+  toggleFullscreen() {
+    this.isFullscreen = !this.isFullscreen;
+  }
+
 }

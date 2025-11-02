@@ -15,9 +15,11 @@ interface ManualSection {
   importantNotes?: string[];
   referenceTable?: {
     title: string;
+    description?: string;
     headers: string[];
     rows: string[][];
   };
+
   icon: string;
 }
 
@@ -368,7 +370,7 @@ export class ManualComponent implements OnInit {
   // Método para buscar en el manual
   searchManual(event: any): void {
     this.searchTerm = event.target.value.toLowerCase().trim();
-    
+
     if (!this.searchTerm) {
       this.filteredSections = [...this.manualSections];
       this.showSearchResults = false;
@@ -377,41 +379,41 @@ export class ManualComponent implements OnInit {
 
     this.filteredSections = this.manualSections.filter(section => {
       // Buscar en título y subtítulo
-      if (section.title.toLowerCase().includes(this.searchTerm) || 
-          section.subtitle.toLowerCase().includes(this.searchTerm)) {
+      if (section.title.toLowerCase().includes(this.searchTerm) ||
+        section.subtitle.toLowerCase().includes(this.searchTerm)) {
         return true;
       }
-      
+
       // Buscar en contenido
-      if (section.content.some(paragraph => 
-          paragraph.toLowerCase().includes(this.searchTerm))) {
+      if (section.content.some(paragraph =>
+        paragraph.toLowerCase().includes(this.searchTerm))) {
         return true;
       }
-      
+
       // Buscar en contenido adicional
-      if (section.content2 && section.content2.some(paragraph => 
-          paragraph.toLowerCase().includes(this.searchTerm))) {
+      if (section.content2 && section.content2.some(paragraph =>
+        paragraph.toLowerCase().includes(this.searchTerm))) {
         return true;
       }
-      
+
       // Buscar en tips
-      if (section.tips && section.tips.some(tip => 
-          tip.toLowerCase().includes(this.searchTerm))) {
+      if (section.tips && section.tips.some(tip =>
+        tip.toLowerCase().includes(this.searchTerm))) {
         return true;
       }
-      
+
       // Buscar en notas importantes
-      if (section.importantNotes && section.importantNotes.some(note => 
-          note.toLowerCase().includes(this.searchTerm))) {
+      if (section.importantNotes && section.importantNotes.some(note =>
+        note.toLowerCase().includes(this.searchTerm))) {
         return true;
       }
-      
+
       return false;
     });
 
     this.searchResultsCount = this.filteredSections.length;
     this.showSearchResults = true;
-    
+
     if (this.filteredSections.length > 0) {
       this.currentSection = this.manualSections.indexOf(this.filteredSections[0]);
     }
@@ -434,7 +436,7 @@ export class ManualComponent implements OnInit {
     if (!this.searchTerm || !this.showSearchResults) {
       return text;
     }
-    
+
     const regex = new RegExp(`(${this.searchTerm})`, 'gi');
     return text.replace(regex, '<span class="highlight">$1</span>');
   }
@@ -447,13 +449,13 @@ export class ManualComponent implements OnInit {
   // Método para guardar/eliminar marcador
   toggleBookmark(sectionIndex: number): void {
     const index = this.bookmarkedSections.indexOf(sectionIndex);
-    
+
     if (index === -1) {
       this.bookmarkedSections.push(sectionIndex);
     } else {
       this.bookmarkedSections.splice(index, 1);
     }
-    
+
     // Guardar en localStorage
     localStorage.setItem('rpeManualBookmarks', JSON.stringify(this.bookmarkedSections));
   }
@@ -467,8 +469,8 @@ export class ManualComponent implements OnInit {
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
     if (!this.isModalOpen) return;
-    
-    switch(event.key) {
+
+    switch (event.key) {
       case 'ArrowLeft':
         this.prevSection();
         break;

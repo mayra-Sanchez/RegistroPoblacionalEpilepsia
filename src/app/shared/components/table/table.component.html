@@ -25,6 +25,7 @@
 </div>
 <div class="table-container">
     <table>
+        <caption>Tabla de registros con opciones para búsqueda, ordenamiento y acciones</caption>
         <thead>
             <tr>
                 <th *ngFor="let col of columns">{{ col.header }}</th>
@@ -57,8 +58,8 @@
             </tr>
         </tbody>
     </table>
-
 </div>
+
 
 <div class="pagination-controls">
     <button (click)="prevPage()" [disabled]="currentPage === 1">Anterior</button>

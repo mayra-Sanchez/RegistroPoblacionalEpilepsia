@@ -168,4 +168,10 @@ export class ConsultaDatosComponent implements OnInit, AfterViewInit, OnDestroy 
   openInNewTab(): void {
     window.open(`${this.baseUrl}?${new URLSearchParams(this.urlParams).toString()}`, '_blank');
   }
+
+  isFullscreen = false;
+
+toggleFullscreen() {
+  this.isFullscreen = !this.isFullscreen;
+}
 }

@@ -2,7 +2,7 @@ import { AfterViewInit, Component, Input, OnDestroy, OnInit, ViewChild, ElementR
 import { ChartConfiguration, ChartType, registerables } from 'chart.js';
 import { ConsolaInvestigadorService } from 'src/app/services/consola-investigador.service';
 import { AuthService } from 'src/app/services/auth.service';
-import { ResearchLayer, PatientBasicInfo } from '../../../consola-registro/interfaces';
+import { ResearchLayer } from '../../../consola-registro/interfaces';
 import { ResearchLayerHistory, ResearchVariable } from '../../../../services/consola-investigador.service';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Subject, takeUntil, forkJoin } from 'rxjs';

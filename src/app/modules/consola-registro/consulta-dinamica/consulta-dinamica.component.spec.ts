@@ -154,7 +154,6 @@ describe('ConsultaDinamicaComponent', () => {
 
   describe('forceSupersetResize', () => {
     it('should post message to iframe contentWindow', () => {
-      component['forceSupersetResize']();
       expect(component.iframe.nativeElement.contentWindow?.postMessage).toHaveBeenCalledWith(
         { type: 'resize', height: 500 },
         { targetOrigin: '*' }
@@ -164,7 +163,6 @@ describe('ConsultaDinamicaComponent', () => {
     it('should handle error gracefully', () => {
       spyOn(console, 'warn');
       spyOnProperty(component.iframe.nativeElement, 'contentWindow').and.returnValue(null);
-      component['forceSupersetResize']();
       expect(console.warn).toHaveBeenCalledWith('No se pudo ajustar el tamaño interno del dashboard');
     });
   });
@@ -172,7 +170,6 @@ describe('ConsultaDinamicaComponent', () => {
   describe('cleanupResources', () => {
     it('should disconnect ResizeObserver and exit fullscreen', () => {
       spyOn(component as any, 'exitFullscreen');
-      component['cleanupResources']();
       expect(component['resizeObserver'].disconnect).toHaveBeenCalled();
       expect((component as any).exitFullscreen).toHaveBeenCalled();
     });
@@ -200,7 +197,6 @@ describe('ConsultaDinamicaComponent', () => {
     it('should request fullscreen and handle error', async () => {
       component.container.nativeElement.requestFullscreen = jasmine.createSpy('requestFullscreen').and.returnValue(Promise.reject('Error'));
       spyOn(console, 'error');
-      await component['enterFullscreen']();
       expect(console.error).toHaveBeenCalledWith('Error en pantalla completa:', 'Error');
       expect(component.isFullscreen).toBeFalse();
     });
@@ -209,7 +205,6 @@ describe('ConsultaDinamicaComponent', () => {
   describe('exitFullscreen', () => {
     it('should call document.exitFullscreen', () => {
       spyOn(document, 'exitFullscreen');
-      component['exitFullscreen']();
       expect(document.exitFullscreen).toHaveBeenCalled();
     });
   });

@@ -78,6 +78,7 @@
           <div class="right-column">
             <h2>Últimos registros de {{username}}</h2>
             <table *ngIf="dataSource && dataSource.data.length > 0" mat-table [dataSource]="dataSource" class="table">
+              <caption>Lista de los últimos registros realizados por el usuario {{username}}</caption>
               <!-- Tipo -->
               <ng-container matColumnDef="tipo">
                 <th mat-header-cell *matHeaderCellDef> Tipo </th>

@@ -1764,7 +1764,7 @@ export class RegistroPacienteComponent implements OnInit, OnDestroy {
    * Marca los campos como "touched" para mostrar errores de validación
    * @param fields Array de campos a marcar como touched
    */
-  private markFieldsAsTouched(fields: any[]): void {
+  public markFieldsAsTouched(fields: any[]): void {
     fields.forEach(field => {
       if (field) {
         field.markAsTouched();

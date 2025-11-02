@@ -7,9 +7,13 @@ body.modal-open {
   overflow: hidden;
 }
 
-body {
-  margin: 0;
-  font-family: 'Montserrat', sans-serif !important;
+/* Aplicar Montserrat a todos los elementos */
+* {
+  font-family: 'Montserrat', sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: 'Montserrat', sans-serif;
 }
 
 .mat-h2, .mat-headline-6, 
@@ -19,14 +23,11 @@ body {
   font-family: 'Montserrat', sans-serif !important;
 }
 
-/* Aplicar Montserrat a todos los elementos */
-* {
-  font-family: 'Montserrat';
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif !important;
 }
 
-h1, h2, h3 {
-  font-family: 'Montserrat';
-}
 
 /* Estilos para mensajes de snack-bar */
 .snack-success {
